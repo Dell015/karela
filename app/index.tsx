@@ -1,8 +1,10 @@
 import React from 'react';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
-import { ActivityIndicator, Image, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+
 
 // IMPORTANT: Importing the two pieces we built
 import { theme } from './theme'; 
@@ -32,10 +34,28 @@ export default function Index() {
     <View style={theme.container}>
       <Stack.Screen options={{ headerShown: false }} />
       
-      <LinearGradient
-        colors={['#151515', '#151515']}
-        style={theme.background}
-      />
+      <View style={theme.glowContainer}>
+        <LinearGradient
+          colors={['#209F77', '#1FA279', '#7CF205']}
+          style={theme.rightBlur}/>
+          
+          
+
+        <LinearGradient
+          colors={['#7CF205', '#1FA279', '#7CF205']}
+          style={theme.leftBlur}/>
+        <BlurView 
+          intensity={100} // Increase this (0-100) for more "fuzziness"
+          tint="dark" 
+          style={StyleSheet.absoluteFill} 
+        />
+        <BlurView 
+          intensity={70} // Increase this (0-100) for more "fuzziness"
+          tint="dark" 
+          style={StyleSheet.absoluteFill} 
+        />
+      </View>
+      
 
       <View style={theme.content}>
         <Image 

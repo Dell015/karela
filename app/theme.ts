@@ -7,6 +7,29 @@ export const theme = StyleSheet.create({
   background: {
     ...StyleSheet.absoluteFillObject,
   },
+  glowContainer: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+    backgroundColor: '#151515',
+  },
+  rightBlur: {
+    position: 'absolute',
+    top: -50,
+    right: -300,
+    width: 600,
+    height: 600,
+    borderRadius: 300, // Makes it a circle
+  },
+  leftBlur: {
+    position: 'absolute',
+    top: 200,
+    left: -95,
+    width: 350,
+    height: 350,
+    borderRadius: 300, // Makes it a circle
+    opacity: 0.7,
+  },
+
   content: {
     flex: 1,
     paddingHorizontal: 30,
