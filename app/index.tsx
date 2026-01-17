@@ -47,7 +47,7 @@ export default function Index() {
         <BlurView 
           intensity={100} // Increase this (0-100) for more "fuzziness"
           tint="dark" 
-          style={StyleSheet.absoluteFill} 
+          style={StyleSheet.absoluteFill}     
         />
         <BlurView 
           intensity={70} // Increase this (0-100) for more "fuzziness"
