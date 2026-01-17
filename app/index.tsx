@@ -109,7 +109,10 @@ export default function Index() {
           </LinearGradient>
         </TouchableOpacity>
 
-        <TouchableOpacity style={theme.skipButton}>
+        <TouchableOpacity
+          style={theme.skipButton}
+          onPress={() => router.push("/login")}
+        >
           <Text style={theme.skipText}>Skip</Text>
         </TouchableOpacity>
       </View>
