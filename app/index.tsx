@@ -79,7 +79,7 @@ export default function Index() {
 
         {/* GRADIENT MASKING APPLIED HERE */}
         <Text style={theme.headline}>
-          Your skibidy starts with{"\n"}
+          Your journey starts with{"\n"}
           <GradientText text="one step." style={theme.headline} />
         </Text>
 
