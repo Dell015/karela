@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { theme } from "./theme";
+import { theme } from "./styles/theme";
 
 export default function Signup() {
   const router = useRouter();

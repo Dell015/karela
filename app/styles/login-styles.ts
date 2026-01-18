@@ -1,0 +1,71 @@
+
+import { StyleSheet } from "react-native";
+
+export const styles = StyleSheet.create({
+  scrollContent: { padding: 24, paddingTop: 60 },
+  header: { marginBottom: 40 },
+  logo: { width: 60, height: 60, marginBottom: 20, tintColor: "#7CF205" },
+  title: {
+    fontSize: 32,
+    fontFamily: "Excon-Bold",
+    color: "#fff",
+    lineHeight: 40,
+  },
+  form: { gap: 20 },
+  inputContainer: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#333",
+    paddingBottom: 5,
+  },
+  input: {
+    fontFamily: "Excon-Regular",
+    color: "#fff",
+    fontSize: 16,
+    paddingVertical: 10,
+  },
+  rowBetween: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 5,
+  },
+  row: { flexDirection: "row", alignItems: "center" },
+  checkbox: {
+    width: 18,
+    height: 18,
+    backgroundColor: "#333",
+    marginRight: 8,
+    borderRadius: 4,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  checkboxChecked: { backgroundColor: "#7CF205" },
+  label: { color: "#888", fontFamily: "Excon-Regular", fontSize: 14 },
+  forgotPass: { color: "#888", fontFamily: "Excon-Regular", fontSize: 14 },
+  loginBtn: { marginTop: 20, borderRadius: 30, overflow: "hidden" },
+  gradientBtn: {
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loginBtnText: { color: "#ffffff", fontFamily: "Excon-Bold", fontSize: 18 },
+  dividerContainer: { alignItems: "center", marginVertical: 30 },
+  dividerText: { color: "#666", fontFamily: "Excon-Regular" },
+  socialStack: { gap: 15 },
+  socialBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    borderRadius: 30,
+  },
+  socialBtnText: { fontFamily: "Excon-Medium", fontSize: 16 },
+  footer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 40,
+    marginBottom: 20,
+  },
+  footerText: { color: "#888", fontFamily: "Excon-Regular" },
+  signupText: { color: "#7CF205", fontFamily: "Excon-Bold" },
+});

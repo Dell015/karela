@@ -14,7 +14,7 @@ import {
 
 // IMPORTANT: Importing the two pieces we built
 import { GradientText } from "../components/GradientText";
-import { theme } from "./theme";
+import { theme } from "./styles/theme";
 
 export default function Index() {
   const router = useRouter();
