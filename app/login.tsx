@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  loginBtnText: { color: "#000", fontFamily: "Excon-Bold", fontSize: 18 },
+  loginBtnText: { color: "#ffffff", fontFamily: "Excon-Bold", fontSize: 18 },
   dividerContainer: { alignItems: "center", marginVertical: 30 },
   dividerText: { color: "#666", fontFamily: "Excon-Regular" },
   socialStack: { gap: 15 },
