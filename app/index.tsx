@@ -3,13 +3,7 @@ import { useFonts } from "expo-font";
 import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import React from "react";
-import {
-    ActivityIndicator,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+import { ActivityIndicator,Image,StyleSheet, Text, TouchableOpacity, View,
 } from "react-native";
 
 // IMPORTANT: Importing the two pieces we built
