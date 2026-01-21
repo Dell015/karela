@@ -166,7 +166,7 @@ export default function Login() {
 
             <TouchableOpacity
               style={styles.loginBtn}
-              onPress={() => router.push("/engine-test")}
+              onPress={() => router.push("/dashboard")}
             >
               <LinearGradient
                 colors={["#7CF205", "#209F77"]}
