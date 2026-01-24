@@ -1,43 +1,51 @@
+import { Header } from '@react-navigation/elements';
+import { Profiler } from 'react';
 import { StyleSheet } from 'react-native';
 
 export const dashboard_ui = StyleSheet.create({
-    headerRow: {
-    flexDirection: 'row', // Align children horizontally (Side-by-side)
-    justifyContent: 'space-between', // Push children to far left and far right
-    alignItems: 'center', // Center them vertically relative to each other
-    paddingHorizontal: 20, // Padding on left and right
-    paddingVertical: 15,   // Padding on top and bottom
+  
+  dashboard: {
+    flex: 1,
+    paddingHorizontal: 20,
   },
-  profileGroup: {
-    flexDirection: 'row', // Keep circle and text stack next to each other
+  dashboardText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  LeftGroup: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 12, // The space between the circle and the text
+    gap: 15,
   },
-  profileCircle: {
+  RightGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+  },
+  ProfileHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  Image: {
+    width: 70,
+    height: 70,
+    borderRadius: 50,
+  },
+  CoachImage: {
     width: 50,
     height: 50,
-    borderRadius: 25, // Logic: Size / 2 = Perfect Circle
-    backgroundColor: '#26A69A', // Your Emerald/Green accent
-  },
-  textStack: {
-    justifyContent: 'center',
   },
   welcomeText: {
-    color: '#888', // Grayish sub-text
-    fontSize: 14,
-    fontFamily: 'System', // You can replace with your 'Excon' font later
+    fontFamily: 'Excon-Regular',
+    fontSize: 18.71,
+    color: '#8A8A8A',
   },
-  userName: {
-    color: '#FFF',
-    fontSize: 20,
-    fontWeight: 'bold',
+  nameText: {
+    fontFamily: 'Excon-Bold',
+    fontSize: 30.27,
+    color: '#fff',
   },
-  iconButton: {
-    width: 45,
-    height: 45,
-    backgroundColor: 'rgba(255,255,255,0.1)', // Semi-transparent "Glass" effect
-    borderRadius: 12,
-    justifyContent: 'center', // Center icon horizontally
-    alignItems: 'center',     // Center icon vertically
-  }
 });
