@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 export const theme = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#121212'
   },
   background: {
     ...StyleSheet.absoluteFillObject,
