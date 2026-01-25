@@ -136,7 +136,7 @@ export const dashboard_ui = StyleSheet.create({
   WeatherText: {
     fontFamily: 'Excon-Bold',
     color: '#FFF',
-    fontSize: 28,
+    fontSize: 20,
     marginTop: 20,
   },
   weatherCard: {
@@ -154,7 +154,7 @@ export const dashboard_ui = StyleSheet.create({
   },
   cityText: {
     color: '#FFF',
-    fontSize: 28,
+    fontSize: 20,
     fontFamily: 'Excon-Bold',
   },
   weatherDesc: {
@@ -164,5 +164,70 @@ export const dashboard_ui = StyleSheet.create({
   tempText: {
     color: '#FFF',
     fontSize: 28,
+    fontFamily: 'Excon-Bold', 
+  },
+  tipCard: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 20,
+    paddingLeft: 30,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+
+  tipIcon: {
+    height: 40,
+    width: 40,
+  },
+
+  tipText: {
+    color: '#888', // Grey text for the tip
+    fontSize: 14,
+    flex: 1,
+    marginLeft: 15,
+    lineHeight: 20,
+  },
+
+  // --- Daily Missions Section ---
+  missionCard: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 25,
+    paddingLeft: 30,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  missionIcon: {
+    height: 40,
+    width: 40,
+  },
+  missionInfo: {
+    flex: 1,
+    marginLeft: 15,
+  },
+  missionTitle: {
+    color: '#FFF',
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+  missionSub: {
+    color: '#7CF205', // Green XP text
+    fontSize: 12,
+  },
+  missionStats: {
+    alignItems: 'flex-end',
+  },
+  statsText: {
+    color: '#888',
+    fontSize: 12,
+  },
+  sectionTitle: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    marginTop: 10,
   }
 });
