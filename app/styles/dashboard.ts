@@ -136,6 +136,7 @@ export const dashboard_ui = StyleSheet.create({
   WeatherText: {
     fontFamily: 'Excon-Bold',
     color: '#FFF',
-
+    fontSize: 18.71,
+    marginTop: 20,
   }
 });

@@ -7,6 +7,7 @@ import { dashboard_ui } from "./styles/dashboard";
 import { Assets } from "@react-navigation/elements";
 import { Image } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useState, useEffect } from "react";
 
 // 'export default' = The main class/function of this file (Like 'public static void Main' logic)
 export default function Dashboard() {
@@ -98,6 +99,7 @@ export default function Dashboard() {
             </View>
           </LinearGradient>
         </TouchableOpacity>
+        <Text style={dashboard_ui.WeatherText}>Weather & Alerts</Text>
       </View>
     </SafeAreaView>
   );
