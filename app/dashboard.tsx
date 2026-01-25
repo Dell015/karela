@@ -17,42 +17,46 @@ export default function Dashboard() {
 
   // --- State Management ---
   // We define the 'weather' object shape. Note the comma after 'desc'.
-  const [weather, setWeather] = useState<{
-    temp: string | number;
+  // 1. Current City State
+  const [currentCity, setCurrentCity] = useState("Locating..."); 
+
+  // 2. Weather Data State
+  const [weather, setWeather] = useState<{ 
+    temp: string | number; 
     desc: string;
-    city: string;
   }>({
     temp: "--",
-    desc: "Loading...",
-    city: "Unknown",
+    desc: "Checking skies...",
   });
 
   // --- API Logic ---
-  const fetchWeather = async () => {
+  // Add 'cityName' as a parameter
+  const fetchWeather = async (cityName: string) => {
     try {
-      const API_KEY = "your_key_here"; // Replace with your OpenWeatherMap key
-      const city = "Tuguegarao";
-      const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${API_KEY}`;
+      const API_KEY = "process.env.EXPO_PUBLIC_WEATHER_API_KEY";
+      // Use the parameter in the URL instead of a hardcoded variable
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&units=metric&appid=${API_KEY}`;
 
       const response = await fetch(url);
       const data = await response.json();
 
-      // Update state with API results
       if (data.main) {
         setWeather({
-          temp: Math.round(data.main.temp), // Rounding decimals for cleaner UI
+          temp: Math.round(data.main.temp),
           desc: data.weather[0].description,
-          city: data.name,
         });
+        // Update the city name to the official one from the API
+        setCurrentCity(data.name); 
       }
     } catch (error) {
-      console.error("The fetch failed:", error);
+      console.error("Fetch failed:", error);
+      setCurrentCity("Unknown Location");
     }
   };
 
-  // --- Lifecycle Hooks ---
   useEffect(() => {
-    fetchWeather(); // Run fetch once when the component mounts
+    // You can change this string to anything, or leave it empty for a "GPS" function later
+    fetchWeather("Tuguegarao"); 
   }, []);
 
   return (
@@ -76,7 +80,7 @@ export default function Dashboard() {
             </TouchableOpacity>
             <View>
               <Text style={dashboard_ui.welcomeText}>Welcome back</Text>
-              <Text style={dashboard_ui.nameText}>Sander</Text>
+              <Text style={dashboard_ui.nameText}>Dzaddy Sander</Text>
             </View>
           </View>
 
@@ -159,7 +163,7 @@ export default function Dashboard() {
               style={dashboard_ui.weatherIcon}
             />
             <View style={{ marginLeft: 10 }}> 
-              <Text style={dashboard_ui.cityText}>{weather.city}</Text>
+              <Text style={dashboard_ui.cityText}>{currentCity}</Text>
               {/* textTransform: 'capitalize' in styles is recommended here */}
               <Text style={dashboard_ui.weatherDesc}>{weather.desc}</Text>
             </View>
