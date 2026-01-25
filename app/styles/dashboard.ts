@@ -136,7 +136,33 @@ export const dashboard_ui = StyleSheet.create({
   WeatherText: {
     fontFamily: 'Excon-Bold',
     color: '#FFF',
-    fontSize: 18.71,
+    fontSize: 28,
     marginTop: 20,
+  },
+  weatherCard: {
+    padding: 20,
+    backgroundColor: '#222222',
+    borderRadius: 22,
+
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  weatherIcon: {
+    height: 70,
+    width: 70,
+  },
+  cityText: {
+    color: '#FFF',
+    fontSize: 28,
+    fontFamily: 'Excon-Bold',
+  },
+  weatherDesc: {
+    color: '#8A8A8A',
+
+  },
+  tempText: {
+    color: '#FFF',
+    fontSize: 28,
   }
 });

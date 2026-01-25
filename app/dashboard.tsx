@@ -16,6 +16,41 @@ export default function Dashboard() {
 
   const progressPercent = (currentXP /totalXP) * 100;
 
+  const [weather, setWeather] = useState<{ 
+    temp: string | number;
+    desc: string 
+    city: string
+  }>({
+    temp: "--",
+    desc: "Loading...",
+    city: "Unknown"
+  })
+
+  const fetchWeather = async () => {
+    try {
+      const API_KEY = "your_key_here";
+      const city = "Tuguegarao";
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${API_KEY}`
+
+      const response = await fetch(url);
+
+      const data = await response.json();
+
+      setWeather({
+        temp: data.main.temp,
+        desc: data.weather[0].description,
+        city: data.name,
+      });
+    
+    } catch (error) {
+      console.error("The fetch failed;", error);
+    }
+  }
+
+  useEffect(() => {
+    fetchWeather();
+  }, []);
+
   return (
     // SafeAreaView: A specialized "Box" that respects the iPhone Notch/Home Indicator
     <SafeAreaView style={theme.container}>
@@ -100,6 +135,19 @@ export default function Dashboard() {
           </LinearGradient>
         </TouchableOpacity>
         <Text style={dashboard_ui.WeatherText}>Weather & Alerts</Text>
+        <View style={dashboard_ui.weatherCard}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Image 
+                source={require("../assets/images/Sun.png")}
+                style={dashboard_ui.weatherIcon}
+              />
+              <View style={{ marginLeft: 10 }}> 
+                <Text style={dashboard_ui.cityText}>{weather.city}</Text>
+                <Text style={dashboard_ui.weatherDesc}>{weather.desc}</Text>
+              </View>
+            </View>
+            <Text style={dashboard_ui.tempText}>{weather.temp}°C</Text>
+          </View>
       </View>
     </SafeAreaView>
   );
