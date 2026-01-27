@@ -19,7 +19,8 @@ export const theme = StyleSheet.create({
     right: -300,
     width: 600,
     height: 600,
-    borderRadius: 300, // Makes it a circle
+    borderRadius: 300,
+// Makes it a circle
   },
   leftBlur: {
     position: 'absolute',
