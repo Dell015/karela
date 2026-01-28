@@ -62,5 +62,5 @@ export const startRecording = async (onUpdate: (data: GhostPoint[]) => void) => 
             // UI NOTIFICATION: Use the spread operator `[...]` to send a fresh copy to the screen.
             onUpdate([...pathData]);
         }
-    )
+  git  )
 }
