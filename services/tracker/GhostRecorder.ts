@@ -1,6 +1,6 @@
-import * as Location from 'expo-location';
-import { getDistance } from 'geolib';
-import { GhostPoint } from './GhostEngine';
+import * as Location from "expo-location";
+import { getDistance } from "geolib";
+import { GhostPoint } from "./GhostEngine";
 
 // State variables to track the current recording session
 let pathData: GhostPoint[] = [];
@@ -11,12 +11,13 @@ let lastPoint: { latitude: number; longitude: number } | null = null;
  * THE RECORDER
  * This function handles the heavy lifting of watching the user's movement.
  */
-export const startRecording = async (onPointAdded: (path: GhostPoint[]) => void) => {
-  
+export const startRecording = async (
+  onPointAdded: (path: GhostPoint[]) => void,
+) => {
   // A. PERMISSIONS
   // We can't track them without asking first!
   const { status } = await Location.requestForegroundPermissionsAsync();
-  if (status !== 'granted') {
+  if (status !== "granted") {
     alert("Karela needs location access to track your run!");
     return;
   }
@@ -26,8 +27,8 @@ export const startRecording = async (onPointAdded: (path: GhostPoint[]) => void)
   const subscription = await Location.watchPositionAsync(
     {
       accuracy: Location.Accuracy.BestForNavigation, // High power, high precision
-      distanceInterval: 5,  // Only trigger every 5 meters moved (prevents jitter)
-      timeInterval: 2000,   // Or every 2 seconds
+      distanceInterval: 5, // Only trigger every 5 meters moved (prevents jitter)
+      timeInterval: 2000, // Or every 2 seconds
     },
     (location) => {
       const { latitude, longitude } = location.coords;
@@ -44,7 +45,7 @@ export const startRecording = async (onPointAdded: (path: GhostPoint[]) => void)
         latitude,
         longitude,
         timestamp: location.timestamp,
-        distanceFromStart: totalDistanceCovered
+        distanceFromStart: totalDistanceCovered,
       };
 
       // E. UPDATE STATE
@@ -53,7 +54,7 @@ export const startRecording = async (onPointAdded: (path: GhostPoint[]) => void)
 
       // Send the whole path back to the UI so we can see the progress
       onPointAdded([...pathData]);
-    }
+    },
   );
 
   return subscription; // We return this so we can stop() it later
