@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-
-/**
- * 1. IMPORTS
- * We bring in our logic files. Notice the pathing — this assumes 
- * your UI is in a different folder than your services.
- */
+import { Text, View, TouchableOpacity } from 'react-native';
+import {styles} from './styles/engineStyle';
+import { saveRun, loadRun } from '@/services/tracker/StorageService';
 import { startRecording } from '../services/tracker/GhostRecorder'; 
 import { GhostPoint } from '../services/tracker/GhostEngine';
 
 export default function TestRecorderScreen() {
+   
   /**
    * 2. STATE MANAGEMENT
    * currentPath: Stores the growing array of GPS points.
@@ -46,18 +43,38 @@ export default function TestRecorderScreen() {
    * 4. STOP HANDLER
    * Triggered when the user hits "STOP RECORDING".
    */
-  const handleStop = () => {
+  const handleStop = async () => {
     if (subscription) {
-      // CRITICAL: This tells the phone's GPS hardware to stop sucking battery
-      subscription.remove(); 
+      subscription.remove();
       setSubscription(null);
     }
-    
+
     setIsRecording(false);
 
-    // Logging the final array — this is what we will eventually save to AsyncStorage
-    console.log("Run Finished! Total Points:", currentPath.length);
-    console.log("Full Path Data:", currentPath);
+    // Saving Logic
+    // We only want to save if we actually collected some data!
+    if (currentPath.length > 0) {
+      try {
+        // call storage service
+        await saveRun(currentPath);
+         console.log("Success Run saved to permanent storage.");
+         alert("Run Saved!");
+      } catch (error) {
+        console.error("Save failed:", error);
+      }
+    }
+
+    console.log("Run Finnished! Total Points:", currentPath.length);
+  };
+
+  const handleLoad = async () => {
+    const savedPoints = await loadRun();
+    if (savedPoints.length > 0) {
+      setCurrentPath(savedPoints);
+      alert(`Loaded ${savedPoints.length} points from last run!`);
+    } else {
+      alert("No saved runs found.");
+    }
   };
 
   /**
@@ -97,58 +114,16 @@ export default function TestRecorderScreen() {
             {isRecording ? "STOP RECORDING" : "START RECORDING"}
         </Text>
       </TouchableOpacity>
+
+      <TouchableOpacity style={styles.loadBtn} onPress={handleLoad}>
+        <Text style={styles.btnText}>LOAD LAST RUN</Text>
+      </TouchableOpacity>
     </View>
   );
+
+
+  
 }
 
-/**
- * 6. STYLES
- */
-const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    backgroundColor: '#f5f5f5' 
-  },
-  title: { 
-    fontSize: 24, 
-    fontWeight: 'bold', 
-    marginBottom: 20,
-    color: '#333'
-  },
-  statsBox: { 
-    backgroundColor: 'white', 
-    padding: 20, 
-    borderRadius: 15, 
-    width: '85%', 
-    // Shadow for iOS
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    // Elevation for Android
-    elevation: 5, 
-    marginBottom: 30 
-  },
-  label: {
-    fontSize: 16,
-    marginVertical: 5,
-    color: '#555',
-    fontFamily: 'monospace' // Makes numbers easier to read
-  },
-  button: { 
-    paddingVertical: 18, 
-    borderRadius: 30, 
-    width: '80%', 
-    alignItems: 'center' 
-  },
-  startBtn: { backgroundColor: '#4CAF50' }, // Green for Go
-  stopBtn: { backgroundColor: '#F44336' },  // Red for Stop
-  buttonText: { 
-    color: 'white', 
-    fontSize: 18, 
-    fontWeight: 'bold',
-    letterSpacing: 1
-  }
-});
+
+
