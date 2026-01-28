@@ -1,5 +1,5 @@
 import * as Location from 'expo-location';
-import { getDistance } from 'geolib';
+import { getPreciseDistance } from 'geolib';
 import { GhostPoint } from './GhostEngine';
 
 // State variables to track the current recording session
@@ -12,31 +12,38 @@ let lastPoint: { latitude: number; longitude: number } | null = null;
  * This function handles the heavy lifting of watching the user's movement.
  */
 export const startRecording = async (onPointAdded: (path: GhostPoint[]) => void) => {
+  pathData = [];
+  totalDistanceCovered = 0;
+  lastPoint = null;
   
   // A. PERMISSIONS
-  // We can't track them without asking first!
   const { status } = await Location.requestForegroundPermissionsAsync();
   if (status !== 'granted') {
     alert("Karela needs location access to track your run!");
-    return;
+    return null; // Stop here if permission is denied
   }
 
   // B. THE WATCHER
-  // This stays open and pings every time the phone moves
+  // We add "const subscription =" so the return at the bottom knows what it is
   const subscription = await Location.watchPositionAsync(
     {
-      accuracy: Location.Accuracy.BestForNavigation, // High power, high precision
-      distanceInterval: 5,  // Only trigger every 5 meters moved (prevents jitter)
-      timeInterval: 2000,   // Or every 2 seconds
+      accuracy: Location.Accuracy.BestForNavigation,
+      distanceInterval: 3, // Changed to 3 for better walk/run responsiveness
+      timeInterval: 1000,   
     },
     (location) => {
       const { latitude, longitude } = location.coords;
 
       // C. DISTANCE MATH
-      // If we have a previous point, calculate the gap and add to total
       if (lastPoint) {
-        const metersMoved = getDistance(lastPoint, { latitude, longitude });
-        totalDistanceCovered += metersMoved;
+        const metersMoved = getPreciseDistance(lastPoint, { latitude, longitude });
+        
+        // Your 1.5m Noise Gate
+        if (metersMoved > 1.5 && metersMoved < 15) {
+          totalDistanceCovered += metersMoved;
+        } else {
+          console.log(`Filtered out ${metersMoved}m of noise.`);
+        }
       }
 
       // D. CREATE GHOST POINT
@@ -47,14 +54,12 @@ export const startRecording = async (onPointAdded: (path: GhostPoint[]) => void)
         distanceFromStart: totalDistanceCovered
       };
 
-      // E. UPDATE STATE
       pathData.push(newPoint);
       lastPoint = { latitude, longitude };
 
-      // Send the whole path back to the UI so we can see the progress
       onPointAdded([...pathData]);
     }
   );
 
-  return subscription; // We return this so we can stop() it later
+  return subscription; // Now this works because we defined it above!
 };
