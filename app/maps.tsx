@@ -1,11 +1,59 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, Dimensions } from 'react-native';
+import { StyleSheet, View, Text, Dimensions, TouchableOpacity } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Polyline, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
+import {styles} from './styles/mapStyles';
+import { GhostPoint } from '../services/tracker/GhostEngine';
+import { startRecording } from '../services/tracker/GhostRecorder'; 
+import { saveRun, loadRun} from '@/services/tracker/StorageService';
+
 
 export default function MapsScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+
+  const [currentPath, setcurrentPath] = useState<GhostPoint[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [subscription, setSubscription] = useState<any>(null);
+
+  const handleStart = async () => {
+    setIsRecording(true);
+    setcurrentPath([]);
+    const sub = await startRecording((newPath) => {
+        setcurrentPath(newPath);
+    })
+    setSubscription(sub);
+  }
+
+  const handleStop = async () => {
+    if (subscription) {
+        subscription.remove();
+        setSubscription(null);
+    }
+
+    setIsRecording(false);
+
+    if (currentPath.length > 0) {
+        try {
+            await saveRun(currentPath);
+            alert("Run Saved!");
+        } catch (error) {
+            console.error("Save failed:", error);
+        }
+    }
+  };
+
+  const handleLoad = async () => {
+    const savedPoints = await loadRun();
+    if (savedPoints.length > 0) {
+        setcurrentPath(savedPoints);
+        alert(`Loaded ${savedPoints.length} points from last run!`);
+    } else {
+        alert("No Saved runs found.");
+    }
+  }
+
 
   useEffect(() => {
     (async () => {
@@ -39,19 +87,14 @@ export default function MapsScreen() {
         showsUserLocation={true}
         followsUserLocation={true}
       />
+      <TouchableOpacity
+        style={[styles.floatingButtonContainer, isRecording ? styles.stopBtn : styles.startBtn]}
+        onPress={isRecording ? handleStop : handleStart}
+        >
+            <Text style={styles.buttonText}>
+                {isRecording ? "Stop Running" : "Start Running"}
+            </Text>
+        </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  map: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
-  },
-});
