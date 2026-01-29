@@ -39,5 +39,4 @@ export const styles = StyleSheet.create({
     handleStart: {
 
     },
-
 })

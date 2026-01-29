@@ -1,21 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Dimensions, TouchableOpacity } from 'react-native';
-import MapView, { PROVIDER_GOOGLE, Polyline, Marker } from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE, Polyline, Marker, Polygon } from 'react-native-maps';
 import * as Location from 'expo-location';
 import {styles} from './styles/mapStyles';
 import { GhostPoint } from '../services/tracker/GhostEngine';
 import { startRecording } from '../services/tracker/GhostRecorder'; 
 import { saveRun, loadRun} from '@/services/tracker/StorageService';
+import { ghostMapStyle } from './styles/ghostMapStyle';
 
 
 export default function MapsScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-
   const [currentPath, setcurrentPath] = useState<GhostPoint[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [subscription, setSubscription] = useState<any>(null);
+  
+  const latestPoint = currentPath.length > 0 
+    ? { latitude: currentPath[currentPath.length - 1].latitude, longitude: currentPath[currentPath.length - 1].longitude }
+    : location ? { latitude: location.coords.latitude, longitude: location.coords.longitude } : null;
 
   const handleStart = async () => {
     setIsRecording(true);
@@ -76,17 +79,31 @@ export default function MapsScreen() {
   return (
     <View style={styles.container}>
       <MapView
-        style={styles.map}
         provider={PROVIDER_GOOGLE}
+        style={styles.map}
+        customMapStyle={ghostMapStyle} 
         initialRegion={{
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
+          latitude: 14.5995,
+          longitude: 120.9842,
           latitudeDelta: 0.005,
           longitudeDelta: 0.005,
         }}
-        showsUserLocation={true}
-        followsUserLocation={true}
-      />
+      >
+        <Polyline
+            coordinates={currentPath}
+            strokeColor='#7CF205'
+            strokeWidth={6}
+        />
+
+        {latestPoint && (
+            <Marker
+                coordinate={latestPoint}
+                title='You'
+            >
+                <View style={{backgroundColor: '#7CF205', padding: 10, borderRadius: 20, borderWidth: 3, borderColor: 'white'}} />
+            </Marker>
+        )}
+      </MapView>
       <TouchableOpacity
         style={[styles.floatingButtonContainer, isRecording ? styles.stopBtn : styles.startBtn]}
         onPress={isRecording ? handleStop : handleStart}
