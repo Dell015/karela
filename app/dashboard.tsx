@@ -166,30 +166,39 @@ export default function Dashboard() {
         {/* --- Weather Section --- */}
         <Text style={dashboard_ui.WeatherText}>Weather & Alerts</Text>
 
-        <View style={dashboard_ui.weatherCard}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            {/* DYNAMIC ICON: This now loads the icon based on the API code */}
-            <Image
+        <TouchableOpacity
+          onPress={() => router.push("/maps")}
+          activeOpacity={0.7}
+          >
+          
+
+          <View style={dashboard_ui.weatherCard}>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              {/* DYNAMIC ICON: This now loads the icon based on the API code */}
+              <Image
               source={{
                 uri: `https://openweathermap.org/img/wn/${weather.icon}@2x.png`,
               }}
               style={dashboard_ui.weatherIcon}
-            />
-            <View style={{ marginLeft: 10 }}>
-              <Text style={dashboard_ui.cityText}>{currentCity}</Text>
-              <Text
+              />
+              <View style={{ marginLeft: 10 }}>
+                <Text style={dashboard_ui.cityText}>{currentCity}</Text>
+                <Text
                 style={[
                   dashboard_ui.weatherDesc,
                   { textTransform: "capitalize" },
                 ]}
               >
                 {weather.desc}
-              </Text>
+                </Text>
+              </View>
             </View>
-          </View>
-
           <Text style={dashboard_ui.tempText}>{weather.temp}°C</Text>
-        </View>
+          </View> 
+        </TouchableOpacity>
+
+
+
         {/* --- AI Tip of the Day --- */}
         <Text style={dashboard_ui.sectionTitle}>Daily Tip</Text>
         <View style={dashboard_ui.tipCard}>
