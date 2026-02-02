@@ -15,6 +15,10 @@ import {
 } from "react-native";
 import { theme } from "./styles/theme";
 
+/**
+ * REUSABLE INPUT COMPONENT
+ * Keeping this outside the main function makes the code cleaner and easier to style globally.
+ */
 interface InputProps {
   placeholder: string;
   value: string;
@@ -40,24 +44,29 @@ const UserInput = ({
   </View>
 );
 
-// MAIN SIGNUP SCREEN
-
+/**
+ * MAIN SIGNUP SCREEN
+ * Handles user registration and state management for the Karela app.
+ */
 export default function Signup() {
   const router = useRouter();
 
   // -- STATE (MEMORY) --
+  // These variables store what the user types in real-time.
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // -- THE UI --
   return (
     <View style={theme.container}>
+      {/* Hides the default Expo router header for a full-screen custom look */}
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Background Effects (Same as Login) */}
+      {/* BACKGROUND VISUAL EFFECTS 
+          Uses a combination of Gradients and Blur to create the "Karela Glow" effect.
+      */}
       <View style={theme.glowContainer}>
         <LinearGradient
           colors={["#209F77", "#1FA279", "#7CF205"]}
@@ -70,15 +79,18 @@ export default function Signup() {
         <BlurView intensity={90} tint="dark" style={StyleSheet.absoluteFill} />
       </View>
 
+      {/* KEYBOARD HANDLING
+          Ensures that when the user taps an input, the keyboard doesn't cover the 'Sign Up' button.
+      */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* Header (Logo + Title) */}
+          
+          {/* HEADER SECTION (Logo & Title) */}
           <View style={styles.header}>
             <Image
-              // We use the same logo as Login
               source={require("../assets/images/karela_word-logo.png")}
               style={styles.logo}
               resizeMode="contain"
@@ -86,7 +98,9 @@ export default function Signup() {
             <Text style={styles.title}>Create your account</Text>
           </View>
 
-          {/* Form Section */}
+          {/* FORM SECTION
+              Captures all user details. Note: confirmPassword logic will need validation later.
+          */}
           <View style={styles.form}>
             <UserInput
               placeholder="Full Name"
@@ -120,13 +134,15 @@ export default function Signup() {
               secureTextEntry
             />
 
-            {/* Sign Up Button */}
+            {/* SIGN UP BUTTON 
+                Currently only logs to console. Integrate with Auth service here.
+            */}
             <TouchableOpacity
               style={styles.signupBtn}
-              onPress={() => console.log("Sign Up clicked:", fullName)}
+              onPress={() => console.log("Sign Up clicked for:", fullName)}
             >
               <LinearGradient
-                colors={["#7CF205", "#209F77"]}
+                colors={["#7CF205", "#209F77"]} // Karela Brand Gradient
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.gradientBtn}
@@ -136,10 +152,11 @@ export default function Signup() {
             </TouchableOpacity>
           </View>
 
-          {/* Footer (Login Link) */}
+          {/* FOOTER SECTION
+              Navigation link for users who already have an account.
+          */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>Already have an account? </Text>
-            {/* Navigates back to Login */}
             <TouchableOpacity onPress={() => router.push("/login")}>
               <Text style={styles.loginText}>Log in</Text>
             </TouchableOpacity>
@@ -150,8 +167,7 @@ export default function Signup() {
   );
 }
 
-// STYLES
-
+// --- STYLING (LOCAL) ---
 const styles = StyleSheet.create({
   scrollContent: {
     padding: 24,
@@ -166,7 +182,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     marginBottom: 20,
-    tintColor: "#7CF205",
+    tintColor: "#7CF205", // Forces the logo to match our Karela Green
   },
   title: {
     fontSize: 28,
@@ -191,7 +207,7 @@ const styles = StyleSheet.create({
   signupBtn: {
     marginTop: 30,
     borderRadius: 30,
-    overflow: "hidden",
+    overflow: "hidden", // Required to make the gradient follow the border radius
   },
   gradientBtn: {
     paddingVertical: 16,
