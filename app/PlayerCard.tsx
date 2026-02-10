@@ -1,231 +1,209 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { theme } from './styles/theme';
 import { Ionicons } from '@expo/vector-icons';
 
+const { width } = Dimensions.get('window');
+
 /**
- * REUSABLE COMPONENT: STAT ITEM
- * Displays a single metric (like Distance or Pace) with a neon icon.
- * Using a sub-component here keeps the main dashboard code clean.
+ * REUSABLE OUTFIT PREVIEW
+ * The small cards at the bottom for selecting different Dati skins.
  */
-const StatItem = ({ label, value, icon }: { label: string; value: string; icon: any }) => (
-  <View style={styles.statItem}>
-    {/* Icon using the Karela Green theme color */}
-    <Ionicons name={icon} size={20} color="#7CF205" />
-    <View>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+const SkinThumbnail = ({ label }: { label: string }) => (
+  <View style={styles.skinThumbContainer}>
+    <View style={styles.skinThumbBox}>
+       {/* Placeholder for chibi skin variants */}
+      <Image 
+        source={{ uri: 'https://via.placeholder.com/100' }} 
+        style={styles.thumbImage} 
+      />
     </View>
+    <Text style={styles.thumbText}>{label}</Text>
   </View>
 );
 
-/**
- * PLAYER CARD SCREEN
- * The "Profile" of the runner. Designed with a high-tech/gaming aesthetic.
- */
 export default function PlayerCard() {
   return (
     <View style={theme.container}>
-      
-      {/* BACKGROUND DECORATION
-          Creates the consistent "Karela Glow" using gradients and a deep blur.
-      */}
+      {/* Background Glows */}
       <View style={theme.glowContainer}>
         <LinearGradient colors={["#209F77", "#7CF205"]} style={theme.leftBlur} />
         <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* --- SECTION 1: PROFILE HEADER --- 
-            Displays user identity and their current "Gamified" level.
+        {/* --- HEADER --- */}
+        <View style={styles.topNav}>
+          <TouchableOpacity>
+            <Ionicons name="chevron-back" size={28} color="#fff" />
+          </TouchableOpacity>
+        </View>
+
+        {/* --- MAIN DATI DISPLAY --- 
+            Mimicking the green rounded container from your screenshot.
         */}
-        <View style={styles.profileHeader}>
-          <View style={styles.imageContainer}>
-            <Image 
-              source={{ uri: 'https://via.placeholder.com/150' }} // TODO: Replace with local storage/Firebase URI
-              style={styles.profileImage} 
-            />
-            {/* Level Badge: Overlays the bottom of the profile picture */}
-            <View style={styles.levelBadge}>
-              <Text style={styles.levelText}>LVL 12</Text>
-            </View>
+        <View style={styles.mainCharacterCard}>
+          <View style={styles.nameBadge}>
+            <Text style={styles.nameBadgeText}>Dati 1</Text>
           </View>
-          <Text style={styles.userName}>Randel_Karela</Text>
-          <Text style={styles.userTitle}>Ghost Runner</Text>
+
+          {/* Sidebar Icons for customization */}
+          <View style={styles.sideToolbar}>
+            <Ionicons name="shirt-outline" size={20} color="#7CF205" />
+            <Ionicons name="body-outline" size={20} color="#7CF205" />
+            <Ionicons name="color-palette-outline" size={20} color="#7CF205" />
+          </View>
+
+          {/* Large Chibi Image */}
+          <Image 
+            source={{ uri: 'https://via.placeholder.com/300' }} // Replace with your chibi image
+            style={styles.mainChibi}
+            resizeMode="contain"
+          />
+
+          <TouchableOpacity style={styles.moreSkinsBtn}>
+            <Text style={styles.moreSkinsText}>More Outfits</Text>
+            <Ionicons name="chevron-forward" size={16} color="#fff" />
+          </TouchableOpacity>
         </View>
 
-        {/* --- SECTION 2: STATS GRID --- 
-            A 2x2 grid showing the user's lifetime running achievements.
-        */}
-        <View style={styles.statsGrid}>
-          <StatItem icon="walk-outline" label="Total KM" value="124.5" />
-          <StatItem icon="time-outline" label="Avg Pace" value="5'12\" />
-          <StatItem icon="flame-outline" label="Calories" value="12,403" />
-          <StatItem icon="trophy-outline" label="Runs" value="42" />
+        {/* --- OUTFIT SELECTION ROW --- */}
+        <View style={styles.skinSelectionRow}>
+          <SkinThumbnail label="chibi 2" />
+          <SkinThumbnail label="chibi 3" />
+          <SkinThumbnail label="chibi 4" />
+          <SkinThumbnail label="chibi 5" />
         </View>
 
-        {/* --- SECTION 3: GHOST PERFORMANCE (Thesis Core) --- 
-            Shows how the user performs against their "Ghost" data.
-        */}
-        <View style={styles.ghostSection}>
-          <Text style={styles.sectionTitle}>Ghost Performance</Text>
-          
-          {/* Glassmorphic Card: Uses subtle transparency and border to pop against the dark BG */}
-          <BlurView intensity={20} style={styles.ghostCard}>
-            <View style={styles.ghostRow}>
-              <Text style={styles.ghostText}>Ghost Win Rate</Text>
-              <Text style={[styles.ghostText, { color: '#7CF205' }]}>68%</Text>
+        {/* --- STATS SECTION --- */}
+        <View style={styles.statsContainer}>
+            <View style={styles.statBox}>
+                <Text style={styles.statNum}>124.5</Text>
+                <Text style={styles.statLabel}>Total KM</Text>
             </View>
-
-            {/* Custom Progress Bar: Visual representation of win rate */}
-            <View style={styles.progressBarBg}>
-              <View style={[styles.progressBarFill, { width: '68%' }]} />
+            <View style={styles.statBox}>
+                <Text style={styles.statNum}>68%</Text>
+                <Text style={styles.statLabel}>Win Rate</Text>
             </View>
-
-            <Text style={styles.ghostSubtext}>
-              You are currently faster than your ghost on 4/5 routes.
-            </Text>
-          </BlurView>
         </View>
-
-        {/* --- SECTION 4: ACTIONS --- */}
-        <TouchableOpacity style={styles.editButton}>
-          <Text style={styles.editButtonText}>Edit Profile</Text>
-        </TouchableOpacity>
 
       </ScrollView>
     </View>
   );
 }
 
-// --- STYLING (LOCAL) ---
 const styles = StyleSheet.create({
-  container: {
-    padding: 24,
-    paddingTop: 60,
-    alignItems: 'center',
+  scrollContent: {
+    paddingBottom: 40,
   },
-  profileHeader: {
-    alignItems: 'center',
-    marginBottom: 30,
+  topNav: {
+    paddingHorizontal: 20,
+    paddingTop: 50,
+    marginBottom: 10,
   },
-  imageContainer: {
+  mainCharacterCard: {
+    backgroundColor: '#209F77', // The green base color from your image
+    width: width * 0.9,
+    height: 400,
+    alignSelf: 'center',
+    borderRadius: 40,
     position: 'relative',
-    marginBottom: 15,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#7CF205',
   },
-  profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 3,
-    borderColor: '#7CF205', // Neon Border
-  },
-  levelBadge: {
+  nameBadge: {
     position: 'absolute',
-    bottom: 0,
-    backgroundColor: '#7CF205',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    top: 0,
+    backgroundColor: '#000',
+    paddingHorizontal: 30,
+    paddingVertical: 8,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
-  levelText: {
-    fontFamily: 'Excon-Bold',
-    fontSize: 12,
-    color: '#000', // Black text on neon green BG for high contrast
-  },
-  userName: {
-    fontSize: 24,
-    fontFamily: 'Excon-Bold',
+  nameBadgeText: {
     color: '#fff',
+    fontFamily: 'Excon-Bold',
+    fontSize: 22,
   },
-  userTitle: {
-    fontSize: 14,
-    fontFamily: 'Excon-Regular',
-    color: '#7CF205',
-    textTransform: 'uppercase',
-    letterSpacing: 2,
+  sideToolbar: {
+    position: 'absolute',
+    left: 20,
+    top: 100,
+    gap: 25,
   },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 15,
-    marginBottom: 30,
+  mainChibi: {
+    width: '80%',
+    height: '80%',
   },
-  statItem: {
-    width: '47%', // Allows two items per row with spacing
-    backgroundColor: 'rgba(255,255,255,0.05)', // Subtle "Glass" feel
-    padding: 15,
-    borderRadius: 20,
+  moreSkinsBtn: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#000',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
-  statValue: {
+  moreSkinsText: {
     color: '#fff',
-    fontSize: 18,
+    fontFamily: 'Excon-Bold',
+    marginRight: 5,
+  },
+  skinSelectionRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 10,
+    marginTop: 20,
+    paddingHorizontal: 10,
+  },
+  skinThumbContainer: {
+    alignItems: 'center',
+  },
+  skinThumbBox: {
+    width: 75,
+    height: 100,
+    backgroundColor: 'rgba(124, 242, 5, 0.2)',
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: '#7CF205',
+    overflow: 'hidden',
+  },
+  thumbImage: {
+    width: '100%',
+    height: '100%',
+  },
+  thumbText: {
+    color: '#7CF205',
+    fontSize: 10,
+    fontFamily: 'Excon-Regular',
+    marginTop: 5,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 30,
+    paddingHorizontal: 20,
+  },
+  statBox: {
+    alignItems: 'center',
+  },
+  statNum: {
+    color: '#fff',
+    fontSize: 24,
     fontFamily: 'Excon-Bold',
   },
   statLabel: {
-    color: '#888',
-    fontSize: 12,
-    fontFamily: 'Excon-Regular',
-  },
-  ghostSection: {
-    width: '100%',
-    marginBottom: 30,
-  },
-  sectionTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontFamily: 'Excon-Bold',
-    marginBottom: 15,
-  },
-  ghostCard: {
-    padding: 20,
-    borderRadius: 25,
-    overflow: 'hidden',
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  ghostRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  ghostText: {
-    color: '#fff',
-    fontFamily: 'Excon-Bold',
-  },
-  progressBarBg: {
-    height: 8,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 4,
-    marginBottom: 10,
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#7CF205',
-    borderRadius: 4,
-  },
-  ghostSubtext: {
-    color: '#888',
-    fontSize: 12,
-    fontFamily: 'Excon-Regular',
-  },
-  editButton: {
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 30,
-    borderWidth: 1,
-    borderColor: '#7CF205',
-  },
-  editButtonText: {
     color: '#7CF205',
-    fontFamily: 'Excon-Bold',
-  },
+    fontSize: 12,
+    fontFamily: 'Excon-Regular',
+    textTransform: 'uppercase',
+  }
 });
