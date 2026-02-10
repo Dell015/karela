@@ -1,9 +1,9 @@
+import { loadRun, saveRun } from '@/services/tracker/StorageService';
 import React, { useState } from 'react';
-import { Text, View, TouchableOpacity } from 'react-native';
-import {styles} from './styles/engineStyle';
-import { saveRun, loadRun } from '@/services/tracker/StorageService';
-import { startRecording } from '../services/tracker/GhostRecorder'; 
+import { Text, TouchableOpacity, View } from 'react-native';
 import { GhostPoint } from '../services/tracker/GhostEngine';
+import { startRecording } from '../services/tracker/GhostRecorder';
+import { styles } from '../styles/engineStyle';
 
 export default function TestRecorderScreen() {
    

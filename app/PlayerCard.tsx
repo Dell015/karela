@@ -1,9 +1,14 @@
+<<<<<<< HEAD
 import React from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+=======
+import { Ionicons } from '@expo/vector-icons';
+>>>>>>> c764999dd66820f9efb96c9c9a3ae728ee982a69
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import { theme } from './styles/theme';
-import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { theme } from '../styles/theme';
 
 const { width } = Dimensions.get('window');
 

@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, Dimensions, TouchableOpacity } from 'react-native';
-import MapView, { PROVIDER_GOOGLE, Polyline, Marker } from 'react-native-maps';
+import { loadRun, saveRun } from '@/services/tracker/StorageService';
 import * as Location from 'expo-location';
-import { styles } from './styles/mapStyles';
+import React, { useEffect, useState } from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
+import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import { GhostPoint } from '../services/tracker/GhostEngine';
-import { startRecording } from '../services/tracker/GhostRecorder'; 
-import { saveRun, loadRun } from '@/services/tracker/StorageService';
-import { ghostMapStyle } from './styles/ghostMapStyle';
+import { startRecording } from '../services/tracker/GhostRecorder';
+import { ghostMapStyle } from '../styles/ghostMapStyle';
+import { styles } from '../styles/mapStyles';
 
 export default function MapsScreen() {
   // --- STATE MANAGEMENT ---
