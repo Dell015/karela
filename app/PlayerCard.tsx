@@ -1,9 +1,9 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import { theme } from './styles/theme';
-import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { theme } from '../styles/theme';
 
 /**
  * REUSABLE COMPONENT: STAT ITEM

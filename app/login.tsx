@@ -4,17 +4,17 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { theme } from "./styles/theme";
+import { theme } from "../styles/theme";
 
 interface InputProps {
   placeholder: string;

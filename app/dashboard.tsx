@@ -5,8 +5,8 @@ import { Image, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Import custom styles
-import { dashboard_ui } from "./styles/dashboard";
-import { theme } from "./styles/theme";
+import { dashboard_ui } from "../styles/dashboard";
+import { theme } from "../styles/theme";
 
 export default function Dashboard() {
   // --- Constant Data ---
@@ -145,7 +145,7 @@ export default function Dashboard() {
                   </Text>
 
                   <TouchableOpacity
-                    onPress={() => router.push("/maps")}
+                    onPress={() => router.push("/test")}
                     style={dashboard_ui.runButtonContainer}
                   >
                     <LinearGradient
