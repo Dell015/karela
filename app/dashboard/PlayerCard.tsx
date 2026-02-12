@@ -3,7 +3,7 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { theme } from '../styles/theme';
+import { theme } from '../../styles/theme';
 
 const { width } = Dimensions.get('window');
 
