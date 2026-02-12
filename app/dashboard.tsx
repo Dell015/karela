@@ -213,38 +213,42 @@ export default function Dashboard() {
           </Text>
         </View>
 
-        {/* --- Daily Missions --- */}
-        <Text style={dashboard_ui.sectionTitle}>Daily Missions</Text>
-        <TouchableOpacity style={dashboard_ui.missionCard} activeOpacity={0.8}>
-          <Image
-            source={require("../assets/images/running.png")}
-            style={dashboard_ui.missionIcon}
-            resizeMode="contain"
-          />
-
-          <View style={dashboard_ui.missionInfo}>
-            <Text style={dashboard_ui.missionTitle}>Run 67km</Text>
-            {/* Add a tiny progress bar under the title */}
-            <View
-              style={{
-                height: 4,
-                backgroundColor: "#333",
-                borderRadius: 2,
-                marginTop: 5,
-              }}
+            {/* --- Daily Missions --- */}
+            <Text style={dashboard_ui.sectionTitle}>Daily Missions</Text>
+            <TouchableOpacity 
+              style={dashboard_ui.missionCard} 
+              activeOpacity={0.8}
+              onPress={() => router.push("/quests")} // This points to your quests.tsx file
             >
-              <View
-                style={{
-                  width: "31.34%",
-                  height: "100%",
-                  backgroundColor: "#7CF205",
-                  borderRadius: 2,
-                }}
+              <Image
+                source={require("../assets/images/running.png")}
+                style={dashboard_ui.missionIcon}
+                resizeMode="contain"
               />
-            </View>
-            <Text style={dashboard_ui.missionSub}>+6767XP</Text>
-          </View>
-        </TouchableOpacity>
+
+              <View style={dashboard_ui.missionInfo}>
+                <Text style={dashboard_ui.missionTitle}>Run 67km</Text>
+                {/* Tiny progress bar */}
+                <View
+                  style={{
+                    height: 4,
+                    backgroundColor: "#333",
+                    borderRadius: 2,
+                    marginTop: 5,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: "31.34%",
+                      height: "100%",
+                      backgroundColor: "#7CF205",
+                      borderRadius: 2,
+                    }}
+                  />
+                </View>
+                <Text style={dashboard_ui.missionSub}>+6767XP</Text>
+              </View>
+            </TouchableOpacity>
 
         {/* --- Bottom Navigation Spacing --- */}
         <View style={{ height: 100 }} />
