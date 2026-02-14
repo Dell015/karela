@@ -83,11 +83,11 @@ export default function Dashboard() {
         <View style={dashboard_ui.ProfileHeader}>
           <View style={dashboard_ui.LeftGroup}>
             <TouchableOpacity
-              onPress={() => router.push("/profile")}
+              onPress={() => router.push("/dashboard/profile")}
               activeOpacity={0.7}
             >
               <Image
-                source={require("../assets/images/sir-sander.jpg")}
+                source={require("@/assets/images/sir-sander.jpg")}
                 style={dashboard_ui.Image}
               />
             </TouchableOpacity>
@@ -98,9 +98,9 @@ export default function Dashboard() {
           </View>
 
           <View style={dashboard_ui.RightGroup}>
-            <TouchableOpacity onPress={() => router.push("/ai_coach")}>
+            <TouchableOpacity onPress={() => router.push("/dashboard/ai_coach")}>
               <Image
-                source={require("../assets/images/coach.png")}
+                source={require("@/assets/images/coach.png")}
                 style={dashboard_ui.CoachImage}
               />
             </TouchableOpacity>
@@ -109,7 +109,7 @@ export default function Dashboard() {
 
         {/* --- Progress Card --- */}
         <TouchableOpacity
-          onPress={() => router.push("/PlayerCard")}
+          onPress={() => router.push("/dashboard/PlayerCard")}
           activeOpacity={0.9}
         >
           <LinearGradient
@@ -122,7 +122,7 @@ export default function Dashboard() {
               <View style={dashboard_ui.CardContent}>
                 <View style={dashboard_ui.Streak}>
                   <Image
-                    source={require("../assets/images/fire.png")}
+                    source={require("@/assets/images/fire.png")}
                     style={dashboard_ui.flameImage}
                   />
                   <Text style={dashboard_ui.StreakText}>67 - Day Streak</Text>
@@ -167,7 +167,7 @@ export default function Dashboard() {
         <Text style={dashboard_ui.WeatherText}>Weather & Alerts</Text>
 
         <TouchableOpacity
-          onPress={() => router.push("/maps")}
+          onPress={() => router.push("/dashboard/maps")}
           activeOpacity={0.7}
           >
           
@@ -203,7 +203,7 @@ export default function Dashboard() {
         <Text style={dashboard_ui.sectionTitle}>Daily Tip</Text>
         <View style={dashboard_ui.tipCard}>
           <Image
-            source={require("../assets/images/Lightbulb.png")}
+            source={require("@/assets/images/Lightbulb.png")}
             style={dashboard_ui.tipIcon}
             resizeMode="contain"
           />
@@ -221,7 +221,7 @@ export default function Dashboard() {
               onPress={() => router.push("/quests")} // This points to your quests.tsx file
             >
               <Image
-                source={require("../assets/images/running.png")}
+                source={require("@/assets/images/running.png")}
                 style={dashboard_ui.missionIcon}
                 resizeMode="contain"
               />

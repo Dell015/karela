@@ -121,7 +121,7 @@ export default function Login() {
           {/* Header */}
           <View style={styles.header}>
             <Image
-              source={require("../assets/images/karela_word-logo.png")}
+              source={require("@/assets/images/karela_word-logo.png")}
               style={styles.logo}
               resizeMode="contain"
             />
@@ -166,7 +166,7 @@ export default function Login() {
 
             <TouchableOpacity
               style={styles.loginBtn}
-              onPress={() => router.push("/dashboard")}
+              onPress={() => router.push("/dashboard/dashboard")}
             >
               <LinearGradient
                 colors={["#7CF205", "#209F77"]}
@@ -209,7 +209,7 @@ export default function Login() {
           </View>
           <View style={styles.footer}>
             <Text style={styles.footerText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={() => router.push("/signup")}>
+            <TouchableOpacity onPress={() => router.push("/auth/signup")}>
               <Text style={styles.signupText}>Sign Up</Text>
             </TouchableOpacity>
           </View>

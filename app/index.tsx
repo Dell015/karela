@@ -20,15 +20,15 @@ import {
 } from 'react-native';
 
 // --- ASSET CONFIGURATION ---
-const LOGO_IMAGE = require('../assets/images/karela_logo.png'); 
+const LOGO_IMAGE = require('@/assets/images/Onboarding/karela_logo.png'); 
 
 const SLIDES = [
   { id: '1', title: 'Your journey starts\nwith one step.', description: 'The hardest part is showing up. Let us handle the rest.', image: LOGO_IMAGE },
-  { id: '2', title: 'Run Smarter,\nRun Stronger', description: 'Get personalized coaching plans adapted to your performance.', image: require('../assets/images/Onboarding/slide2.png') },
-  { id: '3', title: 'Track Every Step', description: 'Real-time stats and GPS tracking to keep you on pace.', image: require('../assets/images/Onboarding/slide3.png') },
-  { id: '4', title: 'Set Goals\nSee Progress', description: 'Visualize your improvements and smash your personal bests.', image: require('../assets/images/Onboarding/slide4.png') },
-  { id: '5', title: 'Run With\nConfidence', description: 'Route planning and safety features for peace of mind.', image: require('../assets/images/Onboarding/slide5.png') },
-  { id: '6', title: 'Ready To\nRun?', description: 'Enable location services to accurately track your runs.', image: require('../assets/images/Onboarding/slide6.png') },
+  { id: '2', title: 'Run Smarter,\nRun Stronger', description: 'Get personalized coaching plans adapted to your performance.', image: require('@/assets/images/Onboarding/slide2.png') },
+  { id: '3', title: 'Track Every Step', description: 'Real-time stats and GPS tracking to keep you on pace.', image: require('@/assets/images/Onboarding/slide3.png') },
+  { id: '4', title: 'Set Goals\nSee Progress', description: 'Visualize your improvements and smash your personal bests.', image: require('@/assets/images/Onboarding/slide4.png') },
+  { id: '5', title: 'Run With\nConfidence', description: 'Route planning and safety features for peace of mind.', image: require('@/assets/images/Onboarding/slide5.png') },
+  { id: '6', title: 'Ready To\nRun?', description: 'Enable location services to accurately track your runs.', image: require('@/assets/images/Onboarding/slide6.png') },
 ];
 
 const THEME = {
@@ -82,10 +82,10 @@ export default function Index() {
   const slidesRef = useRef<FlatList>(null);
 
   const [fontsLoaded] = useFonts({
-    "Excon-Thin": require("../assets/fonts/Excon-Thin.otf"),
-    "Excon-Regular": require("../assets/fonts/Excon-Regular.otf"),
-    "Excon-Bold": require("../assets/fonts/Excon-Bold.otf"),
-    "Excon-Black": require("../assets/fonts/Excon-Black.otf"),
+    "Excon-Thin": require("@/assets/fonts/Excon-Thin.otf"),
+    "Excon-Regular": require("@/assets/fonts/Excon-Regular.otf"),
+    "Excon-Bold": require("@/assets/fonts/Excon-Bold.otf"),
+    "Excon-Black": require("@/assets/fonts/Excon-Black.otf"),
   });
 
   useEffect(() => {
@@ -106,10 +106,10 @@ export default function Index() {
     else {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status === 'granted') router.push("/quest");
+        if (status === 'granted') router.push("/quests");
         else Alert.alert('Permission required', 'Location access is needed to track runs.');
       } catch (e) {
-        router.push("/quest");
+        router.push("/quests");
       }
     }
   };
@@ -158,7 +158,7 @@ export default function Index() {
       <View style={styles.footer}>
         <View style={styles.footerRow}>
           <Animated.View style={[styles.skipContainer, { opacity: morphAnim.interpolate({ inputRange: [0, 0.3], outputRange: [1, 0], extrapolate: 'clamp' }) }]}>
-            <TouchableOpacity onPress={() => router.push("/login")} style={styles.skipButton}><Text style={styles.skipText}>Skip</Text></TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/auth/login")} style={styles.skipButton}><Text style={styles.skipText}>Skip</Text></TouchableOpacity>
           </Animated.View>
 
           <View style={styles.centerWrapper}>

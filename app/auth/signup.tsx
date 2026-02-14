@@ -91,7 +91,7 @@ export default function Signup() {
           {/* HEADER SECTION (Logo & Title) */}
           <View style={styles.header}>
             <Image
-              source={require("../assets/images/karela_word-logo.png")}
+              source={require("@/assets/images/karela_word-logo.png")}
               style={styles.logo}
               resizeMode="contain"
             />
@@ -157,7 +157,7 @@ export default function Signup() {
           */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => router.push("/login")}>
+            <TouchableOpacity onPress={() => router.push("/auth/login")}>
               <Text style={styles.loginText}>Log in</Text>
             </TouchableOpacity>
           </View>

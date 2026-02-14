@@ -1,12 +1,11 @@
-import { loadRun, saveRun } from '@/services/tracker/StorageService';
-import React, { useState } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
-import { GhostPoint } from '../services/tracker/GhostEngine';
-import { startRecording } from '../services/tracker/GhostRecorder';
-import { styles } from '../styles/engineStyle';
+import { loadRun, saveRun } from "@/services/tracker/StorageService";
+import React, { useState } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
+import { GhostPoint } from "../services/tracker/GhostEngine";
+import { startRecording } from "../services/tracker/GhostRecorder";
+import { styles } from "./styles/engineStyle";
 
 export default function TestRecorderScreen() {
-   
   /**
    * 2. STATE MANAGEMENT
    * currentPath: Stores the growing array of GPS points.
@@ -24,11 +23,11 @@ export default function TestRecorderScreen() {
   const handleStart = async () => {
     // UI Feedback: Change button color/text immediately
     setIsRecording(true);
-    
+
     // Clear previous run data so we start fresh
     setCurrentPath([]);
 
-    // Call our backend recorder. 
+    // Call our backend recorder.
     // It takes a "callback" function that runs every time the GPS moves 5 meters.
     const sub = await startRecording((newPath) => {
       // Every time a new point is added, update the screen
@@ -57,8 +56,8 @@ export default function TestRecorderScreen() {
       try {
         // call storage service
         await saveRun(currentPath);
-         console.log("Success Run saved to permanent storage.");
-         alert("Run Saved!");
+        console.log("Success Run saved to permanent storage.");
+        alert("Run Saved!");
       } catch (error) {
         console.error("Save failed:", error);
       }
@@ -86,32 +85,32 @@ export default function TestRecorderScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>GPS Diagnostics</Text>
-      
+
       {/* DISPLAY BOX: Shows live data from the Engine/Recorder */}
       <View style={styles.statsBox}>
         <Text style={styles.label}>Points Collected: {currentPath.length}</Text>
-        
+
         {/* .toFixed(2) keeps the numbers from having 15 decimal places */}
         <Text style={styles.label}>
-            Total Distance: {latestPoint?.distanceFromStart.toFixed(2) || 0}m
+          Total Distance: {latestPoint?.distanceFromStart.toFixed(2) || 0}m
         </Text>
-        
+
         <Text style={styles.label}>
-            Lat: {latestPoint?.latitude.toFixed(5) || '0'}
+          Lat: {latestPoint?.latitude.toFixed(5) || "0"}
         </Text>
-        
+
         <Text style={styles.label}>
-            Lon: {latestPoint?.longitude.toFixed(5) || '0'}
+          Lon: {latestPoint?.longitude.toFixed(5) || "0"}
         </Text>
       </View>
 
       {/* DYNAMIC BUTTON: Switches styles based on isRecording state */}
-      <TouchableOpacity 
-        style={[styles.button, isRecording ? styles.stopBtn : styles.startBtn]} 
+      <TouchableOpacity
+        style={[styles.button, isRecording ? styles.stopBtn : styles.startBtn]}
         onPress={isRecording ? handleStop : handleStart}
       >
         <Text style={styles.buttonText}>
-            {isRecording ? "STOP RECORDING" : "START RECORDING"}
+          {isRecording ? "STOP RECORDING" : "START RECORDING"}
         </Text>
       </TouchableOpacity>
 
@@ -120,10 +119,4 @@ export default function TestRecorderScreen() {
       </TouchableOpacity>
     </View>
   );
-
-
-  
 }
-
-
-
