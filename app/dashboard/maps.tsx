@@ -3,10 +3,10 @@ import * as Location from 'expo-location';
 import React, { useEffect, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
-import { GhostPoint } from '../services/tracker/GhostEngine';
-import { startRecording } from '../services/tracker/GhostRecorder';
-import { ghostMapStyle } from '../styles/ghostMapStyle';
-import { styles } from '../styles/mapStyles';
+import { GhostPoint } from '../../services/tracker/GhostEngine';
+import { startRecording } from '../../services/tracker/GhostRecorder';
+import { ghostMapStyle } from '../../styles/ghostMapStyle';
+import { styles } from '../../styles/mapStyles';
 
 export default function MapsScreen() {
   // --- STATE MANAGEMENT ---
@@ -127,7 +127,7 @@ export default function MapsScreen() {
       {/* FLOATING ACTION BUTTON: Changes color and text based on state */}
       <TouchableOpacity
         style={[styles.floatingButtonContainer, isRecording ? styles.stopBtn : styles.startBtn]}
-        onPress={isRecording ? handleStop : handleStart}
+        onPress={isRecording ? handleStop : handleStart} 
       >
           <Text style={styles.buttonText}>
               {isRecording ? "Stop Running" : "Start Running"}
