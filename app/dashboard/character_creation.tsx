@@ -22,7 +22,7 @@ function Model({ url }: { url: string }) {
   useFrame(() => {
     if (modelRef.current) {
       // Rotate the model slightly on the Y-axis (vertical axis)
-      modelRef.current.rotation.y += 0.01;
+      modelRef.current.rotation.y += 0.5;
     }
   });
 
