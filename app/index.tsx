@@ -106,10 +106,10 @@ export default function Index() {
     else {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status === 'granted') router.push("/quests");
+        if (status === 'granted') router.push("/dashboard/quests");
         else Alert.alert('Permission required', 'Location access is needed to track runs.');
       } catch (e) {
-        router.push("/quests");
+        router.push("/dashboard/quests");
       }
     }
   };

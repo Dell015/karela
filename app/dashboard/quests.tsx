@@ -98,7 +98,7 @@ export default function QuestsScreen() {
         </ScrollView>
 
         <View style={styles.summaryContainer}>
-          <View style={styles.summaryHeader}><Text style={styles.summaryTitle}>Weekly Summary</Text><TouchableOpacity onPress={() => router.push('/calendar')}><Text style={styles.viewAllText}>View All</Text></TouchableOpacity></View>
+          <View style={styles.summaryHeader}><Text style={styles.summaryTitle}>Weekly Summary</Text><TouchableOpacity onPress={() => router.push('/components/calendar')}><Text style={styles.viewAllText}>View All</Text></TouchableOpacity></View>
           <View style={styles.daysRow}>
             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
               <View key={day} style={styles.dayItem}><View style={[styles.circleBase, i < 2 && styles.circleActive]} /><Text style={styles.dayLabel}>{day}</Text></View>

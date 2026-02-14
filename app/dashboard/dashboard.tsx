@@ -218,7 +218,7 @@ export default function Dashboard() {
             <TouchableOpacity 
               style={dashboard_ui.missionCard} 
               activeOpacity={0.8}
-              onPress={() => router.push("/quests")} // This points to your quests.tsx file
+              onPress={() => router.push("/dashboard/quests")} // This points to your quests.tsx file
             >
               <Image
                 source={require("@/assets/images/running.png")}
