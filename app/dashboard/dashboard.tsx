@@ -109,7 +109,7 @@ export default function Dashboard() {
 
         {/* --- Progress Card --- */}
         <TouchableOpacity
-          onPress={() => router.push("/dashboard/PlayerCard")}
+          onPress={() => router.push("/dashboard/character_creation")}
           activeOpacity={0.9}
         >
           <LinearGradient
