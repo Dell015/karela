@@ -1,46 +1,49 @@
-// 1. Grab the original log function
-const originalLog = console.log;
-
-// 2. Rewrite it to "filter" out the junk
-console.log = (...args) => {
-  if (typeof args[0] === 'string' && args[0].includes('EXGL: gl.pixelStorei()')) {
-    return; // Do nothing, don't print it
-  }
-  originalLog(...args); // Otherwise, print normally
-};
-
-import React, { Suspense } from "react";
-import { ActivityIndicator, LogBox, StyleSheet, View } from "react-native";
-
-// 3D Engine Tools
 import {
-  ContactShadows,
   Environment,
   OrbitControls,
+  useAnimations,
   useGLTF,
 } from "@react-three/drei/native";
 import { Canvas } from "@react-three/fiber/native";
 import { useAssets } from "expo-asset";
+import React, { Suspense, useEffect, useRef } from "react";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 
-// 1. Silence specific warnings
-LogBox.ignoreLogs(["EXGL: gl.pixelStorei()"]);
+// --- SILENCE THE TERMINAL SPAM ---
+const originalLog = console.log;
+console.log = (...args) => {
+  const msg = typeof args[0] === "string" ? args[0] : "";
+  if (msg.includes("pixelStorei") || msg.includes("WeakMap")) return;
+  originalLog(...args);
+};
 
 function Model({ url }: { url: string }) {
-  const { scene } = useGLTF(url);
+  const { scene, animations } = useGLTF(url);
+  const group = useRef<any>(null);
+  const { actions, names } = useAnimations(animations, group);
+
+  // LOG 1: Check if animations even exist in the file
+  console.log("Total animations found in file:", animations.length);
+
+  useEffect(() => {
+    // LOG 2: Check if the 'names' array is populated
+    console.log("Current animation names:", names);
+
+    if (names.length > 0 && actions) {
+      const activeAnim = names[0]; 
+      actions[activeAnim]?.reset().fadeIn(0.5).play();
+    }
+  }, [actions, names]);
 
   return (
-    <primitive
-      object={scene}
-      scale={0.009} // This is correct if your model is huge!
-      position={[0, -1.5, 0]}
-    />
+    <group ref={group} dispose={null}>
+      <primitive object={scene} scale={0.009} position={[0, -1.5, 0]} />
+    </group>
   );
 }
 
 export default function DatiViewer() {
-  const [assets, error] = useAssets([require("../../assets/miku_chibi.glb")]);
-
-  if (error) console.log("Model loading error:", error);
+  const [assets] = useAssets([require("../../assets/miku_chibi.glb")]);
 
   return (
     <View style={styles.container}>
@@ -48,46 +51,19 @@ export default function DatiViewer() {
         {assets ? (
           <Canvas
             camera={{ position: [0, 1.5, 8], fov: 40 }}
-            onCreated={(state) => {
-              const _gl = state.gl.getContext();
-              const pixelStorei = _gl.pixelStorei.bind(_gl);
-
-              // Rewrite the function to silence the specific Expo/WebGL spam
-              _gl.pixelStorei = function (...args) {
-                const [parameter] = args;
-                // UNPACK_FLIP_Y_WEBGL is the main cause of the log spam
-                if (parameter === (_gl.UNPACK_FLIP_Y_WEBGL || 0x9240)) return;
-                return pixelStorei(...args);
-              };
-            }}
+            // Fix #2: Tell the renderer to be less aggressive with power management
+            gl={{ antialias: false, powerPreference: "high-performance" }}
           >
-            <ambientLight intensity={1.0} />
-            <pointLight position={[10, 10, 10]} intensity={1.5} />
+            <ambientLight intensity={1.5} />
+            <pointLight position={[10, 10, 10]} intensity={2.0} />
 
-            <OrbitControls
-              enablePan={false}
-              enableZoom={true}
-              minPolarAngle={Math.PI / 4}
-              maxPolarAngle={Math.PI / 1.5}
-            />
+            <OrbitControls enablePan={false} enableZoom={false} />
 
-            {/* Added a key here. This helps React keep the WeakMap stable! */}
-            <Model key="miku-chibi" url={assets[0].localUri || assets[0].uri} />
+            <Model url={assets[0].localUri || assets[0].uri} />
 
+            {/* If it still crashes, try removing Environment temporarily 
+                to see if the textures are the culprit. */}
             <Environment preset="city" />
-
-            <ContactShadows
-              position={[0, -1.51, 0]} // Just a tiny bit below the feet
-              opacity={0.5}
-              scale={10}
-              blur={2.5}
-              far={10}
-              /** * frames={1} is the WeakMap fix.
-               * It tells the app to bake the shadow ONCE instead of
-               * recalculating it every frame, which saves massive RAM.
-               */
-              frames={1}
-            />
           </Canvas>
         ) : null}
       </Suspense>
@@ -96,9 +72,5 @@ export default function DatiViewer() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    height: 400,
-    width: "100%",
-    backgroundColor: "transparent",
-  },
+  container: { height: "70%", width: "100%" },
 });
