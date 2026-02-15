@@ -5,8 +5,8 @@ import { Text, TouchableOpacity, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from "react-native-maps";
 import { GhostPoint } from "../../services/tracker/GhostEngine";
 import { startRecording } from "../../services/tracker/GhostRecorder";
-import { ghostMapStyle } from "../styles/ghostMapStyle";
-import { styles } from "../styles/mapStyles";
+import { ghostMapStyle } from "../../styles/ghostMapStyle";
+import { styles } from "../../styles/mapStyles";
 
 export default function MapsScreen() {
   // --- STATE MANAGEMENT ---

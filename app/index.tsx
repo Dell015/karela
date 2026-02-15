@@ -5,18 +5,18 @@ import * as Location from 'expo-location';
 import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Alert,
-  Animated,
-  Easing,
-  FlatList,
-  Image,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
-  View,
-  ViewToken
+    Alert,
+    Animated,
+    Easing,
+    FlatList,
+    Image,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    useWindowDimensions,
+    View,
+    ViewToken
 } from 'react-native';
 
 // --- ASSET CONFIGURATION ---
