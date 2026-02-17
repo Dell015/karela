@@ -51,6 +51,7 @@
     "react-native-svg": "15.12.1",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.5.1",
+    "simplify-js": "^1.2.4",
     "three": "^0.182.0"
   },
   "devDependencies": {
