@@ -1,17 +1,11 @@
-import { useState } from "react"; 
-import { View, StyleSheet, Dimensions } from "react-native";
-import MapView, { Polyline, Marker } from "react-native-maps";
-import { styles } from "@/styles/mapStyles"
+import { styles } from "@/styles/mapStyles";
+import { useState } from "react";
+import { View } from "react-native";
+import MapView, { Marker, Polyline } from "react-native-maps";
 
 export default function MapScreen() {
-
-  //Manual input of coordinates 
-  const [path, setPath] = useState([
-    { latitude: 17.609017, longitude: 121.715140 },
-    { latitude: 17.609022, longitude: 121.715525 },
-    { latitude: 17.609039, longitude: 121.715851 },
-    { latitude: 17.609233, longitude: 121.715812}
-  ]);
+  //Manual input of coordinates
+  const [path, setPath] = useState([]);
 
   return (
     <View style={styles.container}>
@@ -19,14 +13,14 @@ export default function MapScreen() {
         style={styles.map}
         initialRegion={{
           latitude: 17.609017,
-          longitude: 121.715140,
+          longitude: 121.71514,
           latitudeDelta: 0.0009,
           longitudeDelta: 0.0009,
         }}
       >
         {path.length > 1 && (
           <>
-            <Polyline 
+            <Polyline
               coordinates={path}
               strokeColor="rgba(124, 242, 5, 0.4)"
               strokeWidth={18}
@@ -49,5 +43,5 @@ export default function MapScreen() {
         )}
       </MapView>
     </View>
-  )
+  );
 }

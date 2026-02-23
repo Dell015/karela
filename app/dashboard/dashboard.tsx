@@ -93,12 +93,14 @@ export default function Dashboard() {
             </TouchableOpacity>
             <View>
               <Text style={dashboard_ui.welcomeText}>Welcome back</Text>
-              <Text style={dashboard_ui.nameText}>Dzaddy Sander</Text>
+              <Text style={dashboard_ui.nameText}>Sander</Text>
             </View>
           </View>
 
           <View style={dashboard_ui.RightGroup}>
-            <TouchableOpacity onPress={() => router.push("/dashboard/ai_coach")}>
+            <TouchableOpacity
+              onPress={() => router.push("/dashboard/ai_coach")}
+            >
               <Image
                 source={require("@/assets/images/coach.png")}
                 style={dashboard_ui.CoachImage}
@@ -169,35 +171,31 @@ export default function Dashboard() {
         <TouchableOpacity
           onPress={() => router.push("/dashboard/maps")}
           activeOpacity={0.7}
-          >
-          
-
+        >
           <View style={dashboard_ui.weatherCard}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               {/* DYNAMIC ICON: This now loads the icon based on the API code */}
               <Image
-              source={{
-                uri: `https://openweathermap.org/img/wn/${weather.icon}@2x.png`,
-              }}
-              style={dashboard_ui.weatherIcon}
+                source={{
+                  uri: `https://openweathermap.org/img/wn/${weather.icon}@2x.png`,
+                }}
+                style={dashboard_ui.weatherIcon}
               />
               <View style={{ marginLeft: 10 }}>
                 <Text style={dashboard_ui.cityText}>{currentCity}</Text>
                 <Text
-                style={[
-                  dashboard_ui.weatherDesc,
-                  { textTransform: "capitalize" },
-                ]}
-              >
-                {weather.desc}
+                  style={[
+                    dashboard_ui.weatherDesc,
+                    { textTransform: "capitalize" },
+                  ]}
+                >
+                  {weather.desc}
                 </Text>
               </View>
             </View>
-          <Text style={dashboard_ui.tempText}>{weather.temp}°C</Text>
-          </View> 
+            <Text style={dashboard_ui.tempText}>{weather.temp}°C</Text>
+          </View>
         </TouchableOpacity>
-
-
 
         {/* --- AI Tip of the Day --- */}
         <Text style={dashboard_ui.sectionTitle}>Daily Tip</Text>
@@ -213,42 +211,42 @@ export default function Dashboard() {
           </Text>
         </View>
 
-            {/* --- Daily Missions --- */}
-            <Text style={dashboard_ui.sectionTitle}>Daily Missions</Text>
-            <TouchableOpacity 
-              style={dashboard_ui.missionCard} 
-              activeOpacity={0.8}
-              onPress={() => router.push("/dashboard/quests")} // This points to your quests.tsx file
-            >
-              <Image
-                source={require("@/assets/images/running.png")}
-                style={dashboard_ui.missionIcon}
-                resizeMode="contain"
-              />
+        {/* --- Daily Missions --- */}
+        <Text style={dashboard_ui.sectionTitle}>Daily Missions</Text>
+        <TouchableOpacity
+          style={dashboard_ui.missionCard}
+          activeOpacity={0.8}
+          onPress={() => router.push("/dashboard/quests")} // This points to your quests.tsx file
+        >
+          <Image
+            source={require("@/assets/images/running.png")}
+            style={dashboard_ui.missionIcon}
+            resizeMode="contain"
+          />
 
-              <View style={dashboard_ui.missionInfo}>
-                <Text style={dashboard_ui.missionTitle}>Run 67km</Text>
-                {/* Tiny progress bar */}
-                <View
-                  style={{
-                    height: 4,
-                    backgroundColor: "#333",
-                    borderRadius: 2,
-                    marginTop: 5,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: "31.34%",
-                      height: "100%",
-                      backgroundColor: "#7CF205",
-                      borderRadius: 2,
-                    }}
-                  />
-                </View>
-                <Text style={dashboard_ui.missionSub}>+6767XP</Text>
-              </View>
-            </TouchableOpacity>
+          <View style={dashboard_ui.missionInfo}>
+            <Text style={dashboard_ui.missionTitle}>Run 67km</Text>
+            {/* Tiny progress bar */}
+            <View
+              style={{
+                height: 4,
+                backgroundColor: "#333",
+                borderRadius: 2,
+                marginTop: 5,
+              }}
+            >
+              <View
+                style={{
+                  width: "31.34%",
+                  height: "100%",
+                  backgroundColor: "#7CF205",
+                  borderRadius: 2,
+                }}
+              />
+            </View>
+            <Text style={dashboard_ui.missionSub}>+6767XP</Text>
+          </View>
+        </TouchableOpacity>
 
         {/* --- Bottom Navigation Spacing --- */}
         <View style={{ height: 100 }} />
