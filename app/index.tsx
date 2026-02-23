@@ -126,7 +126,7 @@ export default function Index() {
 
         if (hasPermission) {
             // Success: The user said 'Allow'
-            router.push("/dashboard/quests");
+            router.push("/auth/login");
         } else {
             // Fail: The user said 'Deny'. 
             // Your PermissionManager already showed the Alert with the 'Settings' button.
