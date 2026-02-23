@@ -147,7 +147,7 @@ export default function Dashboard() {
                   </Text>
 
                   <TouchableOpacity
-                    onPress={() => router.push("/test")}
+                    onPress={() => router.push("/test/test")}
                     style={dashboard_ui.runButtonContainer}
                   >
                     <LinearGradient

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { GhostPoint } from "../services/tracker/GhostEngine";
-import { startRecording } from "../services/tracker/GhostRecorder";
-import { styles } from "../styles/Run-Record";
+import { GhostPoint } from "../../services/tracker/GhostEngine";
+import { startRecording } from "../../services/tracker/GhostRecorder";
+import { styles } from "../../styles/Run-Record";
 
 export default function App() {
   // 1. This stores the array of points we get from the Recorder
