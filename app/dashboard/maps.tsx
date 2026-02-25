@@ -1,13 +1,14 @@
-import React, { useMemo, useRef } from 'react';
-import { View, TouchableOpacity, Text, Platform } from 'react-native';
-import MapView, { Polyline, Marker } from 'react-native-maps';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useLocationEngine } from '@/hooks/useLocationEngine';
-import { styles, MAP_CONFIG } from '@/styles/mapStyles';
-import { Stack } from 'expo-router';
-import { ghostMapStyle } from '@/styles/ghostMapStyle';
-import { useQuestEngine } from '@/hooks/useQuestEngine';
+import React, { useMemo, useRef, useState, useEffect } from "react"; // Added useState & useEffect
+import { View, TouchableOpacity, Text, Platform } from "react-native";
+import MapView, { Polyline, Marker } from "react-native-maps";
+import { Ionicons } from "@expo/vector-icons";
+import { Stack, useRouter } from "expo-router";
+
+// Hooks & Services
+import { useLocationEngine } from "@/hooks/useLocationEngine";
+import { useQuestEngine } from "@/hooks/useQuestEngine";
+import { ghostMapStyle } from "@/styles/ghostMapStyle";
+import { MAP_CONFIG, styles } from "@/styles/mapStyles";
 
 /**
  * Mock data representing a previous run.
@@ -31,7 +32,7 @@ export const MOCK_GHOST_DATA = [
 
   // --- SEGMENT 3: FATIGUE / SLOW WALK SOUTH (100s - 160s) ---
   // Note the high timestamp jumps for small distance changes
-  { latitude: 17.611200, longitude: 121.718805, timestamp: 115 }, 
+  { latitude: 17.611200, longitude: 121.718805, timestamp: 115 },
   { latitude: 17.610900, longitude: 121.718815, timestamp: 130 },
   { latitude: 17.610500, longitude: 121.718825, timestamp: 145 },
   { latitude: 17.610000, longitude: 121.718840, timestamp: 160 },
@@ -61,25 +62,25 @@ export default function MapScreen() {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
   
-  // 1. Ghost & User Location Engine
+  // 1. Hook States
   const { path, ghostPosition, isRacing, setIsRacing, currentLocation } =
     useLocationEngine(MOCK_GHOST_DATA);
 
-  // 2. Quest Engine
   const { 
     checkpoints, questPath, questRewards, isDragging, 
     setIsDragging, addCheckpoint, deleteCheckpoint, moveCheckpoint 
   } = useQuestEngine();
 
-  // 3. Logic: Spawn flag in middle of current screen view
+  // 2. THE RESTORED FUNCTION
   const handleSpawnFlag = async () => {
+    // We get the center of the current map view to drop the flag there
     const camera = await mapRef.current?.getCamera();
     if (camera?.center) {
+      // We pass the center coordinates and current user location to the engine
       addCheckpoint(camera.center, currentLocation);
     }
   };
 
-  // 4. Mapping mock data for the ghost trajectory line
   const targetPathLine = useMemo(
     () => MOCK_GHOST_DATA.map((p) => ({ 
       latitude: p.latitude, 
@@ -99,60 +100,68 @@ export default function MapScreen() {
         provider="google"
         showsUserLocation
         followsUserLocation={isRacing}
-        onLongPress={(e) => addCheckpoint(e.nativeEvent.coordinate, currentLocation)}
+        // onLongPress removed to prevent accidental flag drops
       >
-        {/* --- 5. GHOST TRAJECTORY LINE --- */}
+        {/* GHOST LINE - Forced Neon Green Transparent */}
         <Polyline
+          key="ghost-line"
           coordinates={targetPathLine}
-          strokeColor={MAP_CONFIG.futurePath.strokeColor || "rgba(124, 242, 5, 0.20)"}
-          strokeWidth={MAP_CONFIG.futurePath.strokeWidth}
-          geodesic={true}
+          strokeColor="#7CF20544" 
+          strokeWidth={8}
         />
 
-        {/* --- 6. USER TRAVERSED PATH (While Racing) --- */}
+        {/* USER LIVE PATH - Forced Neon Green Solid */}
         {path.length > 1 && (
           <Polyline 
+            key="user-path"
             coordinates={path} 
-            strokeColor={MAP_CONFIG.traversedPath.strokeColor} 
-            strokeWidth={MAP_CONFIG.traversedPath.strokeWidth} 
+            strokeColor="#7CF205" 
+            strokeWidth={8} 
           />
         )}
 
-        {/* --- 7. THE QUEST STREET ROUTE (Gold Line) --- */}
+        {/* QUEST ROUTE - Forced Gold */}
         {questPath.length > 0 && (
-          <Polyline coordinates={questPath} strokeColor="#FFD700" strokeWidth={6} />
+          <Polyline 
+            key="quest-route"
+            coordinates={questPath} 
+            strokeColor="#FFD700" 
+            strokeWidth={6} 
+          />
         )}
 
-        {/* --- 8. GHOST MARKER --- */}
+        {/* GHOST MARKER */}
         {ghostPosition && (
-          <Marker
-            coordinate={ghostPosition}
-            anchor={{ x: 0.5, y: 0.5 }}
-            flat={true}
-          >
+          <Marker coordinate={ghostPosition} anchor={{ x: 0.5, y: 0.5 }} flat>
             <View style={styles.markerWrapper}>
               <View style={styles.ghostMarker} />
             </View>
           </Marker>
         )}
 
-        {/* --- 9. DYNAMIC QUEST FLAGS --- */}
+        {/* QUEST FLAGS */}
         {checkpoints.map((point, index) => (
           <Marker
-            key={`flag-${index}`}
+            key={point.id} // Stable ID stops duplication
             draggable
-            coordinate={point}
+            coordinate={{
+              latitude: point.latitude,
+              longitude: point.longitude
+            }}
             onDragStart={() => setIsDragging(true)}
-            onDragEnd={(e) => {
+            onDragEnd={async (e) => {
               setIsDragging(false);
-              const droppedCoords = e.nativeEvent.coordinate;
+              const dropped = e.nativeEvent.coordinate;
               
-              // TRASH LOGIC: Delete if dropped significantly "below" user or in bottom area
-              const deleteThreshold = Platform.OS === 'ios' ? 0.005 : 0.005;
-              if (currentLocation && droppedCoords.latitude < currentLocation.latitude - deleteThreshold) {
-                 deleteCheckpoint(index, currentLocation);
-              } else {
-                 moveCheckpoint(index, droppedCoords, currentLocation);
+              const camera = await mapRef.current?.getCamera();
+              if (camera) {
+                // TRASH LOGIC: Center vs Drop Point
+                const latDiff = camera.center.latitude - dropped.latitude;
+                if (latDiff > 0.0015) { 
+                  deleteCheckpoint(index, currentLocation);
+                } else {
+                  moveCheckpoint(index, dropped, currentLocation);
+                }
               }
             }}
           >
@@ -166,45 +175,43 @@ export default function MapScreen() {
         ))}
       </MapView>
 
-      {/* REWARD CARD HUD */}
+      {/* REWARD HUD */}
       {questRewards && (
         <View style={styles.questCard}>
           <Text style={styles.rewardText}>💰 {questRewards.coins} | ✨ {questRewards.xp} XP</Text>
         </View>
       )}
 
-      {/* TRASH BIN (Visible during drag) */}
+      {/* TRASH UI - pointerEvents="none" ensures it doesn't block the drop */}
       {isDragging && (
-        <View style={styles.trashBinContainer}>
+        <View style={styles.trashBinContainer} pointerEvents="none">
           <View style={styles.trashBin}>
             <Ionicons name="trash" size={40} color="#FF3B30" />
-            <Text style={{color: '#FF3B30', fontSize: 10, fontWeight: 'bold', marginTop: 4}}>DROP TO DELETE</Text>
+            <Text style={styles.trashText}>DROP TO DELETE</Text>
           </View>
         </View>
       )}
 
-      {/* INVENTORY BUBBLE */}
+      {/* INVENTORY BUBBLE - Calls handleSpawnFlag */}
       <TouchableOpacity style={styles.flagSpawner} onPress={handleSpawnFlag}>
         {checkpoints.length > 0 && (
           <View style={styles.flagCountBadge}>
-            <Text style={{color:'white', fontSize:10, fontWeight: 'bold'}}>{checkpoints.length}</Text>
+            <Text style={{color:'white', fontSize:10, fontWeight:'bold'}}>{checkpoints.length}</Text>
           </View>
         )}
         <Ionicons name="flag" size={24} color="#FFD700" />
       </TouchableOpacity>
 
-      {/* BACK BUTTON */}
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Ionicons name="chevron-back" size={28} color="white" />
       </TouchableOpacity>
 
-      {/* START/STOP BUTTON */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity 
           style={[styles.actionButton, { backgroundColor: isRacing ? "#FF3B30" : "#7CF205" }]}
           onPress={() => setIsRacing(!isRacing)}
         >
-          <Text style={styles.buttonText}>{isRacing ? "STOP RACE" : "START CHALLENGE"}</Text>
+          <Text style={styles.buttonText}>{isRacing ? "STOP" : "START"}</Text>
         </TouchableOpacity>
       </View>
     </View>

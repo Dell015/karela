@@ -1,4 +1,5 @@
 export interface MapCoordinate {
+  id: string;
   latitude: number;
   longitude: number;
 }
