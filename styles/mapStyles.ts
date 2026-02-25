@@ -2,11 +2,11 @@ import { Dimensions, StyleSheet } from "react-native";
 
 export const MAP_CONFIG = {
   futurePath: {
-    strokeColor: "rgba(124, 242, 5, 0.20)",
+    strokeColor: "rgba(124, 242, 5, 0.4)", // Bumped opacity to 0.4 so it doesn't get lost in the dark map
     strokeWidth: 8,
   },
   traversedPath: {
-    strokeColor: "#7CF205",
+    strokeColor: "#7CF205", // Solid Neon Green
     strokeWidth: 8,
   },
 };

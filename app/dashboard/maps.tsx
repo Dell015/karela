@@ -37,6 +37,10 @@ export const MOCK_GHOST_DATA = [
   { latitude: 17.609018, longitude: 121.717677, timestamp: 240 },
 ];
 
+const GHOST_GREEN = "rgba(124, 242, 5, 0.3)"; // Transparent Green
+const USER_GREEN = "rgba(124, 242, 5, 1.0)";  // Solid Green
+const QUEST_GOLD = "rgba(255, 215, 0, 1.0)";  // Solid Gold
+
 export default function MapScreen() {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
@@ -110,30 +114,46 @@ export default function MapScreen() {
           longitudeDelta: 0.05,
         }}
       >
-        <Polyline
-          key="ghost-line"
-          coordinates={targetPathLine}
-          strokeColor="#7CF20544" 
-          strokeWidth={8}
-        />
+{/* GHOST LINE */}
+{targetPathLine && targetPathLine.length > 1 && (
+  <Polyline
+    // Adding 'green' to the key forces iOS to re-evaluate the color prop
+    key={`ghost-line-v1-green-${targetPathLine.length}`}
+    coordinates={targetPathLine}
+    strokeColor="rgba(124, 242, 5, 0.4)" 
+    strokeWidth={8}
+    zIndex={100}
+    geodesic={true}
+    lineDashPattern={[100000, 0]}
+  />
+)}
 
-        {path.length > 1 && (
-          <Polyline 
-            key="user-path"
-            coordinates={path} 
-            strokeColor="#7CF205" 
-            strokeWidth={8} 
-          />
-        )}
+{/* USER LIVE PATH */}
+{path && path.length > 1 && (
+  <Polyline 
+    key={`user-line-v1-green-${path.length}`}
+    coordinates={path} 
+    strokeColor="rgba(124, 242, 5, 1.0)" 
+    strokeWidth={8}
+    zIndex={200}
+    geodesic={true}
+    lineDashPattern={[100000, 0]}
+    
+  />
+)}
 
-        {questPath.length > 0 && (
-          <Polyline 
-            key="quest-route"
-            coordinates={questPath} 
-            strokeColor="#FFD700" 
-            strokeWidth={6} 
-          />
-        )}
+{/* QUEST ROUTE */}
+{questPath && questPath.length > 1 && (
+  <Polyline 
+    key={`quest-line-v1-gold-${questPath.length}`}
+    coordinates={questPath} 
+    strokeColor="rgba(255, 215, 0, 1.0)" 
+    strokeWidth={6} 
+    zIndex={150}
+    geodesic={true}
+    lineDashPattern={[100000, 0]}
+  />
+)}
 
         {ghostPosition && (
           <Marker coordinate={ghostPosition} anchor={{ x: 0.5, y: 0.5 }} flat>
