@@ -1,5 +1,5 @@
-import React, { useMemo, useRef, useState, useEffect } from "react"; // Added useState & useEffect
-import { View, TouchableOpacity, Text, Platform } from "react-native";
+import React, { useMemo, useRef, useState, useEffect } from "react";
+import { View, TouchableOpacity, Text, Platform, ActivityIndicator } from "react-native";
 import MapView, { Polyline, Marker } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
@@ -10,59 +10,38 @@ import { useQuestEngine } from "@/hooks/useQuestEngine";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { MAP_CONFIG, styles } from "@/styles/mapStyles";
 
-/**
- * Mock data representing a previous run.
- * In a production app, this would be fetched from a database or local storage.
- */
 export const MOCK_GHOST_DATA = [
-  // --- SEGMENT 1: START & INITIAL PUSH (0s - 40s) ---
   { latitude: 17.609076, longitude: 121.717660, timestamp: 0 },
   { latitude: 17.609300, longitude: 121.717650, timestamp: 10 },
   { latitude: 17.609600, longitude: 121.717630, timestamp: 20 },
   { latitude: 17.610000, longitude: 121.717600, timestamp: 30 },
   { latitude: 17.610500, longitude: 121.717550, timestamp: 40 },
-  { latitude: 17.611305, longitude: 121.717407, timestamp: 50 }, // Corner 1
-
-  // --- SEGMENT 2: STEADY JOG EAST (50s - 100s) ---
+  { latitude: 17.611305, longitude: 121.717407, timestamp: 50 },
   { latitude: 17.611310, longitude: 121.717600, timestamp: 60 },
   { latitude: 17.611325, longitude: 121.717900, timestamp: 70 },
   { latitude: 17.611350, longitude: 121.718200, timestamp: 80 },
   { latitude: 17.611390, longitude: 121.718500, timestamp: 90 },
-  { latitude: 17.611437, longitude: 121.718799, timestamp: 100 }, // Corner 2
-
-  // --- SEGMENT 3: FATIGUE / SLOW WALK SOUTH (100s - 160s) ---
-  // Note the high timestamp jumps for small distance changes
+  { latitude: 17.611437, longitude: 121.718799, timestamp: 100 },
   { latitude: 17.611200, longitude: 121.718805, timestamp: 115 },
   { latitude: 17.610900, longitude: 121.718815, timestamp: 130 },
   { latitude: 17.610500, longitude: 121.718825, timestamp: 145 },
-  { latitude: 17.610000, longitude: 121.718840, timestamp: 160 },
-
-  // --- SEGMENT 4: RECOVERY & POWER WALK (160s - 210s) ---
+  { latitude: 17.611000, longitude: 121.718840, timestamp: 160 },
   { latitude: 17.609600, longitude: 121.718850, timestamp: 175 },
   { latitude: 17.609300, longitude: 121.718860, timestamp: 190 },
-  { latitude: 17.609098, longitude: 121.718863, timestamp: 205 }, // Corner 3
-
-  // --- SEGMENT 5: FINAL TURN & STEADY PACE (205s - 230s) ---
+  { latitude: 17.609098, longitude: 121.718863, timestamp: 205 },
   { latitude: 17.609080, longitude: 121.718400, timestamp: 215 },
   { latitude: 17.609060, longitude: 121.718000, timestamp: 225 },
   { latitude: 17.609045, longitude: 121.717850, timestamp: 230 },
-
-  // --- SEGMENT 6: LAST SECOND SPRINT (230s - 240s) ---
   { latitude: 17.609030, longitude: 121.717750, timestamp: 235 },
   { latitude: 17.609020, longitude: 121.717700, timestamp: 238 },
-  { latitude: 17.609018, longitude: 121.717677, timestamp: 240 }, // FINISH
+  { latitude: 17.609018, longitude: 121.717677, timestamp: 240 },
 ];
 
-/**
- * MapScreen Component
- * The primary user interface for the racing experience.
- * It visualizes the user's live path and the ghost runner's progress.
- */
 export default function MapScreen() {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
+  const [hasZoomed, setHasZoomed] = useState(false);
   
-  // 1. Hook States
   const { path, ghostPosition, isRacing, setIsRacing, currentLocation } =
     useLocationEngine(MOCK_GHOST_DATA);
 
@@ -71,12 +50,25 @@ export default function MapScreen() {
     setIsDragging, addCheckpoint, deleteCheckpoint, moveCheckpoint 
   } = useQuestEngine();
 
-  // 2. THE RESTORED FUNCTION
+  // 1. ZOOM EFFECT: Wide -> Tight
+  useEffect(() => {
+    if (currentLocation && !hasZoomed && mapRef.current) {
+      setTimeout(() => {
+        mapRef.current?.animateToRegion({
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude,
+          latitudeDelta: 0.005, // Street level
+          longitudeDelta: 0.005,
+        }, 2500); // Cinematic duration
+        
+        setHasZoomed(true);
+      }, 500);
+    }
+  }, [currentLocation, hasZoomed]);
+
   const handleSpawnFlag = async () => {
-    // We get the center of the current map view to drop the flag there
     const camera = await mapRef.current?.getCamera();
     if (camera?.center) {
-      // We pass the center coordinates and current user location to the engine
       addCheckpoint(camera.center, currentLocation);
     }
   };
@@ -89,6 +81,16 @@ export default function MapScreen() {
     []
   );
 
+  // 2. CRASH PREVENTION: Wait for GPS signal before rendering Map
+  if (!currentLocation) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#1A1A1A' }]}>
+        <ActivityIndicator size="large" color="#7CF205" />
+        <Text style={{ color: 'white', marginTop: 10 }}>Locating in Philippines...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -98,11 +100,16 @@ export default function MapScreen() {
         style={styles.map}
         customMapStyle={ghostMapStyle}
         provider="google"
-        showsUserLocation
+        showsUserLocation={true}
         followsUserLocation={isRacing}
-        // onLongPress removed to prevent accidental flag drops
+        // Starts with a wider view, but already centered on your PH location
+        initialRegion={{
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude,
+          latitudeDelta: 0.05, 
+          longitudeDelta: 0.05,
+        }}
       >
-        {/* GHOST LINE - Forced Neon Green Transparent */}
         <Polyline
           key="ghost-line"
           coordinates={targetPathLine}
@@ -110,7 +117,6 @@ export default function MapScreen() {
           strokeWidth={8}
         />
 
-        {/* USER LIVE PATH - Forced Neon Green Solid */}
         {path.length > 1 && (
           <Polyline 
             key="user-path"
@@ -120,7 +126,6 @@ export default function MapScreen() {
           />
         )}
 
-        {/* QUEST ROUTE - Forced Gold */}
         {questPath.length > 0 && (
           <Polyline 
             key="quest-route"
@@ -130,7 +135,6 @@ export default function MapScreen() {
           />
         )}
 
-        {/* GHOST MARKER */}
         {ghostPosition && (
           <Marker coordinate={ghostPosition} anchor={{ x: 0.5, y: 0.5 }} flat>
             <View style={styles.markerWrapper}>
@@ -139,10 +143,9 @@ export default function MapScreen() {
           </Marker>
         )}
 
-        {/* QUEST FLAGS */}
         {checkpoints.map((point, index) => (
           <Marker
-            key={point.id} // Stable ID stops duplication
+            key={point.id}
             draggable
             coordinate={{
               latitude: point.latitude,
@@ -152,10 +155,8 @@ export default function MapScreen() {
             onDragEnd={async (e) => {
               setIsDragging(false);
               const dropped = e.nativeEvent.coordinate;
-              
               const camera = await mapRef.current?.getCamera();
               if (camera) {
-                // TRASH LOGIC: Center vs Drop Point
                 const latDiff = camera.center.latitude - dropped.latitude;
                 if (latDiff > 0.0015) { 
                   deleteCheckpoint(index, currentLocation);
@@ -175,14 +176,12 @@ export default function MapScreen() {
         ))}
       </MapView>
 
-      {/* REWARD HUD */}
       {questRewards && (
         <View style={styles.questCard}>
           <Text style={styles.rewardText}>💰 {questRewards.coins} | ✨ {questRewards.xp} XP</Text>
         </View>
       )}
 
-      {/* TRASH UI - pointerEvents="none" ensures it doesn't block the drop */}
       {isDragging && (
         <View style={styles.trashBinContainer} pointerEvents="none">
           <View style={styles.trashBin}>
@@ -192,7 +191,6 @@ export default function MapScreen() {
         </View>
       )}
 
-      {/* INVENTORY BUBBLE - Calls handleSpawnFlag */}
       <TouchableOpacity style={styles.flagSpawner} onPress={handleSpawnFlag}>
         {checkpoints.length > 0 && (
           <View style={styles.flagCountBadge}>

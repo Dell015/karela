@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
     MapCoordinate,
     getMultiPointRoute,
+    snapToRoad,
 } from "@/services/tracker/routingService";
 
 export const useQuestEngine = () => {
@@ -48,20 +49,18 @@ export const useQuestEngine = () => {
         refreshRoute(userLoc, updated);
     };
 
-    const moveCheckpoint = (
-        index: number,
-        newCoords: { latitude: number; longitude: number },
-        userLoc: any,
-    ) => {
-        const updated = [...checkpoints];
-        // Preserve the ID of the flag being moved
-        updated[index] = {
-            ...updated[index],
-            latitude: newCoords.latitude,
-            longitude: newCoords.longitude,
-        };
-        setCheckpoints(updated);
-        refreshRoute(userLoc, updated);
+    const moveCheckpoint = async (index: number, newCoords: any, userLoc: any) => {
+    // 1. Get the snapped coordinate
+    const snapped = await snapToRoad(newCoords.latitude, newCoords.longitude);
+    
+    const updated = [...checkpoints];
+    updated[index] = {
+        ...updated[index],
+        ...snapped // Use snapped coords instead of raw drop coords
+    };
+    
+    setCheckpoints(updated);
+    refreshRoute(userLoc, updated);
     };
 
     return {

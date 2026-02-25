@@ -58,3 +58,23 @@ export const getMultiPointRoute = async (points: MapCoordinate[]): Promise<Quest
     return null;
   }
 };
+
+export const snapToRoad = async (latitude: number, longitude: number): Promise<{latitude: number, longitude: number}> => {
+  try {
+    const response = await fetch(
+      `https://roads.googleapis.com/v1/nearestRoads?points=${latitude},${longitude}&key=YOUR_GOOGLE_API_KEY`
+    );
+    const data = await response.json();
+
+    if (data.snappedPoints && data.snappedPoints.length > 0) {
+      const snapped = data.snappedPoints[0].location;
+      return {
+        latitude: snapped.latitude,
+        longitude: snapped.longitude,
+      };
+    }
+  } catch (error) {
+    console.error("Snap to road failed:", error);
+  }
+  return { latitude, longitude }; // Fallback to original if API fails
+};
