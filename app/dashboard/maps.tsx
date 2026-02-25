@@ -115,43 +115,36 @@ export default function MapScreen() {
         }}
       >
 {/* GHOST LINE */}
-{targetPathLine && targetPathLine.length > 1 && (
+{targetPathLine.length > 1 && (
   <Polyline
-    // Adding 'green' to the key forces iOS to re-evaluate the color prop
-    key={`ghost-line-v1-green-${targetPathLine.length}`}
+    key={`ghost-${targetPathLine.length}`}
     coordinates={targetPathLine}
-    strokeColor="rgba(124, 242, 5, 0.4)" 
-    strokeWidth={8}
-    zIndex={100}
-    geodesic={true}
-    lineDashPattern={[100000, 0]}
+    {...MAP_CONFIG.futurePath}
+    lineJoin="round"
+    lineCap="round"
   />
 )}
 
 {/* USER LIVE PATH */}
-{path && path.length > 1 && (
+{path.length > 1 && (
   <Polyline 
-    key={`user-line-v1-green-${path.length}`}
+    key={`user-${path.length}`}
     coordinates={path} 
-    strokeColor="rgba(124, 242, 5, 1.0)" 
-    strokeWidth={8}
-    zIndex={200}
-    geodesic={true}
-    lineDashPattern={[100000, 0]}
-    
+    {...MAP_CONFIG.traversedPath}
+    lineJoin="round"
+    lineCap="round"
   />
 )}
 
 {/* QUEST ROUTE */}
-{questPath && questPath.length > 1 && (
+{questPath.length > 1 && (
   <Polyline 
-    key={`quest-line-v1-gold-${questPath.length}`}
+    key={`quest-${questPath.length}`}
     coordinates={questPath} 
-    strokeColor="rgba(255, 215, 0, 1.0)" 
-    strokeWidth={6} 
-    zIndex={150}
+    {...MAP_CONFIG.questPath}
     geodesic={true}
-    lineDashPattern={[100000, 0]}
+    lineJoin="round"
+    lineCap="round"
   />
 )}
 

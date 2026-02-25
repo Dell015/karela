@@ -1,14 +1,29 @@
-import { Dimensions, StyleSheet } from "react-native";
+import { Dimensions, Platform, StyleSheet } from "react-native";
+
+// Define the "iOS Hack" dash pattern
+const iOSSolidFiber = [100000, 0];
 
 export const MAP_CONFIG = {
   futurePath: {
-    strokeColor: "rgba(124, 242, 5, 0.4)", // Bumped opacity to 0.4 so it doesn't get lost in the dark map
+    strokeColor: "rgba(124, 242, 5, 0.4)",
     strokeWidth: 8,
+    zIndex: 100,
+    // Applies the dash trick only on iOS to kill the blue line
+    lineDashPattern: Platform.OS === 'ios' ? iOSSolidFiber : undefined,
   },
   traversedPath: {
-    strokeColor: "#7CF205", // Solid Neon Green
+    strokeColor: "rgba(124, 242, 5, 1.0)",
     strokeWidth: 8,
+    zIndex: 200,
+    lineDashPattern: Platform.OS === 'ios' ? iOSSolidFiber : undefined,
   },
+  questPath: {
+    strokeColor: "rgba(255, 215, 0, 1.0)",
+    strokeWidth: 6,
+    zIndex: 150,
+    // Gold line usually works better without the hack, but add if it turns blue
+    lineDashPattern: Platform.OS === 'ios' ? iOSSolidFiber : undefined,
+  }
 };
 
 export const styles = StyleSheet.create({
