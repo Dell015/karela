@@ -7,6 +7,7 @@ import { useLocationEngine } from '@/hooks/useLocationEngine';
 import { styles, MAP_CONFIG } from '@/styles/mapStyles';
 import { Stack } from 'expo-router';
 import { ghostMapStyle } from '@/styles/ghostMapStyle';
+import { useQuestEngine } from '@/hooks/useQuestEngine';
 
 /**
  * Mock data representing a previous run.
@@ -59,99 +60,99 @@ export const MOCK_GHOST_DATA = [
 export default function MapScreen() {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
-  const { path, ghostPosition, isRacing, setIsRacing } = useLocationEngine(MOCK_GHOST_DATA);
+  const { path, ghostPosition, isRacing, setIsRacing, currentLocation } = useLocationEngine([]);
+  
+  const { 
+    checkpoints, questPath, questRewards, isDragging, 
+    setIsDragging, addCheckpoint, deleteCheckpoint, moveCheckpoint 
+  } = useQuestEngine();
 
-  const targetPathLine = useMemo(() => 
-    MOCK_GHOST_DATA.map(p => ({ latitude: p.latitude, longitude: p.longitude })), 
-  []);
-
-  // 1. Android Zoom Fix: Use animateCamera instead of just fitToCoordinates
-  const fitToPath = () => {
-    if (mapRef.current && targetPathLine.length > 0) {
-      mapRef.current.animateCamera({
-        center: targetPathLine[0],
-        pitch: 0,
-        heading: 0,
-        zoom: 17.5, // High zoom level for a "running" feel
-      }, { duration: 1000 });
+  const handleSpawnFlag = async () => {
+    const camera = await mapRef.current?.getCamera();
+    if (camera?.center) {
+      addCheckpoint(camera.center, currentLocation);
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Hide Header for full-screen immersion */}
       <Stack.Screen options={{ headerShown: false }} />
 
       <MapView
         ref={mapRef}
         style={styles.map}
-        customMapStyle={ghostMapStyle }
-        onMapReady={fitToPath}
-        provider="google" // Force Google Maps for consistent behavior
-        initialRegion={{
-          latitude: 17.609076,
-          longitude: 121.717660,
-          latitudeDelta: 0.001, // Tighten these for Android
-          longitudeDelta: 0.001,
-        }}
-        showsUserLocation={true}
+        customMapStyle={ghostMapStyle}
+        provider="google"
+        showsUserLocation
         followsUserLocation={isRacing}
       >
-        <Polyline
-          coordinates={targetPathLine}
-          strokeColor={MAP_CONFIG.futurePath.strokeColor}
-          strokeWidth={MAP_CONFIG.futurePath.strokeWidth}
-          lineDashPattern={Platform.OS === 'android' ? undefined : [0]}
-          lineCap={Platform.OS === 'android' ? "butt" : "round"}
-          lineJoin={Platform.OS === 'android' ? "miter" : "round"}
-          geodesic={true}
-        />
-
-        {path.length > 1 && (
-          <Polyline
-            coordinates={path}
-            strokeColor={MAP_CONFIG.traversedPath.strokeColor}
-            strokeWidth={MAP_CONFIG.traversedPath.strokeWidth}
-          />
+        {/* The Quest Street Route */}
+        {questPath.length > 0 && (
+          <Polyline coordinates={questPath} strokeColor="#FFD700" strokeWidth={6} />
         )}
 
-        {isRacing && ghostPosition && (
-          <Marker 
-            coordinate={ghostPosition}
-            // If Android, nudge the anchor to compensate for the rounding error.
-            // If iOS, keep it at a perfect 0.5 center.
-            anchor={
-              Platform.OS === 'android' 
-                ? { x: 0.4, y: 0.4 } // Nudge values: tweak these by 0.01 increments\
-                : { x: 0.5, y: 0.5 }
-            }
-            tracksViewChanges={isRacing}
-            flat={true}
+        {/* Dynamic Flags */}
+        {checkpoints.map((point, index) => (
+          <Marker
+            key={`flag-${index}`}
+            draggable
+            coordinate={point}
+            onDragStart={() => setIsDragging(true)}
+            onDragEnd={(e) => {
+              setIsDragging(false);
+              // Simple check: If Y coordinate is very high (bottom of screen area)
+              // Note: For real production, use Screen Coordinates calculation
+              if (Platform.OS === 'ios' ? e.nativeEvent.coordinate.latitude < currentLocation!.latitude - 0.01 : false) {
+                 deleteCheckpoint(index, currentLocation);
+              } else {
+                 moveCheckpoint(index, e.nativeEvent.coordinate, currentLocation);
+              }
+            }}
           >
-            <View style={styles.markerWrapper}>
-              <View style={styles.ghostMarker} />
+            <View style={{ alignItems: 'center' }}>
+              <View style={styles.checkpointLabel}>
+                <Text style={styles.checkpointText}>{index + 1}</Text>
+              </View>
+              <Ionicons name="flag" size={36} color="#FFD700" />
             </View>
           </Marker>
-        )}
+        ))}
       </MapView>
 
-      {/* UI Elements */}
+      {/* REWARD CARD */}
+      {questRewards && (
+        <View style={styles.questCard}>
+          <Text style={styles.rewardText}>💰 {questRewards.coins} | ✨ {questRewards.xp} XP</Text>
+        </View>
+      )}
+
+      {/* TRASH BIN */}
+      {isDragging && (
+        <View style={styles.trashBinContainer}>
+          <View style={styles.trashBin}>
+            <Ionicons name="trash" size={40} color="#FF3B30" />
+          </View>
+        </View>
+      )}
+
+      {/* INVENTORY BUBBLE */}
+      <TouchableOpacity style={styles.flagSpawner} onPress={handleSpawnFlag}>
+        {checkpoints.length > 0 && (
+          <View style={styles.flagCountBadge}><Text style={{color:'white', fontSize:10}}>{checkpoints.length}</Text></View>
+        )}
+        <Ionicons name="flag" size={24} color="#FFD700" />
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Ionicons name="chevron-back" size={28} color="white" />
       </TouchableOpacity>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          activeOpacity={0.8}
+        <TouchableOpacity 
+          style={[styles.actionButton, { backgroundColor: isRacing ? "#FF3B30" : "#7CF205" }]}
           onPress={() => setIsRacing(!isRacing)}
-          style={[
-            styles.actionButton,
-            { backgroundColor: isRacing ? "#FF3B30" : "#7CF205" }
-          ]}
         >
-          <Text style={styles.buttonText}>
-            {isRacing ? "STOP RACE" : "START CHALLENGE"}
-          </Text>
+          <Text style={styles.buttonText}>{isRacing ? "STOP" : "START"}</Text>
         </TouchableOpacity>
       </View>
     </View>
