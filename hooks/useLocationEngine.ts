@@ -7,13 +7,9 @@ export const useLocationEngine = (savedGhostData: any[]) => {
   const [path, setPath] = useState<any[]>([]);
   const [ghostPosition, setGhostPosition] = useState<any>(null);
   const [isRacing, setIsRacing] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<any>(null);
   
   const startTimeRef = useRef<number | null>(null);
-  
-  /**
-   * FIX: Using 'any' or 'ReturnType<typeof setInterval>' avoids the 
-   * "Type 'Timer' is not assignable to type 'number'" error in React Native.
-   */
   const ghostTimerRef = useRef<any>(null);
 
   useEffect(() => {
@@ -27,16 +23,18 @@ export const useLocationEngine = (savedGhostData: any[]) => {
         startTimeRef.current = Date.now();
         setPath([]); 
 
-        // GHOST HEARTBEAT
         ghostTimerRef.current = setInterval(() => {
-          if (startTimeRef.current) {
+          if (startTimeRef.current && savedGhostData.length > 0) {
             const elapsed = (Date.now() - startTimeRef.current) / 1000;
             const pos = GhostEngine.getGhostPosition(savedGhostData, elapsed);
+            
+            // Log to console to debug if pos is actually being found
+            // console.log("Ghost Pos:", pos); 
+            
             setGhostPosition(pos);
           }
         }, 50);
       } else {
-        // Clear ghost position and timer when not racing
         setGhostPosition(null);
         if (ghostTimerRef.current) {
           clearInterval(ghostTimerRef.current);
@@ -44,30 +42,20 @@ export const useLocationEngine = (savedGhostData: any[]) => {
         }
       }
 
-      // GPS TRACKER
       subscription = await Location.watchPositionAsync(
         {
-          accuracy: isRacing ? Location.Accuracy.Highest : Location.Accuracy.Balanced,
-          distanceInterval: isRacing ? 2 : 10,
-          timeInterval: isRacing ? 1000 : 5000,
+          accuracy: Location.Accuracy.BestForNavigation,
+          distanceInterval: 1,
         },
         (location) => {
-          // If we aren't racing, we still update the "currentLocation" via path
-          const secondsPassed = startTimeRef.current 
-            ? (Date.now() - startTimeRef.current) / 1000 
-            : 0;
-
           const newPoint = {
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
-            timestamp: secondsPassed,
           };
-
-          setPath((current) => {
-            // Keep the path short if not racing to save memory
-            if (!isRacing) return [newPoint];
-            return [...current, newPoint];
-          });
+          setCurrentLocation(newPoint);
+          if (isRacing) {
+            setPath((current) => [...current, newPoint]);
+          }
         }
       );
     };
@@ -78,13 +66,7 @@ export const useLocationEngine = (savedGhostData: any[]) => {
       if (subscription) subscription.remove();
       if (ghostTimerRef.current) clearInterval(ghostTimerRef.current);
     };
-  }, [isRacing, savedGhostData]); // Added savedGhostData to dependencies
+  }, [isRacing]); // Removed savedGhostData from dep array to prevent unnecessary restarts
 
-  return {
-    path,
-    ghostPosition,
-    isRacing,
-    setIsRacing,
-    currentLocation: path.length > 0 ? path[path.length - 1] : null
-  };
+  return { path, ghostPosition, isRacing, setIsRacing, currentLocation };
 };
