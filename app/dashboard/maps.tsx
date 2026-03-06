@@ -52,7 +52,7 @@ export default function MapScreen() {
    * useLocationEngine
    * Manages the live GPS tracking and ghost positioning during a race.
    */
-  const { path, ghostPosition, isRacing, setIsRacing, currentLocation } =
+  const { path, ghostPosition, isRacing, setIsRacing, currentLocation, currentSpeed} =
     useLocationEngine(MOCK_GHOST_DATA);
 
   /**
@@ -86,6 +86,12 @@ export default function MapScreen() {
     }
     return ` ${(meters / 1000).toFixed(2)} KM`;
   };
+
+  /**
+   * PH SPEED LIMIT LOGIC
+   * If speed > 35km/h, the UI warns the user they are moving too fast for a "run".
+   */
+  const isSpeeding = (currentSpeed ?? 0) > 35;
 
   /**
    * ZOOM EFFECT
@@ -314,6 +320,23 @@ export default function MapScreen() {
         <Ionicons name="chevron-back" size={28} color="white" />
       </TouchableOpacity>
 
+      {/* SPEEDOMETER */}
+      <View style={[
+        styles.speedometerContainer, 
+        (currentSpeed ?? 0) > 35 && { borderColor: '#FF3B30' } 
+      ]}>
+        <Text style={[
+          styles.speedValue, 
+          (currentSpeed ?? 0) > 35 && { color: '#FF3B30' }
+        ]}>
+          {currentSpeed ?? 0}
+        </Text>
+        <Text style={[
+          styles.speedUnit, 
+          (currentSpeed ?? 0) > 35 && { color: '#FF3B30' }
+        ]}>KM/H</Text>
+      </View>
+
       {/* RACE CONTROLS: Start/Stop Toggle */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
@@ -324,5 +347,6 @@ export default function MapScreen() {
         </TouchableOpacity>
       </View>
     </View>
+    
   );
 }

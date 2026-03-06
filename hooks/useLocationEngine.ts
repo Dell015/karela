@@ -8,19 +8,19 @@ export const useLocationEngine = (savedGhostData: any[]) => {
   const [ghostPosition, setGhostPosition] = useState<any>(null);
   const [isRacing, setIsRacing] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<any>(null);
+  // NEW: Speed state
+  const [currentSpeed, setCurrentSpeed] = useState(0); 
   
-  // Use a Ref to track racing state inside the location callback
   const isRacingRef = useRef(isRacing);
   useEffect(() => { isRacingRef.current = isRacing; }, [isRacing]);
 
   const startTimeRef = useRef<number | null>(null);
   const ghostTimerRef = useRef<any>(null);
 
-  // 1. Handle Ghost Timer separate from Location Subscription
   useEffect(() => {
     if (isRacing) {
       startTimeRef.current = Date.now();
-      setPath([]); // Clear old lines when starting
+      setPath([]); 
       
       ghostTimerRef.current = setInterval(() => {
         if (startTimeRef.current && savedGhostData.length > 0) {
@@ -31,12 +31,12 @@ export const useLocationEngine = (savedGhostData: any[]) => {
       }, 50);
     } else {
       setGhostPosition(null);
+      setCurrentSpeed(0); // Reset speed when not racing
       if (ghostTimerRef.current) clearInterval(ghostTimerRef.current);
     }
     return () => { if (ghostTimerRef.current) clearInterval(ghostTimerRef.current); };
   }, [isRacing, savedGhostData]);
 
-  // 2. Handle Location Subscription (Runs once on mount)
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;
 
@@ -47,17 +47,22 @@ export const useLocationEngine = (savedGhostData: any[]) => {
       subscription = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.BestForNavigation,
-          distanceInterval: 1, // Update every 1 meter
+          distanceInterval: 1, 
+          // Added timeInterval to ensure consistent speed updates
+          timeInterval: 1000, 
         },
         (location) => {
-          const newPoint = {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          };
+          const { latitude, longitude, speed } = location.coords;
           
+          const newPoint = { latitude, longitude };
           setCurrentLocation(newPoint);
 
-          // Use the REF here to avoid stale closures
+          // 1. Calculate Speed (m/s to km/h)
+          // GPS speed can be null or negative on some devices if signal is weak
+          const speedKmH = speed && speed > 0 ? Math.round(speed * 3.6) : 0;
+          setCurrentSpeed(speedKmH);
+
+          // 2. Update Path
           if (isRacingRef.current) {
             setPath((current) => [...current, newPoint]);
           }
@@ -67,7 +72,8 @@ export const useLocationEngine = (savedGhostData: any[]) => {
 
     initLocation();
     return () => { if (subscription) subscription.remove(); };
-  }, []); // Only run once
+  }, []); 
 
-  return { path, ghostPosition, isRacing, setIsRacing, currentLocation };
+  // Added currentSpeed to the return object
+  return { path, ghostPosition, isRacing, setIsRacing, currentLocation, currentSpeed };
 };

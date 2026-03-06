@@ -218,4 +218,29 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
     letterSpacing: 1,
   },
+  speedometerContainer: {
+  position: 'absolute',
+  bottom: 120, // This keeps it above the Start/Stop button
+  left: 20,
+  backgroundColor: 'rgba(0, 0, 0, 0.85)',
+  width: 70,
+  height: 70,
+  borderRadius: 35,
+  borderWidth: 2,
+  borderColor: '#7CF205',
+  justifyContent: 'center',
+  alignItems: 'center',
+  elevation: 10,
+},
+speedValue: {
+  color: '#FFFFFF',
+  fontSize: 22,
+  fontWeight: 'bold',
+},
+speedUnit: {
+  color: '#7CF205',
+  fontSize: 10,
+  fontWeight: 'bold',
+  marginTop: -2,
+},
 });
