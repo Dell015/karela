@@ -37,11 +37,10 @@ export const MOCK_GHOST_DATA = [
   { latitude: 17.609018, longitude: 121.717677, timestamp: 240 },
 ];
 
-const GHOST_GREEN = "rgba(124, 242, 5, 0.3)"; // Transparent Green
-const USER_GREEN = "rgba(124, 242, 5, 1.0)";  // Solid Green
-const QUEST_GOLD = "rgba(255, 215, 0, 1.0)";  // Solid Gold
+
 
 export default function MapScreen() {
+  
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
   const [hasZoomed, setHasZoomed] = useState(false);
@@ -50,9 +49,16 @@ export default function MapScreen() {
     useLocationEngine(MOCK_GHOST_DATA);
 
   const { 
-    checkpoints, questPath, questRewards, isDragging, 
-    setIsDragging, addCheckpoint, deleteCheckpoint, moveCheckpoint 
+    checkpoints, questPath, questRewards, isDragging, totalDistance,
+    setIsDragging, addCheckpoint, deleteCheckpoint, moveCheckpoint,
   } = useQuestEngine();
+
+  const formatDistance = (meters: number) => {
+    if (meters < 1000) {
+        return ` ${Math.round(meters)} M`;
+    }
+    return ` ${(meters / 1000).toFixed(2)} KM`;
+};
 
   // 1. ZOOM EFFECT: Wide -> Tight
   useEffect(() => {
@@ -188,17 +194,18 @@ export default function MapScreen() {
           </Marker>
         ))}
       </MapView>
-
+        
       {questRewards && (
         <View style={styles.questCard}>
-          <Text style={styles.rewardText}>💰 {questRewards.coins} | ✨ {questRewards.xp} XP</Text>
+          <Text style={styles.rewardText}> {questRewards.coins} Points |  {questRewards.xp} XP | {formatDistance(totalDistance)}
+          </Text>
         </View>
       )}
 
       {isDragging && (
         <View style={styles.trashBinContainer} pointerEvents="none">
           <View style={styles.trashBin}>
-            <Ionicons name="trash" size={40} color="#FF3B30" />
+            <Ionicons name="trash" size={20} color="#FF3B30" />
             <Text style={styles.trashText}>DROP TO DELETE</Text>
           </View>
         </View>
