@@ -1,5 +1,6 @@
+// app/dashboard/maps.tsx
 import React, { useMemo, useRef, useState, useEffect } from "react";
-import { View, TouchableOpacity, Text, Platform, ActivityIndicator } from "react-native";
+import { View, TouchableOpacity, Text, ActivityIndicator } from "react-native";
 import MapView, { Polyline, Marker } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
@@ -10,6 +11,11 @@ import { useQuestEngine } from "@/hooks/useQuestEngine";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { MAP_CONFIG, styles } from "@/styles/mapStyles";
 
+/**
+ * MOCK_GHOST_DATA
+ * Represents a pre-recorded run path for the 'Ghost' racer.
+ * In a production environment, this would be fetched from the SQLite database.
+ */
 export const MOCK_GHOST_DATA = [
   { latitude: 17.609076, longitude: 121.717660, timestamp: 0 },
   { latitude: 17.609300, longitude: 121.717650, timestamp: 10 },
@@ -37,45 +43,72 @@ export const MOCK_GHOST_DATA = [
   { latitude: 17.609018, longitude: 121.717677, timestamp: 240 },
 ];
 
-
-
 export default function MapScreen() {
-  
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
   const [hasZoomed, setHasZoomed] = useState(false);
-  
+
+  /**
+   * useLocationEngine
+   * Manages the live GPS tracking and ghost positioning during a race.
+   */
   const { path, ghostPosition, isRacing, setIsRacing, currentLocation } =
     useLocationEngine(MOCK_GHOST_DATA);
 
-  const { 
-    checkpoints, questPath, questRewards, isDragging, totalDistance,
-    setIsDragging, addCheckpoint, deleteCheckpoint, moveCheckpoint,
-  } = useQuestEngine();
+  /**
+   * useQuestEngine
+   * Manages the placement, movement, and deletion of checkpoints.
+   * Now includes 'isOverTrash' for real-time hover feedback.
+   */
+  const {
+    checkpoints,
+    questPath,
+    questRewards,
+    isDragging,
+    isOverTrash,
+    totalDistance,
+    setIsDragging,
+    setIsOverTrash,
+    addCheckpoint,
+    deleteCheckpoint,
+    moveCheckpoint,
+    changeCameraHeading,
+  } = useQuestEngine(mapRef);
 
+  /**
+   * formatDistance
+   * Converts raw meters into a human-readable string (M or KM).
+   */
   const formatDistance = (meters: number) => {
     if (meters < 1000) {
-        return ` ${Math.round(meters)} M`;
+      return ` ${Math.round(meters)} M`;
     }
     return ` ${(meters / 1000).toFixed(2)} KM`;
-};
+  };
 
-  // 1. ZOOM EFFECT: Wide -> Tight
+  /**
+   * ZOOM EFFECT
+   * Triggers once GPS is acquired to transition from a wide regional view
+   * to a tight street-level view centered on the user.
+   */
   useEffect(() => {
     if (currentLocation && !hasZoomed && mapRef.current) {
       setTimeout(() => {
         mapRef.current?.animateToRegion({
           latitude: currentLocation.latitude,
           longitude: currentLocation.longitude,
-          latitudeDelta: 0.005, // Street level
+          latitudeDelta: 0.005,
           longitudeDelta: 0.005,
-        }, 2500); // Cinematic duration
-        
+        }, 2500);
         setHasZoomed(true);
       }, 500);
     }
   }, [currentLocation, hasZoomed]);
 
+  /**
+   * handleSpawnFlag
+   * Places a checkpoint marker at the current center of the map view.
+   */
   const handleSpawnFlag = async () => {
     const camera = await mapRef.current?.getCamera();
     if (camera?.center) {
@@ -83,20 +116,27 @@ export default function MapScreen() {
     }
   };
 
+  /**
+   * targetPathLine
+   * Memoized coordinates for the static Ghost path display.
+   */
   const targetPathLine = useMemo(
-    () => MOCK_GHOST_DATA.map((p) => ({ 
-      latitude: p.latitude, 
-      longitude: p.longitude 
+    () => MOCK_GHOST_DATA.map((p) => ({
+      latitude: p.latitude,
+      longitude: p.longitude,
     })),
     []
   );
 
-  // 2. CRASH PREVENTION: Wait for GPS signal before rendering Map
+  /**
+   * LOADING STATE
+   * Prevents map rendering until a valid GPS signal is found.
+   */
   if (!currentLocation) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#1A1A1A' }]}>
+      <View style={[styles.container, { justifyContent: "center", alignItems: "center", backgroundColor: "#1A1A1A" }]}>
         <ActivityIndicator size="large" color="#7CF205" />
-        <Text style={{ color: 'white', marginTop: 10 }}>Locating in Philippines...</Text>
+        <Text style={{ color: "white", marginTop: 10 }}>Locating in Philippines...</Text>
       </View>
     );
   }
@@ -112,48 +152,48 @@ export default function MapScreen() {
         provider="google"
         showsUserLocation={true}
         followsUserLocation={isRacing}
-        // Starts with a wider view, but already centered on your PH location
         initialRegion={{
           latitude: currentLocation.latitude,
           longitude: currentLocation.longitude,
-          latitudeDelta: 0.05, 
+          latitudeDelta: 0.05,
           longitudeDelta: 0.05,
         }}
       >
-{/* GHOST LINE */}
-{targetPathLine.length > 1 && (
-  <Polyline
-    key={`ghost-${targetPathLine.length}`}
-    coordinates={targetPathLine}
-    {...MAP_CONFIG.futurePath}
-    lineJoin="round"
-    lineCap="round"
-  />
-)}
+        {/* GHOST LINE: Visualizing the target route */}
+        {targetPathLine.length > 1 && (
+          <Polyline
+            key={`ghost-${targetPathLine.length}`}
+            coordinates={targetPathLine}
+            {...MAP_CONFIG.futurePath}
+            lineJoin="round"
+            lineCap="round"
+          />
+        )}
 
-{/* USER LIVE PATH */}
-{path.length > 1 && (
-  <Polyline 
-    key={`user-${path.length}`}
-    coordinates={path} 
-    {...MAP_CONFIG.traversedPath}
-    lineJoin="round"
-    lineCap="round"
-  />
-)}
+        {/* USER LIVE PATH: Visualizing where the user has traveled */}
+        {path.length > 1 && (
+          <Polyline
+            key={`user-${path.length}`}
+            coordinates={path}
+            {...MAP_CONFIG.traversedPath}
+            lineJoin="round"
+            lineCap="round"
+          />
+        )}
 
-{/* QUEST ROUTE */}
-{questPath.length > 1 && (
-  <Polyline 
-    key={`quest-${questPath.length}`}
-    coordinates={questPath} 
-    {...MAP_CONFIG.questPath}
-    geodesic={true}
-    lineJoin="round"
-    lineCap="round"
-  />
-)}
+        {/* QUEST ROUTE: The dynamically calculated path between checkpoints */}
+        {questPath.length > 1 && (
+          <Polyline
+            key={`quest-${questPath.length}`}
+            coordinates={questPath}
+            {...MAP_CONFIG.questPath}
+            geodesic={true}
+            lineJoin="round"
+            lineCap="round"
+          />
+        )}
 
+        {/* GHOST POSITION MARKER */}
         {ghostPosition && (
           <Marker coordinate={ghostPosition} anchor={{ x: 0.5, y: 0.5 }} flat>
             <View style={styles.markerWrapper}>
@@ -162,22 +202,44 @@ export default function MapScreen() {
           </Marker>
         )}
 
+        {/* QUEST CHECKPOINT MARKERS */}
         {checkpoints.map((point, index) => (
           <Marker
             key={point.id}
             draggable
             coordinate={{
               latitude: point.latitude,
-              longitude: point.longitude
+              longitude: point.longitude,
             }}
             onDragStart={() => setIsDragging(true)}
+            /**
+             * onDrag Logic:
+             * Continuously calculates if the dragged marker is within the 'trash zone'.
+             * Updates 'isOverTrash' for real-time opacity changes.
+             */
+            onDrag={async (e) => {
+              const camera = await mapRef.current?.getCamera();
+              if (camera) {
+                const latDiff = camera.center.latitude - e.nativeEvent.coordinate.latitude;
+                if (latDiff > 0.0015) {
+                  if (!isOverTrash) setIsOverTrash(true);
+                } else {
+                  if (isOverTrash) setIsOverTrash(false);
+                }
+              }
+            }}
+            /**
+             * onDragEnd Logic:
+             * Finalizes the marker move or deletes it if released in the trash zone.
+             */
             onDragEnd={async (e) => {
               setIsDragging(false);
+              setIsOverTrash(false);
               const dropped = e.nativeEvent.coordinate;
               const camera = await mapRef.current?.getCamera();
               if (camera) {
                 const latDiff = camera.center.latitude - dropped.latitude;
-                if (latDiff > 0.0015) { 
+                if (latDiff > 0.0015) {
                   deleteCheckpoint(index, currentLocation);
                 } else {
                   moveCheckpoint(index, dropped, currentLocation);
@@ -185,7 +247,7 @@ export default function MapScreen() {
               }
             }}
           >
-            <View style={{ alignItems: 'center' }}>
+            <View style={{ alignItems: "center" }}>
               <View style={styles.checkpointLabel}>
                 <Text style={styles.checkpointText}>{index + 1}</Text>
               </View>
@@ -194,38 +256,52 @@ export default function MapScreen() {
           </Marker>
         ))}
       </MapView>
-        
+
+      {/* REWARD & DISTANCE CARD */}
       {questRewards && (
         <View style={styles.questCard}>
-          <Text style={styles.rewardText}> {questRewards.coins} Points |  {questRewards.xp} XP | {formatDistance(totalDistance)}
+          <Text style={styles.rewardText}>
+            {questRewards.coins} Points | {questRewards.xp} XP | {formatDistance(totalDistance)}
           </Text>
         </View>
       )}
 
+      {/* TRASH BIN OVERLAY: Appears only when dragging a marker */}
       {isDragging && (
-        <View style={styles.trashBinContainer} pointerEvents="none">
+        <View 
+          style={[styles.trashBinContainer, { opacity: isOverTrash ? 0.35 : 1.0 }]} 
+          pointerEvents="none"
+        >
           <View style={styles.trashBin}>
-            <Ionicons name="trash" size={20} color="#FF3B30" />
+            <Ionicons name="trash" size={40} color="#FF3B30" />
             <Text style={styles.trashText}>DROP TO DELETE</Text>
           </View>
         </View>
       )}
 
+      {/* CAMERA RESET BUTTON: Sets view to North */}
+      <TouchableOpacity style={styles.cameraAngle} onPress={() => changeCameraHeading("N")}>
+        <Ionicons name="compass" size={24} color="#FFD700" />
+      </TouchableOpacity>
+
+      {/* FLAG SPAWNER BUTTON */}
       <TouchableOpacity style={styles.flagSpawner} onPress={handleSpawnFlag}>
         {checkpoints.length > 0 && (
           <View style={styles.flagCountBadge}>
-            <Text style={{color:'white', fontSize:10, fontWeight:'bold'}}>{checkpoints.length}</Text>
+            <Text style={{ color: "white", fontSize: 10, fontWeight: "bold" }}>{checkpoints.length}</Text>
           </View>
         )}
         <Ionicons name="flag" size={24} color="#FFD700" />
       </TouchableOpacity>
 
+      {/* NAVIGATION: Back Button */}
       <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Ionicons name="chevron-back" size={28} color="white" />
       </TouchableOpacity>
 
+      {/* RACE CONTROLS: Start/Stop Toggle */}
       <View style={styles.buttonContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.actionButton, { backgroundColor: isRacing ? "#FF3B30" : "#7CF205" }]}
           onPress={() => setIsRacing(!isRacing)}
         >

@@ -18,9 +18,10 @@ export const MAP_CONFIG = {
     lineDashPattern: Platform.OS === 'ios' ? iOSSolidFiber : undefined,
   },
   questPath: {
-    strokeColor: "rgba(255, 215, 0, 1.0)",
+    strokeColor: "rgba(255, 215, 0, 0.4)",
     strokeWidth: 6,
     zIndex: 150,
+    
     // Gold line usually works better without the hack, but add if it turns blue
     lineDashPattern: Platform.OS === 'ios' ? iOSSolidFiber : undefined,
   }
@@ -103,14 +104,28 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     letterSpacing: 0.5,
   },
-  flagSpawner: {
+  cameraAngle: {
     position: 'absolute',
     top: 50,
     right: 20,
     backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    paddingVertical: 10,
+    paddingVertical: 15,
     paddingHorizontal: 15,
-    borderRadius: 25,
+    borderRadius: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#FFD700',
+    elevation: 8,
+  },
+  flagSpawner: {
+    position: 'absolute',
+    top: 115,
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    paddingVertical: 15,
+    paddingHorizontal: 15,
+    borderRadius: 30,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
