@@ -73,6 +73,7 @@ export default function MapScreen() {
     deleteCheckpoint,
     moveCheckpoint,
     changeCameraHeading,
+    updateRemainingPath,
   } = useQuestEngine(mapRef);
 
   /**
@@ -104,6 +105,13 @@ export default function MapScreen() {
       }, 500);
     }
   }, [currentLocation, hasZoomed]);
+
+  useEffect(() => {
+    if (isRacing && currentLocation && questPath.length > 0) {
+      // This will "eat" the gold line as you walk over it
+      updateRemainingPath(currentLocation);
+    }
+  }, [currentLocation, isRacing]);
 
   /**
    * handleSpawnFlag
@@ -181,11 +189,13 @@ export default function MapScreen() {
           />
         )}
 
-        {/* QUEST ROUTE: The dynamically calculated path between checkpoints */}
-        {questPath.length > 1 && (
+        {/* QUEST ROUTE */}
+        {questPath.length > 1 && currentLocation && (
           <Polyline
-            key={`quest-${questPath.length}`}
-            coordinates={questPath}
+            key={`quest-path-${questPath.length}`}
+            // We spread the currentPath BUT override index 0 with the live GPS 
+            // This creates a "rubber band" effect if you go off-road
+            coordinates={[currentLocation, ...questPath.slice(1)]} 
             {...MAP_CONFIG.questPath}
             geodesic={true}
             lineJoin="round"
@@ -218,9 +228,14 @@ export default function MapScreen() {
              * Updates 'isOverTrash' for real-time opacity changes.
              */
             onDrag={async (e) => {
+              // 1. Capture the coordinate immediately (Synchronous)
+              const draggedCoord = e.nativeEvent.coordinate;
+
+              // 2. Now you can safely await the camera
               const camera = await mapRef.current?.getCamera();
-              if (camera) {
-                const latDiff = camera.center.latitude - e.nativeEvent.coordinate.latitude;
+              
+              if (camera && draggedCoord) {
+                const latDiff = camera.center.latitude - draggedCoord.latitude;
                 if (latDiff > 0.0015) {
                   if (!isOverTrash) setIsOverTrash(true);
                 } else {

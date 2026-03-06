@@ -6,11 +6,11 @@ import {
 import { useState } from "react";
 import MapView from "react-native-maps";
 
-/**
- * useQuestEngine
- * Handles the logic for creating, moving, and deleting quest checkpoints.
- * Manages route calculation and real-time UI interaction states.
- */
+// ~100 meters tolerance for PH shortcuts and GPS drift
+const OFF_TRACK_THRESHOLD = 0.001; 
+// ~15 meters for quest completion
+const COMPLETION_THRESHOLD = 0.00015;
+
 export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
   const [checkpoints, setCheckpoints] = useState<MapCoordinate[]>([]);
   const [questPath, setQuestPath] = useState<MapCoordinate[]>([]);
@@ -18,11 +18,57 @@ export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
     coins: number;
     xp: number;
   } | null>(null);
-  
+
   // UI Interaction States
   const [isDragging, setIsDragging] = useState(false);
-  const [isOverTrash, setIsOverTrash] = useState(false); // NEW: Tracks hover status for deletion zone
+  const [isOverTrash, setIsOverTrash] = useState(false);
   const [totalDistance, setTotalDistance] = useState<number>(0);
+
+  /**
+   * Real-time path updates: Handles "eating" the path, 
+   * off-road stretching, and quest completion.
+   */
+  const updateRemainingPath = (userLoc: MapCoordinate) => {
+    setQuestPath((currentPath) => {
+      if (currentPath.length === 0) return currentPath;
+
+      let closestIndex = 0;
+      let minDistance = Number.MAX_VALUE;
+
+      // Find the closest point on the current path
+      currentPath.forEach((point, index) => {
+        const dist = Math.sqrt(
+          Math.pow(point.latitude - userLoc.latitude, 2) +
+          Math.pow(point.longitude - userLoc.longitude, 2)
+        );
+        if (dist < minDistance) {
+          minDistance = dist;
+          closestIndex = index;
+        }
+      });
+
+      // 1. QUEST COMPLETION
+      // If we are at the final segment and close to the end
+      if (currentPath.length <= 2 && minDistance < COMPLETION_THRESHOLD) {
+        console.log("Quest Complete!");
+        setCheckpoints([]); // Clear the flags
+        return []; // Clear the gold line
+      }
+
+      // 2. FORGIVING OFF-TRACK / SHORTCUT LOGIC
+      // If user is far from the road, "rubber-band" the line to the user
+      if (minDistance > OFF_TRACK_THRESHOLD) {
+        return [userLoc, ...currentPath.slice(closestIndex)];
+      }
+
+      // 3. NORMAL PROGRESSION
+      if (closestIndex > 0) {
+        return currentPath.slice(closestIndex);
+      }
+      
+      return currentPath;
+    });
+  };
 
   /**
    * Re-calculates the route whenever checkpoints or user location changes.
@@ -45,12 +91,9 @@ export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
     }
   };
 
-  /**
-   * Spawns a new checkpoint at a specific coordinate.
-   */
   const addCheckpoint = (
     coords: { latitude: number; longitude: number },
-    userLoc: any,
+    userLoc: MapCoordinate | null,
   ) => {
     const newPoint = {
       ...coords,
@@ -61,18 +104,12 @@ export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
     refreshRoute(userLoc, updated);
   };
 
-  /**
-   * Removes a checkpoint from the array by index.
-   */
   const deleteCheckpoint = (index: number, userLoc: MapCoordinate | null) => {
     const updated = checkpoints.filter((_, i) => i !== index);
     setCheckpoints(updated);
     refreshRoute(userLoc, updated);
   };
 
-  /**
-   * Updates checkpoint position and snaps it to the nearest road via OSRM.
-   */
   const moveCheckpoint = async (
     index: number,
     newCoords: any,
@@ -89,9 +126,6 @@ export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
     refreshRoute(userLoc, updated);
   };
 
-  /**
-   * Smoothly animates the Map Camera to a specific cardinal direction.
-   */
   const changeCameraHeading = (direction: "N" | "S" | "E" | "W") => {
     let heading = 0;
     switch (direction) {
@@ -103,7 +137,7 @@ export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
 
     mapRef.current?.animateCamera(
       { heading: heading, pitch: 45 },
-      { duration: 1000 }
+      { duration: 1000 },
     );
   };
 
@@ -114,11 +148,12 @@ export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
     totalDistance,
     isDragging,
     setIsDragging,
-    isOverTrash,     // Exported to trigger UI changes in MapScreen
-    setIsOverTrash,  // Exported to update state during active drag
+    isOverTrash,
+    setIsOverTrash,
     addCheckpoint,
     deleteCheckpoint,
     moveCheckpoint,
     changeCameraHeading,
+    updateRemainingPath,
   };
 };
