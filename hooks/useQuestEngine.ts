@@ -13,6 +13,7 @@ export const useQuestEngine = () => {
         xp: number;
     } | null>(null);
     const [isDragging, setIsDragging] = useState(false);
+    const [totalDistance, setTotalDistance] = useState<number>(0);
 
     const refreshRoute = async (
         userLoc: MapCoordinate | null,
@@ -23,10 +24,13 @@ export const useQuestEngine = () => {
             if (data) {
                 setQuestPath(data.coordinates);
                 setQuestRewards(data.rewards);
+                // NEW: Save the distance computed by the OSRM API
+                setTotalDistance(data.distanceMeters); 
             }
         } else {
             setQuestPath([]);
             setQuestRewards(null);
+            setTotalDistance(0);
         }
     };
 
@@ -67,6 +71,7 @@ export const useQuestEngine = () => {
         checkpoints,
         questPath,
         questRewards,
+        totalDistance, // Export this so the UI can show "Distance: 500m"
         isDragging,
         setIsDragging,
         addCheckpoint,
