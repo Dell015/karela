@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import * as Location from 'expo-location';
 import { GhostEngine } from '@/services/tracker/GhostEngine'; 
 import { PermissionManager } from '@/services/PermissionsManager';
+import { Magnetometer } from 'expo-sensors';
 
 /**
  * Helper: Haversine formula to calculate distance between two points in meters.
@@ -24,6 +25,8 @@ export const useLocationEngine = (savedGhostData: any[]) => {
   const [isRacing, setIsRacing] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<any>(null);
   const [currentSpeed, setCurrentSpeed] = useState(0);
+  const [compassHeading, setCompassHeading] = useState(0);
+  const lastHeadingRef = useRef(0);
 
   const isRacingRef = useRef(isRacing);
   useEffect(() => { isRacingRef.current = isRacing; }, [isRacing]);
@@ -120,5 +123,30 @@ export const useLocationEngine = (savedGhostData: any[]) => {
     return () => { if (subscription) subscription.remove(); };
   }, []);
 
-  return { path, ghostPosition, isRacing, setIsRacing, currentLocation, currentSpeed };
+  useEffect(() => {
+    let subscription: any = null;
+    
+    // 1. Slow down the update interval slightly to prevent "ping-ponging"
+    Magnetometer.setUpdateInterval(150); 
+
+    subscription = Magnetometer.addListener((data) => {
+      let { x, y } = data;
+      let angle = Math.atan2(-x, y) * (180 / Math.PI);
+      if (angle < 0) angle += 360;
+
+      // 1. Aggressive Smoothing: 0.03 is the "Sweet Spot"
+      // It takes more samples to move the camera, creating a glide.
+      const alpha = 0.03; 
+      const smoothedAngle = lastHeadingRef.current + (angle - lastHeadingRef.current) * alpha;
+      
+      lastHeadingRef.current = smoothedAngle;
+      setCompassHeading(smoothedAngle); 
+    });
+
+    return () => subscription && subscription.remove();
+  }, []);
+
+
+
+  return { path, ghostPosition, isRacing, setIsRacing, currentLocation, currentSpeed, compassHeading};
 };

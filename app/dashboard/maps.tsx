@@ -47,12 +47,13 @@ export default function MapScreen() {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
   const [hasZoomed, setHasZoomed] = useState(false);
+  const isProcessing = useRef(false);
 
   /**
    * useLocationEngine
    * Manages the live GPS tracking and ghost positioning during a race.
    */
-  const { path, ghostPosition, isRacing, setIsRacing, currentLocation, currentSpeed} =
+  const { path, ghostPosition, isRacing, setIsRacing, currentLocation, currentSpeed, compassHeading} =
     useLocationEngine(MOCK_GHOST_DATA);
 
   /**
@@ -113,11 +114,31 @@ export default function MapScreen() {
   }, [currentLocation, hasZoomed]);
 
   useEffect(() => {
-    if (isRacing && currentLocation && questPath.length > 0) {
-      // This will "eat" the gold line as you walk over it
-      updateRemainingPath(currentLocation);
+    if (isRacing && currentLocation && mapRef.current) {
+      // 1. "Gimbal Lock": If we are already animating, don't interrupt.
+      // This stops the 'stutter' caused by overlapping commands.
+      if (isProcessing.current) return;
+
+      isProcessing.current = true;
+
+      mapRef.current.animateCamera({
+        center: {
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude,
+        },
+        heading: compassHeading,
+        // Google uses a lower pitch (roughly 45-55) for better horizon visibility
+        pitch: 55, 
+        // Zoom 18 is the sweet spot for "Street View" navigation
+        zoom: 50,
+      }, { duration: 1500 }); // LONG duration creates the smooth "drift" feel
+
+      // Unlock after a delay to allow the animation to breathe
+      setTimeout(() => {
+        isProcessing.current = false;
+      }, 800); 
     }
-  }, [currentLocation, isRacing]);
+  }, [currentLocation, compassHeading, isRacing]);
 
   /**
    * handleSpawnFlag
