@@ -1,6 +1,8 @@
 import { Dimensions, Platform, StyleSheet } from "react-native";
 
-// Define the "iOS Hack" dash pattern
+const { width, height } = Dimensions.get("window");
+
+// Define the "iOS Hack" dash pattern to prevent default blue line behavior
 const iOSSolidFiber = [100000, 0];
 
 export const MAP_CONFIG = {
@@ -8,7 +10,6 @@ export const MAP_CONFIG = {
     strokeColor: "rgba(124, 242, 5, 0.4)",
     strokeWidth: 8,
     zIndex: 100,
-    // Applies the dash trick only on iOS to kill the blue line
     lineDashPattern: Platform.OS === 'ios' ? iOSSolidFiber : undefined,
   },
   traversedPath: {
@@ -18,11 +19,9 @@ export const MAP_CONFIG = {
     lineDashPattern: Platform.OS === 'ios' ? iOSSolidFiber : undefined,
   },
   questPath: {
-    strokeColor: "rgba(255, 215, 0, 0.4)",
+    strokeColor: "rgba(255, 215, 0, 0.6)", // Slightly more opaque gold
     strokeWidth: 6,
     zIndex: 150,
-    
-    // Gold line usually works better without the hack, but add if it turns blue
     lineDashPattern: Platform.OS === 'ios' ? iOSSolidFiber : undefined,
   }
 };
@@ -30,34 +29,55 @@ export const MAP_CONFIG = {
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#1A1A1A", // Dark theme background
   },
   map: {
-    width: Dimensions.get("window").width,
-    height: Dimensions.get("window").height,
+    width: width,
+    height: height,
   },
-  // --- Markers ---
-  marker: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
-    backgroundColor: "#7CF205",
-    borderWidth: 3,
-    borderColor: "#fff",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+  // --- HUD Overlay (Racing Stats) ---
+  hudOverlay: {
+    position: 'absolute',
+    top: 50,
+    left: 10,  // Reduced side margins to give more room
+    right: 10,
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0, 0, 0, 0.9)', // Slightly darker for better contrast
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 5,
+    borderWidth: 1.5,
+    borderColor: '#7CF205',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    zIndex: 1000,
   },
+  hudStat: {
+    alignItems: 'center',
+    flex: 1, // Ensures each of the 5 stats takes up equal space
+  },
+  hudLabel: {
+    color: '#888',
+    fontSize: 8, // Smaller label
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  hudValue: {
+    color: '#FFF',
+    fontSize: 14, // Slightly smaller to prevent text wrapping on smaller phones
+    fontWeight: '900',
+  },
+  hudDivider: {
+    width: 1,
+    height: '60%', // Shorter divider for a cleaner look
+    backgroundColor: '#333',
+  },
+  // --- Markers & Ghost ---
   markerWrapper: {
     width: 44,
     height: 44,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'transparent',
-    elevation: 0, 
-    borderWidth: 0, 
   },
   ghostMarker: {
     width: 22,
@@ -66,10 +86,8 @@ export const styles = StyleSheet.create({
     backgroundColor: "rgba(32, 159, 119, 1)", 
     borderWidth: 2,
     borderColor: "#fff",
-    margin: 0, 
-    padding: 0,
   },
-  // --- Quest System Styles ---
+  // --- Quest System UI ---
   checkpointLabel: {
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     borderRadius: 10,
@@ -96,41 +114,45 @@ export const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#FFD700',
     alignItems: 'center',
-    elevation: 10,
+    zIndex: 50,
   },
   rewardText: {
     color: '#FFD700',
     fontWeight: 'bold',
-    fontSize: 16,
-    letterSpacing: 0.5,
+    fontSize: 14,
+  },
+  // --- Control Buttons ---
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    backgroundColor: '#7CF205',
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
   },
   cameraAngle: {
     position: 'absolute',
     top: 50,
     right: 20,
     backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    paddingVertical: 15,
-    paddingHorizontal: 15,
+    padding: 12,
     borderRadius: 30,
-    flexDirection: 'row',
-    alignItems: 'center',
     borderWidth: 1.5,
     borderColor: '#FFD700',
-    elevation: 8,
   },
   flagSpawner: {
     position: 'absolute',
     top: 115,
     right: 20,
     backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    paddingVertical: 15,
-    paddingHorizontal: 15,
+    padding: 12,
     borderRadius: 30,
-    flexDirection: 'row',
-    alignItems: 'center',
     borderWidth: 1.5,
     borderColor: '#FFD700',
-    elevation: 8,
   },
   flagCountBadge: {
     position: 'absolute',
@@ -142,23 +164,17 @@ export const styles = StyleSheet.create({
     height: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 10,
     borderWidth: 1.5,
     borderColor: 'white',
-  },
-  flagCountText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: 'bold',
   },
   // --- Trash System ---
   trashBinContainer: {
     position: 'absolute',
-    bottom: 120,
+    bottom: 150,
     alignSelf: 'center',
-    alignItems: 'center',
     width: '100%',
-    zIndex: 999,
+    alignItems: 'center',
+    zIndex: 2000,
   },
   trashBin: {
     backgroundColor: 'rgba(255, 59, 48, 0.2)',
@@ -169,8 +185,8 @@ export const styles = StyleSheet.create({
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 120,
-    height: 120,
+    width: 110,
+    height: 110,
   },
   trashText: {
     color: '#FF3B30',
@@ -179,23 +195,7 @@ export const styles = StyleSheet.create({
     marginTop: 5,
     textAlign: 'center',
   },
-  // --- UI Elements ---
-  backButton: {
-    position: 'absolute',
-    top: 50,
-    left: 20,
-    backgroundColor: '#7CF205',
-    width: 45,
-    height: 45,
-    borderRadius: 22.5,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
+  // --- Start/Stop Button ---
   buttonContainer: {
     position: "absolute",
     bottom: 40,
@@ -203,44 +203,16 @@ export const styles = StyleSheet.create({
     alignItems: "center",
   },
   actionButton: {
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 30,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    paddingVertical: 18,
+    paddingHorizontal: 60,
+    borderRadius: 35,
+    elevation: 8,
   },
   buttonText: {
     color: "#FFFFFF",
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
-    letterSpacing: 1,
+    letterSpacing: 2,
   },
-  speedometerContainer: {
-  position: 'absolute',
-  bottom: 120, // This keeps it above the Start/Stop button
-  left: 20,
-  backgroundColor: 'rgba(0, 0, 0, 0.85)',
-  width: 70,
-  height: 70,
-  borderRadius: 35,
-  borderWidth: 2,
-  borderColor: '#7CF205',
-  justifyContent: 'center',
-  alignItems: 'center',
-  elevation: 10,
-},
-speedValue: {
-  color: '#FFFFFF',
-  fontSize: 22,
-  fontWeight: 'bold',
-},
-speedUnit: {
-  color: '#7CF205',
-  fontSize: 10,
-  fontWeight: 'bold',
-  marginTop: -2,
-},
+  
 });
