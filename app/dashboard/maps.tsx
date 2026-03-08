@@ -103,10 +103,10 @@ export default function MapScreen() {
   useEffect(() => {
     if (isRacing && currentLocation) {
       // This is the missing link that makes the gold line disappear as you move
-      updateRemainingPath(currentLocation); 
+      updateRemainingPath(currentLocation);
     }
   }, [currentLocation, isRacing]);
-  
+
   // --- CAMERA LOGIC (FIXED: Moved out of return) ---
   useEffect(() => {
     if (isRacing && currentLocation && mapRef.current) {
@@ -210,18 +210,40 @@ export default function MapScreen() {
           longitudeDelta: 0.05,
         }}
       >
-        {/* GHOST LINE */}
+        {/* GHOST LINE (Original Record) */}
         {targetPathLine.length > 1 && (
           <Polyline coordinates={targetPathLine} {...MAP_CONFIG.futurePath} />
         )}
 
-        {/* QUEST ROUTE */}
+        {/* QUEST ROUTE (Remaining Gold Line) */}
         {questPath.length > 1 && (
           <Polyline
             coordinates={[currentLocation, ...questPath.slice(1)]}
             {...MAP_CONFIG.questPath}
           />
         )}
+
+        {/* --- DYNAMIC USER TRAIL (The Segmented Anti-Cheat Trail) --- */}
+        {path.map((point, index) => {
+          if (index === 0) return null;
+          const prevPoint = path[index - 1];
+          return (
+            <Polyline
+              key={`segment_${index}`}
+              coordinates={[
+                {
+                  latitude: prevPoint.latitude,
+                  longitude: prevPoint.longitude,
+                },
+                { latitude: point.latitude, longitude: point.longitude },
+              ]}
+              // RED if point was recorded in a vehicle (>35km/h), GREEN if valid
+              strokeColor={point.isVehicle ? "#FF3B30" : "#7CF205"}
+              strokeWidth={6}
+              lineJoin="round"
+            />
+          );
+        })}
 
         {/* GHOST MARKER */}
         {ghostPosition && (
@@ -232,7 +254,7 @@ export default function MapScreen() {
           </Marker>
         )}
 
-        {/* FLAGS */}
+        {/* FLAGS/CHECKPOINTS */}
         {checkpoints.map((point, index) => (
           <Marker
             key={point.id}
@@ -280,7 +302,7 @@ export default function MapScreen() {
         ))}
       </MapView>
 
-      {/* --- 1. LIVE HUD: Visible only when Racing --- */}
+      {/* --- 1. LIVE HUD: High-Precision Racing HUD --- */}
       {isRacing && (
         <View style={styles.hudOverlay}>
           {/* 1. TIME */}
@@ -290,26 +312,33 @@ export default function MapScreen() {
           </View>
           <View style={styles.hudDivider} />
 
-          {/* 2. SPEED */}
+          {/* 2. SPEED (Turns RED if cheating) */}
           <View style={styles.hudStat}>
             <Text style={styles.hudLabel}>KM/H</Text>
-            <Text style={[styles.hudValue, (currentSpeed ?? 0) > 35 && { color: '#FF3B30' }]}>
+            <Text
+              style={[
+                styles.hudValue,
+                (currentSpeed ?? 0) > 35 && { color: "#FF3B30" },
+              ]}
+            >
               {currentSpeed ?? 0}
             </Text>
           </View>
           <View style={styles.hudDivider} />
 
-          {/* 3. DISTANCE */}
+          {/* 3. DISTANCE (Now in METERS for granularity) */}
           <View style={styles.hudStat}>
-            <Text style={styles.hudLabel}>DIST</Text>
-            <Text style={styles.hudValue}>{formatDistance(totalDistance)}</Text>
+            <Text style={styles.hudLabel}>METERS</Text>
+            <Text style={styles.hudValue}>{Math.floor(totalDistance)}</Text>
           </View>
           <View style={styles.hudDivider} />
 
-          {/* 4. CALORIES */}
+          {/* 4. CALORIES (Karela Constant 0.062) */}
           <View style={styles.hudStat}>
             <Text style={styles.hudLabel}>KCAL</Text>
-            <Text style={styles.hudValue}>{Math.round(totalDistance * 0.06)}</Text>
+            <Text style={styles.hudValue}>
+              {(totalDistance * 0.062).toFixed(1)}
+            </Text>
           </View>
           <View style={styles.hudDivider} />
 
@@ -317,11 +346,12 @@ export default function MapScreen() {
           <View style={styles.hudStat}>
             <Text style={styles.hudLabel}>GOAL</Text>
             <Text style={styles.hudValue}>
-              {checkpoints.filter(f => (f as any).isReached).length}/{checkpoints.length}
+              {checkpoints.filter((f) => (f as any).isReached).length}/
+              {checkpoints.length}
             </Text>
           </View>
         </View>
-    )}
+      )}
 
       {/* --- 3. EDITOR TOOLS: Hidden when Racing --- */}
       {!isRacing && (
@@ -360,7 +390,7 @@ export default function MapScreen() {
             <View style={styles.questCard}>
               <Text style={styles.rewardText}>
                 {questRewards.coins} Pts | {questRewards.xp} XP |{" "}
-                {formatDistance(totalDistance)}
+                {Math.floor(totalDistance)}m
               </Text>
             </View>
           )}

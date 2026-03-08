@@ -1,35 +1,50 @@
-import { useState, useEffect, useRef } from 'react';
-import * as Location from 'expo-location';
-import { GhostEngine } from '@/services/tracker/GhostEngine'; 
-import { PermissionManager } from '@/services/PermissionsManager';
-import { Magnetometer } from 'expo-sensors';
+import { useState, useEffect, useRef } from "react";
+import * as Location from "expo-location";
+import { GhostEngine } from "@/services/tracker/GhostEngine";
+import { PermissionManager } from "@/services/PermissionsManager";
+import { Magnetometer } from "expo-sensors";
 
 /**
  * Helper: Haversine formula to calculate distance between two points in meters.
- * This is essential for filtering out "GPS jumps" that are physically impossible.
  */
-const getDistance = (p1: { latitude: number, longitude: number }, p2: { latitude: number, longitude: number }) => {
-  const R = 6371000; // Earth's radius in meters
-  const dLat = (p2.latitude - p1.latitude) * Math.PI / 180;
-  const dLon = (p2.longitude - p1.longitude) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(p1.latitude * Math.PI / 180) * Math.cos(p2.latitude * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+const getDistance = (
+  p1: { latitude: number; longitude: number },
+  p2: { latitude: number; longitude: number },
+) => {
+  const R = 6371000; 
+  const dLat = ((p2.latitude - p1.latitude) * Math.PI) / 180;
+  const dLon = ((p2.longitude - p1.longitude) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((p1.latitude * Math.PI) / 180) *
+      Math.cos((p2.latitude * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 };
 
 export const useLocationEngine = (savedGhostData: any[]) => {
-  const [path, setPath] = useState<any[]>([]);
+  // Path now stores objects to track vehicle status per point
+  const [path, setPath] = useState<{latitude: number; longitude: number; isVehicle: boolean}[]>([]);
   const [ghostPosition, setGhostPosition] = useState<any>(null);
   const [isRacing, setIsRacing] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<any>(null);
   const [currentSpeed, setCurrentSpeed] = useState(0);
   const [compassHeading, setCompassHeading] = useState(0);
+  const [totalDistance, setTotalDistance] = useState(0);
+  
   const lastHeadingRef = useRef(0);
+  const VELOCITY_CAP = 35; // KM/H threshold for Anti-Cheat
 
   const isRacingRef = useRef(isRacing);
-  useEffect(() => { isRacingRef.current = isRacing; }, [isRacing]);
+  useEffect(() => {
+    isRacingRef.current = isRacing;
+    if (isRacing) {
+        setTotalDistance(0); // Reset distance when a new race starts
+        setPath([]);         // Reset path
+    }
+  }, [isRacing]);
 
   const startTimeRef = useRef<number | null>(null);
   const ghostTimerRef = useRef<any>(null);
@@ -38,8 +53,6 @@ export const useLocationEngine = (savedGhostData: any[]) => {
   useEffect(() => {
     if (isRacing) {
       startTimeRef.current = Date.now();
-      setPath([]);
-
       ghostTimerRef.current = setInterval(() => {
         if (startTimeRef.current && savedGhostData.length > 0) {
           const elapsed = (Date.now() - startTimeRef.current) / 1000;
@@ -52,10 +65,12 @@ export const useLocationEngine = (savedGhostData: any[]) => {
       setCurrentSpeed(0);
       if (ghostTimerRef.current) clearInterval(ghostTimerRef.current);
     }
-    return () => { if (ghostTimerRef.current) clearInterval(ghostTimerRef.current); };
+    return () => {
+      if (ghostTimerRef.current) clearInterval(ghostTimerRef.current);
+    };
   }, [isRacing, savedGhostData]);
 
-  // 2. Handle Location Subscription with Anti-Zigzag Logic
+  // 2. Handle Location Subscription with Anti-Cheat & Smoothing
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;
 
@@ -72,81 +87,82 @@ export const useLocationEngine = (savedGhostData: any[]) => {
         (location) => {
           const { latitude, longitude, speed, accuracy } = location.coords;
 
-          /**
-           * FILTER 1: ACCURACY GATEKEEPER
-           * If the GPS accuracy is wider than 20 meters, the data is too "noisy"
-           * for a clean trail. We ignore these pings to prevent zigzags.
-           */
+          // FILTER 1: ACCURACY GATEKEEPER
           if (accuracy && accuracy > 20) return;
 
           const newPoint = { latitude, longitude };
-          
-          // Always update current location for the "Blue Dot"
           setCurrentLocation(newPoint);
 
           // Speed calculation (m/s to km/h)
           const speedKmH = speed && speed > 0 ? Math.round(speed * 3.6) : 0;
           setCurrentSpeed(speedKmH);
 
-          /**
-           * FILTER 2: PATH SMOOTHING (The Zigzag Killer)
-           */
+          // Determine if the user is currently "cheating" (in a vehicle)
+          const isVehicle = speedKmH > VELOCITY_CAP;
+
           if (isRacingRef.current) {
             setPath((current) => {
-              if (current.length === 0) return [newPoint];
+              const pointWithStatus = { ...newPoint, isVehicle };
+              
+              if (current.length === 0) return [pointWithStatus];
 
               const lastPoint = current[current.length - 1];
               const distanceMoved = getDistance(lastPoint, newPoint);
 
-              /**
-               * FILTER A: STATIONARY FILTER
-               * If you haven't moved more than 3 meters, don't add a new point.
-               * This stops the "spaghetti" effect when standing still.
-               */
-              if (distanceMoved < 3) return current;
+              // FILTER A: STATIONARY FILTER (3m)
+              // FILTER B: TELEPORT FILTER (25m)
+              if (distanceMoved < 3 || distanceMoved > 25) return current;
 
               /**
-               * FILTER B: TELEPORT FILTER (Kalman-lite)
-               * A human runner cannot move 25 meters in 1 second.
-               * If the jump is that large, it's a GPS glitch/bounce.
+               * CEO ANTI-CHEAT: 
+               * Only increment distance if the user is NOT speeding in a vehicle.
                */
-              if (distanceMoved > 25) return current;
+              if (!isVehicle) {
+                setTotalDistance((prev) => prev + distanceMoved);
+              }
 
-              return [...current, newPoint];
+              return [...current, pointWithStatus];
             });
           }
-        }
+        },
       );
     };
 
     initLocation();
-    return () => { if (subscription) subscription.remove(); };
+    return () => {
+      if (subscription) subscription.remove();
+    };
   }, []);
 
+  // 3. Handle Magnetometer (Compass Smoothing)
   useEffect(() => {
     let subscription: any = null;
-    
-    // 1. Slow down the update interval slightly to prevent "ping-ponging"
-    Magnetometer.setUpdateInterval(150); 
+    Magnetometer.setUpdateInterval(150);
 
     subscription = Magnetometer.addListener((data) => {
       let { x, y } = data;
       let angle = Math.atan2(-x, y) * (180 / Math.PI);
       if (angle < 0) angle += 360;
 
-      // 1. Aggressive Smoothing: 0.03 is the "Sweet Spot"
-      // It takes more samples to move the camera, creating a glide.
-      const alpha = 0.03; 
-      const smoothedAngle = lastHeadingRef.current + (angle - lastHeadingRef.current) * alpha;
-      
+      const alpha = 0.03;
+      const smoothedAngle =
+        lastHeadingRef.current + (angle - lastHeadingRef.current) * alpha;
+
       lastHeadingRef.current = smoothedAngle;
-      setCompassHeading(smoothedAngle); 
+      setCompassHeading(smoothedAngle);
     });
 
     return () => subscription && subscription.remove();
   }, []);
 
-
-
-  return { path, ghostPosition, isRacing, setIsRacing, currentLocation, currentSpeed, compassHeading};
+  return {
+    path,
+    totalDistance,
+    ghostPosition,
+    isRacing,
+    setIsRacing,
+    currentLocation,
+    currentSpeed,
+    compassHeading,
+  };
 };
