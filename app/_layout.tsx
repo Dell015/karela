@@ -1,11 +1,20 @@
+// app/_layout.tsx
+import { useEffect } from 'react';
 import { Stack } from 'expo-router';
+import { initDatabase } from '@/services/database/database'; // Adjust path if needed
 
 export default function RootLayout() {
-  return (
-    <Stack
-      screenOptions={{
-        headerShown: false, // This hides headers for ALL screens in this stack
-      }}
-    />
-  );
+
+  
+  useEffect(() => {
+    // Run this immediately on app launch
+    try {
+      initDatabase();
+      console.log("Database initialized successfully");
+    } catch (err) {
+      console.error("Database failed to initialize", err);
+    }
+  }, []);
+
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

@@ -20,7 +20,14 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.worshestershire.karela"
+      "package": "com.worshestershire.karela",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION", // Needed for pocket-tracking
+        "FOREGROUND_SERVICE",          // Needed to keep the app alive
+        "FOREGROUND_SERVICE_LOCATION" // Tells Android: "I'm using GPS for a reason"
+      ]
     },
     "web": {
       "output": "static",
