@@ -1,6 +1,6 @@
 // app/dashboard/maps.tsx
 import React, { useMemo, useRef, useState, useEffect } from "react";
-import { View, TouchableOpacity, Text, ActivityIndicator, Alert } from "react-native";
+import { View, TouchableOpacity, Text, ActivityIndicator, Alert, Platform } from "react-native";
 import MapView, { Polyline, Marker } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
@@ -26,6 +26,7 @@ export default function MapScreen() {
   // --- HOOKS ---
   const {
     path,
+    setPath,
     ghostPosition,
     isRacing,
     setIsRacing,
@@ -100,7 +101,6 @@ export default function MapScreen() {
     }
     return () => clearInterval(interval);
   }, [isRacing]);
-  
 
   // Formatter
   const formatTime = (seconds: number) => {
@@ -176,11 +176,14 @@ export default function MapScreen() {
       <MapView
         ref={mapRef}
         style={styles.map}
-        customMapStyle={ghostMapStyle}
         provider="google"
+        googleRenderer="LATEST"
+        customMapStyle={ghostMapStyle}
         showsUserLocation={true}
         followsUserLocation={false}
         rotateEnabled={true}
+        showsTraffic={false} 
+        showsIndoors={false}
         initialRegion={{
           latitude: currentLocation.latitude,
           longitude: currentLocation.longitude,
@@ -188,7 +191,7 @@ export default function MapScreen() {
           longitudeDelta: 0.05,
         }}
       >
-        {/* DYNAMIC GHOST LINE (The run you are racing against) */}
+        {/* DYNAMIC GHOST LINE */}
         {isGhostEnabled && activeGhostData.length > 1 && (
           <Polyline 
             coordinates={activeGhostData.map(p => ({ latitude: p.latitude, longitude: p.longitude }))} 
@@ -197,27 +200,35 @@ export default function MapScreen() {
           />
         )}
 
-        {/* QUEST ROUTE (Remaining Gold Line) */}
+        {/* QUEST ROUTE */}
         {questPath.length > 1 && (
           <Polyline coordinates={[currentLocation, ...questPath.slice(1)]} {...MAP_CONFIG.questPath} />
         )}
 
-        {/* SEGMENTED USER TRAIL (Anti-Cheat Red/Green Line) */}
+        {/* SEGMENTED USER TRAIL */}
         {path.map((point, index) => {
-          if (index === 0) return null;
+          if (index === 0 || !path[index - 1]) return null;
           const prevPoint = path[index - 1];
+
           return (
             <Polyline
-              key={`segment_${index}`}
-              coordinates={[{ latitude: prevPoint.latitude, longitude: prevPoint.longitude }, { latitude: point.latitude, longitude: point.longitude }]}
+              key={`segment_${index}_${point.latitude}`}
+              coordinates={[
+                { latitude: prevPoint.latitude, longitude: prevPoint.longitude }, 
+                { latitude: point.latitude, longitude: point.longitude }
+              ]}
               strokeColor={point.isVehicle ? "#FF3B30" : "#7CF205"}
-              strokeWidth={6}
-              lineJoin="round"
+              strokeWidth={8}
+              lineCap="round" 
+              lineJoin="round" 
+              geodesic={false}
+              zIndex={2000 + index}
+              lineDashPattern={Platform.OS === 'ios' ? [1000, 0] : undefined}
             />
           );
         })}
 
-        {/* GHOST MARKER (The actual "Ghost" moving on the map) */}
+        {/* GHOST MARKER */}
         {isGhostEnabled && ghostPosition && (
           <Marker coordinate={ghostPosition} anchor={{ x: 0.5, y: 0.5 }} flat>
             <View style={styles.markerWrapper}>
@@ -233,15 +244,6 @@ export default function MapScreen() {
             draggable={!isRacing}
             coordinate={point}
             onDragStart={() => setIsDragging(true)}
-            onDrag={async (e) => {
-              const draggedCoord = e.nativeEvent.coordinate;
-              const camera = await mapRef.current?.getCamera();
-              if (camera && camera.center.latitude - draggedCoord.latitude > 0.0015) {
-                if (!isOverTrash) setIsOverTrash(true);
-              } else {
-                if (isOverTrash) setIsOverTrash(false);
-              }
-            }}
             onDragEnd={async (e) => {
               setIsDragging(false);
               setIsOverTrash(false);
@@ -268,7 +270,7 @@ export default function MapScreen() {
         ))}
       </MapView>
 
-      {/* HUD OVERLAY (Stats shown while running) */}
+      {/* HUD OVERLAY */}
       {isRacing && (
         <View style={styles.hudOverlay}>
           <View style={styles.hudStat}>
@@ -285,15 +287,11 @@ export default function MapScreen() {
           <View style={styles.hudDivider} />
           <View style={styles.hudStat}>
             <Text style={styles.hudLabel}>METERS</Text>
-            {/* totalDistance here comes from useLocationEngine via your hook call */}
             <Text style={styles.hudValue}>{Math.floor(totalDistance)}</Text>
           </View>
-
           <View style={styles.hudDivider} />
-
           <View style={styles.hudStat}>
             <Text style={styles.hudLabel}>KCAL</Text>
-            {/* Use the same totalDistance for consistent calorie burn */}
             <Text style={styles.hudValue}>{(totalDistance * 0.062).toFixed(1)}</Text>
           </View>
           <View style={styles.hudDivider} />
@@ -306,7 +304,7 @@ export default function MapScreen() {
         </View>
       )}
 
-      {/* TOOLS (Editor buttons) */}
+      {/* TOOLS */}
       {!isRacing && (
         <>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -317,7 +315,6 @@ export default function MapScreen() {
             <Ionicons name="compass" size={24} color="#FFD700" />
           </TouchableOpacity>
 
-          {/* TOGGLE GHOST BUTTON */}
           <TouchableOpacity
             style={[styles.ghostButton, { top: 180, backgroundColor: isGhostEnabled ? "#7CF205" : "rgba(0,0,0,0.6)" }]}
             onPress={toggleGhost}
@@ -325,7 +322,6 @@ export default function MapScreen() {
             <Ionicons name="flash" size={24} color={isGhostEnabled ? "black" : "#FFD700"} />
           </TouchableOpacity>
 
-          {/* SPAWN FLAG BUTTON */}
           <TouchableOpacity style={[styles.flagSpawner, { top: 250 }]} onPress={handleSpawnFlag}>
             {checkpoints.length > 0 && (
               <View style={styles.flagCountBadge}>
@@ -345,17 +341,7 @@ export default function MapScreen() {
         </>
       )}
 
-      {/* TRASH BIN */}
-      {isDragging && (
-        <View style={[styles.trashBinContainer, { opacity: isOverTrash ? 0.35 : 1.0 }]} pointerEvents="none">
-          <View style={styles.trashBin}>
-            <Ionicons name="trash" size={40} color="#FF3B30" />
-            <Text style={styles.trashText}>DROP TO DELETE</Text>
-          </View>
-        </View>
-      )}
-
-      {/* ACTION BUTTON (START/STOP) */}
+      {/* ACTION BUTTON */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.actionButton, { backgroundColor: isRacing ? "#FF3B30" : "#7CF205" }]}

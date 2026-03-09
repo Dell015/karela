@@ -164,5 +164,6 @@ export const useLocationEngine = (savedGhostData: any[]) => {
     currentLocation,
     currentSpeed,
     compassHeading,
+    setPath
   };
 };

@@ -34,4 +34,4 @@ export const PermissionManager = {
         const { status } = await Location.getForegroundPermissionsAsync();
         return status === 'granted';
     }
-}
+}  
