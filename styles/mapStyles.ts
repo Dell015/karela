@@ -121,6 +121,22 @@ export const styles = StyleSheet.create({
     fontSize: 14,
   },
   // --- Control Buttons ---
+  // Remove individual 'top' from these so we can control them easily
+  rightButtonBase: {
+    position: 'absolute',
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    padding: 12,
+    borderRadius: 30,
+    borderWidth: 1.5,
+    borderColor: '#FFD700',
+    zIndex: 100,
+  },
+  // Use these specific positions
+  compassButton: { top: 50 }, 
+  ghostButton: { top: 110 },
+  flagSpawner: { top: 170 },
+  
   backButton: {
     position: 'absolute',
     top: 50,
@@ -132,36 +148,6 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 100,
-  },
-  cameraAngle: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    padding: 12,
-    borderRadius: 30,
-    borderWidth: 1.5,
-    borderColor: '#FFD700',
-  },
-  ghostButton: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    padding: 12,
-    borderRadius: 30,
-    borderWidth: 1.5,
-    borderColor: '#FFD700',
-  },
-  flagSpawner: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    padding: 12,
-    borderRadius: 30,
-    borderWidth: 1.5,
-    borderColor: '#FFD700',
   },
   flagCountBadge: {
     position: 'absolute',

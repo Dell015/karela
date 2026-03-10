@@ -311,18 +311,31 @@ export default function MapScreen() {
             <Ionicons name="chevron-back" size={28} color="white" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.flagSpawner} onPress={() => changeCameraHeading("N")}>
+          {/* COMPASS */}
+          <TouchableOpacity 
+            style={[styles.rightButtonBase, styles.compassButton]} 
+            onPress={() => changeCameraHeading("N")}
+          >
             <Ionicons name="compass" size={24} color="#FFD700" />
           </TouchableOpacity>
 
+          {/* GHOST */}
           <TouchableOpacity
-            style={[styles.ghostButton, { top: 180, backgroundColor: isGhostEnabled ? "#7CF205" : "rgba(0,0,0,0.6)" }]}
+            style={[
+              styles.rightButtonBase, 
+              styles.ghostButton, 
+              { backgroundColor: isGhostEnabled ? "#7CF205" : "rgba(0,0,0,0.85)" }
+            ]}
             onPress={toggleGhost}
           >
             <Ionicons name="flash" size={24} color={isGhostEnabled ? "black" : "#FFD700"} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.flagSpawner, { top: 250 }]} onPress={handleSpawnFlag}>
+          {/* FLAG SPAWNER */}
+          <TouchableOpacity 
+            style={[styles.rightButtonBase, styles.flagSpawner]} 
+            onPress={handleSpawnFlag}
+          >
             {checkpoints.length > 0 && (
               <View style={styles.flagCountBadge}>
                 <Text style={{ color: "white", fontSize: 10, fontWeight: "bold" }}>{checkpoints.length}</Text>
@@ -330,14 +343,6 @@ export default function MapScreen() {
             )}
             <Ionicons name="flag" size={24} color="#FFD700" />
           </TouchableOpacity>
-
-          {questRewards && (
-            <View style={styles.questCard}>
-              <Text style={styles.rewardText}>
-                {questRewards.coins} Pts | {questRewards.xp} XP | {Math.floor(totalDistance)}m
-              </Text>
-            </View>
-          )}
         </>
       )}
 
