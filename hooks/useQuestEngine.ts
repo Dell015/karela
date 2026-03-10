@@ -5,6 +5,7 @@ import {
 } from "@/services/tracker/routingService";
 import { useState } from "react";
 import MapView from "react-native-maps";
+import { useLocationEngine } from "./useLocationEngine";
 
 // ~100 meters tolerance for PH shortcuts and GPS drift
 const OFF_TRACK_THRESHOLD = 0.001; 
@@ -12,6 +13,7 @@ const OFF_TRACK_THRESHOLD = 0.001;
 const COMPLETION_THRESHOLD = 0.00015;
 
 export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
+  const [activeGhostData, setActiveGhostData] = useState<any[]>([]);
   const [checkpoints, setCheckpoints] = useState<MapCoordinate[]>([]);
   const [questPath, setQuestPath] = useState<MapCoordinate[]>([]);
   const [questRewards, setQuestRewards] = useState<{
@@ -23,6 +25,8 @@ export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isOverTrash, setIsOverTrash] = useState(false);
   const [totalDistance, setTotalDistance] = useState<number>(0);
+
+  const {currentLocation} = useLocationEngine(activeGhostData);
 
   /**
    * Real-time path updates: Handles "eating" the path, 
@@ -127,6 +131,8 @@ export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
   };
 
   const changeCameraHeading = (direction: "N" | "S" | "E" | "W") => {
+    if (!mapRef.current || !currentLocation) return;
+
     let heading = 0;
     switch (direction) {
       case "N": heading = 0; break;
@@ -135,9 +141,18 @@ export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
       case "W": heading = 270; break;
     }
 
-    mapRef.current?.animateCamera(
-      { heading: heading, pitch: 45 },
-      { duration: 1000 },
+    // Use ONE command to rule them all
+    mapRef.current.animateCamera(
+      {
+        center: {
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude,
+        },
+        heading: heading,
+        pitch: 45, // Gives it that 3D "Ghost Run" look
+        zoom: 17,  // Equivalent to roughly 0.005 delta
+      },
+      { duration: 1000 }
     );
   };
 
