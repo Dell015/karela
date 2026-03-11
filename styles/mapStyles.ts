@@ -132,7 +132,6 @@ export const styles = StyleSheet.create({
     borderColor: '#FFD700',
     zIndex: 100,
   },
-  // Use these specific positions
   compassButton: { top: 50 }, 
   ghostButton: { top: 110 },
   flagSpawner: { top: 170 },
