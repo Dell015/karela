@@ -1,233 +1,253 @@
-import { Header } from '@react-navigation/elements';
-import { Profiler } from 'react';
 import { StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { createNavigationContainerRef } from '@react-navigation/native';
 
 export const dashboard_ui = StyleSheet.create({
-  
-  dashboard: {
-    flex: 1,
-    paddingHorizontal: 20,
+  dashboard: { 
+    flex: 1, 
+    paddingHorizontal: 20, 
+    backgroundColor: '#0d0d0d' 
   },
-  dashboardText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
+  ProfileHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginTop: 10, 
+    marginBottom: 20 
   },
-  LeftGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 15,
+  LeftGroup: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 15 
   },
-  RightGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 15,
+  Image: { 
+    width: 50, 
+    height: 50, 
+    borderRadius: 25, 
+    backgroundColor: '#209F77' 
   },
-  ProfileHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
+  welcomeText: { 
+    color: '#8A8A8A', 
+    fontSize: 14 
+  },
+  nameText: { 
+    color: '#fff', 
+    fontSize: 24, 
+    fontWeight: 'bold' 
+  },
+
+  // --- PROGRESS CARD STYLES ---
+  RunCard: { 
+    height: 130, 
+    borderRadius: 15, 
+    overflow: 'hidden', 
     marginBottom: 20,
-  },
-  Image: {
-    width: 70,
-    height: 70,
-    borderRadius: 50,
-  },
-  CoachImage: {
-    width: 40,
-    height: 40,
-  },
-  welcomeText: {
-    fontFamily: 'Excon-Regular',
-    fontSize: 18.71,
-    color: '#8A8A8A',
-  },
-  nameText: {
-    fontFamily: 'Excon-Bold',
-    fontSize: 30.27,
-    color: '#fff',
-  },
-  RunCard: {
-    height: 250,
-    borderRadius: 20,
-    marginTop: 20,
-    overflow: 'hidden',
-    padding: 5,
-  },
-  CardOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.60)',
-    borderRadius: 22,
-  },
-  CardContent: {
-    flex: 1,
-    padding: 20,
-  },
-  flameImage: {
-    width: 30,
-    height: 30,
-  },
-  Streak: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  StreakText: {
-    fontFamily: 'Excon-Bold',
-    fontSize: 22,
-    color: '#fff',
-  },
-  LevelText: {
-    fontFamily: 'Excon-Bold',
-    fontSize: 28,
-    color: '#fff',
-    marginTop: 10,
-  },
-  progressContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginTop: 15,
-  },
-  progressBarTrack: {
-    width: '100%',
-    height: 12,
-    backgroundColor: '#1a1a1a',
-    borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(124, 242, 5, 0.2)',
-    overflow: 'hidden',
+    padding: 4,
+    borderColor: 'rgba(124, 242, 5, 0.3)'
   },
-  progressBarFill: {
-    height: '100%',
-    borderRadius: 10,
-    shadowColor: '#7CF205',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
+  CardOverlay: { 
+    flex: 1, 
+    borderRadius: 10, 
+    backgroundColor: 'rgba(0,0,0,0.6)', 
   },
-  xpText: {
-    color: '#8A8A8A',
-    fontFamily: 'Excon-Regular',
-    fontSize: 20,
-    marginTop: 6,
-    fontWeight: '500',
+  CardContent: { 
+    padding: 15,
+    flex: 1,
+    justifyContent: 'center'
   },
-  runButtonContainer: {
-    marginTop: 6,
-    width: '100%',
-    borderRadius: 10,
+  LevelLabel: { 
+    color: '#fff', 
+    fontSize: 10, 
+    opacity: 0.7,
+    letterSpacing: 1
   },
-  runButton: {
-    paddingVertical: 12,
-    borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
+  nameLabel: { 
+    color: '#fff', 
+    fontSize: 20, 
+    fontWeight: 'bold' 
   },
-  runButtonText: {
-    fontFamily: 'Excon-Bold',
-    fontSize: 20,
-    color: '#FFF',
-    textTransform: 'none'
+  progressContainer: { 
+    width: '100%', 
+    marginTop: 10 
   },
-  WeatherText: {
-    fontFamily: 'Excon-Bold',
-    color: '#FFF',
-    fontSize: 20,
-    marginTop: 20,
+  progressBarTrack: { 
+    width: '100%', 
+    height: 10, 
+    backgroundColor: 'rgba(255,255,255,0.1)', 
+    borderRadius: 5, 
+    overflow: 'hidden' 
   },
-  weatherCard: {
-    padding: 20,
-    backgroundColor: '#222222',
-    borderRadius: 22,
+  progressBarFill: { 
+    height: '100%', 
+    backgroundColor: '#7CF205', 
+    borderRadius: 5 
+  },
+  xpText: { 
+    color: '#8A8A8A', 
+    fontSize: 10, 
+    textAlign: 'right', 
+    marginTop: 4 
+  },
 
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between'
+  // --- MAP PREVIEW STYLES ---
+  sectionTitle: { 
+    color: '#fff', 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    marginVertical: 12 
   },
-  weatherIcon: {
-    height: 70,
-    width: 70,
+  mapPreviewContainer: { 
+    height: 180, 
+    backgroundColor: '#1A1A1A', 
+    borderRadius: 15, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    position: 'relative',
+    overflow: 'visible' 
   },
-  cityText: {
-    color: '#FFF',
-    fontSize: 20,
-    fontFamily: 'Excon-Bold',
+  mapPlaceholder: { 
+    color: '#444', 
+    fontSize: 12 
   },
-  weatherDesc: {
-    color: '#8A8A8A',
+  weatherOverlayIcon: { 
+    position: 'absolute', 
+    top: -25, 
+    right: -10, 
+    width: 80, 
+    height: 80,
+    zIndex: 10
+  },
+  mapButton: { 
+    position: 'absolute', 
+    bottom: 15, 
+    right: 15, 
+    backgroundColor: '#7CF205', 
+    paddingHorizontal: 12, 
+    paddingVertical: 6, 
+    borderRadius: 8 
+  },
+  mapButtonText: { 
+    fontSize: 11, 
+    fontWeight: 'bold', 
+    color: '#000' 
+  },
 
+  // --- CHARACTER GRID STYLES ---
+  characterRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    marginTop: 10 
   },
-  tempText: {
-    color: '#FFF',
-    fontSize: 28,
-    fontFamily: 'Excon-Bold', 
+  characterColumn: { 
+    width: '48%' 
   },
-  tipCard: {
-    backgroundColor: '#1E1E1E',
+  characterTitle: { 
+    color: '#fff', 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    marginBottom: 8 
+  },
+  characterBox: { 
+    height: 150, 
+    backgroundColor: '#1A1A1A', 
+    borderRadius: 15 
+  },
+
+  // --- QUEST OVERVIEW STYLES ---
+  questOverviewCard: { 
+    backgroundColor: '#1A1A1A', 
+    borderRadius: 15, 
+    padding: 20, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between' 
+  },
+  questOverviewText: { 
+    color: '#8A8A8A', 
+    fontSize: 14, 
+    flex: 1, 
+    marginRight: 10,
+    lineHeight: 20
+  },
+  questSmallBox: { 
+    width: 60, 
+    height: 60, 
+    backgroundColor: '#333', 
+    borderRadius: 12 
+  },
+
+  // --- CHAT WITH ANI (INTEGRATED NESTED DESIGN) ---
+  chatCardContainer: {
+    backgroundColor: '#1A1A1A',
     borderRadius: 20,
-    paddingLeft: 30,
-    padding: 20,
     flexDirection: 'row',
-    alignItems: 'center',
+    overflow: 'hidden',
+    minHeight: 150,
+    marginTop: 5,
     marginBottom: 20,
   },
-
-  tipIcon: {
-    height: 40,
-    width: 40,
+  chatSideBar: {
+    width: 12,
+    height: '100%',
   },
-
-  tipText: {
-    color: '#888', // Grey text for the tip
-    fontSize: 14,
+  chatContent: {
     flex: 1,
-    marginLeft: 15,
-    lineHeight: 20,
-  },
-
-  // --- Daily Missions Section ---
-  missionCard: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 25,
-    paddingLeft: 30,
     padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
   },
-  missionIcon: {
-    height: 40,
-    width: 40,
+  chatText: {
+    color: '#fff',
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 15,
   },
-  missionInfo: {
+  nestedInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#444',
+    borderRadius: 25,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  nestedInput: {
     flex: 1,
-    marginLeft: 15,
+    color: '#fff',
+    fontSize: 13,
   },
-  missionTitle: {
-    color: '#FFF',
-    fontSize: 22,
+
+  // --- FLOATING ISLAND BUTTON STYLES ---
+  floatingButtonContainer: {
+    position: 'absolute',
+    bottom: 30, 
+    left: 20,
+    right: 20,
+    alignItems: 'center',
+    zIndex: 999, // Ensure it stays above content
+  },
+  floatingIsland: {
+    width: '100%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  gradientButton: {
+    height: 65,
+    borderRadius: 32.5, 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    shadowColor: '#7CF205',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5
+  },
+  mainButtonText: {
+    color: '#fff',
+    fontSize: 20,
     fontWeight: 'bold',
   },
-  missionSub: {
-    color: '#7CF205', // Green XP text
-    fontSize: 12,
-  },
-  missionStats: {
-    alignItems: 'flex-end',
-  },
-  statsText: {
-    color: '#888',
-    fontSize: 12,
-  },
-  sectionTitle: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    marginTop: 10,
-  }
 });
