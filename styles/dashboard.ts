@@ -1,233 +1,43 @@
-import { Header } from '@react-navigation/elements';
-import { Profiler } from 'react';
 import { StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { createNavigationContainerRef } from '@react-navigation/native';
 
 export const dashboard_ui = StyleSheet.create({
-  
-  dashboard: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  dashboardText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  LeftGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 15,
-  },
-  RightGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 15,
-  },
-  ProfileHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  Image: {
-    width: 70,
-    height: 70,
-    borderRadius: 50,
-  },
-  CoachImage: {
-    width: 40,
-    height: 40,
-  },
-  welcomeText: {
-    fontFamily: 'Excon-Regular',
-    fontSize: 18.71,
-    color: '#8A8A8A',
-  },
-  nameText: {
-    fontFamily: 'Excon-Bold',
-    fontSize: 30.27,
-    color: '#fff',
-  },
-  RunCard: {
-    height: 250,
-    borderRadius: 20,
-    marginTop: 20,
-    overflow: 'hidden',
-    padding: 5,
-  },
-  CardOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.60)',
-    borderRadius: 22,
-  },
-  CardContent: {
-    flex: 1,
-    padding: 20,
-  },
-  flameImage: {
-    width: 30,
-    height: 30,
-  },
-  Streak: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  StreakText: {
-    fontFamily: 'Excon-Bold',
-    fontSize: 22,
-    color: '#fff',
-  },
-  LevelText: {
-    fontFamily: 'Excon-Bold',
-    fontSize: 28,
-    color: '#fff',
-    marginTop: 10,
-  },
-  progressContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginTop: 15,
-  },
-  progressBarTrack: {
-    width: '100%',
-    height: 12,
-    backgroundColor: '#1a1a1a',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(124, 242, 5, 0.2)',
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    borderRadius: 10,
-    shadowColor: '#7CF205',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
-  },
-  xpText: {
-    color: '#8A8A8A',
-    fontFamily: 'Excon-Regular',
-    fontSize: 20,
-    marginTop: 6,
-    fontWeight: '500',
-  },
-  runButtonContainer: {
-    marginTop: 6,
-    width: '100%',
-    borderRadius: 10,
-  },
-  runButton: {
-    paddingVertical: 12,
-    borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  runButtonText: {
-    fontFamily: 'Excon-Bold',
-    fontSize: 20,
-    color: '#FFF',
-    textTransform: 'none'
-  },
-  WeatherText: {
-    fontFamily: 'Excon-Bold',
-    color: '#FFF',
-    fontSize: 20,
-    marginTop: 20,
-  },
-  weatherCard: {
-    padding: 20,
-    backgroundColor: '#222222',
-    borderRadius: 22,
+  dashboard: { flex: 1, paddingHorizontal: 20, backgroundColor: '#0d0d0d' },
+  ProfileHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, marginBottom: 20 },
+  LeftGroup: { flexDirection: 'row', alignItems: 'center', gap: 15 },
+  Image: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#209F77' },
+  welcomeText: { color: '#8A8A8A', fontSize: 14 },
+  nameText: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
 
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between'
-  },
-  weatherIcon: {
-    height: 70,
-    width: 70,
-  },
-  cityText: {
-    color: '#FFF',
-    fontSize: 20,
-    fontFamily: 'Excon-Bold',
-  },
-  weatherDesc: {
-    color: '#8A8A8A',
+  RunCard: { height: 130, borderRadius: 15, overflow: 'hidden', marginBottom: 20, borderWidth: 1, padding: 4, borderColor: 'rgba(124, 242, 5, 0.3)' },
+  CardOverlay: { flex: 1, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.6)' },
+  CardContent: { padding: 15, flex: 1, justifyContent: 'center' },
+  LevelLabel: { color: '#fff', fontSize: 10, opacity: 0.7, letterSpacing: 1 },
+  nameLabel: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
+  progressContainer: { width: '100%', marginTop: 10 },
+  progressBarTrack: { width: '100%', height: 10, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 5, overflow: 'hidden' },
+  progressBarFill: { height: '100%', backgroundColor: '#7CF205', borderRadius: 5 },
+  xpText: { color: '#8A8A8A', fontSize: 10, textAlign: 'right', marginTop: 4 },
 
-  },
-  tempText: {
-    color: '#FFF',
-    fontSize: 28,
-    fontFamily: 'Excon-Bold', 
-  },
-  tipCard: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 20,
-    paddingLeft: 30,
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
+  sectionTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', marginVertical: 12 },
+  mapPreviewContainer: { height: 180, backgroundColor: '#1A1A1A', borderRadius: 15, position: 'relative' },
+  weatherOverlayIcon: { position: 'absolute', top: -25, right: -10, width: 80, height: 80, zIndex: 10 },
+  mapButton: { position: 'absolute', bottom: 15, right: 15, backgroundColor: '#7CF205', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  mapButtonText: { fontSize: 11, fontWeight: 'bold', color: '#000' },
 
-  tipIcon: {
-    height: 40,
-    width: 40,
-  },
+  characterRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
+  characterColumn: { width: '48%' },
+  characterTitle: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 8 },
+  characterBox: { height: 150, backgroundColor: '#1A1A1A', borderRadius: 15, overflow: 'hidden' },
 
-  tipText: {
-    color: '#888', // Grey text for the tip
-    fontSize: 14,
-    flex: 1,
-    marginLeft: 15,
-    lineHeight: 20,
-  },
+  chatCardContainer: { backgroundColor: '#1A1A1A', borderRadius: 20, flexDirection: 'row', overflow: 'hidden', minHeight: 150, marginTop: 5 },
+  chatSideBar: { width: 12, height: '100%' },
+  chatContent: { flex: 1, padding: 20, justifyContent: 'space-between' },
+  chatText: { color: '#fff', fontSize: 14, lineHeight: 20, marginBottom: 15 },
+  nestedInputContainer: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#444', borderRadius: 25, paddingHorizontal: 15, paddingVertical: 8, backgroundColor: 'rgba(0,0,0,0.2)' },
+  nestedInput: { flex: 1, color: '#fff', fontSize: 13 },
 
-  // --- Daily Missions Section ---
-  missionCard: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 25,
-    paddingLeft: 30,
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  missionIcon: {
-    height: 40,
-    width: 40,
-  },
-  missionInfo: {
-    flex: 1,
-    marginLeft: 15,
-  },
-  missionTitle: {
-    color: '#FFF',
-    fontSize: 22,
-    fontWeight: 'bold',
-  },
-  missionSub: {
-    color: '#7CF205', // Green XP text
-    fontSize: 12,
-  },
-  missionStats: {
-    alignItems: 'flex-end',
-  },
-  statsText: {
-    color: '#888',
-    fontSize: 12,
-  },
-  sectionTitle: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    marginTop: 10,
-  }
+  floatingButtonContainer: { position: 'absolute', bottom: 30, left: 20, right: 20, zIndex: 100 },
+  floatingIsland: { width: '100%', shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.5, shadowRadius: 10, elevation: 10 },
+  gradientButton: { height: 65, borderRadius: 32.5, justifyContent: 'center', alignItems: 'center' },
+  mainButtonText: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
 });

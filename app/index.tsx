@@ -1,11 +1,11 @@
+import { PermissionManager } from '@/services/PermissionsManager';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { useFonts } from "expo-font";
 import { LinearGradient } from 'expo-linear-gradient';
-import { PermissionManager } from '@/services/PermissionsManager';
 import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    Alert, Animated, Easing, FlatList, Image, StatusBar,
+    Animated, Easing, FlatList, Image, StatusBar,
     StyleSheet, Text, TouchableOpacity, useWindowDimensions,
     View, ViewToken
 } from 'react-native';
@@ -23,7 +23,7 @@ const THEME = {
 };
 
 const SLIDES = [
-    { id: '1', title: 'Your journey starts\nwith one step.', description: 'The hardest part is showing up. Let us handle the rest.', image: LOGO_IMAGE },
+    { id: '1', title: 'Your journey starts \nwith one step.', description: 'The hardest part is showing up. Let us handle the rest.', image: LOGO_IMAGE },
     { id: '2', title: 'Run Smarter,\nRun Stronger', description: 'Get personalized coaching plans adapted to your performance.', image: require('@/assets/images/Onboarding/slide2.png') },
     { id: '3', title: 'Track Every Step', description: 'Real-time stats and GPS tracking to keep you on pace.', image: require('@/assets/images/Onboarding/slide3.png') },
     { id: '4', title: 'Set Goals\nSee Progress', description: 'Visualize your improvements and smash your personal bests.', image: require('@/assets/images/Onboarding/slide4.png') },
