@@ -18,6 +18,7 @@ export default function MapScreen() {
   const [hasZoomed, setHasZoomed] = useState(false);
   const isProcessing = useRef(false);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [physicalMeters, setPhysicalMeters] = useState(0);
 
   // --- NEW GHOST STATE ---
   const [isGhostEnabled, setIsGhostEnabled] = useState(false);
@@ -41,7 +42,7 @@ export default function MapScreen() {
     questRewards,
     isDragging,
     isOverTrash,
-    totalDistance,
+    totalDistance, // This remains for "Goal" or "Quest" tracking
     setIsDragging,
     setIsOverTrash,
     addCheckpoint,
@@ -50,6 +51,32 @@ export default function MapScreen() {
     changeCameraHeading,
     updateRemainingPath,
   } = useQuestEngine(mapRef);
+
+  // --- PHYSICAL DISTANCE TRACKER ---
+  // Calculates real-world distance based on path breadcrumbs, independent of quest route
+  useEffect(() => {
+    if (isRacing && path.length > 1) {
+      const lastPoint = path[path.length - 1];
+      const prevPoint = path[path.length - 2];
+
+      const R = 6371000; 
+      const dLat = ((lastPoint.latitude - prevPoint.latitude) * Math.PI) / 180;
+      const dLon = ((lastPoint.longitude - prevPoint.longitude) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((prevPoint.latitude * Math.PI) / 180) *
+          Math.cos((lastPoint.latitude * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const distanceMoved = R * c;
+
+      // Anti-Cheat: Only add distance if not speeding and within reasonable GPS drift
+      if (!lastPoint.isVehicle && distanceMoved > 2 && distanceMoved < 40) {
+        setPhysicalMeters((prev) => prev + distanceMoved);
+      }
+    }
+  }, [path, isRacing]);
 
   // --- TOGGLE GHOST LOGIC ---
   const toggleGhost = () => {
@@ -74,10 +101,10 @@ export default function MapScreen() {
     router.push({
       pathname: "/dashboard/summary",
       params: {
-        meters: Math.floor(totalDistance),
+        meters: Math.floor(physicalMeters), // Using physical tracking
         seconds: elapsedTime,
-        kcal: (totalDistance * 0.062).toFixed(1),
-        xp: Math.floor(totalDistance * 0.1),
+        kcal: (physicalMeters * 0.062).toFixed(1), // Using physical tracking
+        xp: Math.floor(physicalMeters * 0.1), // Using physical tracking
         path: JSON.stringify(path) 
       }
     });
@@ -287,12 +314,14 @@ export default function MapScreen() {
           <View style={styles.hudDivider} />
           <View style={styles.hudStat}>
             <Text style={styles.hudLabel}>METERS</Text>
-            <Text style={styles.hudValue}>{Math.floor(totalDistance)}</Text>
+            {/* Displaying real physical distance */}
+            <Text style={styles.hudValue}>{Math.floor(physicalMeters)}</Text>
           </View>
           <View style={styles.hudDivider} />
           <View style={styles.hudStat}>
             <Text style={styles.hudLabel}>KCAL</Text>
-            <Text style={styles.hudValue}>{(totalDistance * 0.062).toFixed(1)}</Text>
+            {/* Displaying calories burned from physical distance */}
+            <Text style={styles.hudValue}>{(physicalMeters * 0.062).toFixed(1)}</Text>
           </View>
           <View style={styles.hudDivider} />
           <View style={styles.hudStat}>

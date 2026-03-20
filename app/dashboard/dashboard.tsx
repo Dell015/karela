@@ -67,7 +67,7 @@ export default function Dashboard() {
       const data = await response.json();
       if (data.cod === 200 && data.main) {
         setWeather({
-          temp: Math.round(data.main.temp),
+          temp: Math.round(data.main.temp), // This number is now allowed by the type above
           desc: data.weather[0].description,
           city: data.name,
           icon: data.weather[0].icon,
@@ -77,6 +77,7 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    fetchWeather("Tuguegarao");
     fetchWeather("Tuguegarao");
   }, []);
 
