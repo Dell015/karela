@@ -25,7 +25,6 @@ const getDistance = (
 };
 
 export const useLocationEngine = (savedGhostData: any[]) => {
-  // Path now stores objects to track vehicle status per point
   const [path, setPath] = useState<{latitude: number; longitude: number; isVehicle: boolean}[]>([]);
   const [ghostPosition, setGhostPosition] = useState<any>(null);
   const [isRacing, setIsRacing] = useState(false);
@@ -35,42 +34,36 @@ export const useLocationEngine = (savedGhostData: any[]) => {
   const [totalDistance, setTotalDistance] = useState(0);
   
   const lastHeadingRef = useRef(0);
+  const isRacingRef = useRef(isRacing);
   const VELOCITY_CAP = 35; // KM/H threshold for Anti-Cheat
 
-  const isRacingRef = useRef(isRacing);
+  // Sync ref with state for use inside listeners without causing re-renders
   useEffect(() => {
     isRacingRef.current = isRacing;
     if (isRacing) {
-        setTotalDistance(0); // Reset distance when a new race starts
-        setPath([]);         // Reset path
+      setTotalDistance(0);
+      setPath([]);
     }
   }, [isRacing]);
 
-  const startTimeRef = useRef<number | null>(null);
-  const ghostTimerRef = useRef<any>(null);
-
-  // 1. Handle Ghost Timer
+  // 1. GHOST TIMER - Only runs if isRacing is TRUE
   useEffect(() => {
-    if (isRacing) {
-      startTimeRef.current = Date.now();
-      ghostTimerRef.current = setInterval(() => {
-        if (startTimeRef.current && savedGhostData.length > 0) {
-          const elapsed = (Date.now() - startTimeRef.current) / 1000;
-          const pos = GhostEngine.getGhostPosition(savedGhostData, elapsed);
-          setGhostPosition(pos);
-        }
-      }, 50);
-    } else {
+    if (!isRacing || !savedGhostData || savedGhostData.length === 0) {
       setGhostPosition(null);
-      setCurrentSpeed(0);
-      if (ghostTimerRef.current) clearInterval(ghostTimerRef.current);
+      return;
     }
-    return () => {
-      if (ghostTimerRef.current) clearInterval(ghostTimerRef.current);
-    };
+
+    const startTime = Date.now();
+    const ghostTimer = setInterval(() => {
+      const elapsed = (Date.now() - startTime) / 1000;
+      const pos = GhostEngine.getGhostPosition(savedGhostData, elapsed);
+      setGhostPosition(pos);
+    }, 100); // 10Hz is plenty for UI smoothness
+
+    return () => clearInterval(ghostTimer);
   }, [isRacing, savedGhostData]);
 
-  // 2. Handle Location Subscription with Anti-Cheat & Smoothing
+  // 2. LOCATION SUBSCRIPTION - Dynamic Accuracy Based on State
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;
 
@@ -80,43 +73,35 @@ export const useLocationEngine = (savedGhostData: any[]) => {
 
       subscription = await Location.watchPositionAsync(
         {
-          accuracy: Location.Accuracy.BestForNavigation,
-          distanceInterval: 1,
-          timeInterval: 1000,
+          // Optimization: Use lower accuracy when not racing to save CPU/Battery
+          accuracy: isRacing ? Location.Accuracy.BestForNavigation : Location.Accuracy.Balanced,
+          distanceInterval: isRacing ? 2 : 15, 
+          timeInterval: isRacing ? 1000 : 5000, 
         },
         (location) => {
           const { latitude, longitude, speed, accuracy } = location.coords;
 
-          // FILTER 1: ACCURACY GATEKEEPER
-          if (accuracy && accuracy > 20) return;
+          // Philippine GPS Signal Filter: Accuracy > 35m is usually a "jump" or "glitch"
+          if (accuracy && accuracy > 35) return;
 
           const newPoint = { latitude, longitude };
           setCurrentLocation(newPoint);
 
-          // Speed calculation (m/s to km/h)
-          const speedKmH = speed && speed > 0 ? Math.round(speed * 3.6) : 0;
-          setCurrentSpeed(speedKmH);
-
-          // Determine if the user is currently "cheating" (in a vehicle)
-          const isVehicle = speedKmH > VELOCITY_CAP;
-
           if (isRacingRef.current) {
+            const speedKmH = speed && speed > 0 ? Math.round(speed * 3.6) : 0;
+            setCurrentSpeed(speedKmH);
+            const isVehicle = speedKmH > VELOCITY_CAP;
+
             setPath((current) => {
               const pointWithStatus = { ...newPoint, isVehicle };
-              
               if (current.length === 0) return [pointWithStatus];
 
               const lastPoint = current[current.length - 1];
               const distanceMoved = getDistance(lastPoint, newPoint);
 
-              // FILTER A: STATIONARY FILTER (3m)
-              // FILTER B: TELEPORT FILTER (25m)
-              if (distanceMoved < 3 || distanceMoved > 25) return current;
+              // Filtering jitter (Stationary < 3m, Teleport > 40m)
+              if (distanceMoved < 3 || distanceMoved > 40) return current;
 
-              /**
-               * CEO ANTI-CHEAT: 
-               * Only increment distance if the user is NOT speeding in a vehicle.
-               */
               if (!isVehicle) {
                 setTotalDistance((prev) => prev + distanceMoved);
               }
@@ -124,7 +109,7 @@ export const useLocationEngine = (savedGhostData: any[]) => {
               return [...current, pointWithStatus];
             });
           }
-        },
+        }
       );
     };
 
@@ -132,28 +117,35 @@ export const useLocationEngine = (savedGhostData: any[]) => {
     return () => {
       if (subscription) subscription.remove();
     };
-  }, []);
+  }, [isRacing]); // Re-subscribes with new accuracy mode when racing starts/stops
 
-  // 3. Handle Magnetometer (Compass Smoothing)
+  // 3. COMPASS (Magnetometer) - Only active during Race
   useEffect(() => {
-    let subscription: any = null;
-    Magnetometer.setUpdateInterval(150);
+    if (!isRacing) {
+        setCompassHeading(0);
+        return;
+    }
 
-    subscription = Magnetometer.addListener((data) => {
+    let magnetSubscription: any = null;
+    Magnetometer.setUpdateInterval(200); // Relaxed from 150ms
+
+    magnetSubscription = Magnetometer.addListener((data) => {
       let { x, y } = data;
       let angle = Math.atan2(-x, y) * (180 / Math.PI);
       if (angle < 0) angle += 360;
 
-      const alpha = 0.03;
-      const smoothedAngle =
-        lastHeadingRef.current + (angle - lastHeadingRef.current) * alpha;
+      // Low-pass filter for smoothness
+      const alpha = 0.1; 
+      const smoothedAngle = lastHeadingRef.current + (angle - lastHeadingRef.current) * alpha;
 
       lastHeadingRef.current = smoothedAngle;
       setCompassHeading(smoothedAngle);
     });
 
-    return () => subscription && subscription.remove();
-  }, []);
+    return () => {
+      if (magnetSubscription) magnetSubscription.remove();
+    };
+  }, [isRacing]);
 
   return {
     path,
