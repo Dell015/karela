@@ -1,5 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { router, Stack } from "expo-router";
+import { router, Stack, useNavigation } from "expo-router";
+import { DrawerActions } from "@react-navigation/native";
 import { useEffect, useRef, useState } from "react";
 import {
   Image,
@@ -31,7 +32,7 @@ export default function Dashboard() {
   const currentXP = 452;
   const totalXP = 1000;
   const progressPercent = (currentXP / totalXP) * 100;
-  
+  const navigation = useNavigation();
 
   const [weather, setWeather] = useState<{
     temp: string | number;
@@ -87,7 +88,6 @@ export default function Dashboard() {
   return (
     <SafeAreaView style={[theme.container, { backgroundColor: "#0d0d0d" }]}>
       <StatusBar barStyle="light-content" />
-      <Stack.Screen options={{ headerShown: false }} />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -120,7 +120,14 @@ export default function Dashboard() {
                     <Text style={dashboard_ui.nameText}>Sander</Text>
                   </View>
                 </View>
-                <TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    // This ensures we reach out to the Drawer navigator wrapping this screen
+                    navigation.dispatch(DrawerActions.openDrawer());
+                    // If that doesn't work, try the direct dispatch:
+                    // navigation.dispatch(DrawerActions.openDrawer());
+                  }}
+                >
                   <Text style={{ color: "#fff", fontSize: 24 }}>☰</Text>
                 </TouchableOpacity>
               </View>

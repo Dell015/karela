@@ -236,8 +236,16 @@ export default function MapScreen() {
 
         {/* SEGMENTED USER TRAIL */}
         {path.map((point, index) => {
+          // Skip the first point because we need a "previous" point to draw a line segment
           if (index === 0 || !path[index - 1]) return null;
+          
           const prevPoint = path[index - 1];
+
+          /** * THE COLOR GATE:
+           * If the CURRENT point is flagged as a vehicle, the segment leading to it turns RED.
+           * This creates a visual "Heatmap" of where the user cheated or drove.
+           */
+          const segmentColor = point.isVehicle ? "#FF3B30" : "#7CF205";
 
           return (
             <Polyline
@@ -246,13 +254,11 @@ export default function MapScreen() {
                 { latitude: prevPoint.latitude, longitude: prevPoint.longitude }, 
                 { latitude: point.latitude, longitude: point.longitude }
               ]}
-              strokeColor={point.isVehicle ? "#FF3B30" : "#7CF205"}
+              strokeColor={segmentColor}
               strokeWidth={8}
               lineCap="round" 
               lineJoin="round" 
-              geodesic={false}
-              zIndex={2000 + index}
-              lineDashPattern={Platform.OS === 'ios' ? [1000, 0] : undefined}
+              zIndex={2000 + index} // Ensures the trail stays above the map but below markers
             />
           );
         })}
