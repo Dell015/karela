@@ -3,10 +3,9 @@ import * as Location from "expo-location";
 import { GhostEngine } from "@/services/tracker/GhostEngine";
 import { PermissionManager } from "@/services/PermissionsManager";
 import { Magnetometer } from "expo-sensors";
+// 1. IMPORT THE SHIELD
+import { useMotionShield } from "./useMotionShield"; 
 
-/**
- * Helper: Haversine formula to calculate distance between two points in meters.
- */
 const getDistance = (
   p1: { latitude: number; longitude: number },
   p2: { latitude: number; longitude: number },
@@ -25,6 +24,9 @@ const getDistance = (
 };
 
 export const useLocationEngine = (savedGhostData: any[]) => {
+  // 2. INITIALIZE THE SHIELD
+  const { isPhysicallyMoving, stepCount } = useMotionShield();
+  
   const [path, setPath] = useState<{latitude: number; longitude: number; isVehicle: boolean}[]>([]);
   const [ghostPosition, setGhostPosition] = useState<any>(null);
   const [isRacing, setIsRacing] = useState(false);
@@ -35,9 +37,8 @@ export const useLocationEngine = (savedGhostData: any[]) => {
   
   const lastHeadingRef = useRef(0);
   const isRacingRef = useRef(isRacing);
-  const VELOCITY_CAP = 35; // KM/H threshold for Anti-Cheat
+  const VELOCITY_CAP = 35; 
 
-  // Sync ref with state for use inside listeners without causing re-renders
   useEffect(() => {
     isRacingRef.current = isRacing;
     if (isRacing) {
@@ -46,24 +47,21 @@ export const useLocationEngine = (savedGhostData: any[]) => {
     }
   }, [isRacing]);
 
-  // 1. GHOST TIMER - Only runs if isRacing is TRUE
   useEffect(() => {
     if (!isRacing || !savedGhostData || savedGhostData.length === 0) {
       setGhostPosition(null);
       return;
     }
-
     const startTime = Date.now();
     const ghostTimer = setInterval(() => {
       const elapsed = (Date.now() - startTime) / 1000;
       const pos = GhostEngine.getGhostPosition(savedGhostData, elapsed);
       setGhostPosition(pos);
-    }, 100); // 10Hz is plenty for UI smoothness
-
+    }, 100);
     return () => clearInterval(ghostTimer);
   }, [isRacing, savedGhostData]);
 
-  // 2. LOCATION SUBSCRIPTION - Dynamic Accuracy Based on State
+  // 3. UPDATED LOCATION SUBSCRIPTION
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;
 
@@ -73,7 +71,6 @@ export const useLocationEngine = (savedGhostData: any[]) => {
 
       subscription = await Location.watchPositionAsync(
         {
-          // Optimization: Use lower accuracy when not racing to save CPU/Battery
           accuracy: isRacing ? Location.Accuracy.BestForNavigation : Location.Accuracy.Balanced,
           distanceInterval: isRacing ? 2 : 15, 
           timeInterval: isRacing ? 1000 : 5000, 
@@ -81,7 +78,6 @@ export const useLocationEngine = (savedGhostData: any[]) => {
         (location) => {
           const { latitude, longitude, speed, accuracy } = location.coords;
 
-          // Philippine GPS Signal Filter: Accuracy > 35m is usually a "jump" or "glitch"
           if (accuracy && accuracy > 35) return;
 
           const newPoint = { latitude, longitude };
@@ -99,8 +95,21 @@ export const useLocationEngine = (savedGhostData: any[]) => {
               const lastPoint = current[current.length - 1];
               const distanceMoved = getDistance(lastPoint, newPoint);
 
-              // Filtering jitter (Stationary < 3m, Teleport > 40m)
-              if (distanceMoved < 3 || distanceMoved > 40) return current;
+              /**
+               * THE STATIONARY SHIELD LOGIC
+               * We only "Commit" this movement if:
+               * 1. Distance is > 2m (Standard filter)
+               * 2. AND we are physically moving OR moving fast enough to be a vehicle
+               */
+              const isValidMovement = distanceMoved > 2 && (isPhysicallyMoving || isVehicle);
+
+              if (!isValidMovement) {
+                // Ignore the update; the shield has blocked the jitter.
+                return current;
+              }
+
+              // Protection against "Teleportation" glitches
+              if (distanceMoved > 100) return current;
 
               if (!isVehicle) {
                 setTotalDistance((prev) => prev + distanceMoved);
@@ -117,31 +126,25 @@ export const useLocationEngine = (savedGhostData: any[]) => {
     return () => {
       if (subscription) subscription.remove();
     };
-  }, [isRacing]); // Re-subscribes with new accuracy mode when racing starts/stops
+  }, [isRacing, isPhysicallyMoving]); // Added isPhysicallyMoving to dependency array
 
-  // 3. COMPASS (Magnetometer) - Only active during Race
+  // COMPASS REMAINS THE SAME...
   useEffect(() => {
     if (!isRacing) {
         setCompassHeading(0);
         return;
     }
-
     let magnetSubscription: any = null;
-    Magnetometer.setUpdateInterval(200); // Relaxed from 150ms
-
+    Magnetometer.setUpdateInterval(200);
     magnetSubscription = Magnetometer.addListener((data) => {
       let { x, y } = data;
       let angle = Math.atan2(-x, y) * (180 / Math.PI);
       if (angle < 0) angle += 360;
-
-      // Low-pass filter for smoothness
       const alpha = 0.1; 
       const smoothedAngle = lastHeadingRef.current + (angle - lastHeadingRef.current) * alpha;
-
       lastHeadingRef.current = smoothedAngle;
       setCompassHeading(smoothedAngle);
     });
-
     return () => {
       if (magnetSubscription) magnetSubscription.remove();
     };
@@ -156,6 +159,8 @@ export const useLocationEngine = (savedGhostData: any[]) => {
     currentLocation,
     currentSpeed,
     compassHeading,
+    isPhysicallyMoving, // Return this so the UI can show the shield status
+    stepCount,
     setPath
   };
 };

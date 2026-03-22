@@ -34,6 +34,8 @@ export default function MapScreen() {
     currentLocation,
     currentSpeed,
     compassHeading,
+    isPhysicallyMoving, // <--- Add this
+    stepCount,          // <--- Add this
   } = useLocationEngine(activeGhostData);
 
   const {

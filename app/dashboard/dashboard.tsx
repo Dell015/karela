@@ -27,12 +27,11 @@ export default function Dashboard() {
   const mapRef = useRef<MapView>(null);
   const [activeGhostData] = useState<any[]>([]);
   const { currentLocation } = useLocationEngine(activeGhostData);
-
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-
   const currentXP = 452;
   const totalXP = 1000;
   const progressPercent = (currentXP / totalXP) * 100;
+  
 
   const [weather, setWeather] = useState<{
     temp: string | number;
