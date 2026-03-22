@@ -28,7 +28,6 @@ export default function Dashboard() {
   const [activeGhostData] = useState<any[]>([]);
   const { currentLocation } = useLocationEngine(activeGhostData);
 
-  // State to track if keyboard is open to adjust layout
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
 
   const currentXP = 452;
@@ -71,19 +70,18 @@ export default function Dashboard() {
       const data = await response.json();
       if (data.cod === 200 && data.main) {
         setWeather({
-          temp: Math.round(data.main.temp), // This number is now allowed by the type above
+          temp: Math.round(data.main.temp),
           desc: data.weather[0].description,
           city: data.name,
           icon: data.weather[0].icon,
         });
       }
     } catch (error) {
-      console.error("Fetch failed:", error);
+      console.error("Weather Fetch failed:", error);
     }
   };
 
   useEffect(() => {
-    fetchWeather("Tuguegarao");
     fetchWeather("Tuguegarao");
   }, []);
 
@@ -176,22 +174,49 @@ export default function Dashboard() {
                 </LinearGradient>
               </TouchableOpacity>
 
+              {/* Map Preview Section */}
               <Text style={dashboard_ui.sectionTitle}>Active Path-Maker</Text>
               <View style={dashboard_ui.mapPreviewContainer}>
-                <View style={{ borderRadius: 15, overflow: "hidden", flex: 1 }}>
-                  <MapView
-                    ref={mapRef}
-                    style={StyleSheet.absoluteFillObject}
-                    provider="google"
-                    customMapStyle={ghostMapStyle}
-                    showsUserLocation={true}
-                    initialRegion={{
-                      latitude: currentLocation?.latitude || 17.6132,
-                      longitude: currentLocation?.longitude || 121.727,
-                      latitudeDelta: 0.05,
-                      longitudeDelta: 0.05,
-                    }}
-                  />
+                <View
+                  style={{
+                    borderRadius: 15,
+                    overflow: "hidden",
+                    height: 200,
+                    width: "100%",
+                    backgroundColor: "#1a1a1a",
+                  }}
+                >
+                  {currentLocation?.latitude ? (
+                    <MapView
+                      ref={mapRef}
+                      // FORCE GOOGLE MAPS FOR THE GHOST STYLE TO WORK
+                      provider={
+                        Platform.OS === "android" ? undefined : "google"
+                      }
+                      style={StyleSheet.absoluteFillObject}
+                      customMapStyle={ghostMapStyle}
+                      showsUserLocation={true}
+                      tintColor="#7CF205" // Makes the blue dot match your theme
+                      region={{
+                        latitude: currentLocation.latitude,
+                        longitude: currentLocation.longitude,
+                        latitudeDelta: 0.01,
+                        longitudeDelta: 0.01,
+                      }}
+                    />
+                  ) : (
+                    <View
+                      style={{
+                        flex: 1,
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text style={{ color: "#7CF205", fontWeight: "600" }}>
+                        INITIALIZING SENSORS...
+                      </Text>
+                    </View>
+                  )}
                 </View>
                 <Image
                   source={require("@/assets/images/Sun.png")}
@@ -207,6 +232,7 @@ export default function Dashboard() {
                 </TouchableOpacity>
               </View>
 
+              {/* Character Avatars */}
               <View style={dashboard_ui.characterRow}>
                 <View style={dashboard_ui.characterColumn}>
                   <Text style={dashboard_ui.characterTitle}>Ani</Text>
@@ -218,6 +244,7 @@ export default function Dashboard() {
                 </View>
               </View>
 
+              {/* Chat with Ani */}
               <Text style={dashboard_ui.sectionTitle}>Chat with Ani</Text>
               <View style={dashboard_ui.chatCardContainer}>
                 <LinearGradient
@@ -244,16 +271,14 @@ export default function Dashboard() {
               </View>
 
               <Text style={dashboard_ui.sectionTitle}>Quest Progress</Text>
-              <View style={dashboard_ui.chatCardContainer}></View>
+              <View style={dashboard_ui.chatCardContainer} />
 
-              {/* DYNAMIC SPACER: Pushes the card up higher when typing */}
               {isKeyboardVisible && <View style={{ height: 100 }} />}
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
 
-      {/* Hide the run button when keyboard is open for a cleaner look */}
       {!isKeyboardVisible && (
         <View style={dashboard_ui.floatingButtonContainer}>
           <TouchableOpacity
