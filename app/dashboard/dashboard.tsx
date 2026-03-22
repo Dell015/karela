@@ -13,7 +13,7 @@ import {
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  View
+  View,
 } from "react-native";
 import MapView from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -27,7 +27,7 @@ export default function Dashboard() {
   const mapRef = useRef<MapView>(null);
   const [activeGhostData] = useState<any[]>([]);
   const { currentLocation } = useLocationEngine(activeGhostData);
-  
+
   // State to track if keyboard is open to adjust layout
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
 
@@ -49,8 +49,12 @@ export default function Dashboard() {
 
   // Keyboard Listeners
   useEffect(() => {
-    const showSubscription = Keyboard.addListener("keyboardDidShow", () => setKeyboardVisible(true));
-    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => setKeyboardVisible(false));
+    const showSubscription = Keyboard.addListener("keyboardDidShow", () =>
+      setKeyboardVisible(true),
+    );
+    const hideSubscription = Keyboard.addListener("keyboardDidHide", () =>
+      setKeyboardVisible(false),
+    );
 
     return () => {
       showSubscription.remove();
@@ -73,7 +77,9 @@ export default function Dashboard() {
           icon: data.weather[0].icon,
         });
       }
-    } catch (error) { console.error("Fetch failed:", error); }
+    } catch (error) {
+      console.error("Fetch failed:", error);
+    }
   };
 
   useEffect(() => {
@@ -82,47 +88,69 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <SafeAreaView style={[theme.container, { backgroundColor: '#0d0d0d' }]}>
+    <SafeAreaView style={[theme.container, { backgroundColor: "#0d0d0d" }]}>
       <StatusBar barStyle="light-content" />
       <Stack.Screen options={{ headerShown: false }} />
 
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0} 
+        keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView
             showsVerticalScrollIndicator={false}
-            style={{ backgroundColor: '#0d0d0d' }} 
-            contentContainerStyle={{ 
-              paddingBottom: isKeyboardVisible ? 20 : 160, 
-              backgroundColor: '#0d0d0d' 
+            style={{ backgroundColor: "#0d0d0d" }}
+            contentContainerStyle={{
+              paddingBottom: isKeyboardVisible ? 20 : 160,
+              backgroundColor: "#0d0d0d",
             }}
           >
             <View style={dashboard_ui.dashboard}>
               {/* Profile Header */}
               <View style={dashboard_ui.ProfileHeader}>
                 <View style={dashboard_ui.LeftGroup}>
-                  <TouchableOpacity onPress={() => router.push("/dashboard/profile")}>
-                    <Image source={require("@/assets/images/sir-sander.jpg")} style={dashboard_ui.Image} />
+                  <TouchableOpacity
+                    onPress={() => router.push("/dashboard/profile")}
+                  >
+                    <Image
+                      source={require("@/assets/images/sir-sander.jpg")}
+                      style={dashboard_ui.Image}
+                    />
                   </TouchableOpacity>
                   <View>
                     <Text style={dashboard_ui.welcomeText}>Welcome back</Text>
                     <Text style={dashboard_ui.nameText}>Sander</Text>
                   </View>
                 </View>
-                <TouchableOpacity><Text style={{ color: "#fff", fontSize: 24 }}>☰</Text></TouchableOpacity>
+                <TouchableOpacity>
+                  <Text style={{ color: "#fff", fontSize: 24 }}>☰</Text>
+                </TouchableOpacity>
               </View>
 
               {/* Stats Card */}
-              <TouchableOpacity activeOpacity={0.9}>
-                <LinearGradient colors={["#7CF205", "#209F77"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={dashboard_ui.RunCard}>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => router.push("/dashboard/progress_screen")}
+              >
+                <LinearGradient
+                  colors={["#7CF205", "#209F77"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={dashboard_ui.RunCard}
+                >
                   <View style={dashboard_ui.CardOverlay}>
                     <View style={dashboard_ui.CardContent}>
-                      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                        }}
+                      >
                         <View>
-                          <Text style={dashboard_ui.LevelLabel}>LVL 12 STRIDER</Text>
+                          <Text style={dashboard_ui.LevelLabel}>
+                            LVL 12 STRIDER
+                          </Text>
                           <Text style={dashboard_ui.nameLabel}>Sander_67</Text>
                         </View>
                         <View style={{ alignItems: "flex-end" }}>
@@ -132,9 +160,16 @@ export default function Dashboard() {
                       </View>
                       <View style={dashboard_ui.progressContainer}>
                         <View style={dashboard_ui.progressBarTrack}>
-                          <View style={[dashboard_ui.progressBarFill, { width: `${progressPercent}%` }]} />
+                          <View
+                            style={[
+                              dashboard_ui.progressBarFill,
+                              { width: `${progressPercent}%` },
+                            ]}
+                          />
                         </View>
-                        <Text style={dashboard_ui.xpText}>{currentXP}/{totalXP} XP</Text>
+                        <Text style={dashboard_ui.xpText}>
+                          {currentXP}/{totalXP} XP
+                        </Text>
                       </View>
                     </View>
                   </View>
@@ -143,24 +178,32 @@ export default function Dashboard() {
 
               <Text style={dashboard_ui.sectionTitle}>Active Path-Maker</Text>
               <View style={dashboard_ui.mapPreviewContainer}>
-                <View style={{ borderRadius: 15, overflow: 'hidden', flex: 1 }}>
-                    <MapView
-                      ref={mapRef}
-                      style={StyleSheet.absoluteFillObject}
-                      provider="google"
-                      customMapStyle={ghostMapStyle}
-                      showsUserLocation={true}
-                      initialRegion={{
-                        latitude: currentLocation?.latitude || 17.6132,
-                        longitude: currentLocation?.longitude || 121.7270,
-                        latitudeDelta: 0.05,
-                        longitudeDelta: 0.05,
-                      }}
-                    />
+                <View style={{ borderRadius: 15, overflow: "hidden", flex: 1 }}>
+                  <MapView
+                    ref={mapRef}
+                    style={StyleSheet.absoluteFillObject}
+                    provider="google"
+                    customMapStyle={ghostMapStyle}
+                    showsUserLocation={true}
+                    initialRegion={{
+                      latitude: currentLocation?.latitude || 17.6132,
+                      longitude: currentLocation?.longitude || 121.727,
+                      latitudeDelta: 0.05,
+                      longitudeDelta: 0.05,
+                    }}
+                  />
                 </View>
-                <Image source={require("@/assets/images/Sun.png")} style={dashboard_ui.weatherOverlayIcon} />
-                <TouchableOpacity style={dashboard_ui.mapButton} onPress={() => router.push("/dashboard/maps")}>
-                  <Text style={dashboard_ui.mapButtonText}>Click to see more</Text>
+                <Image
+                  source={require("@/assets/images/Sun.png")}
+                  style={dashboard_ui.weatherOverlayIcon}
+                />
+                <TouchableOpacity
+                  style={dashboard_ui.mapButton}
+                  onPress={() => router.push("/dashboard/maps")}
+                >
+                  <Text style={dashboard_ui.mapButtonText}>
+                    Click to see more
+                  </Text>
                 </TouchableOpacity>
               </View>
 
@@ -177,26 +220,31 @@ export default function Dashboard() {
 
               <Text style={dashboard_ui.sectionTitle}>Chat with Ani</Text>
               <View style={dashboard_ui.chatCardContainer}>
-                <LinearGradient colors={["#7CF205", "#209F77"]} style={dashboard_ui.chatSideBar} />
+                <LinearGradient
+                  colors={["#7CF205", "#209F77"]}
+                  style={dashboard_ui.chatSideBar}
+                />
                 <View style={dashboard_ui.chatContent}>
                   <Text style={dashboard_ui.chatText}>
-                    my sensors see rain clouds rolling into {weather.city}—let’s knock out your errands now!
+                    my sensors see rain clouds rolling into {weather.city}—let’s
+                    knock out your errands now!
                   </Text>
                   <View style={dashboard_ui.nestedInputContainer}>
-                    <TextInput 
-                      placeholder="Ask Ani anything..." 
-                      placeholderTextColor="#8A8A8A" 
-                      style={dashboard_ui.nestedInput} 
+                    <TextInput
+                      placeholder="Ask Ani anything..."
+                      placeholderTextColor="#8A8A8A"
+                      style={dashboard_ui.nestedInput}
                       returnKeyType="send"
                     />
-                    <TouchableOpacity><Text style={{ color: "#fff", fontSize: 18 }}>➔</Text></TouchableOpacity>
+                    <TouchableOpacity>
+                      <Text style={{ color: "#fff", fontSize: 18 }}>➔</Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
               </View>
-              
+
               <Text style={dashboard_ui.sectionTitle}>Quest Progress</Text>
-              <View style={dashboard_ui.chatCardContainer}>
-              </View>
+              <View style={dashboard_ui.chatCardContainer}></View>
 
               {/* DYNAMIC SPACER: Pushes the card up higher when typing */}
               {isKeyboardVisible && <View style={{ height: 100 }} />}
@@ -208,8 +256,17 @@ export default function Dashboard() {
       {/* Hide the run button when keyboard is open for a cleaner look */}
       {!isKeyboardVisible && (
         <View style={dashboard_ui.floatingButtonContainer}>
-          <TouchableOpacity style={dashboard_ui.floatingIsland} activeOpacity={0.8} onPress={() => router.push("/test/test")}>
-            <LinearGradient colors={["#7CF205", "#209F77"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={dashboard_ui.gradientButton}>
+          <TouchableOpacity
+            style={dashboard_ui.floatingIsland}
+            activeOpacity={0.8}
+            onPress={() => router.push("/test/test")}
+          >
+            <LinearGradient
+              colors={["#7CF205", "#209F77"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={dashboard_ui.gradientButton}
+            >
               <Text style={dashboard_ui.mainButtonText}>Go for a Run</Text>
             </LinearGradient>
           </TouchableOpacity>
