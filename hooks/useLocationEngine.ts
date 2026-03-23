@@ -1,20 +1,18 @@
-import { NotificationService } from "@/services/notificationService";
-import { PermissionManager } from "@/services/PermissionsManager";
-import { GhostEngine } from "@/services/tracker/GhostEngine";
 import * as Location from "expo-location";
 import { Magnetometer } from "expo-sensors";
 import { useEffect, useRef, useState } from "react";
 import { useMotionShield } from "./useMotionShield";
+import { GhostEngine } from "@/services/tracker/GhostEngine";
+import { PermissionManager } from "@/services/PermissionsManager";
 
 /**
  * Helper: Haversine formula to calculate distance between two points in meters.
- * Essential for translating GPS coordinates into physical exercise metrics.
  */
 const getDistance = (
   p1: { latitude: number; longitude: number },
   p2: { latitude: number; longitude: number },
 ) => {
-  const R = 6371000; // Earth's radius in meters
+  const R = 6371000; 
   const dLat = ((p2.latitude - p1.latitude) * Math.PI) / 180;
   const dLon = ((p2.longitude - p1.longitude) * Math.PI) / 180;
   const a =
@@ -28,13 +26,11 @@ const getDistance = (
 };
 
 export const useLocationEngine = (savedGhostData: any[]) => {
-  // 1. SENSOR FUSION: Initialize the Pedometer-based "Motion Shield"
-  // This helps us verify if movement is actually coming from human steps.
+  // 1. Hook initializations
   const { isPhysicallyMoving, stepCount } = useMotionShield();
 
-  const [path, setPath] = useState<
-    { latitude: number; longitude: number; isVehicle: boolean }[]
-  >([]);
+  // 2. State definitions
+  const [path, setPath] = useState<{ latitude: number; longitude: number; isVehicle: boolean }[]>([]);
   const [ghostPosition, setGhostPosition] = useState<any>(null);
   const [isRacing, setIsRacing] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<any>(null);
@@ -42,52 +38,64 @@ export const useLocationEngine = (savedGhostData: any[]) => {
   const [compassHeading, setCompassHeading] = useState(0);
   const [totalDistance, setTotalDistance] = useState(0);
 
+  // 3. Refs (Must be declared before any useEffect uses them)
+  const raceStartTimeRef = useRef<number | null>(null);
   const lastHeadingRef = useRef(0);
   const isRacingRef = useRef(isRacing);
 
   // ANTI-CHEAT CONSTANTS
-  const VELOCITY_CAP = 35; // Speed in KM/H. Anything above this is flagged as a vehicle (Car/Tricycle).
-  const JITTER_THRESHOLD = 2; // Meters. GPS drifts smaller than this are ignored.
-  const TELEPORT_THRESHOLD = 100; // Meters. Sudden jumps larger than this are ignored (Signal glitches).
+  const VELOCITY_CAP = 35; 
+  const JITTER_THRESHOLD = 2; 
+  const TELEPORT_THRESHOLD = 100; 
 
-  // Sync Racing state with a Ref to allow the Location Listener to access it without closure staleness
+  // --- 1. RACE STATE SYNC & RESET ---
   useEffect(() => {
     isRacingRef.current = isRacing;
     if (isRacing) {
+      raceStartTimeRef.current = Date.now();
       setTotalDistance(0);
-      setPath([]);
-    }
-  }, [isRacing]);
-
-  useEffect(() => {
-    if (isRacing) {
-      NotificationService.setup();
+      setPath([]); // Clears the trail for the new run
     } else {
-      NotificationService.stopWidget();
+      raceStartTimeRef.current = null;
+      setGhostPosition(null);
     }
   }, [isRacing]);
 
+  // --- 2. GHOST SYNC ENGINE ---
   useEffect(() => {
-    if (!isRacing || !savedGhostData || savedGhostData.length === 0) {
-      setGhostPosition(null);
-      return;
+    let ghostTimer: any;
+
+    if (isRacing && savedGhostData && savedGhostData.length > 0) {
+      // Get the timestamp of the first point in the saved data
+      const ghostStartTime = savedGhostData[0].timestamp;
+
+      ghostTimer = setInterval(() => {
+        if (!raceStartTimeRef.current) return;
+
+        // Calculate how many seconds have passed since YOU pressed Start
+        const userElapsedSeconds = (Date.now() - raceStartTimeRef.current) / 1000;
+        
+        // Calculate the "Target Time" within the ghost's timeline
+        const targetTimestamp = ghostStartTime + userElapsedSeconds;
+
+        const pos = GhostEngine.getGhostPosition(savedGhostData, targetTimestamp);
+        
+        if (pos) {
+          setGhostPosition({
+            latitude: pos.latitude,
+            longitude: pos.longitude
+          });
+        } else {
+          // If the ghost has finished its recorded path
+          setGhostPosition(savedGhostData[savedGhostData.length - 1]);
+        }
+      }, 100); 
     }
-
-    const raceStartClockTime = Date.now();
-    const ghostBaseTimestamp = savedGhostData[0].timestamp;
-
-    const ghostTimer = setInterval(() => {
-      const userElapsedSeconds = (Date.now() - raceStartClockTime) / 1000;
-      const syncedTime = ghostBaseTimestamp + userElapsedSeconds;
-
-      const pos = GhostEngine.getGhostPosition(savedGhostData, syncedTime);
-      setGhostPosition(pos);
-    }, 100);
 
     return () => clearInterval(ghostTimer);
   }, [isRacing, savedGhostData]);
 
-  // 3. CORE TRACKING ENGINE (Update the distance accumulation part)
+  // --- 3. CORE GPS TRACKING ENGINE ---
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;
 
@@ -95,17 +103,20 @@ export const useLocationEngine = (savedGhostData: any[]) => {
       const isAllowed = await PermissionManager.requestLocation();
       if (!isAllowed) return;
 
+      const lastKnown = await Location.getLastKnownPositionAsync({});
+      if (lastKnown) setCurrentLocation(lastKnown.coords);
+
       subscription = await Location.watchPositionAsync(
         {
-          accuracy: isRacing
-            ? Location.Accuracy.BestForNavigation
-            : Location.Accuracy.Balanced,
-          distanceInterval: isRacing ? 2 : 15,
+          accuracy: isRacing ? Location.Accuracy.High : Location.Accuracy.Balanced,
+          distanceInterval: isRacing ? 2 : 10,
           timeInterval: isRacing ? 1000 : 5000,
         },
         (location) => {
           const { latitude, longitude, speed, accuracy } = location.coords;
-          if (accuracy && accuracy > 35) return;
+          
+          // Filter poor signals
+          if (accuracy && accuracy > 40) return;
 
           const newPoint = { latitude, longitude };
           setCurrentLocation(newPoint);
@@ -122,28 +133,14 @@ export const useLocationEngine = (savedGhostData: any[]) => {
               const lastPoint = current[current.length - 1];
               const distanceMoved = getDistance(lastPoint, newPoint);
 
-              if (
-                distanceMoved < JITTER_THRESHOLD ||
-                distanceMoved > TELEPORT_THRESHOLD
-              ) {
+              // Filter jitter and "teleporting"
+              if (distanceMoved < JITTER_THRESHOLD || distanceMoved > TELEPORT_THRESHOLD) {
                 return current;
               }
 
-              const requiredDistance = isVehicle ? 10 : JITTER_THRESHOLD;
-              if (distanceMoved < requiredDistance) return current;
-
-              // --- UPDATE NOTIFICATION WIDGET HERE ---
+              // Only accumulate distance if moving and not in a vehicle
               if (!isVehicle && isPhysicallyMoving) {
-                setTotalDistance((prev) => {
-                  const newTotal = prev + distanceMoved;
-                  // Push the update to the lockscreen
-                  NotificationService.updateRaceWidget(newTotal, speedKmH);
-                  return newTotal;
-                });
-              } else {
-                // Even if not counting distance (vehicle/standing),
-                // update the widget so speed shows correctly
-                NotificationService.updateRaceWidget(totalDistance, speedKmH);
+                setTotalDistance((prev) => prev + distanceMoved);
               }
 
               return [...current, pointWithStatus];
@@ -159,8 +156,7 @@ export const useLocationEngine = (savedGhostData: any[]) => {
     };
   }, [isRacing, isPhysicallyMoving]);
 
-  // 5. COMPASS ENGINE (Magnetometer)
-  // Provides orientation for the "3D" follow-camera mode
+  // --- 4. COMPASS & CAMERA ENGINE ---
   useEffect(() => {
     if (!isRacing) {
       setCompassHeading(0);
@@ -173,10 +169,9 @@ export const useLocationEngine = (savedGhostData: any[]) => {
       let angle = Math.atan2(-x, y) * (180 / Math.PI);
       if (angle < 0) angle += 360;
 
-      // Low-pass filter: Reduces compass "shaking" for a smoother map experience
+      // Smoothing filter for the camera rotation
       const alpha = 0.1;
-      const smoothedAngle =
-        lastHeadingRef.current + (angle - lastHeadingRef.current) * alpha;
+      const smoothedAngle = lastHeadingRef.current + (angle - lastHeadingRef.current) * alpha;
       lastHeadingRef.current = smoothedAngle;
       setCompassHeading(smoothedAngle);
     });
@@ -194,7 +189,7 @@ export const useLocationEngine = (savedGhostData: any[]) => {
     currentLocation,
     currentSpeed,
     compassHeading,
-    isPhysicallyMoving, // Used to show the "Shield" icon in the UI
+    isPhysicallyMoving,
     stepCount,
     setPath,
   };

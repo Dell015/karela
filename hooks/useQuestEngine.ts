@@ -1,16 +1,16 @@
-import {
-  MapCoordinate,
-  getMultiPointRoute,
-  snapToRoad,
+import { 
+  MapCoordinate, 
+  getMultiPointRoute, 
+  snapToRoad 
 } from "@/services/tracker/routingService";
 import { useState } from "react";
 import MapView from "react-native-maps";
-import { useLocationEngine } from "./useLocationEngine";
 
-// ~100 meters tolerance for PH shortcuts and GPS drift
+// --- PH GPS DRIFT OPTIMIZATION ---
+// ~100 meters tolerance for shortcuts and drift
 const OFF_TRACK_THRESHOLD = 0.001; 
-// ~20 meters for "popping" a flag (Good for PH GPS drift)
-const CHECKPOINT_PROXIMITY = 0.0002;
+// ~20-25 meters for "popping" a flag (Accounts for signal bouncing off buildings)
+const CHECKPOINT_PROXIMITY = 0.00025;
 const COMPLETION_THRESHOLD = 0.00015;
 
 export interface Checkpoint extends MapCoordinate {
@@ -19,7 +19,6 @@ export interface Checkpoint extends MapCoordinate {
 }
 
 export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
-  const [activeGhostData, setActiveGhostData] = useState<any[]>([]);
   const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
   const [questPath, setQuestPath] = useState<MapCoordinate[]>([]);
   const [questRewards, setQuestRewards] = useState<{ coins: number; xp: number } | null>(null);
@@ -28,10 +27,9 @@ export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
   const [isOverTrash, setIsOverTrash] = useState(false);
   const [totalDistance, setTotalDistance] = useState<number>(0);
 
-  const { currentLocation } = useLocationEngine(activeGhostData);
-
   /**
    * Real-time path & checkpoint logic
+   * Triggered by MapScreen whenever currentLocation changes during a race.
    */
   const updateRemainingPath = (userLoc: MapCoordinate) => {
     // 1. UPDATE CHECKPOINTS (THE "POP" LOGIC)
@@ -43,9 +41,10 @@ export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
         const latDiff = Math.abs(cp.latitude - userLoc.latitude);
         const lonDiff = Math.abs(cp.longitude - userLoc.longitude);
 
+        // Check if user is within the proximity of the flag
         if (latDiff < CHECKPOINT_PROXIMITY && lonDiff < CHECKPOINT_PROXIMITY) {
           hasChanged = true;
-          console.log(`Popped Checkpoint: ${cp.id}`);
+          console.log(`[QuestEngine] Popped Checkpoint: ${cp.id}`);
           return { ...cp, isReached: true };
         }
         return cp;
@@ -60,6 +59,7 @@ export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
       let closestIndex = 0;
       let minDistance = Number.MAX_VALUE;
 
+      // Find the segment of the gold line closest to the user
       currentPath.forEach((point, index) => {
         const dist = Math.sqrt(
           Math.pow(point.latitude - userLoc.latitude, 2) +
@@ -71,23 +71,33 @@ export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
         }
       });
 
-      // Finish Logic
+      // Finish Logic: If user is at the very end of the line
       if (currentPath.length <= 2 && minDistance < COMPLETION_THRESHOLD) {
         return []; 
       }
 
-      // Off-track stretching
+      // Off-track stretching: If user moves far away from the road, 
+      // stretch the gold line to their current position
       if (minDistance > OFF_TRACK_THRESHOLD) {
         return [userLoc, ...currentPath.slice(closestIndex)];
       }
 
+      // "Eat" the path: Remove the parts of the line the user has already passed
       return closestIndex > 0 ? currentPath.slice(closestIndex) : currentPath;
     });
   };
 
+  /**
+   * Re-calculates the route via the Routing Service
+   */
   const refreshRoute = async (userLoc: MapCoordinate | null, points: Checkpoint[]) => {
     if (userLoc && points.length > 0) {
       const activePoints = points.filter(p => !p.isReached);
+      if (activePoints.length === 0) {
+        setQuestPath([]);
+        return;
+      }
+
       const data = await getMultiPointRoute([userLoc, ...activePoints]);
       if (data) {
         setQuestPath(data.coordinates);
@@ -119,6 +129,7 @@ export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
   };
 
   const moveCheckpoint = async (index: number, newCoords: any, userLoc: any) => {
+    // Snap to road ensures the flag isn't placed inside a building
     const snapped = await snapToRoad(newCoords.latitude, newCoords.longitude);
     const updated = [...checkpoints];
     updated[index] = { ...updated[index], ...snapped };
@@ -127,10 +138,14 @@ export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
   };
 
   const changeCameraHeading = (direction: "N" | "S" | "E" | "W") => {
-    if (!mapRef.current || !currentLocation) return;
-    let heading = direction === "N" ? 0 : direction === "E" ? 90 : direction === "S" ? 180 : 270;
+    if (!mapRef.current) return;
+    
+    let heading = 0;
+    if (direction === "E") heading = 90;
+    if (direction === "S") heading = 180;
+    if (direction === "W") heading = 270;
+
     mapRef.current.animateCamera({
-        center: currentLocation,
         heading,
         pitch: 45,
         zoom: 17,

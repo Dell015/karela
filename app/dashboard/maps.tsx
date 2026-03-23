@@ -6,7 +6,7 @@ import {
   Alert,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import MapView, { Callout, Marker, Polyline } from "react-native-maps";
 
@@ -15,9 +15,8 @@ import { useLocationEngine } from "@/hooks/useLocationEngine";
 import { useQuestEngine } from "@/hooks/useQuestEngine";
 import { getLatestGhostRun } from "@/services/database/database";
 import { PermissionManager } from "@/services/PermissionsManager";
-import { MAP_CONFIG, styles } from "@/styles/mapStyles";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
-import { NotificationService } from "@/services/notificationService";
+import { styles } from "@/styles/mapStyles";
 
 export default function MapScreen() {
   const router = useRouter();
@@ -36,17 +35,16 @@ export default function MapScreen() {
     path,
     ghostPosition,
     isRacing,
-    setIsRacing,
     currentLocation,
     currentSpeed,
     compassHeading,
+    setIsRacing,
+    setPath,
   } = useLocationEngine(activeGhostData);
 
   const {
     checkpoints,
     questPath,
-    setIsDragging,
-    setIsOverTrash,
     addCheckpoint,
     deleteCheckpoint,
     moveCheckpoint,
@@ -62,15 +60,16 @@ export default function MapScreen() {
 
       const R = 6371000; // Earth's radius in meters
       const dLat = ((lastPoint.latitude - prevPoint.latitude) * Math.PI) / 180;
-      const dLon = ((lastPoint.longitude - prevPoint.longitude) * Math.PI) / 180;
-      
+      const dLon =
+        ((lastPoint.longitude - prevPoint.longitude) * Math.PI) / 180;
+
       const a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
         Math.cos((prevPoint.latitude * Math.PI) / 180) *
           Math.cos((lastPoint.latitude * Math.PI) / 180) *
           Math.sin(dLon / 2) *
           Math.sin(dLon / 2);
-      
+
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       const distanceMoved = R * c;
 
@@ -92,9 +91,12 @@ export default function MapScreen() {
   const handleStartRace = async () => {
     const locationAllowed = await PermissionManager.requestLocation();
     if (locationAllowed) {
-      await PermissionManager.requestNotificationStats();
+      // 1. Reset all local screen states
       setPhysicalMeters(0);
       setElapsedTime(0);
+      setPath([]); // Force clear the trail array before starting
+      
+      // 2. Trigger the engine
       setIsRacing(true);
     }
   };
@@ -121,7 +123,10 @@ export default function MapScreen() {
         setActiveGhostData(savedData);
         setIsGhostEnabled(true);
       } else {
-        Alert.alert("No Ghost Found", "Save a run first to race against yourself!");
+        Alert.alert(
+          "No Ghost Found",
+          "Save a run first to race against yourself!",
+        );
       }
     } else {
       setIsGhostEnabled(false);
@@ -162,7 +167,10 @@ export default function MapScreen() {
 
       mapRef.current.animateCamera(
         {
-          center: { latitude: currentLocation.latitude, longitude: currentLocation.longitude },
+          center: {
+            latitude: currentLocation.latitude,
+            longitude: currentLocation.longitude,
+          },
           heading: compassHeading,
           pitch: 55,
           zoom: 20,
@@ -170,7 +178,9 @@ export default function MapScreen() {
         { duration: 1500 },
       );
 
-      setTimeout(() => { isProcessing.current = false; }, 800);
+      setTimeout(() => {
+        isProcessing.current = false;
+      }, 800);
     }
   }, [currentLocation, compassHeading, isRacing]);
 
@@ -178,12 +188,15 @@ export default function MapScreen() {
   useEffect(() => {
     if (currentLocation && !hasZoomed && mapRef.current) {
       setTimeout(() => {
-        mapRef.current?.animateToRegion({
+        mapRef.current?.animateToRegion(
+          {
             latitude: currentLocation.latitude,
             longitude: currentLocation.longitude,
             latitudeDelta: 0.005,
             longitudeDelta: 0.005,
-          }, 2500);
+          },
+          2500,
+        );
         setHasZoomed(true);
       }, 500);
     }
@@ -191,9 +204,20 @@ export default function MapScreen() {
 
   if (!currentLocation) {
     return (
-      <View style={[styles.container, { justifyContent: "center", alignItems: "center", backgroundColor: "#1A1A1A" }]}>
+      <View
+        style={[
+          styles.container,
+          {
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "#1A1A1A",
+          },
+        ]}
+      >
         <ActivityIndicator size="large" color="#7CF205" />
-        <Text style={{ color: "white", marginTop: 10 }}>Locating in Philippines...</Text>
+        <Text style={{ color: "white", marginTop: 10 }}>
+          Locating in Philippines...
+        </Text>
       </View>
     );
   }
@@ -207,8 +231,9 @@ export default function MapScreen() {
         style={styles.map}
         provider="google"
         googleRenderer="LATEST"
-        customMapStyle={ghostMapStyle} // ADD THIS LINE
+        customMapStyle={ghostMapStyle}
         showsUserLocation={true}
+        showsMyLocationButton={false} // Prevents Google from overriding UI
         initialRegion={{
           latitude: currentLocation.latitude,
           longitude: currentLocation.longitude,
@@ -216,27 +241,59 @@ export default function MapScreen() {
           longitudeDelta: 0.05,
         }}
       >
-        {/* GHOST LINE */}
+        {/* --- GHOST ENGINE LAYER --- */}
+        {/* GHOST LINE (The static path of the saved run) */}
         {isGhostEnabled && activeGhostData.length > 1 && (
           <Polyline
             coordinates={activeGhostData}
             strokeColor="rgba(255, 215, 0, 0.4)"
-            strokeWidth={3}
+            strokeColors={["rgba(255, 215, 0, 0.4)"]} // Override native blue
+            strokeWidth={4}
             lineCap="round"
             lineJoin="round"
-            zIndex={9999}
-            lineDashPattern={[5, 5]}
-            
+            zIndex={1000}
+            lineDashPattern={[5, 10]}
+            geodesic={true}
           />
         )}
 
-        {/* QUEST ROUTE (Gold Line) */}
+        {/* GHOST MARKER (The actual moving ghost) */}
+        {isGhostEnabled && ghostPosition && (
+          <Marker
+            coordinate={ghostPosition}
+            anchor={{ x: 0.5, y: 0.5 }}
+            flat
+            zIndex={9000} // Keep it high so it stays above your own trail
+          >
+            <View
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: 12,
+                backgroundColor: "#FFD700",
+                borderWidth: 3,
+                borderColor: "white",
+                elevation: 5, // Fix for Android clipping
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.5,
+                shadowRadius: 3,
+              }}
+            />
+          </Marker>
+        )}
+
+        {/* QUEST ROUTE (Gold Line) - FIXED TO PREVENT BLUE */}
         {questPath.length > 1 && (
           <Polyline
             coordinates={[currentLocation, ...questPath.slice(1)]}
-            {...MAP_CONFIG.questPath}
             strokeColor="#FFD700"
-            strokeWidth={5}
+            strokeColors={["#FFD700"]} // Force plural to override native blue
+            strokeWidth={6}
+            lineCap="round"
+            lineJoin="round"
+            zIndex={2000} // High Z-Index to stay above user path
+            geodesic={true}
           />
         )}
 
@@ -244,24 +301,26 @@ export default function MapScreen() {
         {path.map((point, index) => {
           if (index === 0 || !path[index - 1]) return null;
           const prevPoint = path[index - 1];
+
+          // We define the color here
+          const segmentColor = point.isVehicle ? "#FF3B30" : "#7CF205";
+
           return (
             <Polyline
               key={`trail_${index}`}
               coordinates={[prevPoint, point]}
-              strokeColor={point.isVehicle ? "#FF3B30" : "#7CF205"}
+              // FIX: We provide both singular and plural to override the native driver
+              strokeColor={segmentColor}
+              strokeColors={[segmentColor, segmentColor]}
               strokeWidth={8}
               lineCap="round"
-              zIndex={2000 + index}
+              lineJoin="round"
+              // Extremely high Z-Index to stay on top of any hidden Google layers
+              zIndex={5000 + index}
+              geodesic={true}
             />
           );
         })}
-
-        {/* GHOST MARKER */}
-        {isGhostEnabled && ghostPosition && (
-          <Marker coordinate={ghostPosition} anchor={{ x: 0.5, y: 0.5 }} flat>
-            <View style={[styles.ghostMarker, { backgroundColor: "#FFD700" }]} />
-          </Marker>
-        )}
 
         {/* FLAGS (Checkpoints) */}
         {checkpoints.map((point, index) => {
@@ -284,21 +343,20 @@ export default function MapScreen() {
                 <Ionicons name="flag" size={36} color="#FFD700" />
               </View>
 
-              {/* THE EDIT BUBBLE */}
-              <Callout 
-                tooltip 
+              <Callout
+                tooltip
                 onPress={() => {
                   Alert.alert(
                     "Manage Checkpoint",
                     "What would you like to do?",
                     [
                       { text: "Cancel", style: "cancel" },
-                      { 
-                        text: "Delete Flag", 
+                      {
+                        text: "Delete Flag",
                         onPress: () => deleteCheckpoint(index, currentLocation),
-                        style: "destructive" 
-                      }
-                    ]
+                        style: "destructive",
+                      },
+                    ],
                   );
                 }}
               >
@@ -315,14 +373,19 @@ export default function MapScreen() {
       {/* HUD */}
       {isRacing && (
         <View style={styles.hudOverlay}>
-          <View style={styles.hudStat}>
+          <div style={styles.hudStat}>
             <Text style={styles.hudLabel}>TIME</Text>
             <Text style={styles.hudValue}>{formatTime(elapsedTime)}</Text>
-          </View>
+          </div>
           <View style={styles.hudDivider} />
           <View style={styles.hudStat}>
             <Text style={styles.hudLabel}>KM/H</Text>
-            <Text style={[styles.hudValue, (currentSpeed ?? 0) > 35 && { color: "#FF3B30" }]}>
+            <Text
+              style={[
+                styles.hudValue,
+                (currentSpeed ?? 0) > 35 && { color: "#FF3B30" },
+              ]}
+            >
               {currentSpeed ?? 0}
             </Text>
           </View>
@@ -335,7 +398,8 @@ export default function MapScreen() {
           <View style={styles.hudStat}>
             <Text style={styles.hudLabel}>GOAL</Text>
             <Text style={styles.hudValue}>
-              {checkpoints.filter((f) => (f as any).isReached).length}/{checkpoints.length}
+              {checkpoints.filter((f) => (f as any).isReached).length}/
+              {checkpoints.length}
             </Text>
           </View>
         </View>
@@ -344,24 +408,51 @@ export default function MapScreen() {
       {/* TOOLS (Only visible when NOT racing) */}
       {!isRacing && (
         <>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
             <Ionicons name="chevron-back" size={28} color="white" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.rightButtonBase, styles.compassButton]} onPress={() => changeCameraHeading("N")}>
+          <TouchableOpacity
+            style={[styles.rightButtonBase, styles.compassButton]}
+            onPress={() => changeCameraHeading("N")}
+          >
             <Ionicons name="compass" size={24} color="#FFD700" />
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.rightButtonBase, styles.ghostButton, { backgroundColor: isGhostEnabled ? "#7CF205" : "rgba(0,0,0,0.85)" }]} 
+          <TouchableOpacity
+            style={[
+              styles.rightButtonBase,
+              styles.ghostButton,
+              {
+                backgroundColor: isGhostEnabled
+                  ? "#7CF205"
+                  : "rgba(0,0,0,0.85)",
+              },
+            ]}
             onPress={toggleGhost}
           >
-            <Ionicons name="flash" size={24} color={isGhostEnabled ? "black" : "#FFD700"} />
+            <Ionicons
+              name="flash"
+              size={24}
+              color={isGhostEnabled ? "black" : "#FFD700"}
+            />
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.rightButtonBase, styles.flagSpawner]} onPress={handleSpawnFlag}>
+          <TouchableOpacity
+            style={[styles.rightButtonBase, styles.flagSpawner]}
+            onPress={handleSpawnFlag}
+          >
             {checkpoints.length > 0 && (
-              <View style={styles.flagCountBadge}><Text style={{ color: "white", fontSize: 10, fontWeight: "bold" }}>{checkpoints.length}</Text></View>
+              <View style={styles.flagCountBadge}>
+                <Text
+                  style={{ color: "white", fontSize: 10, fontWeight: "bold" }}
+                >
+                  {checkpoints.length}
+                </Text>
+              </View>
             )}
             <Ionicons name="flag" size={24} color="#FFD700" />
           </TouchableOpacity>
@@ -371,7 +462,10 @@ export default function MapScreen() {
       {/* ACTION BUTTON */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: isRacing ? "#FF3B30" : "#7CF205" }]}
+          style={[
+            styles.actionButton,
+            { backgroundColor: isRacing ? "#FF3B30" : "#7CF205" },
+          ]}
           onPress={() => (isRacing ? handleStopRace() : handleStartRace())}
         >
           <Text style={styles.buttonText}>{isRacing ? "STOP" : "START"}</Text>
