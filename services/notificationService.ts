@@ -7,34 +7,49 @@ export const NotificationService = {
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('race-tracker', {
         name: 'Ghost Race Tracker',
-        importance: Notifications.AndroidImportance.LOW, // Low means no annoying sound every second
+        importance: Notifications.AndroidImportance.LOW,
         showBadge: false,
         lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
       });
     }
+
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
   },
 
   // 2. Update the "Live Widget"
   updateRaceWidget: async (distanceMeters: number, speedKmH: number) => {
     const distanceKm = (distanceMeters / 1000).toFixed(2);
     
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "👻 Ghost Race Active",
-        body: `Distance: ${distanceKm} km  |  Speed: ${speedKmH} km/h`,
-        sticky: true, // Android: cannot be swiped away
-        color: "#7CF205", // Neon Green
-        priority: Notifications.AndroidNotificationPriority.LOW,
-      },
-      trigger: null, // "null" means show it immediately
-      identifier: 'race-progress', // Same ID means it overwrites the old one (updating it)
-    });
+    try {
+      // identifier: 'race-progress' ensures it updates the existing notification 
+      // instead of creating a new one every second.
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "👻 Ghost Race Active",
+          body: `Distance: ${distanceKm} km  |  Speed: ${speedKmH} km/h`,
+          sticky: true, // Android specific
+          color: "#7CF205",
+          priority: Notifications.AndroidNotificationPriority.LOW,
+        },
+        trigger: null, // null means "Show immediately"
+        identifier: 'race-progress', 
+      });
+    } catch (error) {
+      console.warn("Notification update failed:", error);
+    }
   },
 
   // 3. Remove it when finished
   stopWidget: async () => {
-    // This clears the specific notification from the lockscreen
-    await Notifications.dismissAllNotificationsAsync();
-    // Or specifically: await Notifications.dismissNotificationAsync('race-progress');
+    // Specifically dismiss the race progress notification
+    await Notifications.dismissNotificationAsync('race-progress');
   }
 };

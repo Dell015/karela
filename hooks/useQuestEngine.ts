@@ -9,37 +9,57 @@ import { useLocationEngine } from "./useLocationEngine";
 
 // ~100 meters tolerance for PH shortcuts and GPS drift
 const OFF_TRACK_THRESHOLD = 0.001; 
-// ~15 meters for quest completion
+// ~20 meters for "popping" a flag (Good for PH GPS drift)
+const CHECKPOINT_PROXIMITY = 0.0002;
 const COMPLETION_THRESHOLD = 0.00015;
+
+export interface Checkpoint extends MapCoordinate {
+  id: string;
+  isReached: boolean;
+}
 
 export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
   const [activeGhostData, setActiveGhostData] = useState<any[]>([]);
-  const [checkpoints, setCheckpoints] = useState<MapCoordinate[]>([]);
+  const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
   const [questPath, setQuestPath] = useState<MapCoordinate[]>([]);
-  const [questRewards, setQuestRewards] = useState<{
-    coins: number;
-    xp: number;
-  } | null>(null);
+  const [questRewards, setQuestRewards] = useState<{ coins: number; xp: number } | null>(null);
 
-  // UI Interaction States
   const [isDragging, setIsDragging] = useState(false);
   const [isOverTrash, setIsOverTrash] = useState(false);
   const [totalDistance, setTotalDistance] = useState<number>(0);
 
-  const {currentLocation} = useLocationEngine(activeGhostData);
+  const { currentLocation } = useLocationEngine(activeGhostData);
 
   /**
-   * Real-time path updates: Handles "eating" the path, 
-   * off-road stretching, and quest completion.
+   * Real-time path & checkpoint logic
    */
   const updateRemainingPath = (userLoc: MapCoordinate) => {
+    // 1. UPDATE CHECKPOINTS (THE "POP" LOGIC)
+    setCheckpoints((current) => {
+      let hasChanged = false;
+      const updated = current.map((cp) => {
+        if (cp.isReached) return cp;
+
+        const latDiff = Math.abs(cp.latitude - userLoc.latitude);
+        const lonDiff = Math.abs(cp.longitude - userLoc.longitude);
+
+        if (latDiff < CHECKPOINT_PROXIMITY && lonDiff < CHECKPOINT_PROXIMITY) {
+          hasChanged = true;
+          console.log(`Popped Checkpoint: ${cp.id}`);
+          return { ...cp, isReached: true };
+        }
+        return cp;
+      });
+      return hasChanged ? updated : current;
+    });
+
+    // 2. UPDATE QUEST PATH (THE "EATING" LOGIC)
     setQuestPath((currentPath) => {
       if (currentPath.length === 0) return currentPath;
 
       let closestIndex = 0;
       let minDistance = Number.MAX_VALUE;
 
-      // Find the closest point on the current path
       currentPath.forEach((point, index) => {
         const dist = Math.sqrt(
           Math.pow(point.latitude - userLoc.latitude, 2) +
@@ -51,38 +71,24 @@ export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
         }
       });
 
-      // 1. QUEST COMPLETION
-      // If we are at the final segment and close to the end
+      // Finish Logic
       if (currentPath.length <= 2 && minDistance < COMPLETION_THRESHOLD) {
-        console.log("Quest Complete!");
-        setCheckpoints([]); // Clear the flags
-        return []; // Clear the gold line
+        return []; 
       }
 
-      // 2. FORGIVING OFF-TRACK / SHORTCUT LOGIC
-      // If user is far from the road, "rubber-band" the line to the user
+      // Off-track stretching
       if (minDistance > OFF_TRACK_THRESHOLD) {
         return [userLoc, ...currentPath.slice(closestIndex)];
       }
 
-      // 3. NORMAL PROGRESSION
-      if (closestIndex > 0) {
-        return currentPath.slice(closestIndex);
-      }
-      
-      return currentPath;
+      return closestIndex > 0 ? currentPath.slice(closestIndex) : currentPath;
     });
   };
 
-  /**
-   * Re-calculates the route whenever checkpoints or user location changes.
-   */
-  const refreshRoute = async (
-    userLoc: MapCoordinate | null,
-    points: MapCoordinate[],
-  ) => {
+  const refreshRoute = async (userLoc: MapCoordinate | null, points: Checkpoint[]) => {
     if (userLoc && points.length > 0) {
-      const data = await getMultiPointRoute([userLoc, ...points]);
+      const activePoints = points.filter(p => !p.isReached);
+      const data = await getMultiPointRoute([userLoc, ...activePoints]);
       if (data) {
         setQuestPath(data.coordinates);
         setQuestRewards(data.rewards);
@@ -95,13 +101,11 @@ export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
     }
   };
 
-  const addCheckpoint = (
-    coords: { latitude: number; longitude: number },
-    userLoc: MapCoordinate | null,
-  ) => {
-    const newPoint = {
+  const addCheckpoint = (coords: { latitude: number; longitude: number }, userLoc: MapCoordinate | null) => {
+    const newPoint: Checkpoint = {
       ...coords,
       id: Math.random().toString(36).substring(7),
+      isReached: false,
     };
     const updated = [...checkpoints, newPoint];
     setCheckpoints(updated);
@@ -114,46 +118,23 @@ export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
     refreshRoute(userLoc, updated);
   };
 
-  const moveCheckpoint = async (
-    index: number,
-    newCoords: any,
-    userLoc: any,
-  ) => {
+  const moveCheckpoint = async (index: number, newCoords: any, userLoc: any) => {
     const snapped = await snapToRoad(newCoords.latitude, newCoords.longitude);
     const updated = [...checkpoints];
-    updated[index] = {
-      ...updated[index],
-      ...snapped,
-    };
-
+    updated[index] = { ...updated[index], ...snapped };
     setCheckpoints(updated);
     refreshRoute(userLoc, updated);
   };
 
   const changeCameraHeading = (direction: "N" | "S" | "E" | "W") => {
     if (!mapRef.current || !currentLocation) return;
-
-    let heading = 0;
-    switch (direction) {
-      case "N": heading = 0; break;
-      case "E": heading = 90; break;
-      case "S": heading = 180; break;
-      case "W": heading = 270; break;
-    }
-
-    // Use ONE command to rule them all
-    mapRef.current.animateCamera(
-      {
-        center: {
-          latitude: currentLocation.latitude,
-          longitude: currentLocation.longitude,
-        },
-        heading: heading,
-        pitch: 45, // Gives it that 3D "Ghost Run" look
-        zoom: 17,  // Equivalent to roughly 0.005 delta
-      },
-      { duration: 1000 }
-    );
+    let heading = direction === "N" ? 0 : direction === "E" ? 90 : direction === "S" ? 180 : 270;
+    mapRef.current.animateCamera({
+        center: currentLocation,
+        heading,
+        pitch: 45,
+        zoom: 17,
+      }, { duration: 1000 });
   };
 
   return {

@@ -1,4 +1,5 @@
 import { QuestCard } from "@/components/QuestCard";
+import { Ionicons } from "@expo/vector-icons";
 import { DrawerActions } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useNavigation } from "expo-router";
@@ -18,22 +19,21 @@ import {
   View,
 } from "react-native";
 import MapView from "react-native-maps";
-import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Custom Hooks & Styles
 import { useLocationEngine } from "@/hooks/useLocationEngine";
-import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { dashboard_ui } from "../../styles/dashboard";
 import { theme } from "../../styles/theme";
 
 export default function Dashboard() {
   const mapRef = useRef<MapView>(null);
   const [activeGhostData] = useState<any[]>([]);
-  
+
   // Extracting currentLocation and compassHeading to drive the map and recenter logic
-  const { currentLocation, compassHeading } = useLocationEngine(activeGhostData);
-  
+  const { currentLocation, compassHeading } =
+    useLocationEngine(activeGhostData);
+
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const currentXP = 452;
   const totalXP = 1000;
@@ -64,9 +64,9 @@ export default function Dashboard() {
           },
           heading: compassHeading || 0, // Faces the direction the user is pointing
           pitch: 55, // 3D Tilt
-          zoom: 18,  // Cinematic zoom level for dashboard
+          zoom: 18, // Cinematic zoom level for dashboard
         },
-        { duration: 1000 }
+        { duration: 1000 },
       );
     }
   };
@@ -219,7 +219,6 @@ export default function Dashboard() {
                       ref={mapRef}
                       provider={Platform.OS === "android" ? "google" : "google"}
                       style={StyleSheet.absoluteFillObject}
-                      customMapStyle={ghostMapStyle}
                       showsUserLocation={true}
                       tintColor="#7CF205"
                       initialRegion={{
@@ -245,17 +244,17 @@ export default function Dashboard() {
                 </View>
 
                 {/* RECENTER BUTTON (Targeting User) */}
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={{
-                    position: 'absolute',
+                    position: "absolute",
                     left: 12,
                     top: 1,
                     backgroundColor: "#7CF205",
                     padding: 5,
                     borderRadius: 12,
                     borderWidth: 1,
-                    zIndex: 10
-                  }} 
+                    zIndex: 10,
+                  }}
                   onPress={recenterMap}
                 >
                   <Ionicons name="navigate" size={20} color="#ffffff" />
@@ -265,7 +264,7 @@ export default function Dashboard() {
                   source={require("@/assets/images/Sun.png")}
                   style={dashboard_ui.weatherOverlayIcon}
                 />
-                
+
                 <TouchableOpacity
                   style={dashboard_ui.mapButton}
                   onPress={() => router.push("/dashboard/maps")}
@@ -364,10 +363,10 @@ export default function Dashboard() {
               end={{ x: 1, y: 1 }}
               style={dashboard_ui.circularGradient}
             >
-              <Ionicons 
-                name="play"    
-                size={40} 
-                color="#fff" 
+              <Ionicons
+                name="play"
+                size={40}
+                color="#fff"
                 style={{ marginLeft: 4 }}
               />
             </LinearGradient>
