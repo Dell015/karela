@@ -9,7 +9,18 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.worshestershire.karela",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "location",
+          "fetch",
+          "remote-notification"
+        ],
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Karela tracks your race against the ghost even when the screen is locked.",
+        "NSLocationAlwaysUsageDescription": "Karela requires background location to sync your progress with the ghost runner.",
+        "NSLocationWhenInUseUsageDescription": "Karela uses your location to show your progress on the map."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -18,20 +29,23 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
       "package": "com.worshestershire.karela",
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION", // Needed for pocket-tracking
-        "FOREGROUND_SERVICE",          // Needed to keep the app alive
-        "FOREGROUND_SERVICE_LOCATION" // Tells Android: "I'm using GPS for a reason"
-      ]
-    },
-    "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "POST_NOTIFICATIONS"
+      ],
+      "foregroundService": {
+        "types": ["location"],
+        "notification": {
+          "title": "Ghost Race Active",
+          "body": "Karela is tracking your run in the background.",
+          "color": "#7CF205"
+        }
+      }
     },
     "plugins": [
       "expo-router",
@@ -50,7 +64,8 @@
       "expo-font",
       "expo-sqlite",
       "@react-native-community/datetimepicker",
-      "expo-asset"
+      "expo-asset",
+      "expo-notifications" 
     ],
     "experiments": {
       "typedRoutes": true,

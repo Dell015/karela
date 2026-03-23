@@ -1,3 +1,4 @@
+import { NotificationService } from "@/services/notificationService";
 import { PermissionManager } from "@/services/PermissionsManager";
 import { GhostEngine } from "@/services/tracker/GhostEngine";
 import * as Location from "expo-location";
@@ -58,36 +59,35 @@ export const useLocationEngine = (savedGhostData: any[]) => {
     }
   }, [isRacing]);
 
-  // 2. GHOST ENGINE TIMER
-  // Interpolates the ghost's position based on elapsed time for a smooth 10Hz visual update
+  useEffect(() => {
+    if (isRacing) {
+      NotificationService.setup();
+    } else {
+      NotificationService.stopWidget();
+    }
+  }, [isRacing]);
+
   useEffect(() => {
     if (!isRacing || !savedGhostData || savedGhostData.length === 0) {
       setGhostPosition(null);
       return;
     }
 
-    // 1. Capture the exact moment the user hits START
     const raceStartClockTime = Date.now();
-
-    // 2. Identify the Ghost's own internal start time (the timestamp of its first point)
     const ghostBaseTimestamp = savedGhostData[0].timestamp;
 
     const ghostTimer = setInterval(() => {
-      // 3. How many seconds has the USER been running? (e.g., 5.2 seconds)
       const userElapsedSeconds = (Date.now() - raceStartClockTime) / 1000;
-
-      // 4. Synchronize: Tell the engine to find where the ghost was
-      // at its own "Start Time" + "User's Elapsed Time"
       const syncedTime = ghostBaseTimestamp + userElapsedSeconds;
 
       const pos = GhostEngine.getGhostPosition(savedGhostData, syncedTime);
       setGhostPosition(pos);
-    }, 100); // 10Hz update for buttery smooth movement
+    }, 100);
 
     return () => clearInterval(ghostTimer);
   }, [isRacing, savedGhostData]);
-  
-  // 3. CORE TRACKING ENGINE (GPS + SENSOR VALIDATION)
+
+  // 3. CORE TRACKING ENGINE (Update the distance accumulation part)
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;
 
@@ -105,52 +105,49 @@ export const useLocationEngine = (savedGhostData: any[]) => {
         },
         (location) => {
           const { latitude, longitude, speed, accuracy } = location.coords;
-
-          // FILTER: Ignore poor signal quality
           if (accuracy && accuracy > 35) return;
 
           const newPoint = { latitude, longitude };
-          
-          // ALWAYS update current location for the UI/Map Dot
           setCurrentLocation(newPoint);
 
           if (isRacingRef.current) {
-            // Convert m/s to km/h
             const speedKmH = speed && speed > 0 ? Math.round(speed * 3.6) : 0;
             setCurrentSpeed(speedKmH);
-
-            // FLAG: Identify if the user is currently in a vehicle
             const isVehicle = speedKmH > VELOCITY_CAP;
 
             setPath((current) => {
-            const pointWithStatus = { ...newPoint, isVehicle };
-            if (current.length === 0) return [pointWithStatus];
+              const pointWithStatus = { ...newPoint, isVehicle };
+              if (current.length === 0) return [pointWithStatus];
 
-            const lastPoint = current[current.length - 1];
-            const distanceMoved = getDistance(lastPoint, newPoint);
+              const lastPoint = current[current.length - 1];
+              const distanceMoved = getDistance(lastPoint, newPoint);
 
-            // 1. FILTER: Jitter & Teleport (Data Quality)
-            if (distanceMoved < JITTER_THRESHOLD || distanceMoved > TELEPORT_THRESHOLD) {
-              return current;
-            }
+              if (
+                distanceMoved < JITTER_THRESHOLD ||
+                distanceMoved > TELEPORT_THRESHOLD
+              ) {
+                return current;
+              }
 
-            // 2. PERFORMANCE FILTER: "The Point Saver"
-            // If we are moving fast (Vehicle), we don't need a point every 2 meters.
-            // 10 meters is enough to draw a smooth red line.
-            const requiredDistance = isVehicle ? 10 : JITTER_THRESHOLD;
-            
-            if (distanceMoved < requiredDistance) {
-              return current; // Skip this point to prevent the "Black Screen"
-            }
+              const requiredDistance = isVehicle ? 10 : JITTER_THRESHOLD;
+              if (distanceMoved < requiredDistance) return current;
 
-            // 3. ANTI-CHEAT: Distance Accumulation
-            if (!isVehicle && isPhysicallyMoving) {
-              setTotalDistance((prev) => prev + distanceMoved);
-            }
+              // --- UPDATE NOTIFICATION WIDGET HERE ---
+              if (!isVehicle && isPhysicallyMoving) {
+                setTotalDistance((prev) => {
+                  const newTotal = prev + distanceMoved;
+                  // Push the update to the lockscreen
+                  NotificationService.updateRaceWidget(newTotal, speedKmH);
+                  return newTotal;
+                });
+              } else {
+                // Even if not counting distance (vehicle/standing),
+                // update the widget so speed shows correctly
+                NotificationService.updateRaceWidget(totalDistance, speedKmH);
+              }
 
-            // 4. UPDATE: This will still draw the RED line because 'isVehicle' is true
-            return [...current, pointWithStatus];
-          });
+              return [...current, pointWithStatus];
+            });
           }
         },
       );
