@@ -13,7 +13,7 @@ import MapView, { Callout, Marker, Polyline } from "react-native-maps";
 // Hooks & Services
 import { useLocationEngine } from "@/hooks/useLocationEngine";
 import { useQuestEngine } from "@/hooks/useQuestEngine";
-import { getLatestGhostRun } from "@/services/database/sqlite.ts/database";
+import { getLatestGhostRun } from "@/services/database/sqlite/database";
 import { PermissionManager } from "@/services/PermissionsManager";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { styles } from "@/styles/mapStyles";
@@ -60,8 +60,7 @@ export default function MapScreen() {
 
       const R = 6371000; // Earth's radius in meters
       const dLat = ((lastPoint.latitude - prevPoint.latitude) * Math.PI) / 180;
-      const dLon =
-        ((lastPoint.longitude - prevPoint.longitude) * Math.PI) / 180;
+      const dLon = ((lastPoint.longitude - prevPoint.longitude) * Math.PI) / 180;
 
       const a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -73,14 +72,13 @@ export default function MapScreen() {
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       const distanceMoved = R * c;
 
-      // Anti-Cheat & Drift Filter
       if (!lastPoint.isVehicle && distanceMoved > 1.5 && distanceMoved < 40) {
         setPhysicalMeters((prev) => prev + distanceMoved);
       }
     }
   }, [path, isRacing]);
 
-  // --- SYNC ENGINE (Path Eating & Flag Popping) ---
+  // --- SYNC ENGINE ---
   useEffect(() => {
     if (isRacing && currentLocation) {
       updateRemainingPath(currentLocation);
@@ -91,12 +89,9 @@ export default function MapScreen() {
   const handleStartRace = async () => {
     const locationAllowed = await PermissionManager.requestLocation();
     if (locationAllowed) {
-      // 1. Reset all local screen states
       setPhysicalMeters(0);
       setElapsedTime(0);
-      setPath([]); // Force clear the trail array before starting
-
-      // 2. Trigger the engine
+      setPath([]); 
       setIsRacing(true);
     }
   };
@@ -115,13 +110,21 @@ export default function MapScreen() {
     });
   };
 
-  // --- GHOST LOGIC ---
+  // --- FIXED GHOST LOGIC ---
   const toggleGhost = () => {
     if (!isGhostEnabled) {
-      const savedData = getLatestGhostRun();
-      if (savedData) {
-        setActiveGhostData(savedData);
-        setIsGhostEnabled(true);
+      const savedRow: any = getLatestGhostRun(); // Get the row from SQLite
+      
+      if (savedRow && savedRow.path_data) {
+        try {
+          // Parse the JSON string into an array of coordinates
+          const parsedPath = JSON.parse(savedRow.path_data);
+          setActiveGhostData(parsedPath);
+          setIsGhostEnabled(true);
+        } catch (e) {
+          console.error("Ghost parse error", e);
+          Alert.alert("Error", "Could not load ghost path.");
+        }
       } else {
         Alert.alert(
           "No Ghost Found",
@@ -233,7 +236,7 @@ export default function MapScreen() {
         googleRenderer="LATEST"
         customMapStyle={ghostMapStyle}
         showsUserLocation={true}
-        showsMyLocationButton={false} // Prevents Google from overriding UI
+        showsMyLocationButton={false}
         initialRegion={{
           latitude: currentLocation.latitude,
           longitude: currentLocation.longitude,
@@ -417,7 +420,7 @@ export default function MapScreen() {
 
           <TouchableOpacity
             style={[styles.rightButtonBase, styles.compassButton]}
-            onPress={() => changeCameraHeading("N")}
+            onPress={() => changeCameraHeading("N", currentLocation)}
           >
             <Ionicons name="compass" size={24} color="#FFD700" />
           </TouchableOpacity>

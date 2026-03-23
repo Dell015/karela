@@ -13,8 +13,11 @@ import {
     TouchableOpacity,
     View,
     Alert,
+    ActivityIndicator,
 } from "react-native";
 import { theme } from "../../styles/theme";
+// Import the registration function we updated in auth.ts
+import { registerUser } from "../../services/database/firebase/auth";
 
 /**
  * REUSABLE INPUT COMPONENT
@@ -56,6 +59,7 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // -- ADAPTIVE ENGINE STATE (Bio-Data) --
   const [weight, setWeight] = useState(""); // kg
@@ -77,6 +81,8 @@ export default function Signup() {
       return;
     }
 
+    setLoading(true);
+
     try {
       // 2. Calculate Baseline Metrics for the Thesis Engine
       const hMeters = parseFloat(height) / 100;
@@ -84,39 +90,37 @@ export default function Signup() {
       const bmi = wKg / (hMeters * hMeters);
 
       // 3. Construct the Personalized User Object
-      const newUserProfile = {
+      const userData = {
         fullName,
         username,
-        email,
         bio: {
           weight: wKg,
           height: parseFloat(height),
           age: parseInt(age),
           bmi: parseFloat(bmi.toFixed(2)),
-          initialFitnessLevel: 1.0, // Starting point for the learning algorithm
-        },
-        progress: {
-            xp: 0,
-            level: 1,
-            completedMissions: 0,
-            streak: 0
-        },
-        createdAt: new Date().toISOString(),
+        }
       };
 
-      console.log("INITIALIZING DATABASE WITH:", newUserProfile);
+      // 4. Call the Firebase Auth Service (Now includes Email Verification)
+      await registerUser(email, password, userData);
 
-      // TODO: Firebase Auth & Firestore Logic goes here
-      // await registerUser(email, password, newUserProfile);
-
+      // 5. Success Feedback
       Alert.alert(
-        "Success!", 
-        "Profile Analyzed. Your first 3 personalized missions are ready.",
-        [{ text: "Let's Go", onPress: () => router.push("/dashboard/dashboard") }]
+        "Verify Your Email", 
+        `A verification link has been sent to ${email}. Please verify your email before logging in.`,
+        [{ text: "Go to Login", onPress: () => router.replace("/auth/login") }]
       );
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Signup failed:", error);
+      let msg = "An error occurred during signup.";
+      if (error.code === 'auth/email-already-in-use') msg = "This email is already registered.";
+      if (error.code === 'auth/invalid-email') msg = "Invalid email format.";
+      if (error.code === 'auth/weak-password') msg = "Password is too weak (min 6 chars).";
+      
+      Alert.alert("Signup Error", msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -154,7 +158,7 @@ export default function Signup() {
             <UserInput placeholder="Username" value={username} onChangeText={setUsername} />
             <UserInput placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" />
             
-            {/* BIO-DATA ROW (Thesis Feature: Adaptive Baseline) */}
+            {/* BIO-DATA ROW */}
             <View style={styles.bioRow}>
                 <View style={{flex: 1}}>
                     <UserInput placeholder="Weight (kg)" value={weight} onChangeText={setWeight} keyboardType="numeric" />
@@ -171,13 +175,21 @@ export default function Signup() {
             <UserInput placeholder="Confirm Password" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
 
             {/* ACTION BUTTON */}
-            <TouchableOpacity style={styles.signupBtn} onPress={handleSignup}>
+            <TouchableOpacity 
+                style={[styles.signupBtn, loading && { opacity: 0.7 }]} 
+                onPress={handleSignup}
+                disabled={loading}
+            >
               <LinearGradient
                 colors={["#7CF205", "#209F77"]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={styles.gradientBtn}
               >
-                <Text style={styles.signupBtnText}>Sign up</Text>
+                {loading ? (
+                    <ActivityIndicator color="#fff" />
+                ) : (
+                    <Text style={styles.signupBtnText}>Analyze & Sign up</Text>
+                )}
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -251,6 +263,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: "center",
     justifyContent: "center",
+    minHeight: 55, // Prevents button shrinking when loading
   },
   signupBtnText: {
     color: "#fff",

@@ -137,19 +137,24 @@ export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
     refreshRoute(userLoc, updated);
   };
 
-  const changeCameraHeading = (direction: "N" | "S" | "E" | "W") => {
-    if (!mapRef.current) return;
-    
+  // Add 'location: any' to the parameters
+  const changeCameraHeading = (direction: "N" | "S" | "E" | "W", location: any) => {
+    if (!mapRef.current || !location) return;
+
     let heading = 0;
     if (direction === "E") heading = 90;
     if (direction === "S") heading = 180;
     if (direction === "W") heading = 270;
 
     mapRef.current.animateCamera({
-        heading,
-        pitch: 45,
-        zoom: 17,
-      }, { duration: 1000 });
+      center: {
+        latitude: location.latitude,
+        longitude: location.longitude,
+      },
+      heading,
+      pitch: 45,
+      zoom: 17,
+    }, { duration: 1000 });
   };
 
   return {

@@ -32,8 +32,6 @@ export const initDatabase = () => {
 
 /**
  * Saves a completed run.
- * We calculate avg_speed here so the Adaptive Engine can read it 
- * without having to parse the huge path_data JSON every time.
  */
 export const saveGhostRun = (distance: number, duration: number, path: any[]) => {
   const pathString = JSON.stringify(path);
@@ -49,7 +47,16 @@ export const saveGhostRun = (distance: number, duration: number, path: any[]) =>
 };
 
 /**
- * Finds the most recent ghost run that STARTED near the user.
+ * FIX: This is the missing function your Dashboard is looking for!
+ * It simply gets the very last run recorded on this device.
+ */
+export const getLatestGhostRun = () => {
+  const result = db.getFirstSync('SELECT * FROM ghost_runs ORDER BY id DESC LIMIT 1');
+  return result || null;
+};
+
+/**
+ * Finds a ghost run that STARTED near the user's current GPS location.
  */
 export const getNearbyGhostRun = (userLat: number, userLon: number) => {
   const allRows = db.getAllSync('SELECT * FROM ghost_runs ORDER BY id DESC');
@@ -80,7 +87,7 @@ export const getNearbyGhostRun = (userLat: number, userLon: number) => {
  * MISSION ENGINE: Saves the 3 personalized missions generated from Firebase data.
  */
 export const setLocalMissions = (missions: any[]) => {
-  const dateStr = new Date().toISOString().split('T')[0]; // Current YYYY-MM-DD
+  const dateStr = new Date().toISOString().split('T')[0]; 
   
   missions.forEach(m => {
     db.runSync(

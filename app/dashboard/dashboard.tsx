@@ -25,6 +25,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
 import { dashboard_ui } from "../../styles/dashboard";
 import { theme } from "../../styles/theme";
+import { ghostMapStyle } from "@/styles/ghostMapStyle";
 
 export default function Dashboard() {
   const mapRef = useRef<MapView>(null);
@@ -219,6 +220,7 @@ export default function Dashboard() {
                       ref={mapRef}
                       provider={Platform.OS === "android" ? "google" : "google"}
                       style={StyleSheet.absoluteFillObject}
+                      customMapStyle={ghostMapStyle}
                       showsUserLocation={true}
                       tintColor="#7CF205"
                       initialRegion={{

@@ -1,4 +1,4 @@
-import { saveGhostRun } from "@/services/database/sqlite.ts/database"; // Import your DB service
+import { saveGhostRun } from "@/services/database/sqlite/database"; // Import your DB service
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";

@@ -1,10 +1,13 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { 
+  initializeAuth, 
+  getReactNativePersistence // Try importing from the main folder
+} from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Your web app's Firebase configuration from your screenshot
 const firebaseConfig = {
-  apiKey: "AIzaSyDm3NkBTP3bu7syf0JFMdWt1ix9g0HgPI4",
+  apiKey: "AIzaSyDm3NkBTP3bu7syF0JFMdWt1iX9g0HgPI4",
   authDomain: "karela-628fe.firebaseapp.com",
   projectId: "karela-628fe",
   storageBucket: "karela-628fe.firebasestorage.app",
@@ -13,11 +16,13 @@ const firebaseConfig = {
   measurementId: "G-CLEGK7PJWJ"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Export the services so your Signup and Dashboard can use them
-export const auth = getAuth(app);
+// 2. Initialize Auth using the specific React Native persistence
+export const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(AsyncStorage)
+});
+
 export const db = getFirestore(app);
 
 export default app;
