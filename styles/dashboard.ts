@@ -219,35 +219,29 @@ export const dashboard_ui = StyleSheet.create({
   // --- FLOATING ISLAND BUTTON STYLES ---
   floatingButtonContainer: {
     position: 'absolute',
-    bottom: 30, 
-    left: 20,
-    right: 20,
+    bottom: 40,
+    left: 0,
+    right: 0,
     alignItems: 'center',
-    zIndex: 999, // Ensure it stays above content
+    justifyContent: 'center',
+    zIndex: 999,
   },
-  floatingIsland: {
-    width: '100%',
-    maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  gradientButton: {
-    height: 65,
-    borderRadius: 32.5, 
-    justifyContent: 'center', 
-    alignItems: 'center',
+  floatingIslandCircle: {
+    width: 80, // Equal width and height
+    height: 80,
+    borderRadius: 40, // Half of width/height
     shadowColor: '#7CF205',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 12,
   },
-  mainButtonText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold',
+  circularGradient: {
+    flex: 1,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)', // Subtle inner ring
   },
 });

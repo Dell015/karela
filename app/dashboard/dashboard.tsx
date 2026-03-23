@@ -1,6 +1,7 @@
-import { LinearGradient } from "expo-linear-gradient";
-import { router, Stack, useNavigation } from "expo-router";
+import { QuestCard } from "@/components/QuestCard";
 import { DrawerActions } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
+import { router, useNavigation } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   Image,
@@ -17,6 +18,7 @@ import {
   View,
 } from "react-native";
 import MapView from "react-native-maps";
+import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useLocationEngine } from "@/hooks/useLocationEngine";
@@ -252,32 +254,60 @@ export default function Dashboard() {
 
               {/* Chat with Ani */}
               <Text style={dashboard_ui.sectionTitle}>Chat with Ani</Text>
-              <View style={dashboard_ui.chatCardContainer}>
-                <LinearGradient
-                  colors={["#7CF205", "#209F77"]}
-                  style={dashboard_ui.chatSideBar}
-                />
-                <View style={dashboard_ui.chatContent}>
-                  <Text style={dashboard_ui.chatText}>
-                    my sensors see rain clouds rolling into {weather.city}—let’s
-                    knock out your errands now!
-                  </Text>
-                  <View style={dashboard_ui.nestedInputContainer}>
-                    <TextInput
-                      placeholder="Ask Ani anything..."
-                      placeholderTextColor="#8A8A8A"
-                      style={dashboard_ui.nestedInput}
-                      returnKeyType="send"
-                    />
-                    <TouchableOpacity>
-                      <Text style={{ color: "#fff", fontSize: 18 }}>➔</Text>
-                    </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => router.push("/dashboard/ai_coach")}
+              >
+                <View style={dashboard_ui.chatCardContainer}>
+                  <LinearGradient
+                    colors={["#7CF205", "#209F77"]}
+                    style={dashboard_ui.chatSideBar}
+                  />
+                  <View style={dashboard_ui.chatContent}>
+                    <Text style={dashboard_ui.chatText}>
+                      my sensors see rain clouds rolling into {weather.city}
+                      —let’s knock out your errands now!
+                    </Text>
+                    <View style={dashboard_ui.nestedInputContainer}>
+                      <TextInput
+                        placeholder="Ask Ani anything..."
+                        placeholderTextColor="#8A8A8A"
+                        style={dashboard_ui.nestedInput}
+                        returnKeyType="send"
+                      />
+                      <TouchableOpacity
+                        onPress={() => router.push("/dashboard/ai_coach")}
+                      >
+                        <Text style={{ color: "#fff", fontSize: 18 }}>➔</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
 
               <Text style={dashboard_ui.sectionTitle}>Quest Progress</Text>
-              <View style={dashboard_ui.chatCardContainer} />
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{
+                  paddingHorizontal: 20,
+                  paddingBottom: 20,
+                }}
+              >
+                <QuestCard
+                  title="Daily Mission"
+                  mission="Run 5km"
+                  xp={150}
+                  progress={0.7} // 70% done
+                  colors={["#7CF205", "#209F77"]}
+                />
+                <QuestCard
+                  title="Weekly Mission"
+                  mission="Run 20km"
+                  xp={500}
+                  progress={0.35}
+                  colors={["#FFD700", "#FFA500"]} // Gold/Orange for Weekly
+                />
+              </ScrollView>
 
               {isKeyboardVisible && <View style={{ height: 100 }} />}
             </View>
@@ -288,17 +318,22 @@ export default function Dashboard() {
       {!isKeyboardVisible && (
         <View style={dashboard_ui.floatingButtonContainer}>
           <TouchableOpacity
-            style={dashboard_ui.floatingIsland}
+            style={dashboard_ui.floatingIslandCircle} // New style name
             activeOpacity={0.8}
-            onPress={() => router.push("/test/test")}
+            onPress={() => router.push("/dashboard/maps")}
           >
             <LinearGradient
               colors={["#7CF205", "#209F77"]}
               start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={dashboard_ui.gradientButton}
+              end={{ x: 1, y: 1 }}
+              style={dashboard_ui.circularGradient}
             >
-              <Text style={dashboard_ui.mainButtonText}>Go for a Run</Text>
+              <Ionicons 
+                name="play"    
+                size={40} 
+                color="#fff" 
+                style={{ marginLeft: 4 }} // Optically centers the triangle
+              />
             </LinearGradient>
           </TouchableOpacity>
         </View>

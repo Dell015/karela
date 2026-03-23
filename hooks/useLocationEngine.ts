@@ -97,7 +97,6 @@ export const useLocationEngine = (savedGhostData: any[]) => {
 
       subscription = await Location.watchPositionAsync(
         {
-          // High accuracy during race, balanced during idle to save battery
           accuracy: isRacing
             ? Location.Accuracy.BestForNavigation
             : Location.Accuracy.Balanced,
@@ -107,10 +106,12 @@ export const useLocationEngine = (savedGhostData: any[]) => {
         (location) => {
           const { latitude, longitude, speed, accuracy } = location.coords;
 
-          // FILTER: Ignore poor signal quality (Typical for indoor or dense urban Tuguegarao areas)
+          // FILTER: Ignore poor signal quality
           if (accuracy && accuracy > 35) return;
 
           const newPoint = { latitude, longitude };
+          
+          // ALWAYS update current location for the UI/Map Dot
           setCurrentLocation(newPoint);
 
           if (isRacingRef.current) {
@@ -122,37 +123,34 @@ export const useLocationEngine = (savedGhostData: any[]) => {
             const isVehicle = speedKmH > VELOCITY_CAP;
 
             setPath((current) => {
-              const pointWithStatus = { ...newPoint, isVehicle };
-              if (current.length === 0) return [pointWithStatus];
+            const pointWithStatus = { ...newPoint, isVehicle };
+            if (current.length === 0) return [pointWithStatus];
 
-              const lastPoint = current[current.length - 1];
-              const distanceMoved = getDistance(lastPoint, newPoint);
+            const lastPoint = current[current.length - 1];
+            const distanceMoved = getDistance(lastPoint, newPoint);
 
-              /**
-               * THE STATIONARY SHIELD LOGIC (Sensor Fusion)
-               * A movement is only considered "Valid Human Exercise" if:
-               * 1. It's not a tiny GPS drift (> 2 meters).
-               * 2. The Pedometer confirms steps ARE happening OR it's a vehicle.
-               * * Note: We allow 'isVehicle' to pass the shield so the map shows the
-               * RED line, but we filter it out of the 'totalDistance' calculation below.
-               */
-              const isValidMovement =
-                distanceMoved > JITTER_THRESHOLD &&
-                (isPhysicallyMoving || isVehicle);
+            // 1. FILTER: Jitter & Teleport (Data Quality)
+            if (distanceMoved < JITTER_THRESHOLD || distanceMoved > TELEPORT_THRESHOLD) {
+              return current;
+            }
 
-              if (!isValidMovement) return current;
+            // 2. PERFORMANCE FILTER: "The Point Saver"
+            // If we are moving fast (Vehicle), we don't need a point every 2 meters.
+            // 10 meters is enough to draw a smooth red line.
+            const requiredDistance = isVehicle ? 10 : JITTER_THRESHOLD;
+            
+            if (distanceMoved < requiredDistance) {
+              return current; // Skip this point to prevent the "Black Screen"
+            }
 
-              // FILTER: Anti-Teleportation (Ignores massive signal jumps)
-              if (distanceMoved > TELEPORT_THRESHOLD) return current;
+            // 3. ANTI-CHEAT: Distance Accumulation
+            if (!isVehicle && isPhysicallyMoving) {
+              setTotalDistance((prev) => prev + distanceMoved);
+            }
 
-              // 4. DISTANCE ACCUMULATION (The Anti-Cheat Gate)
-              // Only add to Total Meters if the user is moving like a human (Steps + Low Speed)
-              if (!isVehicle && isPhysicallyMoving) {
-                setTotalDistance((prev) => prev + distanceMoved);
-              }
-
-              return [...current, pointWithStatus];
-            });
+            // 4. UPDATE: This will still draw the RED line because 'isVehicle' is true
+            return [...current, pointWithStatus];
+          });
           }
         },
       );
@@ -162,7 +160,7 @@ export const useLocationEngine = (savedGhostData: any[]) => {
     return () => {
       if (subscription) subscription.remove();
     };
-  }, [isRacing, isPhysicallyMoving]); // Re-bind listener when motion state changes
+  }, [isRacing, isPhysicallyMoving]);
 
   // 5. COMPASS ENGINE (Magnetometer)
   // Provides orientation for the "3D" follow-camera mode
