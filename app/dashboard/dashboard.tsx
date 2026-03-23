@@ -250,6 +250,7 @@ export default function Dashboard() {
                     left: 12,
                     top: 1,
                     backgroundColor: "#7CF205",
+                    borderColor: "#7CF205",
                     padding: 5,
                     borderRadius: 12,
                     borderWidth: 1,

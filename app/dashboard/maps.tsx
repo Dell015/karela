@@ -13,7 +13,7 @@ import MapView, { Callout, Marker, Polyline } from "react-native-maps";
 // Hooks & Services
 import { useLocationEngine } from "@/hooks/useLocationEngine";
 import { useQuestEngine } from "@/hooks/useQuestEngine";
-import { getLatestGhostRun } from "@/services/database/database";
+import { getLatestGhostRun } from "@/services/database/sqlite.ts/database";
 import { PermissionManager } from "@/services/PermissionsManager";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { styles } from "@/styles/mapStyles";
@@ -95,7 +95,7 @@ export default function MapScreen() {
       setPhysicalMeters(0);
       setElapsedTime(0);
       setPath([]); // Force clear the trail array before starting
-      
+
       // 2. Trigger the engine
       setIsRacing(true);
     }

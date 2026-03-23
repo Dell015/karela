@@ -12,18 +12,19 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+    Alert,
 } from "react-native";
 import { theme } from "../../styles/theme";
 
 /**
  * REUSABLE INPUT COMPONENT
- * Keeping this outside the main function makes the code cleaner and easier to style globally.
  */
 interface InputProps {
   placeholder: string;
   value: string;
   onChangeText: (text: string) => void;
   secureTextEntry?: boolean;
+  keyboardType?: "default" | "numeric" | "email-address";
 }
 
 const UserInput = ({
@@ -31,6 +32,7 @@ const UserInput = ({
   value,
   onChangeText,
   secureTextEntry,
+  keyboardType = "default",
 }: InputProps) => (
   <View style={styles.inputContainer}>
     <TextInput
@@ -40,55 +42,102 @@ const UserInput = ({
       value={value}
       onChangeText={onChangeText}
       secureTextEntry={secureTextEntry}
+      keyboardType={keyboardType}
     />
   </View>
 );
 
-/**
- * MAIN SIGNUP SCREEN
- * Handles user registration and state management for the Karela app.
- */
 export default function Signup() {
   const router = useRouter();
 
-  // -- STATE (MEMORY) --
-  // These variables store what the user types in real-time.
+  // -- AUTH STATE --
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  // -- ADAPTIVE ENGINE STATE (Bio-Data) --
+  const [weight, setWeight] = useState(""); // kg
+  const [height, setHeight] = useState(""); // cm
+  const [age, setAge] = useState("");
+
+  /**
+   * HANDLER: Registration & Initial Analytics
+   */
+  const handleSignup = async () => {
+    // 1. Basic Validation
+    if (!email || !password || !weight || !height || !age) {
+      Alert.alert("Required Fields", "Please fill in your physical profile so we can generate your missions.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match.");
+      return;
+    }
+
+    try {
+      // 2. Calculate Baseline Metrics for the Thesis Engine
+      const hMeters = parseFloat(height) / 100;
+      const wKg = parseFloat(weight);
+      const bmi = wKg / (hMeters * hMeters);
+
+      // 3. Construct the Personalized User Object
+      const newUserProfile = {
+        fullName,
+        username,
+        email,
+        bio: {
+          weight: wKg,
+          height: parseFloat(height),
+          age: parseInt(age),
+          bmi: parseFloat(bmi.toFixed(2)),
+          initialFitnessLevel: 1.0, // Starting point for the learning algorithm
+        },
+        progress: {
+            xp: 0,
+            level: 1,
+            completedMissions: 0,
+            streak: 0
+        },
+        createdAt: new Date().toISOString(),
+      };
+
+      console.log("INITIALIZING DATABASE WITH:", newUserProfile);
+
+      // TODO: Firebase Auth & Firestore Logic goes here
+      // await registerUser(email, password, newUserProfile);
+
+      Alert.alert(
+        "Success!", 
+        "Profile Analyzed. Your first 3 personalized missions are ready.",
+        [{ text: "Let's Go", onPress: () => router.push("/dashboard/dashboard") }]
+      );
+
+    } catch (error) {
+      console.error("Signup failed:", error);
+    }
+  };
+
   return (
     <View style={theme.container}>
-      {/* Hides the default Expo router header for a full-screen custom look */}
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* BACKGROUND VISUAL EFFECTS 
-          Uses a combination of Gradients and Blur to create the "Karela Glow" effect.
-      */}
+      {/* BACKGROUND VISUALS */}
       <View style={theme.glowContainer}>
-        <LinearGradient
-          colors={["#209F77", "#1FA279", "#7CF205"]}
-          style={theme.rightBlur}
-        />
-        <LinearGradient
-          colors={["#7CF205", "#1FA279", "#7CF205"]}
-          style={theme.leftBlur}
-        />
+        <LinearGradient colors={["#209F77", "#1FA279", "#7CF205"]} style={theme.rightBlur} />
+        <LinearGradient colors={["#7CF205", "#1FA279", "#7CF205"]} style={theme.leftBlur} />
         <BlurView intensity={90} tint="dark" style={StyleSheet.absoluteFill} />
       </View>
 
-      {/* KEYBOARD HANDLING
-          Ensures that when the user taps an input, the keyboard doesn't cover the 'Sign Up' button.
-      */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
-          {/* HEADER SECTION (Logo & Title) */}
+          {/* HEADER */}
           <View style={styles.header}>
             <Image
               source={require("@/assets/images/karela_word-logo.png")}
@@ -96,55 +145,36 @@ export default function Signup() {
               resizeMode="contain"
             />
             <Text style={styles.title}>Create your account</Text>
+            <Text style={styles.subtitle}>Tell us about yourself to tailor your missions.</Text>
           </View>
 
-          {/* FORM SECTION
-              Captures all user details. Note: confirmPassword logic will need validation later.
-          */}
+          {/* FORM SECTION */}
           <View style={styles.form}>
-            <UserInput
-              placeholder="Full Name"
-              value={fullName}
-              onChangeText={setFullName}
-            />
+            <UserInput placeholder="Full Name" value={fullName} onChangeText={setFullName} />
+            <UserInput placeholder="Username" value={username} onChangeText={setUsername} />
+            <UserInput placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" />
+            
+            {/* BIO-DATA ROW (Thesis Feature: Adaptive Baseline) */}
+            <View style={styles.bioRow}>
+                <View style={{flex: 1}}>
+                    <UserInput placeholder="Weight (kg)" value={weight} onChangeText={setWeight} keyboardType="numeric" />
+                </View>
+                <View style={{flex: 1}}>
+                    <UserInput placeholder="Height (cm)" value={height} onChangeText={setHeight} keyboardType="numeric" />
+                </View>
+                <View style={{flex: 1}}>
+                    <UserInput placeholder="Age" value={age} onChangeText={setAge} keyboardType="numeric" />
+                </View>
+            </View>
 
-            <UserInput
-              placeholder="Username"
-              value={username}
-              onChangeText={setUsername}
-            />
+            <UserInput placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry />
+            <UserInput placeholder="Confirm Password" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
 
-            <UserInput
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-            />
-
-            <UserInput
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-
-            <UserInput
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-            />
-
-            {/* SIGN UP BUTTON 
-                Currently only logs to console. Integrate with Auth service here.
-            */}
-            <TouchableOpacity
-              style={styles.signupBtn}
-              onPress={() => console.log("Sign Up clicked for:", fullName)}
-            >
+            {/* ACTION BUTTON */}
+            <TouchableOpacity style={styles.signupBtn} onPress={handleSignup}>
               <LinearGradient
-                colors={["#7CF205", "#209F77"]} // Karela Brand Gradient
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
+                colors={["#7CF205", "#209F77"]}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={styles.gradientBtn}
               >
                 <Text style={styles.signupBtnText}>Sign up</Text>
@@ -152,9 +182,7 @@ export default function Signup() {
             </TouchableOpacity>
           </View>
 
-          {/* FOOTER SECTION
-              Navigation link for users who already have an account.
-          */}
+          {/* FOOTER */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>Already have an account? </Text>
             <TouchableOpacity onPress={() => router.push("/auth/login")}>
@@ -167,7 +195,6 @@ export default function Signup() {
   );
 }
 
-// --- STYLING (LOCAL) ---
 const styles = StyleSheet.create({
   scrollContent: {
     padding: 24,
@@ -182,7 +209,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     marginBottom: 20,
-    tintColor: "#7CF205", // Forces the logo to match our Karela Green
+    tintColor: "#7CF205",
   },
   title: {
     fontSize: 28,
@@ -190,12 +217,23 @@ const styles = StyleSheet.create({
     color: "#fff",
     textAlign: "center",
   },
+  subtitle: {
+    fontSize: 14,
+    color: "rgba(255,255,255,0.6)",
+    textAlign: 'center',
+    marginTop: 8,
+    fontFamily: "Excon-Regular",
+  },
   form: {
-    gap: 20,
+    gap: 18,
+  },
+  bioRow: {
+    flexDirection: 'row',
+    gap: 12,
   },
   inputContainer: {
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.5)",
+    borderBottomColor: "rgba(255, 255, 255, 0.3)",
     paddingBottom: 5,
   },
   input: {
@@ -205,9 +243,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   signupBtn: {
-    marginTop: 30,
+    marginTop: 20,
     borderRadius: 30,
-    overflow: "hidden", // Required to make the gradient follow the border radius
+    overflow: "hidden",
   },
   gradientBtn: {
     paddingVertical: 16,
@@ -222,8 +260,7 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 40,
-    marginBottom: 20,
+    marginTop: 30,
   },
   footerText: {
     color: "#888",
