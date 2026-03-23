@@ -128,7 +128,7 @@ export const dashboard_ui = StyleSheet.create({
   mapButtonText: { 
     fontSize: 11, 
     fontWeight: 'bold', 
-    color: '#000' 
+    color: '#ffffff' 
   },
 
   // --- CHARACTER GRID STYLES ---

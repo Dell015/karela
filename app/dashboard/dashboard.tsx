@@ -21,6 +21,7 @@ import MapView from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+// Custom Hooks & Styles
 import { useLocationEngine } from "@/hooks/useLocationEngine";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { dashboard_ui } from "../../styles/dashboard";
@@ -29,7 +30,10 @@ import { theme } from "../../styles/theme";
 export default function Dashboard() {
   const mapRef = useRef<MapView>(null);
   const [activeGhostData] = useState<any[]>([]);
-  const { currentLocation } = useLocationEngine(activeGhostData);
+  
+  // Extracting currentLocation and compassHeading to drive the map and recenter logic
+  const { currentLocation, compassHeading } = useLocationEngine(activeGhostData);
+  
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const currentXP = 452;
   const totalXP = 1000;
@@ -48,7 +52,26 @@ export default function Dashboard() {
     icon: "01d",
   });
 
-  // Keyboard Listeners
+  // --- RECENTER LOGIC ---
+  // This function snaps the camera back to the user with a 3D perspective
+  const recenterMap = () => {
+    if (currentLocation && mapRef.current) {
+      mapRef.current.animateCamera(
+        {
+          center: {
+            latitude: currentLocation.latitude,
+            longitude: currentLocation.longitude,
+          },
+          heading: compassHeading || 0, // Faces the direction the user is pointing
+          pitch: 55, // 3D Tilt
+          zoom: 18,  // Cinematic zoom level for dashboard
+        },
+        { duration: 1000 }
+      );
+    }
+  };
+
+  // Keyboard Listeners for UI adjustments
   useEffect(() => {
     const showSubscription = Keyboard.addListener("keyboardDidShow", () =>
       setKeyboardVisible(true),
@@ -124,10 +147,7 @@ export default function Dashboard() {
                 </View>
                 <TouchableOpacity
                   onPress={() => {
-                    // This ensures we reach out to the Drawer navigator wrapping this screen
                     navigation.dispatch(DrawerActions.openDrawer());
-                    // If that doesn't work, try the direct dispatch:
-                    // navigation.dispatch(DrawerActions.openDrawer());
                   }}
                 >
                   <Text style={{ color: "#fff", fontSize: 24 }}>☰</Text>
@@ -197,15 +217,12 @@ export default function Dashboard() {
                   {currentLocation?.latitude ? (
                     <MapView
                       ref={mapRef}
-                      // FORCE GOOGLE MAPS FOR THE GHOST STYLE TO WORK
-                      provider={
-                        Platform.OS === "android" ? undefined : "google"
-                      }
+                      provider={Platform.OS === "android" ? "google" : "google"}
                       style={StyleSheet.absoluteFillObject}
                       customMapStyle={ghostMapStyle}
                       showsUserLocation={true}
-                      tintColor="#7CF205" // Makes the blue dot match your theme
-                      region={{
+                      tintColor="#7CF205"
+                      initialRegion={{
                         latitude: currentLocation.latitude,
                         longitude: currentLocation.longitude,
                         latitudeDelta: 0.01,
@@ -226,10 +243,29 @@ export default function Dashboard() {
                     </View>
                   )}
                 </View>
+
+                {/* RECENTER BUTTON (Targeting User) */}
+                <TouchableOpacity 
+                  style={{
+                    position: 'absolute',
+                    left: 12,
+                    top: 1,
+                    backgroundColor: "#7CF205",
+                    padding: 5,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    zIndex: 10
+                  }} 
+                  onPress={recenterMap}
+                >
+                  <Ionicons name="navigate" size={20} color="#ffffff" />
+                </TouchableOpacity>
+
                 <Image
                   source={require("@/assets/images/Sun.png")}
                   style={dashboard_ui.weatherOverlayIcon}
                 />
+                
                 <TouchableOpacity
                   style={dashboard_ui.mapButton}
                   onPress={() => router.push("/dashboard/maps")}
@@ -297,7 +333,7 @@ export default function Dashboard() {
                   title="Daily Mission"
                   mission="Run 5km"
                   xp={150}
-                  progress={0.7} // 70% done
+                  progress={0.7}
                   colors={["#7CF205", "#209F77"]}
                 />
                 <QuestCard
@@ -305,7 +341,7 @@ export default function Dashboard() {
                   mission="Run 20km"
                   xp={500}
                   progress={0.35}
-                  colors={["#FFD700", "#FFA500"]} // Gold/Orange for Weekly
+                  colors={["#FFD700", "#FFA500"]}
                 />
               </ScrollView>
 
@@ -318,7 +354,7 @@ export default function Dashboard() {
       {!isKeyboardVisible && (
         <View style={dashboard_ui.floatingButtonContainer}>
           <TouchableOpacity
-            style={dashboard_ui.floatingIslandCircle} // New style name
+            style={dashboard_ui.floatingIslandCircle}
             activeOpacity={0.8}
             onPress={() => router.push("/dashboard/maps")}
           >
@@ -332,7 +368,7 @@ export default function Dashboard() {
                 name="play"    
                 size={40} 
                 color="#fff" 
-                style={{ marginLeft: 4 }} // Optically centers the triangle
+                style={{ marginLeft: 4 }}
               />
             </LinearGradient>
           </TouchableOpacity>
