@@ -1,9 +1,9 @@
-import { auth, db } from "./config";
-import { 
-  createUserWithEmailAndPassword, 
+import {
+  createUserWithEmailAndPassword,
   sendEmailVerification // <-- Add this import
 } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from "./config";
 
 export const registerUser = async (email: string, password: string, userData: any) => {
   // 1. Create the user
@@ -18,6 +18,7 @@ export const registerUser = async (email: string, password: string, userData: an
     uid: user.uid,
     email: email,
     displayName: userData.fullName,
+    username: userData.username,
     isVerified: false, // Track this for your UI
     stats: {
       weight: userData.bio.weight,

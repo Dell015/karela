@@ -22,12 +22,14 @@ import MapView from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Custom Hooks & Styles
+import { useAuth } from "@/context/AuthContext";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
+import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { dashboard_ui } from "../../styles/dashboard";
 import { theme } from "../../styles/theme";
-import { ghostMapStyle } from "@/styles/ghostMapStyle";
 
 export default function Dashboard() {
+  const { profile, loading } = useAuth();
   const mapRef = useRef<MapView>(null);
   const [activeGhostData] = useState<any[]>([]);
 
@@ -36,7 +38,9 @@ export default function Dashboard() {
     useLocationEngine(activeGhostData);
 
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const currentXP = 452;
+  const currentXP = profile?.stats?.xp || 0; 
+  const currentLevel = profile?.stats?.level || 1;
+  const currentStreak = profile?.stats?.streak || 0;
   const totalXP = 1000;
   const progressPercent = (currentXP / totalXP) * 100;
   const navigation = useNavigation();
@@ -143,7 +147,8 @@ export default function Dashboard() {
                   </TouchableOpacity>
                   <View>
                     <Text style={dashboard_ui.welcomeText}>Welcome back</Text>
-                    <Text style={dashboard_ui.nameText}>Sander</Text>
+                    <Text style={dashboard_ui.nameText}>{profile?.displayName || "Strider"}</Text>
+                    <Text style={dashboard_ui.LevelLabel}>LVL {currentLevel} STRIDER</Text>
                   </View>
                 </View>
                 <TouchableOpacity
@@ -176,13 +181,13 @@ export default function Dashboard() {
                       >
                         <View>
                           <Text style={dashboard_ui.LevelLabel}>
-                            LVL 12 STRIDER
+                            LVL {currentLevel} STRIDER
                           </Text>
-                          <Text style={dashboard_ui.nameLabel}>Sander_67</Text>
+                          <Text style={dashboard_ui.nameLabel}>{profile?.username || "Strider_01"}</Text>
                         </View>
                         <View style={{ alignItems: "flex-end" }}>
                           <Text style={dashboard_ui.LevelLabel}>STREAK</Text>
-                          <Text style={dashboard_ui.nameLabel}>67 🔥</Text>
+                          <Text style={dashboard_ui.nameLabel}>{currentStreak} 🔥</Text>
                         </View>
                       </View>
                       <View style={dashboard_ui.progressContainer}>
