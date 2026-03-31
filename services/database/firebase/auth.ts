@@ -1,35 +1,30 @@
 import {
   createUserWithEmailAndPassword,
-  sendEmailVerification // <-- Add this import
+  sendEmailVerification
 } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "./config";
 
+/**
+ * Registers a user in Firebase Auth and creates a Firestore profile.
+ * @param userData - The structured object built in the Signup screen.
+ */
 export const registerUser = async (email: string, password: string, userData: any) => {
-  // 1. Create the user
+  // 1. Create the user in Firebase Authentication
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   const user = userCredential.user;
 
-  // 2. NEW: Send the Verification Email immediately
+  // 2. Send the verification email immediately
   await sendEmailVerification(user);
 
-  // 3. Create the Profile in Firestore
+  // 3. Save the profile to Firestore
+  // We spread (...userData) so that 'displayName', 'stats', and 'settings'
+  // are saved exactly as you defined them in the Signup.tsx file.
   await setDoc(doc(db, "users", user.uid), {
     uid: user.uid,
-    email: email,
-    displayName: userData.fullName,
-    username: userData.username,
-    isVerified: false, // Track this for your UI
-    stats: {
-      weight: userData.bio.weight,
-      height: userData.bio.height,
-      age: userData.bio.age,
-      bmi: userData.bio.bmi,
-      xp: 0,
-      level: 1,
-      fitness_score: 1.0,
-    },
-    createdAt: new Date().toISOString(),
+    email: user.email,
+    isVerified: false, // Default to false until they click the email link
+    ...userData, 
   });
 
   return user.uid;

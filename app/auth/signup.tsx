@@ -3,17 +3,17 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-    Alert,
-    ActivityIndicator,
+  ActivityIndicator,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { theme } from "../../styles/theme";
 // Import the registration function we updated in auth.ts
@@ -91,14 +91,31 @@ export default function Signup() {
 
       // 3. Construct the Personalized User Object
       const userData = {
-        fullName,
-        username,
-        bio: {
+        displayName: fullName, // Use 'displayName' to match Firebase/AuthContext
+        username: username,
+        stats: {                // Change 'bio' to 'stats' to match your Interface
           weight: wKg,
           height: parseFloat(height),
           age: parseInt(age),
           bmi: parseFloat(bmi.toFixed(2)),
-        }
+          // Add these defaults so the user isn't missing fields!
+          level: 1,
+          xp: 0,
+          fitness_score: 1.0,
+          streak: 0,
+          longest_streak: 0,
+          last_active_date: new Date().toISOString(),
+          total_distance_km: 0,
+          total_calories_burned: 0,
+          total_missions_completed: 0,
+          avg_pace_mins_km: 0,
+          target_weight: wKg,
+        },
+        settings: {
+          units: "metric",
+          notifications: true,
+        },
+        createdAt: new Date().toISOString(),
       };
 
       // 4. Call the Firebase Auth Service (Now includes Email Verification)
