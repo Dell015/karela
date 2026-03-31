@@ -376,10 +376,10 @@ export default function MapScreen() {
       {/* HUD */}
       {isRacing && (
         <View style={styles.hudOverlay}>
-          <div style={styles.hudStat}>
+          <View style={styles.hudStat}>
             <Text style={styles.hudLabel}>TIME</Text>
             <Text style={styles.hudValue}>{formatTime(elapsedTime)}</Text>
-          </div>
+          </View>
           <View style={styles.hudDivider} />
           <View style={styles.hudStat}>
             <Text style={styles.hudLabel}>KM/H</Text>

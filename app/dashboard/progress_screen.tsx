@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { useAuth } from "@/context/AuthContext";
+import { ProgressScreenUI } from '@/styles/progressScreenStyle';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { ProgressScreenUI } from '@/styles/progressScreenStyle';
+import React, { useState } from 'react';
+import { Dimensions, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
+
 export default function ProgressScreen() {
   const [timeFrame, setTimeFrame] = useState<'weekly' | 'monthly'>('weekly');
+  const { profile, loading } = useAuth();
 
   // Placeholder Data
   const stats = {
@@ -16,7 +19,12 @@ export default function ProgressScreen() {
     monthly: { distance: "62.5", streak: "18", burned: "24,500", ghostWins: "12", steps: "210,442" }
   };
 
+  const currentXP = profile?.stats?.xp || 0; 
+  const currentLevel = profile?.stats?.level || 1;
   const currentStats = stats[timeFrame];
+  const currentStreak = profile?.stats?.streak || 0;
+  const totalXP = 1000;
+  const progressPercent = (currentXP / totalXP) * 100;
 
   return (
     <ScrollView style={ProgressScreenUI.container} contentContainerStyle={{ paddingBottom: 40 }}>
@@ -42,8 +50,8 @@ export default function ProgressScreen() {
             />
           </LinearGradient>
         </View>
-        <Text style={ProgressScreenUI.rankText}>LVL 16 STRIDER</Text>
-        <Text style={ProgressScreenUI.xpText}>412/1000 XP</Text>
+        <Text style={ProgressScreenUI.rankText}>LVL {currentLevel} STRIDER</Text>
+        <Text style={ProgressScreenUI.xpText}>{currentXP}/{totalXP} XP</Text>
         
         <TouchableOpacity style={ProgressScreenUI.rankButton}>
           <LinearGradient 
