@@ -1,3 +1,4 @@
+import { db } from '@/services/database/sqlite/database';
 import { PermissionManager } from '@/services/PermissionsManager';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { useFonts } from "expo-font";
@@ -76,6 +77,21 @@ const CustomSplashScreen = ({ onFinish }: { onFinish: () => void }) => {
     );
 };
 
+export const seedTestData = () => {
+  const titles = ["Past Run", "Ghost Victory", "Morning Sprint"];
+  
+  for (let i = 1; i <= 30; i++) {
+    const fakeDate = new Date();
+    fakeDate.setDate(fakeDate.getDate() - i); // Go back i days
+    
+    db.runSync(
+      'INSERT INTO ghost_runs (date, distance, duration) VALUES (?, ?, ?)',
+      [fakeDate.toISOString(), Math.floor(Math.random() * 5000) + 1000, 1200]
+    );
+  }
+  console.log("30 Days of testing data injected!");
+};
+
 // --- 3. MAIN COMPONENT ---
 
 export default function Index() {
@@ -99,7 +115,7 @@ export default function Index() {
     });
 
     // Handle Button Morph Effect
-    useEffect(() => {
+    useEffect(() => {        
         Animated.spring(morphAnim, {
             toValue: currentIndex === SLIDES.length - 1 ? 1 : 0,
             useNativeDriver: false,
