@@ -73,51 +73,45 @@ export const getChartData = (): { timestamp: number; value: number }[] => {
 
 export const calculateStreak = (): number => {
   const rows = db.getAllSync(`
-    SELECT DISTINCT date FROM ghost_runs 
+    SELECT date FROM ghost_runs 
     ORDER BY date DESC
   `) as any[];
 
   if (rows.length === 0) return 0;
 
-  // Standardize "Today" to midnight for comparison
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Helper to strip time from a date
+  const stripTime = (dateInput: number | string | Date) => {
+    const d = new Date(dateInput);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  };
 
-  // Get unique days (milliseconds) from DB to avoid duplicate entries on same day breaking logic
-  const runDays = Array.from(
-    new Set(
-      rows.map((r) => {
-        const d = new Date(r.date);
-        d.setHours(0, 0, 0, 0);
-        return d.getTime();
-      }),
-    ),
-  );
+  const today = stripTime(Date.now());
+
+  // Get unique calendar days from the DB
+  const runDays = Array.from(new Set(rows.map((r) => stripTime(r.date))));
+
+  // Check if the most recent run was today or yesterday
+  // If the last run is older than 1 day ago, the streak is dead.
+  const latestRun = runDays[0];
+  const diffInMs = today - latestRun;
+  const oneDayInMs = 86400000;
+
+  if (diffInMs > oneDayInMs) {
+    return 0; // Streak broken: last run was more than 24h before today started
+  }
 
   let streak = 0;
-
-  // Check if the user has run today or yesterday.
-  // If the latest run is older than yesterday, the streak is broken (0).
-  const latestRun = runDays[0];
-  if (today.getTime() - latestRun > 86400000) {
-    return 0;
-  }
-
+  // Start checking from the most recent run day and count backwards
   for (let i = 0; i < runDays.length; i++) {
-    // We expect the date to be Today - (i days)
-    const expectedDate = today.getTime() - i * 86400000;
+    const expectedDate = latestRun - i * oneDayInMs;
 
-    // If the user didn't run today, but ran yesterday, the streak can still be valid
-    // This handles the case where you haven't run YET today.
-    const dateToCheck = runDays.includes(today.getTime())
-      ? expectedDate
-      : today.getTime() - (i + 1) * 86400000;
-
-    if (runDays.includes(dateToCheck)) {
+    if (runDays.includes(expectedDate)) {
       streak++;
     } else {
-      break;
+      break; // Gap found
     }
   }
+
   return streak;
 };
