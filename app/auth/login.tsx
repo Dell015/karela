@@ -52,7 +52,7 @@ export default function Login() {
       }
 
       // 3. Success! Move to Dashboard
-      router.replace("/dashboard/dashboard");
+      router.replace("/drawer/dashboard");
 
     } catch (error: any) {
       console.error(error);

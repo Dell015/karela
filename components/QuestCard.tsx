@@ -76,7 +76,7 @@ export const QuestCard = ({ overallCompletion, quests }: QuestCardProps) => {
       <View style={styles.headerRow}>
         <TouchableOpacity 
         style={styles.iconButton}
-        onPress={() => router.push("/dashboard/quests")}
+        onPress={() => router.push("/drawer/quests")}
         >
           <Ionicons name="arrow-up-outline" size={18} color="white" style={{transform: [{rotate: '45deg'}]}} />
         </TouchableOpacity>

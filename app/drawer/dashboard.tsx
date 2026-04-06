@@ -5,18 +5,18 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useNavigation } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  Image,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
+    Image,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
 } from "react-native";
 import MapView from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -25,8 +25,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
-import { dashboard_ui } from "../../styles/dashboard";
-import { theme } from "../../styles/theme";
+import { dashboard_ui } from "@/styles/dashboard";
+import { theme } from "@/styles/theme";
 
 export default function Dashboard() {
   const { profile, loading } = useAuth();
@@ -38,7 +38,7 @@ export default function Dashboard() {
     useLocationEngine(activeGhostData);
 
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const currentXP = profile?.stats?.xp || 0; 
+  const currentXP = profile?.stats?.xp || 0;
   const currentLevel = profile?.stats?.level || 1;
   const currentStreak = profile?.stats?.streak || 0;
   const totalXP = 1000;
@@ -138,7 +138,7 @@ export default function Dashboard() {
               <View style={dashboard_ui.ProfileHeader}>
                 <View style={dashboard_ui.LeftGroup}>
                   <TouchableOpacity
-                    onPress={() => router.push("/dashboard/profile")}
+                    onPress={() => router.push("/drawer/profile")}
                   >
                     <Image
                       source={require("@/assets/images/sir-sander.jpg")}
@@ -147,8 +147,12 @@ export default function Dashboard() {
                   </TouchableOpacity>
                   <View>
                     <Text style={dashboard_ui.welcomeText}>Welcome back</Text>
-                    <Text style={dashboard_ui.nameText}>{profile?.displayName || "Strider"}</Text>
-                    <Text style={dashboard_ui.LevelLabel}>LVL {currentLevel} STRIDER</Text>
+                    <Text style={dashboard_ui.nameText}>
+                      {profile?.displayName || "Strider"}
+                    </Text>
+                    <Text style={dashboard_ui.LevelLabel}>
+                      LVL {currentLevel} STRIDER
+                    </Text>
                   </View>
                 </View>
                 <TouchableOpacity
@@ -163,7 +167,7 @@ export default function Dashboard() {
               {/* Stats Card */}
               <TouchableOpacity
                 activeOpacity={0.9}
-                onPress={() => router.push("/dashboard/progress_screen")}
+                onPress={() => router.push("/drawer/progress")}
               >
                 <LinearGradient
                   colors={["#7CF205", "#209F77"]}
@@ -183,11 +187,15 @@ export default function Dashboard() {
                           <Text style={dashboard_ui.LevelLabel}>
                             LVL {currentLevel} STRIDER
                           </Text>
-                          <Text style={dashboard_ui.nameLabel}>{profile?.username || "Strider_01"}</Text>
+                          <Text style={dashboard_ui.nameLabel}>
+                            {profile?.username || "Strider_01"}
+                          </Text>
                         </View>
                         <View style={{ alignItems: "flex-end" }}>
                           <Text style={dashboard_ui.LevelLabel}>STREAK</Text>
-                          <Text style={dashboard_ui.nameLabel}>{currentStreak} 🔥</Text>
+                          <Text style={dashboard_ui.nameLabel}>
+                            {currentStreak} 🔥
+                          </Text>
                         </View>
                       </View>
                       <View style={dashboard_ui.progressContainer}>
@@ -275,7 +283,7 @@ export default function Dashboard() {
 
                 <TouchableOpacity
                   style={dashboard_ui.mapButton}
-                  onPress={() => router.push("/dashboard/maps")}
+                  onPress={() => router.push("/drawer/maps")}
                 >
                   <Text style={dashboard_ui.mapButtonText}>
                     Click to see more
@@ -298,7 +306,7 @@ export default function Dashboard() {
               {/* Chat with Ani */}
               <Text style={dashboard_ui.sectionTitle}>Chat with Ani</Text>
               <TouchableOpacity
-                onPress={() => router.push("/dashboard/ai_coach")}
+                onPress={() => router.push("/drawer/ai_coach")}
               >
                 <View style={dashboard_ui.chatCardContainer}>
                   <LinearGradient
@@ -318,7 +326,7 @@ export default function Dashboard() {
                         returnKeyType="send"
                       />
                       <TouchableOpacity
-                        onPress={() => router.push("/dashboard/ai_coach")}
+                        onPress={() => router.push("/drawer/ai_coach")}
                       >
                         <Text style={{ color: "#fff", fontSize: 18 }}>➔</Text>
                       </TouchableOpacity>
@@ -332,11 +340,36 @@ export default function Dashboard() {
                 <QuestCard
                   overallCompletion={0.7} // 70% Excellent Gauge
                   quests={[
-                    { id: 'q1', mission: 'Running 15km', progress: 0.7, xp: 150 },
-                    { id: 'q2', mission: 'Running 1km',  progress: 1.0, xp: 150 }, // Green if 1.0
-                    { id: 'q3', mission: 'Running 15km', progress: 0.6, xp: 150 },
-                    { id: 'q4', mission: 'Running 15km', progress: 0.6, xp: 150 },
-                    { id: 'q5', mission: 'Running 15km', progress: 0.6, xp: 150 },
+                    {
+                      id: "q1",
+                      mission: "Running 15km",
+                      progress: 0.7,
+                      xp: 150,
+                    },
+                    {
+                      id: "q2",
+                      mission: "Running 1km",
+                      progress: 1.0,
+                      xp: 150,
+                    }, // Green if 1.0
+                    {
+                      id: "q3",
+                      mission: "Running 15km",
+                      progress: 0.6,
+                      xp: 150,
+                    },
+                    {
+                      id: "q4",
+                      mission: "Running 15km",
+                      progress: 0.6,
+                      xp: 150,
+                    },
+                    {
+                      id: "q5",
+                      mission: "Running 15km",
+                      progress: 0.6,
+                      xp: 150,
+                    },
                   ]}
                 />
               </View>
@@ -351,7 +384,7 @@ export default function Dashboard() {
           <TouchableOpacity
             style={dashboard_ui.floatingIslandCircle}
             activeOpacity={0.8}
-            onPress={() => router.push("/dashboard/maps")}
+            onPress={() => router.push("/drawer/maps")}
           >
             <LinearGradient
               colors={["#7CF205", "#209F77"]}
