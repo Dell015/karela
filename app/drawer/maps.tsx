@@ -99,7 +99,7 @@ export default function MapScreen() {
   const handleStopRace = () => {
     setIsRacing(false);
     router.push({
-      pathname: "/dashboard/summary",
+      pathname: "/summary",
       params: {
         meters: Math.floor(physicalMeters),
         seconds: elapsedTime,

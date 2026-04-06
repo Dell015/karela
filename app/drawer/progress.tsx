@@ -126,7 +126,7 @@ import {
         <View style={ProgressScreenUI.header}>
           <TouchableOpacity 
             style={ProgressScreenUI.backButton}
-            onPress={() => router.push("/dashboard/dashboard")}
+            onPress={() => router.push("/drawer/dashboard")}
           >
             <Ionicons name="chevron-back" size={28} color="white" />
           </TouchableOpacity>
