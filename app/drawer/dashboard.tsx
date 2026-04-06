@@ -25,7 +25,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/context/AuthContext";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
-import { dashboard_ui } from "@/styles/dashboard";
+import { dashboard_ui } from "@/styles/dashboardStyle";
 import { theme } from "@/styles/theme";
 
 export default function Dashboard() {

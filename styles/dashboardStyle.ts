@@ -39,7 +39,7 @@ export const dashboard_ui = StyleSheet.create({
     height: 130, 
     borderRadius: 15, 
     overflow: 'hidden', 
-    marginBottom: 20,
+    marginBottom: 8,
     borderWidth: 1,
     padding: 4,
     borderColor: 'rgba(124, 242, 5, 0.3)'
@@ -93,7 +93,8 @@ export const dashboard_ui = StyleSheet.create({
     color: '#fff', 
     fontSize: 18, 
     fontWeight: 'bold', 
-    marginVertical: 12 
+    marginBottom: 8, 
+    marginTop: 8, 
   },
   mapPreviewContainer: { 
     height: 180, 
@@ -102,7 +103,9 @@ export const dashboard_ui = StyleSheet.create({
     justifyContent: 'center', 
     alignItems: 'center', 
     position: 'relative',
-    overflow: 'visible' 
+    overflow: 'visible', 
+    marginTop: 10,
+    marginBottom: 8,
   },
   mapPlaceholder: { 
     color: '#444', 
@@ -143,7 +146,8 @@ export const dashboard_ui = StyleSheet.create({
   characterTitle: { 
     color: '#fff', 
     fontSize: 16, 
-    fontWeight: 'bold', 
+    fontWeight: 'bold',
+    marginTop: 8, 
     marginBottom: 8 
   },
   characterBox: { 

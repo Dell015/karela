@@ -1,6 +1,10 @@
 import { auth } from "@/services/database/firebase/config";
 import { Ionicons } from "@expo/vector-icons";
-import { DrawerContentScrollView, DrawerItem, DrawerItemList } from "@react-navigation/drawer";
+import {
+    DrawerContentScrollView,
+    DrawerItem,
+    DrawerItemList,
+} from "@react-navigation/drawer";
 import { useRouter } from "expo-router";
 import { Drawer } from "expo-router/drawer";
 import { signOut } from "firebase/auth";
@@ -13,17 +17,17 @@ function CustomDrawerContent(props: any) {
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to log out?", [
       { text: "Cancel", style: "cancel" },
-      { 
-        text: "Logout", 
-        style: "destructive", 
+      {
+        text: "Logout",
+        style: "destructive",
         onPress: async () => {
           try {
             await signOut(auth);
-            router.replace("/auth/login"); 
+            router.replace("/auth/login");
           } catch (error) {
             Alert.alert("Error", "Failed to log out.");
           }
-        } 
+        },
       },
     ]);
   };
@@ -38,7 +42,9 @@ function CustomDrawerContent(props: any) {
         <DrawerItem
           label="Logout"
           labelStyle={{ color: "#FF4444", fontFamily: "Excon-Bold" }}
-          icon={({ size }) => <Ionicons name="log-out-outline" size={size} color="#FF4444" />}
+          icon={({ size }) => (
+            <Ionicons name="log-out-outline" size={size} color="#FF4444" />
+          )}
           onPress={handleLogout}
         />
       </View>
@@ -52,42 +58,68 @@ export default function DrawerLayout() {
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerShown: false,
-        drawerPosition: 'right', // Your preferred right-side drawer
+        drawerPosition: "right", // Your preferred right-side drawer
         drawerStyle: { backgroundColor: "#1A1A1A", width: 280 },
         drawerActiveTintColor: "#7CF205",
         drawerInactiveTintColor: "#FFFFFF",
-        drawerLabelStyle: { fontFamily: "Excon-Bold", fontSize: 16 }
+        drawerLabelStyle: { fontFamily: "Excon-Bold", fontSize: 16 },
       }}
     >
       {/* NOTE: name matches the filename inside the (drawer) folder.
          If your dashboard is in app/(drawer)/dashboard.tsx, name is "dashboard"
       */}
       <Drawer.Screen
-        name="dashboard" 
+        name="profile"
+        options={{
+          drawerLabel: "Profile",
+          drawerIcon: ({ color }) => (
+            <Ionicons name="person-outline" size={22} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="dashboard"
         options={{
           drawerLabel: "Home",
-          drawerIcon: ({ color }) => <Ionicons name="home-outline" size={22} color={color} />,
+          drawerIcon: ({ color }) => (
+            <Ionicons name="home-outline" size={22} color={color} />
+          ),
         }}
       />
       <Drawer.Screen
         name="maps"
         options={{
           drawerLabel: "Ghost Race",
-          drawerIcon: ({ color }) => <Ionicons name="map-outline" size={22} color={color} />,
+          drawerIcon: ({ color }) => (
+            <Ionicons name="map-outline" size={22} color={color} />
+          ),
         }}
       />
       <Drawer.Screen
-        name="progress_screen"
+        name="progress"
         options={{
-          drawerLabel: "My Progress",
-          drawerIcon: ({ color }) => <Ionicons name="stats-chart-outline" size={22} color={color} />,
+          drawerLabel: "My Progres",
+          drawerIcon: ({ color }) => (
+            <Ionicons name="stats-chart-outline" size={22} color={color} />
+          ),
         }}
       />
       <Drawer.Screen
         name="quests"
         options={{
           drawerLabel: "Quests",
-          drawerIcon: ({ color }) => <Ionicons name="trophy-outline" size={22} color={color} />,
+          drawerIcon: ({ color }) => (
+            <Ionicons name="trophy-outline" size={22} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="ai_coach"
+        options={{
+          drawerLabel: "AI Coach",
+          drawerIcon: ({ color }) => (
+            <Ionicons name="chatbox-ellipses-outline" size={22} color={color} />
+          ),
         }}
       />
     </Drawer>

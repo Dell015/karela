@@ -227,7 +227,7 @@ export default function QuestsScreen() {
           <View style={styles.summaryHeader}>
             <Text style={styles.summaryTitle}>Weekly Summary</Text>
             <TouchableOpacity
-              onPress={() => router.push("/components/calendar")}
+              onPress={() => router.push("/drawer/calendar")}
             >
               <Text style={styles.viewAllText}>View All</Text>
             </TouchableOpacity>
