@@ -328,30 +328,18 @@ export default function Dashboard() {
               </TouchableOpacity>
 
               <Text style={dashboard_ui.sectionTitle}>Quest Progress</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{
-                  paddingHorizontal: 20,
-                  paddingBottom: 20,
-                }}
-              >
+              <View style={{ marginBottom: 20 }}>
                 <QuestCard
-                  title="Daily Mission"
-                  mission="Run 5km"
-                  xp={150}
-                  progress={0.7}
-                  colors={["#7CF205", "#209F77"]}
+                  overallCompletion={0.7} // 70% Excellent Gauge
+                  quests={[
+                    { id: 'q1', mission: 'Running 15km', progress: 0.7, xp: 150 },
+                    { id: 'q2', mission: 'Running 1km',  progress: 1.0, xp: 150 }, // Green if 1.0
+                    { id: 'q3', mission: 'Running 15km', progress: 0.6, xp: 150 },
+                    { id: 'q4', mission: 'Running 15km', progress: 0.6, xp: 150 },
+                    { id: 'q5', mission: 'Running 15km', progress: 0.6, xp: 150 },
+                  ]}
                 />
-                <QuestCard
-                  title="Weekly Mission"
-                  mission="Run 20km"
-                  xp={500}
-                  progress={0.35}
-                  colors={["#FFD700", "#FFA500"]}
-                />
-              </ScrollView>
-
+              </View>
               {isKeyboardVisible && <View style={{ height: 100 }} />}
             </View>
           </ScrollView>
