@@ -6,9 +6,10 @@ import {
 } from "@/services/statsService";
 import { ProgressScreenUI } from "@/styles/progressScreenStyle";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useFocusEffect } from "@react-navigation/native";
+import { DrawerNavigationProp } from "@react-navigation/drawer";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router"; // Added Stack
 import React, { useCallback, useState } from "react";
 import {
   Dimensions,
@@ -28,6 +29,7 @@ const { width } = Dimensions.get("window");
 export default function ProgressScreen() {
   const router = useRouter();
   const { profile } = useAuth();
+  const navigation = useNavigation<DrawerNavigationProp<any>>();
 
   // States
   const [activeIndex, setActiveIndex] = useState(0);
@@ -40,20 +42,14 @@ export default function ProgressScreen() {
   useFocusEffect(
     useCallback(() => {
       // 1. Load Aggregated Stats (Daily/Weekly/Monthly)
+      // Note: getDynamicStats now handles the streak logic internally via statsService
       const localData = getDynamicStats();
-      const currentStreak = profile?.stats?.streak?.toString() || "0";
-
-      const mergedData = localData.map((item) => ({
-        ...item,
-        streak: currentStreak,
-      }));
-      setStatsArray(mergedData);
+      setStatsArray(localData);
 
       // 2. Load Real Database Chart Data
       const dbChart = getChartData();
       setRealChartData(dbChart);
 
-      // Cleanup function
       return () => {};
     }, [profile]),
   );
@@ -87,7 +83,7 @@ export default function ProgressScreen() {
           <Ionicons
             name="location"
             size={28}
-            color="white"
+            color="#7CF205"
             style={ProgressScreenUI.statIcon}
           />
         </View>
@@ -97,7 +93,7 @@ export default function ProgressScreen() {
               <MaterialCommunityIcons
                 name="lightning-bolt"
                 size={18}
-                color="white"
+                color="#FFD700"
               />
               <View>
                 <Text style={ProgressScreenUI.statLabelSmall}>Streak</Text>
@@ -107,7 +103,7 @@ export default function ProgressScreen() {
               </View>
             </View>
             <View style={ProgressScreenUI.smallCard}>
-              <MaterialCommunityIcons name="fire" size={18} color="white" />
+              <MaterialCommunityIcons name="fire" size={18} color="#FF5A00" />
               <View>
                 <Text style={ProgressScreenUI.statLabelSmall}>Burned</Text>
                 <Text style={ProgressScreenUI.statValueSmall}>
@@ -118,7 +114,7 @@ export default function ProgressScreen() {
           </View>
           <View style={ProgressScreenUI.statCardRow}>
             <View style={ProgressScreenUI.smallCard}>
-              <Ionicons name="trophy" size={16} color="white" />
+              <Ionicons name="trophy" size={16} color="#FFD700" />
               <View>
                 <Text style={ProgressScreenUI.statLabelSmall}>Wins</Text>
                 <Text style={ProgressScreenUI.statValueSmall}>
@@ -130,7 +126,7 @@ export default function ProgressScreen() {
               <MaterialCommunityIcons
                 name="shoe-print"
                 size={16}
-                color="white"
+                color="#BF5AF2"
               />
               <View>
                 <Text style={ProgressScreenUI.statLabelSmall}>Steps</Text>
@@ -151,6 +147,15 @@ export default function ProgressScreen() {
       contentContainerStyle={{ paddingBottom: 40 }}
       showsVerticalScrollIndicator={false}
     >
+      {/* 1. STACK CONFIG: Disable Swipe-Back Gesture */}
+      <Stack.Screen
+        options={{
+          gestureEnabled: false,
+          headerShown: false,
+        }}
+      />
+
+      {/* 2. CONSISTENT HEADER: BACK ON LEFT, BURGER ON RIGHT */}
       <View style={ProgressScreenUI.header}>
         <TouchableOpacity
           style={ProgressScreenUI.backButton}
@@ -158,17 +163,20 @@ export default function ProgressScreen() {
         >
           <Ionicons name="chevron-back" size={28} color="white" />
         </TouchableOpacity>
-        <Text style={{ color: "white", fontWeight: "bold" }}>
+
+        <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
           @{profile?.username || "strider"}
         </Text>
+
         <TouchableOpacity
           style={ProgressScreenUI.menuButton}
-          onPress={() => console.log("Active View Index:", activeIndex)} // Using index to clear warning
+          onPress={() => navigation.openDrawer()}
         >
-          <Ionicons name="menu" size={28} color="#7CF205" />
+          <Ionicons name="menu" size={32} color="#7CF205" />
         </TouchableOpacity>
       </View>
 
+      {/* PROFILE SECTION */}
       <View style={ProgressScreenUI.profileSection}>
         <View style={ProgressScreenUI.avatarWrapper}>
           <LinearGradient
@@ -202,6 +210,7 @@ export default function ProgressScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* STATS CARDS (Horizontal Swipeable List) */}
       <FlatList
         data={statsArray}
         renderItem={renderStats}
@@ -212,6 +221,7 @@ export default function ProgressScreen() {
         showsHorizontalScrollIndicator={false}
       />
 
+      {/* PERFORMANCE CHART PREVIEW */}
       <View style={ProgressScreenUI.sectionContainer}>
         <View style={ProgressScreenUI.row}>
           <Text style={ProgressScreenUI.sectionTitle}>Performance Preview</Text>

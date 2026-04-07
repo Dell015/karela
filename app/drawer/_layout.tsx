@@ -66,50 +66,91 @@ export default function DrawerLayout() {
       }}
     >
       <Drawer.Screen
-        name="settings"
-        options={{
-          drawerLabel: "Settings",
-          drawerIcon: ({ color }) => <Ionicons name="settings-outline" size={22} color={color} />,
-        }}
-      />
-      <Drawer.Screen
         name="dashboard"
         options={{
           drawerLabel: "Home",
-          drawerIcon: ({ color }) => <Ionicons name="home-outline" size={22} color={color} />,
+          drawerIcon: ({ color }) => (
+            <Ionicons name="home-outline" size={22} color={color} />
+          ),
         }}
       />
       <Drawer.Screen
         name="progress"
         options={{
           drawerLabel: "My Progress",
-          drawerIcon: ({ color }) => <Ionicons name="stats-chart-outline" size={22} color={color} />,
+          drawerIcon: ({ color }) => (
+            <Ionicons name="stats-chart-outline" size={22} color={color} />
+          ),
         }}
       />
       <Drawer.Screen
         name="maps"
         options={{
           drawerLabel: "Ghost Race",
-          drawerIcon: ({ color }) => <Ionicons name="map-outline" size={22} color={color} />,
+          drawerIcon: ({ color }) => (
+            <Ionicons name="map-outline" size={22} color={color} />
+          ),
         }}
       />
       <Drawer.Screen
         name="quests"
         options={{
           drawerLabel: "Quests",
-          drawerIcon: ({ color }) => <Ionicons name="trophy-outline" size={22} color={color} />,
+          drawerIcon: ({ color }) => (
+            <Ionicons name="trophy-outline" size={22} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="ai_coach"
+        options={{
+          drawerLabel: "AI Coach",
+          drawerIcon: ({ color }) => (
+            <Ionicons
+              name="chatbubble-ellipses-outline"
+              size={22}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="calendar"
+        options={{
+          drawerLabel: "Calendar",
+          drawerIcon: ({ color }) => (
+            <Ionicons name="calendar-outline" size={22} color={color} />
+          ),
+        }}
+      />
+
+      <Drawer.Screen
+        name="settings"
+        options={{
+          drawerLabel: "Settings",
+          drawerIcon: ({ color }) => (
+            <Ionicons name="settings-outline" size={22} color={color} />
+          ),
         }}
       />
 
       {/* Hidden Routes */}
-      <Drawer.Screen name="profile" options={{ drawerItemStyle: { display: "none" } }} />
-      <Drawer.Screen name="ai_coach" options={{ drawerItemStyle: { display: "none" } }} />
-      <Drawer.Screen name="calendar" options={{ drawerItemStyle: { display: "none" } }} />
-      <Drawer.Screen name="performanceGraph" options={{ drawerItemStyle: { display: "none" } }} />
+      <Drawer.Screen
+        name="profile"
+        options={{ drawerItemStyle: { display: "none" } }}
+      />
+      <Drawer.Screen
+        name="performanceGraph"
+        options={{ drawerItemStyle: { display: "none" } }}
+      />
     </Drawer>
   );
 }
 
 const styles = StyleSheet.create({
-  logoutContainer: { borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.1)", paddingBottom: 20 },
+  logoutContainer: {
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.1)",
+    paddingBottom: 20,
+  },
 });

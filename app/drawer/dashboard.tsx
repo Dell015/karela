@@ -1,22 +1,21 @@
 import { QuestCard } from "@/components/QuestCard";
 import { Ionicons } from "@expo/vector-icons";
-import { DrawerActions } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useNavigation } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-    Image,
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View,
+  Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from "react-native";
 import MapView from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -24,9 +23,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 // Custom Hooks & Styles
 import { useAuth } from "@/context/AuthContext";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
-import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { dashboard_ui } from "@/styles/dashboardStyle";
+import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { theme } from "@/styles/theme";
+import { DrawerNavigationProp } from "@react-navigation/drawer";
 
 export default function Dashboard() {
   const { profile, loading } = useAuth();
@@ -43,7 +43,7 @@ export default function Dashboard() {
   const currentStreak = profile?.stats?.streak || 0;
   const totalXP = 1000;
   const progressPercent = (currentXP / totalXP) * 100;
-  const navigation = useNavigation();
+  const navigation = useNavigation<DrawerNavigationProp<any>>();
 
   const [weather, setWeather] = useState<{
     temp: string | number;
@@ -156,11 +156,10 @@ export default function Dashboard() {
                   </View>
                 </View>
                 <TouchableOpacity
-                  onPress={() => {
-                    navigation.dispatch(DrawerActions.openDrawer());
-                  }}
+                  style={dashboard_ui.menuButton}
+                  onPress={() => navigation.openDrawer()}
                 >
-                  <Text style={{ color: "#fff", fontSize: 24 }}>☰</Text>
+                  <Ionicons name="menu" size={32} color="#7CF205" />
                 </TouchableOpacity>
               </View>
 
@@ -305,9 +304,7 @@ export default function Dashboard() {
 
               {/* Chat with Ani */}
               <Text style={dashboard_ui.sectionTitle}>Chat with Ani</Text>
-              <TouchableOpacity
-                onPress={() => router.push("/drawer/ai_coach")}
-              >
+              <TouchableOpacity onPress={() => router.push("/drawer/ai_coach")}>
                 <View style={dashboard_ui.chatCardContainer}>
                   <LinearGradient
                     colors={["#7CF205", "#209F77"]}
