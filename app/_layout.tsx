@@ -7,11 +7,16 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        {/* The Root Stack handles full-screen transitions */}
-        <Stack screenOptions={{ headerShown: false }}>
+        {/* Added gestureEnabled: false here to lock the screens */}
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            gestureEnabled: false, // This stops the "swipe back to index" behavior globally
+          }}
+        >
           {/* 1. Onboarding / Landing */}
           <Stack.Screen name="index" />
-          
+
           {/* 2. Auth Group */}
           <Stack.Screen name="auth/login" />
           <Stack.Screen name="auth/signup" />
