@@ -42,8 +42,9 @@ export default function Dashboard() {
   const currentLevel = profile?.stats?.level || 1;
   const currentStreak = profile?.stats?.streak || 0;
   const totalXP = 1000;
-  const progressPercent = (currentXP / totalXP) * 100;
+  const progressPercent = Math.min((currentXP / totalXP) * 100, 100);
   const navigation = useNavigation<DrawerNavigationProp<any>>();
+  
 
   const [weather, setWeather] = useState<{
     temp: string | number;
