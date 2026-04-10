@@ -42,3 +42,10 @@ app-example
 /ios
 /android
 .env
+
+# API Keys and Secrets
+.env
+.env.local
+.env.example
+# (Optional but recommended)
+EXPO_PUBLIC_*
