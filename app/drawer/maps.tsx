@@ -17,6 +17,7 @@ import { getLatestGhostRun } from "@/services/database/sqlite/database";
 import { PermissionManager } from "@/services/PermissionsManager";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { styles } from "@/styles/mapStyles";
+import { calculateStreak } from "@/services/statsService";
 
 export default function MapScreen() {
   const router = useRouter();
@@ -60,7 +61,8 @@ export default function MapScreen() {
 
       const R = 6371000; // Earth's radius in meters
       const dLat = ((lastPoint.latitude - prevPoint.latitude) * Math.PI) / 180;
-      const dLon = ((lastPoint.longitude - prevPoint.longitude) * Math.PI) / 180;
+      const dLon =
+        ((lastPoint.longitude - prevPoint.longitude) * Math.PI) / 180;
 
       const a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -91,21 +93,27 @@ export default function MapScreen() {
     if (locationAllowed) {
       setPhysicalMeters(0);
       setElapsedTime(0);
-      setPath([]); 
+      setPath([]);
       setIsRacing(true);
     }
   };
 
-  const handleStopRace = () => {
+  const handleStopRace = async () => {
     setIsRacing(false);
+
+    // 1. Calculate the potential new streak
+    // We call a service that checks if today's run + previous runs form a chain
+    const updatedStreak = calculateStreak();
+
     router.push({
-      pathname: "/dashboard/summary",
+      pathname: "/summary",
       params: {
         meters: Math.floor(physicalMeters),
         seconds: elapsedTime,
         kcal: (physicalMeters * 0.062).toFixed(1),
         xp: Math.floor(physicalMeters * 0.1),
         path: JSON.stringify(path),
+        newStreak: updatedStreak, // Pass it to the summary screen to show the user
       },
     });
   };
@@ -114,7 +122,7 @@ export default function MapScreen() {
   const toggleGhost = () => {
     if (!isGhostEnabled) {
       const savedRow: any = getLatestGhostRun(); // Get the row from SQLite
-      
+
       if (savedRow && savedRow.path_data) {
         try {
           // Parse the JSON string into an array of coordinates

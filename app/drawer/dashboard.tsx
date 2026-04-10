@@ -1,6 +1,5 @@
 import { QuestCard } from "@/components/QuestCard";
 import { Ionicons } from "@expo/vector-icons";
-import { DrawerActions } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useNavigation } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -24,9 +23,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 // Custom Hooks & Styles
 import { useAuth } from "@/context/AuthContext";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
+import { dashboard_ui } from "@/styles/dashboardStyle";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
-import { dashboard_ui } from "../../styles/dashboard";
-import { theme } from "../../styles/theme";
+import { theme } from "@/styles/theme";
+import { DrawerNavigationProp } from "@react-navigation/drawer";
 
 export default function Dashboard() {
   const { profile, loading } = useAuth();
@@ -38,12 +38,12 @@ export default function Dashboard() {
     useLocationEngine(activeGhostData);
 
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const currentXP = profile?.stats?.xp || 0; 
+  const currentXP = profile?.stats?.xp || 0;
   const currentLevel = profile?.stats?.level || 1;
   const currentStreak = profile?.stats?.streak || 0;
   const totalXP = 1000;
   const progressPercent = (currentXP / totalXP) * 100;
-  const navigation = useNavigation();
+  const navigation = useNavigation<DrawerNavigationProp<any>>();
 
   const [weather, setWeather] = useState<{
     temp: string | number;
@@ -138,7 +138,7 @@ export default function Dashboard() {
               <View style={dashboard_ui.ProfileHeader}>
                 <View style={dashboard_ui.LeftGroup}>
                   <TouchableOpacity
-                    onPress={() => router.push("/dashboard/profile")}
+                    onPress={() => router.push("/drawer/profile")}
                   >
                     <Image
                       source={require("@/assets/images/sir-sander.jpg")}
@@ -147,23 +147,26 @@ export default function Dashboard() {
                   </TouchableOpacity>
                   <View>
                     <Text style={dashboard_ui.welcomeText}>Welcome back</Text>
-                    <Text style={dashboard_ui.nameText}>{profile?.displayName || "Strider"}</Text>
-                    <Text style={dashboard_ui.LevelLabel}>LVL {currentLevel} STRIDER</Text>
+                    <Text style={dashboard_ui.nameText}>
+                      {profile?.displayName || "Strider"}
+                    </Text>
+                    <Text style={dashboard_ui.LevelLabel}>
+                      LVL {currentLevel} STRIDER
+                    </Text>
                   </View>
                 </View>
                 <TouchableOpacity
-                  onPress={() => {
-                    navigation.dispatch(DrawerActions.openDrawer());
-                  }}
+                  style={dashboard_ui.menuButton}
+                  onPress={() => navigation.openDrawer()}
                 >
-                  <Text style={{ color: "#fff", fontSize: 24 }}>☰</Text>
+                  <Ionicons name="menu" size={32} color="#7CF205" />
                 </TouchableOpacity>
               </View>
 
               {/* Stats Card */}
               <TouchableOpacity
                 activeOpacity={0.9}
-                onPress={() => router.push("/dashboard/progress_screen")}
+                onPress={() => router.push("/drawer/progress")}
               >
                 <LinearGradient
                   colors={["#7CF205", "#209F77"]}
@@ -183,11 +186,15 @@ export default function Dashboard() {
                           <Text style={dashboard_ui.LevelLabel}>
                             LVL {currentLevel} STRIDER
                           </Text>
-                          <Text style={dashboard_ui.nameLabel}>{profile?.username || "Strider_01"}</Text>
+                          <Text style={dashboard_ui.nameLabel}>
+                            {profile?.username || "Strider_01"}
+                          </Text>
                         </View>
                         <View style={{ alignItems: "flex-end" }}>
                           <Text style={dashboard_ui.LevelLabel}>STREAK</Text>
-                          <Text style={dashboard_ui.nameLabel}>{currentStreak} 🔥</Text>
+                          <Text style={dashboard_ui.nameLabel}>
+                            {currentStreak} 🔥
+                          </Text>
                         </View>
                       </View>
                       <View style={dashboard_ui.progressContainer}>
@@ -275,7 +282,7 @@ export default function Dashboard() {
 
                 <TouchableOpacity
                   style={dashboard_ui.mapButton}
-                  onPress={() => router.push("/dashboard/maps")}
+                  onPress={() => router.push("/drawer/maps")}
                 >
                   <Text style={dashboard_ui.mapButtonText}>
                     Click to see more
@@ -297,9 +304,7 @@ export default function Dashboard() {
 
               {/* Chat with Ani */}
               <Text style={dashboard_ui.sectionTitle}>Chat with Ani</Text>
-              <TouchableOpacity
-                onPress={() => router.push("/dashboard/ai_coach")}
-              >
+              <TouchableOpacity onPress={() => router.push("/drawer/ai_coach")}>
                 <View style={dashboard_ui.chatCardContainer}>
                   <LinearGradient
                     colors={["#7CF205", "#209F77"]}
@@ -318,7 +323,7 @@ export default function Dashboard() {
                         returnKeyType="send"
                       />
                       <TouchableOpacity
-                        onPress={() => router.push("/dashboard/ai_coach")}
+                        onPress={() => router.push("/drawer/ai_coach")}
                       >
                         <Text style={{ color: "#fff", fontSize: 18 }}>➔</Text>
                       </TouchableOpacity>
@@ -328,30 +333,43 @@ export default function Dashboard() {
               </TouchableOpacity>
 
               <Text style={dashboard_ui.sectionTitle}>Quest Progress</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{
-                  paddingHorizontal: 20,
-                  paddingBottom: 20,
-                }}
-              >
+              <View style={{ marginBottom: 20 }}>
                 <QuestCard
-                  title="Daily Mission"
-                  mission="Run 5km"
-                  xp={150}
-                  progress={0.7}
-                  colors={["#7CF205", "#209F77"]}
+                  overallCompletion={0.7} // 70% Excellent Gauge
+                  quests={[
+                    {
+                      id: "q1",
+                      mission: "Running 15km",
+                      progress: 0.7,
+                      xp: 150,
+                    },
+                    {
+                      id: "q2",
+                      mission: "Running 1km",
+                      progress: 1.0,
+                      xp: 150,
+                    }, // Green if 1.0
+                    {
+                      id: "q3",
+                      mission: "Running 15km",
+                      progress: 0.6,
+                      xp: 150,
+                    },
+                    {
+                      id: "q4",
+                      mission: "Running 15km",
+                      progress: 0.6,
+                      xp: 150,
+                    },
+                    {
+                      id: "q5",
+                      mission: "Running 15km",
+                      progress: 0.6,
+                      xp: 150,
+                    },
+                  ]}
                 />
-                <QuestCard
-                  title="Weekly Mission"
-                  mission="Run 20km"
-                  xp={500}
-                  progress={0.35}
-                  colors={["#FFD700", "#FFA500"]}
-                />
-              </ScrollView>
-
+              </View>
               {isKeyboardVisible && <View style={{ height: 100 }} />}
             </View>
           </ScrollView>
@@ -363,7 +381,7 @@ export default function Dashboard() {
           <TouchableOpacity
             style={dashboard_ui.floatingIslandCircle}
             activeOpacity={0.8}
-            onPress={() => router.push("/dashboard/maps")}
+            onPress={() => router.push("/drawer/maps")}
           >
             <LinearGradient
               colors={["#7CF205", "#209F77"]}

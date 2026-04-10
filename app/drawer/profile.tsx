@@ -28,7 +28,11 @@ const { width } = Dimensions.get("window");
 const ProfileRow = ({ label, value, valueComponent }: any) => (
   <View style={styles.row}>
     <Text style={styles.rowLabel}>{label}</Text>
-    {valueComponent ? valueComponent : <Text style={styles.rowValue}>{value}</Text>}
+    {valueComponent ? (
+      valueComponent
+    ) : (
+      <Text style={styles.rowValue}>{value}</Text>
+    )}
   </View>
 );
 
@@ -48,23 +52,41 @@ const ToggleRow = ({ label, value, onValueChange }: any) => (
 const ActionRow = ({ label, actionText, onPress, color = "#888", icon }: any) => (
   <TouchableOpacity style={styles.actionRow} onPress={onPress} activeOpacity={0.7}>
     <View style={styles.actionRowLeft}>
-      {icon && <Ionicons name={icon} size={20} color="#888" style={{ marginRight: 10 }} />}
+      {icon && (
+        <Ionicons
+          name={icon}
+          size={20}
+          color="#888"
+          style={{ marginRight: 10 }}
+        />
+      )}
       <Text style={styles.rowLabel}>{label}</Text>
     </View>
     {actionText ? (
-      <Text style={[styles.rowValue, { color, fontWeight: "600" }]}>{actionText}</Text>
+      <Text style={[styles.rowValue, { color, fontWeight: "600" }]}>
+        {actionText}
+      </Text>
     ) : null}
   </TouchableOpacity>
 );
 
 // --- BOTTOM SHEET MODAL COMPONENT ---
 const BottomSheet = ({ visible, onClose, title, children }: any) => (
-  <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
-    <KeyboardAvoidingView 
-      style={styles.modalOverlay} 
+  <Modal
+    visible={visible}
+    animationType="slide"
+    transparent={true}
+    onRequestClose={onClose}
+  >
+    <KeyboardAvoidingView
+      style={styles.modalOverlay}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={onClose} />
+      <TouchableOpacity
+        style={styles.modalBackdrop}
+        activeOpacity={1}
+        onPress={onClose}
+      />
       <View style={styles.bottomSheet}>
         <View style={styles.bottomSheetHeader}>
           <Text style={styles.bottomSheetTitle}>{title}</Text>
@@ -72,7 +94,9 @@ const BottomSheet = ({ visible, onClose, title, children }: any) => (
             <Ionicons name="close-circle" size={28} color="#888" />
           </TouchableOpacity>
         </View>
-        <ScrollView bounces={false} showsVerticalScrollIndicator={false}>{children}</ScrollView>
+        <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+          {children}
+        </ScrollView>
       </View>
     </KeyboardAvoidingView>
   </Modal>
@@ -104,22 +128,29 @@ export default function ProfilePage() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.scrollContainer} bounces={false}>
-        
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        bounces={false}
+      >
         {/* HEADER BANNER */}
         <LinearGradient
-          colors={["#2b7a1f", "#0a2e11"]} 
+          colors={["#2b7a1f", "#0a2e11"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.headerBanner}
         >
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.push("/drawer/dashboard")}
+          >
             <Ionicons name="chevron-back" size={32} color="#FFF" />
           </TouchableOpacity>
 
           <View style={styles.thoughtBubbleContainer}>
             <View style={styles.speechBubble}>
-              <Text style={styles.speechText}>Sweat now, shine later. 🏃‍♀️💨</Text>
+              <Text style={styles.speechText}>
+                Sweat now, shine later. 🏃‍♀️💨
+              </Text>
             </View>
             <View style={styles.bubbleDot1} />
             <View style={styles.bubbleDot2} />
@@ -130,17 +161,24 @@ export default function ProfilePage() {
           <View style={styles.avatarContainer}>
             <View style={styles.avatarPlaceholder} />
           </View>
-          <Text style={styles.nameText}>{profile?.displayName || "Player Name"}</Text>
-          <Text style={styles.usernameText}>@{profile?.username || "username"}</Text>
+          <Text style={styles.nameText}>
+            {profile?.displayName || "Player Name"}
+          </Text>
+          <Text style={styles.usernameText}>
+            @{profile?.username || "username"}
+          </Text>
 
           {/* XP & LEVEL BAR */}
           <View style={styles.progressContainer}>
             <View style={styles.progressBarBackground}>
               <LinearGradient
-                colors={["#52CC39", "#209F77"]} 
+                colors={["#52CC39", "#209F77"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={[styles.progressBarFill, { width: `${progressPercent}%` }]} 
+                style={[
+                  styles.progressBarFill,
+                  { width: `${progressPercent}%` },
+                ]}
               />
             </View>
             <View style={styles.progressLabels}>
@@ -243,7 +281,13 @@ export default function ProfilePage() {
             placeholder="Enter username" 
             placeholderTextColor="#888" 
           />
-          <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#209F77", marginTop: 20 }]} onPress={() => setShowEditProfile(false)}>
+          <TouchableOpacity
+            style={[
+              styles.actionBtn,
+              { backgroundColor: "#209F77", marginTop: 20 },
+            ]}
+            onPress={() => setShowEditProfile(false)}
+          >
             <Text style={styles.actionBtnText}>Save Changes</Text>
           </TouchableOpacity>
         </View>
@@ -252,11 +296,23 @@ export default function ProfilePage() {
       {/* GENERAL SETTINGS MODAL */}
       <BottomSheet visible={showGeneralSettings} onClose={() => setShowGeneralSettings(false)} title="App Preferences">
         <View style={styles.modalContent}>
-          <ToggleRow label="Metric Units (km/kg)" value={isMetric} onValueChange={setIsMetric} />
+          <ToggleRow
+            label="Metric Units (km/kg)"
+            value={isMetric}
+            onValueChange={setIsMetric}
+          />
           <View style={styles.divider} />
-          <ToggleRow label="Mission Alerts" value={isPushEnabled} onValueChange={setIsPushEnabled} />
+          <ToggleRow
+            label="Mission Alerts"
+            value={isPushEnabled}
+            onValueChange={setIsPushEnabled}
+          />
           <View style={styles.divider} />
-          <ToggleRow label="Dark Mode" value={isDarkMode} onValueChange={setIsDarkMode} />
+          <ToggleRow
+            label="Dark Mode"
+            value={isDarkMode}
+            onValueChange={setIsDarkMode}
+          />
           <View style={styles.divider} />
           <ToggleRow label="Public (Leaderboard Visible)" value={isPublic} onValueChange={setIsPublic} />
           <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#209F77", marginTop: 20 }]} onPress={() => setShowGeneralSettings(false)}>
@@ -268,14 +324,14 @@ export default function ProfilePage() {
       {/* ACCOUNT SETTINGS MODAL */}
       <BottomSheet visible={showAccountSettings} onClose={() => setShowAccountSettings(false)} title="Account Security">
         <View style={styles.modalContent}>
-          <ProfileRow 
-            label="Email" 
+          <ProfileRow
+            label="Email"
             valueComponent={
               <Text style={[styles.rowValue, { fontSize: 13, textAlign: 'right' }]}>
                 {profile?.email || "No email linked"}{"\n"}
                 <Text style={styles.successText}>[✅ Verified]</Text>
               </Text>
-            } 
+            }
           />
           <View style={styles.divider} />
           <ActionRow label="Change Password" />
@@ -290,7 +346,6 @@ export default function ProfilePage() {
           </TouchableOpacity>
         </View>
       </BottomSheet>
-
     </SafeAreaView>
   );
 }
@@ -308,15 +363,57 @@ const styles = StyleSheet.create({
   thoughtBubbleContainer: { alignItems: "center", marginBottom: 20, marginLeft: 40 },
   speechBubble: { backgroundColor: "rgba(30, 30, 30, 0.8)", paddingVertical: 10, paddingHorizontal: 20, borderRadius: 20, borderWidth: 1, borderColor: "#333" },
   speechText: { color: "#e0e0e0", fontSize: 14 },
-  bubbleDot1: { width: 12, height: 12, borderRadius: 6, backgroundColor: "rgba(30, 30, 30, 0.8)", position: "absolute", bottom: -15, left: 20 },
-  bubbleDot2: { width: 8, height: 8, borderRadius: 4, backgroundColor: "rgba(30, 30, 30, 0.8)", position: "absolute", bottom: -25, left: 10 },
+  bubbleDot1: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "rgba(30, 30, 30, 0.8)",
+    position: "absolute",
+    bottom: -15,
+    left: 20,
+  },
+  bubbleDot2: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "rgba(30, 30, 30, 0.8)",
+    position: "absolute",
+    bottom: -25,
+    left: 10,
+  },
   profileSection: { paddingHorizontal: 25, marginTop: -50 },
-  avatarContainer: { width: 90, height: 90, borderRadius: 45, backgroundColor: "#121212", justifyContent: "center", alignItems: "center", marginBottom: 15 },
-  avatarPlaceholder: { width: 76, height: 76, borderRadius: 38, backgroundColor: "#209F77" },
-  nameText: { color: "#FFF", fontSize: 24, fontWeight: "bold", marginBottom: 4 },
+  avatarContainer: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: "#121212",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  avatarPlaceholder: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: "#209F77",
+  },
+  nameText: {
+    color: "#FFF",
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
   usernameText: { color: "#888", fontSize: 14, marginBottom: 20 },
   progressContainer: { marginBottom: 25 },
-  progressBarBackground: { height: 14, backgroundColor: "#222", borderRadius: 7, borderWidth: 1, borderColor: "#e8f5e9", overflow: "hidden", marginBottom: 8 },
+  progressBarBackground: {
+    height: 14,
+    backgroundColor: "#222",
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: "#e8f5e9",
+    overflow: "hidden",
+    marginBottom: 8,
+  },
   progressBarFill: { height: "100%", borderRadius: 7 },
   progressLabels: { flexDirection: "row", justifyContent: "space-between" },
   rankText: { color: "#FFF", fontSize: 14, fontWeight: "bold" },
@@ -350,16 +447,50 @@ const styles = StyleSheet.create({
   // --- BUTTONS ---
   outlineBtn: { flexDirection: "row", borderWidth: 1, borderColor: "#209F77", paddingVertical: 14, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   outlineBtnText: { color: "#209F77", fontSize: 16, fontWeight: "bold" },
-  actionBtn: { flexDirection: "row", paddingVertical: 16, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-  actionBtnText: { color: "#FFF", fontSize: 16, fontWeight: "bold", letterSpacing: 0.5 },
+  actionBtn: {
+    flexDirection: "row",
+    paddingVertical: 16,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionBtnText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "bold",
+    letterSpacing: 0.5,
+  },
 
   // --- BOTTOM SHEET MODALS ---
   modalOverlay: { flex: 1, justifyContent: "flex-end" },
-  modalBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.6)" },
-  bottomSheet: { backgroundColor: "#1e1e1e", borderTopLeftRadius: 25, borderTopRightRadius: 25, padding: 25, paddingBottom: 50, maxHeight: "85%" },
-  bottomSheetHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.6)",
+  },
+  bottomSheet: {
+    backgroundColor: "#1e1e1e",
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    padding: 25,
+    paddingBottom: 50,
+    maxHeight: "85%",
+  },
+  bottomSheetHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
   bottomSheetTitle: { color: "#FFF", fontSize: 20, fontWeight: "bold" },
   modalContent: { gap: 10 },
   inputLabel: { color: "#888", fontSize: 14, marginBottom: 5, marginTop: 10 },
-  input: { backgroundColor: "#121212", color: "#FFF", borderRadius: 10, padding: 15, fontSize: 16, borderWidth: 1, borderColor: "#333" },
+  input: {
+    backgroundColor: "#121212",
+    color: "#FFF",
+    borderRadius: 10,
+    padding: 15,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#333",
+  },
 });

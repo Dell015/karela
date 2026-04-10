@@ -1,5 +1,5 @@
-import { db, auth } from "./config";
-import { doc, updateDoc, increment, getDoc } from "firebase/firestore";
+import { doc, increment, updateDoc } from "firebase/firestore";
+import { auth, db } from "./config";
 
 export const updateFirebaseProgress = async (summary: { distance: number, avgSpeed: number }) => {
   const user = auth.currentUser;

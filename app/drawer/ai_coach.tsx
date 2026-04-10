@@ -18,7 +18,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { theme } from "../../styles/theme";
+import { theme } from "@/styles/theme";
 
 // =========================================================
 // 1. DATA & LOGIC
