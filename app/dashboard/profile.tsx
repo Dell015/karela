@@ -45,7 +45,6 @@ const ToggleRow = ({ label, value, onValueChange }: any) => (
   </View>
 );
 
-// Modified ActionRow: actionText is optional. No arrows needed!
 const ActionRow = ({ label, actionText, onPress, color = "#888", icon }: any) => (
   <TouchableOpacity style={styles.actionRow} onPress={onPress} activeOpacity={0.7}>
     <View style={styles.actionRowLeft}>
@@ -86,9 +85,6 @@ export default function ProfilePage() {
   const router = useRouter();
   const { profile } = useAuth();
 
-  // --- UI STATES ---
-  const [activeTab, setActiveTab] = useState<"profile" | "card">("card"); 
-
   // --- MODAL STATES ---
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showAccountSettings, setShowAccountSettings] = useState(false);
@@ -106,123 +102,6 @@ export default function ProfilePage() {
   const totalXP = 1000;
   const progressPercent = Math.min((currentXP / totalXP) * 100, 100);
 
-  // =========================================================
-  // TAB RENDERING FUNCTIONS
-  // =========================================================
-  
-  // 1. PLAYER PROFILE TAB (Includes settings menus now)
-  const renderProfileTab = () => (
-    <View style={styles.tabContent}>
-      <TouchableOpacity 
-        style={styles.outlineBtn}
-        onPress={() => setShowEditProfile(true)}
-      >
-        <Ionicons name="pencil" size={16} color="#209F77" style={{ marginRight: 8 }}/>
-        <Text style={styles.outlineBtnText}>Edit Profile</Text>
-      </TouchableOpacity>
-
-      {/* Settings Menu Only Shows in Profile Tab */}
-      <View style={styles.bottomMenuContainer}>
-        <ActionRow 
-          icon="settings-outline"
-          label="General Settings" 
-          onPress={() => setShowGeneralSettings(true)}
-        />
-        <View style={styles.divider} />
-        <ActionRow 
-          icon="shield-checkmark-outline"
-          label="Account & Security" 
-          onPress={() => setShowAccountSettings(true)}
-        />
-      </View>
-    </View>
-  );
-
-  // 2. PLAYER CARD TAB (Only stats and data)
-  const renderCardTab = () => (
-    <View style={styles.tabContent}>
-      
-      {/* SECTION A: Performance & Stats */}
-      <View style={styles.sciFiCardContainer}>
-        <Text style={styles.cardTitle}>Performance & Stats</Text>
-        
-        {/* Line Graph Placeholder */}
-        <View style={styles.graphPlaceholder}>
-          <Ionicons name="analytics" size={40} color="#52CC39" />
-          <Text style={styles.graphText}>
-            [ Visual Graph: Pace/Distance over last 7 days ]
-          </Text>
-        </View>
-
-        <View style={styles.cardContent}>
-          <ProfileRow label="All-Time Distance" value="128.4 km" />
-          <ProfileRow label="Total Missions" value="42 Completed" />
-          <ProfileRow 
-            label="Personal Bests" 
-            valueComponent={
-              <Text style={[styles.rowValue, { fontSize: 13, textAlign: 'right' }]}>
-                Fastest 5K: 24:15{"\n"}
-                Longest Streak: 12 Days 🔥
-              </Text>
-            } 
-          />
-        </View>
-      </View>
-
-      {/* SECTION B: Physical Profile (Engine Data) */}
-      <View style={styles.sciFiCardContainer}>
-        <Text style={styles.cardTitle}>Physical Profile</Text>
-        <View style={styles.cardContent}>
-          
-          {/* Weight Progress Bar */}
-          <View style={styles.weightProgressContainer}>
-            <View style={styles.weightLabels}>
-              <Text style={styles.weightTextDim}>Current: 76.5 kg</Text>
-              <Text style={styles.weightTextHighlight}>Target: 70.0 kg</Text>
-            </View>
-            <View style={styles.weightBarBg}>
-              <LinearGradient
-                colors={["#209F77", "#52CC39"]} 
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={[styles.weightBarFill, { width: '45%' }]} 
-              />
-            </View>
-          </View>
-
-          <ProfileRow 
-            label="Vitals" 
-            valueComponent={
-              <Text style={styles.rowValue}>
-                178cm | 22 yrs | 24.1 <Text style={styles.successText}>(Healthy)</Text>
-              </Text>
-            } 
-          />
-          <ProfileRow label="Fitness Level" value="Intermediate" />
-        </View>
-      </View>
-
-      {/* SECTION C: Thesis Secret Sauce (Engine Insights) */}
-      <View style={[styles.sciFiCardContainer, { borderColor: '#209F77', borderWidth: 1 }]}>
-        <Text style={[styles.cardTitle, { color: '#52CC39' }]}>Engine Insights</Text>
-        <View style={styles.cardContent}>
-          <ProfileRow 
-            label="Fitness Score" 
-            valueComponent={<Text style={styles.rowValue}>1.47 📈</Text>} 
-          />
-          <ProfileRow 
-            label="Adaptation Status" 
-            valueComponent={<Text style={[styles.rowValue, { color: '#888', fontSize: 13 }]}>Optimized to User Baseline</Text>} 
-          />
-        </View>
-      </View>
-
-    </View>
-  );
-
-  // =========================================================
-  // MAIN RENDER
-  // =========================================================
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContainer} bounces={false}>
@@ -254,6 +133,7 @@ export default function ProfilePage() {
           <Text style={styles.nameText}>{profile?.displayName || "Player Name"}</Text>
           <Text style={styles.usernameText}>@{profile?.username || "username"}</Text>
 
+          {/* XP & LEVEL BAR */}
           <View style={styles.progressContainer}>
             <View style={styles.progressBarBackground}>
               <LinearGradient
@@ -269,29 +149,75 @@ export default function ProfilePage() {
             </View>
           </View>
 
-          {/* CUSTOM TABS */}
-          <View style={styles.tabContainer}>
-            <TouchableOpacity 
-              style={[styles.tabButton, activeTab === "profile" && styles.tabButtonActive]}
-              onPress={() => setActiveTab("profile")}
-            >
-              <Text style={[styles.tabText, activeTab === "profile" && styles.tabTextActive]}>
-                Player Profile
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.tabButton, activeTab === "card" && styles.tabButtonActive]}
-              onPress={() => setActiveTab("card")}
-            >
-              <Text style={[styles.tabText, activeTab === "card" && styles.tabTextActive]}>
-                Player Card
-              </Text>
-            </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.outlineBtn}
+            onPress={() => setShowEditProfile(true)}
+          >
+            <Ionicons name="pencil" size={16} color="#209F77" style={{ marginRight: 8 }}/>
+            <Text style={styles.outlineBtnText}>Edit Profile</Text>
+          </TouchableOpacity>
+
+          {/* 🏆 THE TROPHY CABINET (NEW) */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Trophy Cabinet</Text>
+            <View style={styles.badgesRow}>
+              <View style={styles.badgeItem}>
+                <View style={[styles.badgeIconBg, { backgroundColor: '#FFD70020' }]}>
+                  <Ionicons name="flame" size={28} color="#FFD700" />
+                </View>
+                <Text style={styles.badgeText}>7 Day Streak</Text>
+              </View>
+              <View style={styles.badgeItem}>
+                <View style={[styles.badgeIconBg, { backgroundColor: '#52CC3920' }]}>
+                  <Ionicons name="footsteps" size={28} color="#52CC39" />
+                </View>
+                <Text style={styles.badgeText}>First 5K</Text>
+              </View>
+              <View style={styles.badgeItem}>
+                <View style={[styles.badgeIconBg, { backgroundColor: '#8A2BE220' }]}>
+                  <Ionicons name="moon" size={28} color="#8A2BE2" />
+                </View>
+                <Text style={styles.badgeText}>Night Owl</Text>
+              </View>
+            </View>
           </View>
 
-          {/* TAB CONTENT RENDERER */}
-          {activeTab === "profile" ? renderProfileTab() : renderCardTab()}
+          {/* 👥 YOUR SQUAD (NEW) */}
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Your Squad</Text>
+              <Text style={styles.seeAllText}>See All</Text>
+            </View>
+            <View style={styles.squadRow}>
+              <View style={styles.squadAvatar}><Text>🏃‍♂️</Text></View>
+              <View style={styles.squadAvatar}><Text>🚴‍♀️</Text></View>
+              <View style={styles.squadAvatar}><Text>🏋️</Text></View>
+              <TouchableOpacity style={styles.addFriendBtn}>
+                <Ionicons name="add" size={24} color="#FFF" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* ⚙️ SETTINGS & SECURITY */}
+          <View style={styles.bottomMenuContainer}>
+            <ActionRow 
+              icon="apps-outline"
+              label="Connected Apps (Strava, Spotify)" 
+              onPress={() => {}} // Hook this up later if needed!
+            />
+            <View style={styles.divider} />
+            <ActionRow 
+              icon="settings-outline"
+              label="General Settings" 
+              onPress={() => setShowGeneralSettings(true)}
+            />
+            <View style={styles.divider} />
+            <ActionRow 
+              icon="shield-checkmark-outline"
+              label="Account & Security" 
+              onPress={() => setShowAccountSettings(true)}
+            />
+          </View>
 
         </View>
       </ScrollView>
@@ -301,14 +227,9 @@ export default function ProfilePage() {
       {/* ========================================================= */}
 
       {/* EDIT PROFILE MODAL */}
-      <BottomSheet 
-        visible={showEditProfile} 
-        onClose={() => setShowEditProfile(false)} 
-        title="Edit Profile"
-      >
+      <BottomSheet visible={showEditProfile} onClose={() => setShowEditProfile(false)} title="Edit Profile">
         <View style={styles.modalContent}>
           <Text style={styles.inputLabel}>Display Name</Text>
-          {/* Dynamically pulling Display Name */}
           <TextInput 
             style={styles.input} 
             defaultValue={profile?.displayName || ""} 
@@ -316,7 +237,6 @@ export default function ProfilePage() {
             placeholderTextColor="#888" 
           />
           <Text style={styles.inputLabel}>Username</Text>
-          {/* Dynamically pulling Username */}
           <TextInput 
             style={styles.input} 
             defaultValue={profile?.username || ""} 
@@ -330,11 +250,7 @@ export default function ProfilePage() {
       </BottomSheet>
 
       {/* GENERAL SETTINGS MODAL */}
-      <BottomSheet 
-        visible={showGeneralSettings} 
-        onClose={() => setShowGeneralSettings(false)} 
-        title="App Preferences"
-      >
+      <BottomSheet visible={showGeneralSettings} onClose={() => setShowGeneralSettings(false)} title="App Preferences">
         <View style={styles.modalContent}>
           <ToggleRow label="Metric Units (km/kg)" value={isMetric} onValueChange={setIsMetric} />
           <View style={styles.divider} />
@@ -343,28 +259,19 @@ export default function ProfilePage() {
           <ToggleRow label="Dark Mode" value={isDarkMode} onValueChange={setIsDarkMode} />
           <View style={styles.divider} />
           <ToggleRow label="Public (Leaderboard Visible)" value={isPublic} onValueChange={setIsPublic} />
-          
-          <TouchableOpacity 
-            style={[styles.actionBtn, { backgroundColor: "#209F77", marginTop: 20 }]} 
-            onPress={() => setShowGeneralSettings(false)}
-          >
+          <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#209F77", marginTop: 20 }]} onPress={() => setShowGeneralSettings(false)}>
             <Text style={styles.actionBtnText}>Save & Close</Text>
           </TouchableOpacity>
         </View>
       </BottomSheet>
 
       {/* ACCOUNT SETTINGS MODAL */}
-      <BottomSheet 
-        visible={showAccountSettings} 
-        onClose={() => setShowAccountSettings(false)} 
-        title="Account Security"
-      >
+      <BottomSheet visible={showAccountSettings} onClose={() => setShowAccountSettings(false)} title="Account Security">
         <View style={styles.modalContent}>
           <ProfileRow 
             label="Email" 
             valueComponent={
               <Text style={[styles.rowValue, { fontSize: 13, textAlign: 'right' }]}>
-                {/* Dynamically pulling Email */}
                 {profile?.email || "No email linked"}{"\n"}
                 <Text style={styles.successText}>[✅ Verified]</Text>
               </Text>
@@ -374,13 +281,10 @@ export default function ProfilePage() {
           <ActionRow label="Change Password" />
           <View style={styles.divider} />
           <ActionRow label="Help & Support" />
-          
           <View style={{ height: 20 }} />
-          
           <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#333" }]} activeOpacity={0.8}>
             <Text style={[styles.actionBtnText, { color: "#FFF" }]}>Log Out</Text>
           </TouchableOpacity>
-
           <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "transparent", borderWidth: 1, borderColor: "#FF4C4C", marginTop: 10 }]} activeOpacity={0.8}>
             <Text style={[styles.actionBtnText, { color: "#FF4C4C" }]}>Delete Account</Text>
           </TouchableOpacity>
@@ -398,7 +302,7 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#121212" },
   scrollContainer: { paddingBottom: 40 },
 
-  // --- HEADER & UNTOUCHED PROFILE STYLES ---
+  // --- HEADER & PROFILE ---
   headerBanner: { height: 160, width: "100%", justifyContent: "center", alignItems: "center", paddingTop: 20 },
   backButton: { position: "absolute", top: 20, left: 15, zIndex: 10, padding: 5 },
   thoughtBubbleContainer: { alignItems: "center", marginBottom: 20, marginLeft: 40 },
@@ -418,43 +322,33 @@ const styles = StyleSheet.create({
   rankText: { color: "#FFF", fontSize: 14, fontWeight: "bold" },
   levelText: { color: "#888", fontSize: 14 },
 
-  // --- TABS ---
-  tabContainer: { flexDirection: "row", backgroundColor: "#1e1e1e", borderRadius: 12, padding: 4, marginBottom: 20 },
-  tabButton: { flex: 1, paddingVertical: 10, alignItems: "center", borderRadius: 8 },
-  tabButtonActive: { backgroundColor: "#333" },
-  tabText: { color: "#888", fontWeight: "600", fontSize: 14 },
-  tabTextActive: { color: "#FFF" },
-  tabContent: { gap: 15 },
+  // --- NEW SECTIONS (BADGES & COMMUNITY) ---
+  sectionContainer: { marginTop: 25 },
+  sectionHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15 },
+  sectionTitle: { color: "#FFF", fontSize: 18, fontWeight: "bold", marginBottom: 15 },
+  seeAllText: { color: "#209F77", fontSize: 14, fontWeight: "600" },
+  
+  badgesRow: { flexDirection: "row", justifyContent: "space-between" },
+  badgeItem: { alignItems: "center", width: "30%" },
+  badgeIconBg: { width: 60, height: 60, borderRadius: 30, justifyContent: "center", alignItems: "center", marginBottom: 8 },
+  badgeText: { color: "#888", fontSize: 12, fontWeight: "600", textAlign: "center" },
 
-  // --- SCI-FI PLAYER CARD ---
-  sciFiCardContainer: { backgroundColor: "#1a1a1a", borderRadius: 16, padding: 20, borderWidth: 1, borderColor: "#2a2a2a" },
-  cardTitle: { color: "#FFF", fontSize: 16, fontWeight: "bold", marginBottom: 16, letterSpacing: 0.5 },
-  cardContent: { gap: 14 },
+  squadRow: { flexDirection: "row", alignItems: "center", gap: 15 },
+  squadAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: "#2a2a2a", justifyContent: "center", alignItems: "center" },
+  addFriendBtn: { width: 50, height: 50, borderRadius: 25, backgroundColor: "#209F77", justifyContent: "center", alignItems: "center", borderStyle: "dashed", borderWidth: 1, borderColor: "#FFF" },
+
+  // --- BOTTOM MENU ---
+  bottomMenuContainer: { marginTop: 30, backgroundColor: "#1e1e1e", borderRadius: 16, paddingHorizontal: 20, paddingVertical: 10 },
+  actionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 12 },
+  actionRowLeft: { flexDirection: "row", alignItems: "center" },
+  divider: { height: 1, backgroundColor: "#2a2a2a", marginVertical: 4 },
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   rowLabel: { color: "#888", fontSize: 14, flex: 1 },
   rowValue: { color: "#FFF", fontSize: 14, fontWeight: "500" },
   successText: { color: "#52CC39", fontWeight: "600" },
 
-  // --- WEIGHT PROGRESS BAR ---
-  weightProgressContainer: { marginBottom: 10 },
-  weightLabels: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
-  weightTextDim: { color: "#888", fontSize: 12 },
-  weightTextHighlight: { color: "#52CC39", fontSize: 12, fontWeight: "bold" },
-  weightBarBg: { height: 8, backgroundColor: "#333", borderRadius: 4, overflow: "hidden" },
-  weightBarFill: { height: "100%", borderRadius: 4 },
-
-  // --- BOTTOM MENU NAVIGATION (Now inside Profile Tab) ---
-  bottomMenuContainer: { marginTop: 15, backgroundColor: "#1e1e1e", borderRadius: 16, paddingHorizontal: 20, paddingVertical: 10 },
-  actionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 12 },
-  actionRowLeft: { flexDirection: "row", alignItems: "center" },
-  divider: { height: 1, backgroundColor: "#2a2a2a", marginVertical: 4 },
-
-  // --- GRAPH PLACEHOLDER ---
-  graphPlaceholder: { height: 130, backgroundColor: "#121212", borderRadius: 12, justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "#333", borderStyle: "dashed", marginBottom: 20 },
-  graphText: { color: "#555", marginTop: 10, fontSize: 12 },
-
   // --- BUTTONS ---
-  outlineBtn: { flexDirection: "row", borderWidth: 1, borderColor: "#209F77", paddingVertical: 14, borderRadius: 14, alignItems: "center", justifyContent: "center", marginBottom: 10 },
+  outlineBtn: { flexDirection: "row", borderWidth: 1, borderColor: "#209F77", paddingVertical: 14, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   outlineBtnText: { color: "#209F77", fontSize: 16, fontWeight: "bold" },
   actionBtn: { flexDirection: "row", paddingVertical: 16, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   actionBtnText: { color: "#FFF", fontSize: 16, fontWeight: "bold", letterSpacing: 0.5 },
