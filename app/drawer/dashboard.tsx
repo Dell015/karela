@@ -21,6 +21,7 @@ import MapView from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Custom Hooks & Styles
+import AniView from "@/components/AniModel";
 import { useAuth } from "@/context/AuthContext";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
 import { dashboard_ui } from "@/styles/dashboardStyle";
@@ -44,7 +45,7 @@ export default function Dashboard() {
   const totalXP = 1000;
   const progressPercent = Math.min((currentXP / totalXP) * 100, 100);
   const navigation = useNavigation<DrawerNavigationProp<any>>();
-  
+  const [currentAniAction, setCurrentAniAction] = useState("Female_rig|female_IDLE");
 
   const [weather, setWeather] = useState<{
     temp: string | number;
@@ -292,14 +293,21 @@ export default function Dashboard() {
               </View>
 
               {/* Character Avatars */}
+              {/* Character Avatars */}
               <View style={dashboard_ui.characterRow}>
                 <View style={dashboard_ui.characterColumn}>
                   <Text style={dashboard_ui.characterTitle}>Ani</Text>
-                  <View style={dashboard_ui.characterBox} />
+                  <View style={dashboard_ui.characterBox}>
+                    {/* THE 3D MODEL LIVES HERE */}
+                    <AniView action={currentAniAction} />
+                  </View>
                 </View>
+
                 <View style={dashboard_ui.characterColumn}>
                   <Text style={dashboard_ui.characterTitle}>Sander</Text>
-                  <View style={dashboard_ui.characterBox} />
+                  <View style={dashboard_ui.characterBox}>
+                    {/* You can put a different model or placeholder here later */}
+                  </View>
                 </View>
               </View>
 

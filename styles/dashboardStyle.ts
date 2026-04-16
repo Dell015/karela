@@ -153,7 +153,7 @@ export const dashboard_ui = StyleSheet.create({
     marginBottom: 8,
   },
   characterBox: {
-    height: 150,
+    height: 300,
     backgroundColor: "#1A1A1A",
     borderRadius: 15,
   },

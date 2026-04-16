@@ -11,13 +11,14 @@ import {
 import MapView, { Callout, Marker, Polyline } from "react-native-maps";
 
 // Hooks & Services
+import AniView from "@/components/AniModel";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
 import { useQuestEngine } from "@/hooks/useQuestEngine";
 import { getLatestGhostRun } from "@/services/database/sqlite/database";
 import { PermissionManager } from "@/services/PermissionsManager";
+import { calculateStreak } from "@/services/statsService";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { styles } from "@/styles/mapStyles";
-import { calculateStreak } from "@/services/statsService";
 
 export default function MapScreen() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function MapScreen() {
   const isProcessing = useRef(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [physicalMeters, setPhysicalMeters] = useState(0);
+  const [is3DMode, setIs3DMode] = useState(false);
 
   // --- GHOST STATE ---
   const [isGhostEnabled, setIsGhostEnabled] = useState(false);
@@ -42,6 +44,16 @@ export default function MapScreen() {
     setIsRacing,
     setPath,
   } = useLocationEngine(activeGhostData);
+
+  const handleRegionChangeComplete = async () => {
+    const camera = await mapRef.current?.getCamera();
+    // Usually, a pitch > 10-20 degrees is considered "3D"
+    if (camera && camera.pitch > 10) {
+      setIs3DMode(true);
+    } else {
+      setIs3DMode(false);
+    }
+  };
 
   const {
     checkpoints,
@@ -241,9 +253,10 @@ export default function MapScreen() {
         ref={mapRef}
         style={styles.map}
         provider="google"
-        googleRenderer="LATEST"
+        //googleRenderer="LATEST"
+        onRegionChangeComplete={handleRegionChangeComplete}
+        showsUserLocation={!is3DMode}
         customMapStyle={ghostMapStyle}
-        showsUserLocation={true}
         showsMyLocationButton={false}
         initialRegion={{
           latitude: currentLocation.latitude,
@@ -262,7 +275,7 @@ export default function MapScreen() {
             strokeWidth={4}
             lineCap="round"
             lineJoin="round"
-            zIndex={1000}
+            zIndex={500}
             lineDashPattern={[5, 10]}
             geodesic={true}
           />
@@ -274,7 +287,7 @@ export default function MapScreen() {
             coordinate={ghostPosition}
             anchor={{ x: 0.5, y: 0.5 }}
             flat
-            zIndex={9000} // Keep it high so it stays above your own trail
+            zIndex={600} // Keep it high so it stays above your own trail
           >
             <View
               style={{
@@ -303,7 +316,7 @@ export default function MapScreen() {
             strokeWidth={6}
             lineCap="round"
             lineJoin="round"
-            zIndex={2000} // High Z-Index to stay above user path
+            zIndex={700} // High Z-Index to stay above user path
             geodesic={true}
           />
         )}
@@ -327,7 +340,7 @@ export default function MapScreen() {
               lineCap="round"
               lineJoin="round"
               // Extremely high Z-Index to stay on top of any hidden Google layers
-              zIndex={5000 + index}
+              zIndex={800 + index}
               geodesic={true}
             />
           );
@@ -380,6 +393,37 @@ export default function MapScreen() {
           );
         })}
       </MapView>
+
+      {/* 3D CHARACTER OVERLAY (Fix for iOS & Performance) */}
+      {(isRacing || is3DMode) && currentLocation && (
+        <View
+          pointerEvents="none" // Allows you to still touch/pan the map "through" the character
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            width: 150,
+            height: 150,
+            // Centers the 150x150 view perfectly in the middle of the screen
+            transform: [
+              { translateX: -75 },
+              { translateY: -75 },
+              { rotate: `${compassHeading}deg` }, // Optional: keeps her facing the right way
+            ],
+            zIndex: 999,
+          }}
+        >
+          <AniView
+            action={
+              isRacing
+                ? currentSpeed > 8
+                  ? "Female_rig|female_RUN"
+                  : "female_WALK"
+                : "female_IDLE"
+            }
+          />
+        </View>
+      )}
 
       {/* HUD */}
       {isRacing && (
