@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LibTrack — Intern Challenge Brief</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0C1929;--blue:#2563EB;--blue-lt:#EFF6FF;--blue-mid:#BFDBFE;
+  --gold:#C9A84C;--gold-lt:#FFFBF0;--green:#0F6E56;--green-lt:#ECFDF5;
+  --red:#DC2626;--red-lt:#FEF2F2;--amber:#D97706;--amber-lt:#FFFBEB;
+  --purple:#7C3AED;--purple-lt:#F5F3FF;
+  --body:#1E293B;--mid:#475569;--faint:#94A3B8;--rule:#E2E8F0;
+  --bg:#F8FAFC;--surface:#FFFFFF;
+  --font-display:'Sora',sans-serif;
+  --font-body:'DM Sans',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font-body);background:var(--bg);color:var(--body);font-size:15px;line-height:1.7;}
+
+/* NAV */
+.sidenav{position:fixed;top:0;left:0;width:220px;height:100vh;background:var(--navy);padding:28px 0;overflow-y:auto;z-index:100;}
+.sidenav-logo{padding:0 20px 24px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.sidenav-mark{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.sidenav-mark-box{width:30px;height:30px;border:1.5px solid var(--gold);border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:10px;font-weight:500;color:var(--gold);}
+.sidenav-brand{font-family:var(--font-display);font-size:13px;font-weight:700;color:#fff;}
+.sidenav-sub{font-size:11px;color:rgba(255,255,255,0.4);font-family:var(--font-mono);}
+.sidenav-section{padding:20px 0 4px 20px;font-size:9px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.3);font-family:var(--font-mono);}
+.sidenav a{display:block;padding:8px 20px;font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;transition:all .15s;border-left:2px solid transparent;}
+.sidenav a:hover{color:#fff;background:rgba(255,255,255,0.05);}
+.sidenav a.active{color:#fff;border-left-color:var(--gold);background:rgba(201,168,76,0.08);}
+
+/* MAIN */
+.main{margin-left:220px;min-height:100vh;}
+
+/* HERO */
+.hero{background:var(--navy);padding:64px 60px 56px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--blue));}
+.hero-eyebrow{font-family:var(--font-mono);font-size:11px;font-weight:500;color:var(--gold);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:16px;}
+.hero-title{font-family:var(--font-display);font-size:42px;font-weight:800;color:#fff;line-height:1.1;margin-bottom:8px;}
+.hero-title span{color:var(--gold);}
+.hero-sub{font-size:16px;color:rgba(255,255,255,0.55);margin-bottom:32px;max-width:560px;}
+.hero-tags{display:flex;flex-wrap:wrap;gap:8px;}
+.tag{font-family:var(--font-mono);font-size:11px;padding:4px 12px;border-radius:20px;font-weight:500;}
+.tag-blue{background:rgba(37,99,235,0.2);color:#93C5FD;border:1px solid rgba(37,99,235,0.3);}
+.tag-gold{background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3);}
+.tag-green{background:rgba(15,110,86,0.2);color:#6EE7B7;border:1px solid rgba(15,110,86,0.3);}
+
+/* CONTENT */
+.content{padding:48px 60px 80px;}
+.section{margin-bottom:64px;scroll-margin-top:32px;}
+
+h2.section-title{font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--navy);margin-bottom:6px;padding-bottom:12px;border-bottom:2px solid var(--gold);display:inline-block;}
+h3.sub-title{font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--navy);margin:28px 0 12px;}
+p{color:var(--mid);margin-bottom:14px;max-width:720px;}
+p strong{color:var(--body);font-weight:600;}
+
+/* CALLOUT BOXES */
+.callout{border-radius:10px;padding:18px 22px;margin:20px 0;border-left:4px solid;}
+.callout-blue{background:var(--blue-lt);border-color:var(--blue);}
+.callout-blue .callout-label{color:var(--blue);}
+.callout-gold{background:var(--gold-lt);border-color:var(--gold);}
+.callout-gold .callout-label{color:#92670A;}
+.callout-green{background:var(--green-lt);border-color:var(--green);}
+.callout-green .callout-label{color:var(--green);}
+.callout-red{background:var(--red-lt);border-color:var(--red);}
+.callout-red .callout-label{color:var(--red);}
+.callout-amber{background:var(--amber-lt);border-color:var(--amber);}
+.callout-amber .callout-label{color:var(--amber);}
+.callout-label{font-family:var(--font-mono);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;}
+.callout p{margin:0;font-size:14px;}
+.callout p+p{margin-top:8px;}
+
+/* PROBLEM STATEMENT */
+.problem-box{background:var(--navy);border-radius:12px;padding:32px 36px;margin:24px 0;position:relative;overflow:hidden;}
+.problem-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--blue));}
+.problem-box h3{font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--gold);margin-bottom:16px;}
+.problem-box p{color:rgba(255,255,255,0.75);max-width:100%;margin-bottom:12px;}
+.problem-box p:last-child{margin:0;}
+.problem-box strong{color:#fff;}
+
+/* TOOLS GRID */
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:20px 0;}
+.tool-card{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:18px;transition:box-shadow .15s;}
+.tool-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08);}
+.tool-icon{margin-bottom:10px;color:var(--blue);}
+.tool-name{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px;}
+.tool-purpose{font-size:12px;color:var(--faint);font-family:var(--font-mono);}
+.tool-job{font-size:13px;color:var(--mid);margin-top:6px;}
+
+/* TIMELINE */
+.timeline{margin:24px 0;}
+.tl-item{display:grid;grid-template-columns:100px 1fr;gap:0;margin-bottom:0;}
+.tl-left{padding:0 24px 0 0;text-align:right;padding-top:18px;}
+.tl-day{font-family:var(--font-mono);font-size:11px;font-weight:500;color:var(--blue);text-transform:uppercase;letter-spacing:0.06em;}
+.tl-right{border-left:2px solid var(--rule);padding:0 0 28px 24px;position:relative;}
+.tl-right::before{content:'';position:absolute;left:-6px;top:22px;width:10px;height:10px;border-radius:50%;background:var(--blue);border:2px solid var(--surface);}
+.tl-item.gate .tl-right::before{background:var(--gold);}
+.tl-item.demo .tl-right::before{background:var(--green);}
+.tl-card{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:14px 18px;margin-top:8px;}
+.tl-card-title{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--navy);margin-bottom:4px;}
+.tl-card-desc{font-size:13px;color:var(--mid);}
+.tl-gate-card{background:var(--gold-lt);border:1px solid rgba(201,168,76,0.4);border-radius:8px;padding:14px 18px;margin-top:8px;}
+.tl-gate-card .tl-card-title{color:#92670A;}
+.tl-demo-card{background:var(--green-lt);border:1px solid rgba(15,110,86,0.3);border-radius:8px;padding:14px 18px;margin-top:8px;}
+.tl-demo-card .tl-card-title{color:var(--green);}
+
+/* JIRA SECTION */
+.jira-example{background:var(--surface);border:1px solid var(--rule);border-radius:10px;overflow:hidden;margin:20px 0;}
+.jira-header{background:#0052CC;padding:12px 18px;display:flex;align-items:center;gap:10px;}
+.jira-header-text{font-family:var(--font-mono);font-size:12px;color:#fff;font-weight:500;}
+.jira-body{padding:20px 22px;}
+.jira-field{margin-bottom:16px;}
+.jira-field-label{font-family:var(--font-mono);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.1em;color:var(--faint);margin-bottom:4px;}
+.jira-field-value{font-size:14px;color:var(--body);}
+.jira-field-value.mono{font-family:var(--font-mono);font-size:13px;}
+.jira-skeleton{background:var(--surface);border:2px dashed var(--rule);border-radius:10px;overflow:hidden;margin:20px 0;}
+.jira-skeleton-header{background:#F0F2F5;padding:12px 18px;display:flex;align-items:center;gap:10px;}
+.jira-skeleton-header-text{font-family:var(--font-mono);font-size:12px;color:var(--faint);font-weight:500;}
+.jira-skeleton-body{padding:20px 22px;}
+.skeleton-line{height:14px;background:#F1F5F9;border-radius:4px;margin-bottom:8px;}
+.skeleton-line.short{width:40%;}
+.skeleton-line.med{width:65%;}
+.skeleton-line.full{width:100%;}
+.fill-me{background:var(--blue-lt);border:1.5px dashed var(--blue-mid);border-radius:6px;padding:10px 14px;font-size:13px;color:var(--blue);font-family:var(--font-mono);margin-bottom:12px;}
+.fill-me::before{content:'';display:none;}
+
+/* ADR */
+.adr-box{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:24px;margin:20px 0;}
+.adr-box h4{font-family:var(--font-mono);font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.1em;color:var(--faint);margin-bottom:16px;}
+.adr-row{display:grid;grid-template-columns:140px 1fr;gap:8px;margin-bottom:12px;align-items:start;}
+.adr-key{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--mid);padding-top:2px;}
+.adr-val{font-size:14px;color:var(--body);}
+.adr-val.placeholder{color:var(--faint);font-style:italic;}
+
+/* GIT */
+.code-block{background:#0F172A;border-radius:8px;padding:18px 22px;margin:16px 0;overflow-x:auto;}
+.code-block pre{font-family:var(--font-mono);font-size:13px;line-height:1.8;color:#E2E8F0;}
+.code-block .cm{color:#64748B;}
+.code-block .ck{color:#7DD3FC;}
+.code-block .cs{color:#86EFAC;}
+.code-block .cn{color:#FCA5A5;}
+.code-block .ca{color:#FCD34D;}
+
+/* TEST CASE TABLE */
+.tc-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:13px;}
+.tc-table th{background:var(--navy);color:#fff;font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;padding:10px 14px;text-align:left;font-weight:500;}
+.tc-table td{padding:12px 14px;border-bottom:1px solid var(--rule);vertical-align:top;color:var(--mid);}
+.tc-table tr:nth-child(even) td{background:#F8FAFC;}
+.tc-table tr:hover td{background:var(--blue-lt);}
+.tc-table td:first-child{font-family:var(--font-mono);font-size:11px;color:var(--blue);font-weight:500;}
+.tc-status{display:inline-block;font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:12px;font-weight:500;}
+.tc-pass{background:#DCFCE7;color:#166534;}
+.tc-fail{background:#FEE2E2;color:#991B1B;}
+.tc-blank{background:#F1F5F9;color:var(--faint);}
+
+/* SCORING */
+.score-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin:20px 0;}
+.score-card{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:20px;text-align:center;}
+.score-pct{font-family:var(--font-display);font-size:36px;font-weight:800;color:var(--blue);}
+.score-label{font-size:13px;color:var(--mid);margin-top:4px;font-weight:500;}
+.score-desc{font-size:12px;color:var(--faint);margin-top:6px;}
+
+/* DB COMPARISON */
+.db-compare{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:20px 0;}
+.db-card{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:20px;}
+.db-name{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--navy);margin-bottom:4px;}
+.db-type{font-family:var(--font-mono);font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px;}
+.db-item{display:flex;gap:8px;margin-bottom:8px;font-size:13px;color:var(--mid);align-items:flex-start;}
+.db-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.db-dot.green{background:var(--green);}
+.db-dot.red{background:var(--red);}
+.db-dot.amber{background:var(--amber);}
+.db-question{background:var(--gold-lt);border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:14px 18px;margin:16px 0;font-size:14px;color:#92670A;}
+.db-question strong{display:block;font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;color:var(--amber);}
+
+/* RULES */
+.rules-list{list-style:none;margin:16px 0;}
+.rules-list li{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start;}
+.rule-icon{width:22px;height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:2px;}
+.rule-icon.red{background:var(--red-lt);color:var(--red);}
+.rule-icon.green{background:var(--green-lt);color:var(--green);}
+.rule-icon.blue{background:var(--blue-lt);color:var(--blue);}
+.rule-text{font-size:14px;color:var(--mid);}
+.rule-text strong{color:var(--body);}
+
+/* BRANCH DIAGRAM */
+.branch-visual{background:#0F172A;border-radius:10px;padding:24px 28px;margin:16px 0;font-family:var(--font-mono);font-size:13px;line-height:2;}
+.branch-visual .b-main{color:#86EFAC;}
+.branch-visual .b-feature{color:#7DD3FC;}
+.branch-visual .b-fix{color:#FCA5A5;}
+.branch-visual .b-comment{color:#475569;}
+.branch-visual .b-arrow{color:#FCD34D;}
+
+/* DIAGRAM GUIDE */
+.diagram-checklist{margin:16px 0;}
+.dc-item{display:flex;gap:12px;padding:12px 16px;border-radius:8px;margin-bottom:8px;background:var(--surface);border:1px solid var(--rule);align-items:flex-start;}
+.dc-num{font-family:var(--font-mono);font-size:11px;font-weight:500;color:var(--blue);background:var(--blue-lt);padding:2px 8px;border-radius:4px;flex-shrink:0;margin-top:2px;}
+.dc-text{font-size:14px;color:var(--mid);}
+.dc-text strong{color:var(--body);}
+
+/* FOOTER */
+.footer{background:var(--navy);padding:32px 60px;margin-left:0;display:flex;align-items:center;justify-content:space-between;}
+.footer-left{font-size:13px;color:rgba(255,255,255,0.4);}
+.footer-right{font-family:var(--font-mono);font-size:11px;color:var(--gold);font-style:italic;}
+
+/* BADGES */
+.badge{display:inline-block;font-family:var(--font-mono);font-size:10px;font-weight:500;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;}
+.badge-required{background:#FEE2E2;color:#991B1B;}
+.badge-optional{background:#F1F5F9;color:var(--faint);}
+.badge-day1{background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3);}
+
+@media(max-width:900px){
+  .sidenav{display:none;}
+  .main{margin-left:0;}
+  .hero,.content{padding-left:24px;padding-right:24px;}
+  .db-compare{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDENAV -->
+<nav class="sidenav">
+  <div class="sidenav-logo">
+    <div class="sidenav-mark">
+      <div class="sidenav-mark-box">o3</div>
+      <div class="sidenav-brand">Origin3</div>
+    </div>
+    <div class="sidenav-sub">Intern Program 2026</div>
+  </div>
+  <div class="sidenav-section">The Challenge</div>
+  <a href="#overview" class="active">Overview</a>
+  <a href="#problem">The problem</a>
+  <a href="#timeline">Timeline</a>
+  <a href="#day1">Week 1 deliverables</a>
+  <div class="sidenav-section">Tools & Workflow</div>
+  <a href="#tools">Your tools</a>
+  <a href="#jira">Jira setup + guide</a>
+  <a href="#git">Git guide</a>
+  <a href="#diagram">System diagram</a>
+  <div class="sidenav-section">Tech Decisions</div>
+  <a href="#techstack">Tech stack</a>
+  <a href="#database">Database choice</a>
+  <a href="#adr">Writing an ADR</a>
+  <div class="sidenav-section">Quality</div>
+  <a href="#testing">Testing & QA</a>
+  <a href="#scoring">How you're scored</a>
+  <div class="sidenav-section">Rules</div>
+  <a href="#rules">Non-negotiables</a>
+</nav>
+
+<div class="main">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Origin3 Technologies · Intern Challenge 2026</div>
+  <div class="hero-title">Build <span>LibTrack</span>.</div>
+  <div class="hero-sub">A real engineering challenge. Real workflow. Real tools. One month. Two teams. May the better process win.</div>
+  <div class="hero-tags">
+    <span class="tag tag-blue">1 month</span>
+    <span class="tag tag-blue">2 teams of 5</span>
+    <span class="tag tag-gold">Full stack</span>
+    <span class="tag tag-gold">Competing</span>
+    <span class="tag tag-gold">Week 1 = planning only</span>
+    <span class="tag tag-green">Capstone: Technical Proposal ↓</span>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- OVERVIEW -->
+<div class="section" id="overview">
+  <h2 class="section-title">What is this?</h2>
+  <p>Welcome to your first real engineering challenge. This isn't a school project where you submit code and get a grade. This is closer to how software actually gets built — with tickets, branches, reviews, and teammates who depend on you.</p>
+  <p>You're building <strong>LibTrack</strong>, a library book borrowing system. Simple problem. The hard part isn't the code — it's doing everything the right way, every day, for a month.</p>
+  <p>There are two teams. Same problem. At the end, you both present to the founders. The team with the better <strong>process</strong> wins — not necessarily the prettier UI.</p>
+
+  <div class="callout callout-blue">
+    <div class="callout-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px;"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 7 7c0 2.5-1.5 4.5-3 6l-1 1H9l-1-1C6.5 13.5 5 11.5 5 9a7 7 0 0 1 7-7z"/></svg>The real lesson</div>
+    <p>Most fresh grads can write code. Very few can break a problem into tasks, track their work properly, review each other's code, and ship something that actually works. That's what this month is about.</p>
+  </div>
+
+  <h3 class="sub-title">What about the capstone?</h3>
+  <p>At the end of the program, each team produces a <strong>Technical Proposal</strong> — a document written as if you're pitching LibTrack to a real client. It covers what you built, the technical decisions you made, why you made them, how the system is architected, and what you'd do differently if you built it again.</p>
+  <p>This is a document deliverable, not more code. It's due after Demo Day and is separate from the competition scoring. Think of it as your exit artifact — proof that you can communicate engineering decisions in writing, not just in code. More details will be shared in Week 4.</p>
+</div>
+
+<!-- PROBLEM -->
+<div class="section" id="problem">
+  <h2 class="section-title">The problem</h2>
+  <div class="problem-box">
+    <h3>LibTrack — Library Book Borrowing System</h3>
+    <p>Your school library is still tracking book borrowing on paper. The librarian is drowning in index cards. Students have no idea which books are available without walking to the library.</p>
+    <p>Your job is to build a simple web system that fixes this.</p>
+    <p><strong>A student can:</strong> Browse available books · Submit a borrow request · See their request was received</p>
+    <p><strong>A librarian can:</strong> See all borrow requests · Mark a book as Borrowed · Mark it as Returned (so it becomes available again)</p>
+    <p><strong>That's it.</strong> No login system required. No fancy features. Keep the scope tight and ship it properly.</p>
+  </div>
+
+  <h3 class="sub-title">Acceptance criteria</h3>
+  <p>These are the conditions QA will check on Demo Day. If any of these fail, the feature is not done.</p>
+
+  <table class="tc-table">
+    <thead><tr><th>ID</th><th>As a...</th><th>I can...</th><th>So that...</th></tr></thead>
+    <tbody>
+      <tr><td>AC-01</td><td>Student</td><td>See a list of books and which ones are available</td><td>I know what I can borrow</td></tr>
+      <tr><td>AC-02</td><td>Student</td><td>Submit a borrow request with my name and chosen book</td><td>The librarian knows I want it</td></tr>
+      <tr><td>AC-03</td><td>Student</td><td>Get a confirmation that my request was submitted</td><td>I'm not left wondering</td></tr>
+      <tr><td>AC-04</td><td>Librarian</td><td>See all borrow requests with their current status</td><td>I can manage the queue</td></tr>
+      <tr><td>AC-05</td><td>Librarian</td><td>Mark a request as Borrowed</td><td>The book shows as unavailable</td></tr>
+      <tr><td>AC-06</td><td>Librarian</td><td>Mark a request as Returned</td><td>The book becomes available again</td></tr>
+      <tr><td>AC-07</td><td>Anyone</td><td>The frontend talks to a real backend API</td><td>Data isn't hardcoded in the UI</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- TIMELINE -->
+<div class="section" id="timeline">
+  <h2 class="section-title">Timeline</h2>
+  <p>You have one month, 4 hours a day, Monday to Friday. <strong>Week 1 is planning only — no code.</strong> Weeks 2–4 are yours to structure. How you organize your sprints is part of the challenge — and part of what you submit at the end of Week 1.</p>
+
+  <div class="callout callout-amber">
+    <div class="callout-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Important</div>
+    <p>You don't just decide the sprint structure — you <strong>justify it</strong>. By end of Week 1, you submit a Sprint Plan explaining how many sprints you're running for Weeks 2–4, what goes in each one, and why. Founders review everything at the end of Week 1. No approval = no coding on Week 2.</p>
+  </div>
+
+  <div class="timeline">
+    <div class="tl-item gate">
+      <div class="tl-left"><div class="tl-day">Week 1</div></div>
+      <div class="tl-right">
+        <div class="tl-gate-card">
+          <div class="tl-card-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:7px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Planning Gate — no code until all 7 deliverables are approved</div>
+          <div class="tl-card-desc">System diagram · Tech stack doc · ADRs · Sprint plan · Deployment plan · Jira board · Git repo. All due end of Week 1 together. One missing = gate stays closed.</div>
+        </div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-day">Week 2–3</div></div>
+      <div class="tl-right">
+        <div class="tl-card">
+          <div class="tl-card-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:7px;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Build — your sprints, your pace</div>
+          <div class="tl-card-desc">Coding starts Monday of Week 2 — only after founders approve your plan. How you structure these two weeks is up to you. You justified it in your Sprint Plan.</div>
+        </div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-day">Week 4</div></div>
+      <div class="tl-right">
+        <div class="tl-card">
+          <div class="tl-card-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:7px;"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Harden — QA, bug fixes, demo prep</div>
+          <div class="tl-card-desc">Write and execute test cases · Cross-test within team · Fix bugs with proper tickets · Prepare and rehearse demo walkthrough</div>
+        </div>
+      </div>
+    </div>
+    <div class="tl-item demo">
+      <div class="tl-left"><div class="tl-day">Week 4<br>Day 20</div></div>
+      <div class="tl-right">
+        <div class="tl-demo-card">
+          <div class="tl-card-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:7px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Demo Day — both teams present to all founders</div>
+          <div class="tl-card-desc">Live demo · Walk through your Jira board · Explain your tech decisions · Answer questions</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DAY 1 -->
+<div class="section" id="day1">
+  <h2 class="section-title">Week 1 deliverables <span class="badge badge-day1">Gate</span></h2>
+  <p>The entire first week is planning. No code. By <strong>end of Week 1 (Friday)</strong>, your team submits all 7 deliverables together to the founders via Google Drive. They're reviewed over the weekend. Founders approve Monday morning — coding starts then. Missing any one deliverable means the gate stays closed for your team.</p>
+
+  <div class="callout callout-blue">
+    <div class="callout-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px;"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 7 7c0 2.5-1.5 4.5-3 6l-1 1H9l-1-1C6.5 13.5 5 11.5 5 9a7 7 0 0 1 7-7z"/></svg>What if founders reject the plan?</div>
+    <p>No penalty for a first-attempt rejection — founders will give specific written feedback. You fix it and resubmit during the same week. The gate only stays permanently closed if you don't resubmit. Aim to submit by Thursday so you have Friday to revise if needed.</p>
+  </div>
+
+  <div class="diagram-checklist">
+    <div class="dc-item">
+      <span class="dc-num">01</span>
+      <div class="dc-text"><strong>System diagram</strong> — drawn in Draw.io. Must show all three layers (Frontend → Backend → Data), every API endpoint you plan to build (method + route), and how Student and Librarian interact with the system. See the <a href="#diagram" style="color:var(--blue);">System Diagram guide</a> below.</div>
+    </div>
+    <div class="dc-item">
+      <span class="dc-num">02</span>
+      <div class="dc-text"><strong>Tech stack decision doc</strong> — one Google Doc, one paragraph per layer (frontend, backend, database). State what you chose and why. Not just "we picked React because it's popular." See the <a href="#techstack" style="color:var(--blue);">Tech Stack section</a>.</div>
+    </div>
+    <div class="dc-item">
+      <span class="dc-num">03</span>
+      <div class="dc-text"><strong>ADRs (Architecture Decision Records)</strong> — a short document that captures a technical decision: what you chose, why, and what you considered. At minimum: one for your database choice, one for your backend framework. See the <a href="#adr" style="color:var(--blue);">ADR guide</a> — it has a full example and a skeleton to fill in.</div>
+    </div>
+    <div class="dc-item">
+      <span class="dc-num">04</span>
+      <div class="dc-text"><strong>Sprint plan</strong> — how many sprints are you running for Weeks 2–4? What goes in each one? Why did you structure it that way? Remember: Week 4 is always harden + demo prep — don't plan features into it. One page in Google Docs is enough.</div>
+    </div>
+    <div class="dc-item">
+      <span class="dc-num">05</span>
+      <div class="dc-text"><strong>Deployment plan</strong> — where would this run? How would you deploy it? What environment variables does it need? It doesn't need to be live on Demo Day, but you need to have thought it through. Free options to consider: <strong>Vercel or Netlify</strong> for frontend · <strong>Render or Railway</strong> for backend · <strong>Supabase or Railway</strong> for database. Write one paragraph in Google Docs — where each layer lives and how they talk to each other.</div>
+    </div>
+    <div class="dc-item">
+      <span class="dc-num">06</span>
+      <div class="dc-text"><strong>Jira board</strong> — fully set up with your team's tickets written, assigned, and sitting in Backlog. See the <a href="#jira" style="color:var(--blue);">Jira guide</a> for how to write good tickets.</div>
+    </div>
+    <div class="dc-item">
+      <span class="dc-num">07</span>
+      <div class="dc-text"><strong>Git repo initialized</strong> — README written, branching convention agreed, everyone has cloned it. See the <a href="#git" style="color:var(--blue);">Git guide</a>.</div>
+    </div>
+  </div>
+</div>
+
+<!-- TOOLS -->
+<div class="section" id="tools">
+  <h2 class="section-title">Your tools</h2>
+  <p>Six tools. Each has one clear job. Don't let them overlap — that creates confusion.</p>
+
+  <div class="tools-grid">
+    <div class="tool-card">
+      <div class="tool-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg></div>
+      <div class="tool-name">GitHub</div>
+      <div class="tool-purpose">Code · Branches · PRs</div>
+      <div class="tool-job">Where your code lives. Submit your GitHub username in the intern profile sheet — the founders will add you to the org. Every task gets a branch. Every branch ends in a PR. Nothing goes straight to main.</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 12h6M9 15h4"/></svg></div>
+      <div class="tool-name">Jira</div>
+      <div class="tool-purpose">Tickets · Sprint board</div>
+      <div class="tool-job">Where your tasks live. If it's not in Jira, it didn't happen. This is your team's source of truth.</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="7" height="5" rx="1"/><rect x="15" y="7" width="7" height="5" rx="1"/><rect x="8" y="14" width="8" height="5" rx="1"/><path d="M9 9.5H15M12 12v2"/></svg></div>
+      <div class="tool-name">Draw.io</div>
+      <div class="tool-purpose">System diagram</div>
+      <div class="tool-job">For your Week 1 system diagram. Free, runs in the browser, exports to Google Drive. diagrams.net</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="8" y1="9" x2="10" y2="9"/></svg></div>
+      <div class="tool-name">Google Docs</div>
+      <div class="tool-purpose">Documents · ADRs · Plans</div>
+      <div class="tool-job">Tech stack doc, ADRs, sprint plan, deployment plan. All written documents live here.</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg></div>
+      <div class="tool-name">Google Sheets</div>
+      <div class="tool-purpose">QA test cases only</div>
+      <div class="tool-job">Your QA test case template. Don't use it for task tracking — that's Jira's job.</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+      <div class="tool-name">Discord</div>
+      <div class="tool-purpose">Daily standups · Async</div>
+      <div class="tool-job">Already set up — check your invite. Post your daily standup in <strong>#standup</strong> every morning. What I did, what I'm doing, any blockers. Keep it to 3 lines.</div>
+    </div>
+  </div>
+
+  <div class="callout callout-red">
+    <div class="callout-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:inline;vertical-align:middle;margin-right:5px;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>Don't do this</div>
+    <p>Don't track tasks in Google Sheets. Don't use Gmail to discuss decisions — put them in Docs or Discord. Don't commit to main. One tool, one job.</p>
+  </div>
+</div>
+
+<!-- JIRA -->
+<div class="section" id="jira">
+  <h2 class="section-title">Jira setup + guide</h2>
+  <p>Jira is where your work lives. Each team sets up their own Jira project from scratch — it's part of the Week 1 planning work. Before you touch any code, every task needs to exist as a ticket.</p>
+
+  <h3 class="sub-title">Step-by-step: setting up your Jira project</h3>
+  <p>Each team creates their own completely separate Jira account and project. The team lead does this on Day 1 of Week 1, then invites the rest of the team. Follow every step in order.</p>
+
+  <div class="diagram-checklist">
+    <div class="dc-item">
+      <span class="dc-num">01</span>
+      <div class="dc-text"><strong>Create a free Atlassian account</strong> — go to <a href="https://www.atlassian.com/software/jira" target="_blank" style="color:var(--blue);">atlassian.com/software/jira</a> and click <em>Get it free</em>. Use your personal email. One account per team lead — the rest of the team gets invited in Step 4.</div>
+    </div>
+    <div class="dc-item">
+      <span class="dc-num">02</span>
+      <div class="dc-text"><strong>Create a new Jira Software project</strong> — after signing in, click <em>Create project</em>. Choose <strong>Scrum</strong> as the project type. Name it <code style="background:var(--blue-lt);padding:2px 6px;border-radius:3px;font-family:var(--font-mono);font-size:12px;">LibTrack - Team A</code> or <code style="background:var(--blue-lt);padding:2px 6px;border-radius:3px;font-family:var(--font-mono);font-size:12px;">LibTrack - Team B</code>. Set the project key to <code style="background:var(--blue-lt);padding:2px 6px;border-radius:3px;font-family:var(--font-mono);font-size:12px;">LTA</code> for Team A or <code style="background:var(--blue-lt);padding:2px 6px;border-radius:3px;font-family:var(--font-mono);font-size:12px;">LTB</code> for Team B. This prefixes all your ticket IDs — so Team A has LTA-01, LTA-02... and Team B has LTB-01, LTB-02. Keeping them distinct makes cross-team discussion in Discord unambiguous.</div>
+    </div>
+    <div class="dc-item">
+      <span class="dc-num">03</span>
+      <div class="dc-text"><strong>Configure your board columns</strong> — go to <em>Project Settings → Board</em>. You need exactly four columns: <strong>Backlog, In Progress, For QA, Done</strong>. Delete any default columns that don't match. Drag to reorder if needed.</div>
+    </div>
+    <div class="dc-item">
+      <span class="dc-num">04</span>
+      <div class="dc-text"><strong>Invite your teammates</strong> — go to <em>Project Settings → Access</em>. Invite each teammate by their email address. Set their role to <strong>Member</strong>. Everyone must accept the invite before they can create or update tickets.</div>
+    </div>
+    <div class="dc-item">
+      <span class="dc-num">05</span>
+      <div class="dc-text"><strong>Create your first sprint</strong> — in the Backlog view, click <em>Create Sprint</em>. Name it <strong>Sprint 1</strong> and set the duration based on your sprint plan. Leave it in draft — do not click Start Sprint. You fill the backlog first (Step 6), then start the sprint only after founders approve your Week 1 plan.</div>
+    </div>
+    <div class="dc-item">
+      <span class="dc-num">06</span>
+      <div class="dc-text"><strong>Write your tickets</strong> — create all your tickets in the Backlog (not inside the sprint yet). Use the format from the example below. Once all tickets are written, drag the ones for Sprint 1 into the sprint container. <strong>Do not click Start Sprint yet</strong> — that happens after founders approve your plan at the end of Week 1.</div>
+    </div>
+    <div class="dc-item">
+      <span class="dc-num">07</span>
+      <div class="dc-text"><strong>Share the board link with founders</strong> — copy your project URL and drop it in Discord. Founders need access to your board to review it as part of the Week 1 gate. Make sure the project is set to <em>Private</em> but with founders added as viewers.</div>
+    </div>
+  </div>
+
+  <div class="callout callout-amber">
+    <div class="callout-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Common mistake</div>
+    <p>Don't start your sprint before all your tickets are written and reviewed. Once a sprint starts, Jira locks the structure. Write everything first, then start the sprint at the end of Week 1 when your plan is approved.</p>
+  </div>
+
+  <h3 class="sub-title">Your board columns</h3>
+  <p>Set your board up with exactly these four columns:</p>
+  <div style="display:flex;gap:10px;margin:16px 0;flex-wrap:wrap;">
+    <div style="background:#F1F5F9;border-radius:8px;padding:12px 20px;font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--mid);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px;"><path d="M3 6h18M3 12h18M3 18h18"/></svg>Backlog</div>
+    <div style="background:#EFF6FF;border-radius:8px;padding:12px 20px;font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--blue);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px;"><polygon points="5 3 19 12 5 21 5 3"/></svg>In Progress</div>
+    <div style="background:var(--amber-lt);border-radius:8px;padding:12px 20px;font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--amber);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px;"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>For QA</div>
+    <div style="background:var(--green-lt);border-radius:8px;padding:12px 20px;font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--green);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px;"><polyline points="20 6 9 17 4 12"/></svg>Done</div>
+  </div>
+  <p>A ticket only moves to <strong><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px;"><polyline points="20 6 9 17 4 12"/></svg>Done</strong> after QA signs off. Not when you think you're done. After QA confirms.</p>
+
+  <h3 class="sub-title">What a good ticket looks like</h3>
+  <p>Here's a real example. Study the format — then write yours.</p>
+
+  <div class="jira-example">
+    <div class="jira-header">
+      <div class="jira-header-text"> LTA-02 · Story · Backend · Team A</div>
+    </div>
+    <div class="jira-body">
+      <div class="jira-field">
+        <div class="jira-field-label">Summary</div>
+        <div class="jira-field-value" style="font-size:16px;font-weight:600;color:var(--navy);">GET /books — return list of books with availability status</div>
+      </div>
+      <div class="jira-field">
+        <div class="jira-field-label">Description</div>
+        <div class="jira-field-value">Build an API endpoint that returns all books in the system, including each book's title, author, and current availability status (Available or Borrowed). The frontend will call this to display the book list to students.</div>
+      </div>
+      <div class="jira-field">
+        <div class="jira-field-label">Acceptance Criteria</div>
+        <div class="jira-field-value">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline;vertical-align:middle;margin-right:5px;"><path d="M2 6l3 3 5-5" stroke="#0F6E56" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>GET /books returns HTTP 200<br>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline;vertical-align:middle;margin-right:5px;"><path d="M2 6l3 3 5-5" stroke="#0F6E56" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Response is a JSON array of book objects<br>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline;vertical-align:middle;margin-right:5px;"><path d="M2 6l3 3 5-5" stroke="#0F6E56" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Each book has: id, title, author, status (Available | Borrowed)<br>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline;vertical-align:middle;margin-right:5px;"><path d="M2 6l3 3 5-5" stroke="#0F6E56" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Returns empty array (not error) if no books exist<br>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline;vertical-align:middle;margin-right:5px;"><path d="M2 6l3 3 5-5" stroke="#0F6E56" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Tested manually with Postman or curl
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:8px;">
+        <div class="jira-field" style="margin:0;">
+          <div class="jira-field-label">Assignee</div>
+          <div class="jira-field-value">Backend dev</div>
+        </div>
+        <div class="jira-field" style="margin:0;">
+          <div class="jira-field-label">Story Points</div>
+          <div class="jira-field-value">2 <span style="font-size:12px;color:var(--faint);font-family:var(--font-mono);">(1=simple · 3=medium · 5=hard)</span></div>
+        </div>
+        <div class="jira-field" style="margin:0;">
+          <div class="jira-field-label">Priority</div>
+          <div class="jira-field-value"> High</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="sub-title">Now write yours — skeleton below</h3>
+  <p>We're giving you the areas to fill in. You figure out what the tickets actually are, what they say, and who owns them. That's your job during Week 1.</p>
+
+  <div class="jira-skeleton">
+    <div class="jira-skeleton-header">
+      <div class="jira-skeleton-header-text">LT-?? · Your ticket · Your team</div>
+    </div>
+    <div class="jira-skeleton-body">
+      <div class="jira-field">
+        <div class="jira-field-label">Summary — one line, verb first</div>
+        <div class="fill-me">What does this ticket do? Start with a verb. e.g. "Build...", "Create...", "Fix..."</div>
+      </div>
+      <div class="jira-field">
+        <div class="jira-field-label">Description — what and why</div>
+        <div class="fill-me">What needs to be built? Why does it exist? What does it connect to?</div>
+      </div>
+      <div class="jira-field">
+        <div class="jira-field-label">Acceptance Criteria — how QA knows it's done</div>
+        <div class="fill-me">Write at least 3 checkboxes. Be specific. "It works" is not an acceptance criterion.</div>
+      </div>
+      <div class="jira-field" style="margin:0;">
+        <div class="jira-field-label">Assignee · Story Points · Priority</div>
+        <div class="fill-me">Assignee: who owns this? Story points: 1=simple, 3=medium, 5=hard — don't overthink it, just estimate. Priority: High / Medium / Low.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-gold">
+    <div class="callout-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px;"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 7 7c0 2.5-1.5 4.5-3 6l-1 1H9l-1-1C6.5 13.5 5 11.5 5 9a7 7 0 0 1 7-7z"/></svg>Hint — what tickets do you need?</div>
+    <p>Think about what the system needs to do (check the acceptance criteria). Break each feature into the smallest piece of work that can be independently built, tested, and reviewed. A ticket that takes more than 2 days is probably too big — split it.</p>
+    <p style="margin-top:8px;">You'll need tickets for: backend endpoints, frontend pages/components, connecting frontend to backend, QA test cases, and demo preparation. The exact breakdown is yours to decide.</p>
+  </div>
+</div>
+
+<!-- GIT -->
+<div class="section" id="git">
+  <h2 class="section-title">Git guide</h2>
+  <p>Git is how your team works together without breaking each other's code. These rules are non-negotiable.</p>
+
+  <h3 class="sub-title">Branch naming convention</h3>
+  <p>Every branch name must follow this format. <strong>No exceptions.</strong></p>
+
+  <div class="branch-visual">
+    <pre><span class="b-comment"># Format: type/TICKET-ID-short-description</span>
+<span class="b-arrow">→</span> <span class="b-feature">feature/LTA-02-get-books-endpoint</span>
+<span class="b-arrow">→</span> <span class="b-feature">feature/LTA-05-student-book-list-ui</span>
+<span class="b-arrow">→</span> <span class="b-fix">fix/LTA-11-status-not-updating</span>
+<span class="b-arrow">→</span> <span class="b-fix">fix/LTA-09-borrow-form-validation</span>
+
+<span class="b-comment"># NEVER do this:</span>
+<span class="cn">  my-branch</span>
+<span class="cn">  juan-working</span>
+<span class="cn">  test123</span>
+<span class="cn">  final-final-v2</span></pre>
+  </div>
+
+  <h3 class="sub-title">Your daily Git workflow</h3>
+  <p>A <strong>Pull Request (PR)</strong> is how you ask your teammates to review your code before it merges into main. Think of it as saying "I'm done with this — can someone check it before we ship?" It's not optional. It's how the team catches mistakes before they become everyone's problem.</p>
+  <div class="code-block">
+    <pre><span class="cm"># 1. Always start from the latest main</span>
+<span class="ck">git</span> <span class="cs">checkout main</span>
+<span class="ck">git</span> <span class="cs">pull origin main</span>
+
+<span class="cm"># 2. Create your branch for the ticket you're working on</span>
+<span class="ck">git</span> <span class="cs">checkout -b feature/LTA-02-get-books-endpoint</span>
+
+<span class="cm"># 3. Do your work. Commit often with clear messages.</span>
+<span class="ck">git</span> <span class="cs">add .</span>
+<span class="ck">git</span> <span class="cs">commit -m "LTA-02: add GET /books endpoint returning all books"</span>
+<span class="ck">git</span> <span class="cs">commit -m "LTA-02: add availability status field to book response"</span>
+
+<span class="cm"># 4. Push your branch and open a Pull Request on GitHub</span>
+<span class="ck">git</span> <span class="cs">push origin feature/LTA-02-get-books-endpoint</span>
+
+<span class="cm"># 5. On GitHub → New Pull Request → fill in the PR template</span>
+<span class="cm"># 6. Tag a teammate to review it — don't merge your own PRs</span></pre>
+  </div>
+
+  <h3 class="sub-title">PR description template</h3>
+  <p>Every pull request needs a description. Copy this format into every PR you open.</p>
+  <div class="code-block">
+    <pre><span class="ca">## What does this PR do?</span>
+<span class="cs">Adds the GET /books endpoint. Returns all books with title, author,</span>
+<span class="cs">and availability status as a JSON array.</span>
+
+<span class="ca">## Jira ticket</span>
+<span class="cs">LTA-02 or LTB-02 — use your team's prefix</span>
+
+<span class="ca">## How to test it</span>
+<span class="cs">1. Run the backend: [your start command here, e.g. npm start / uvicorn main:app]</span>
+<span class="cs">2. Open Postman or your browser, GET http://localhost:[your port]/books</span>
+<span class="cs">3. Should return 200 with a JSON array of books</span>
+
+<span class="ca">## Screenshot (if UI change)</span>
+<span class="cm">[paste screenshot here]</span></pre>
+  </div>
+
+  <div class="callout callout-red">
+    <div class="callout-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:inline;vertical-align:middle;margin-right:5px;"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Hard rules</div>
+    <p><strong>Never commit directly to main.</strong> Never merge your own PR without a review. Never push without a meaningful commit message. These aren't suggestions.</p>
+  </div>
+</div>
+
+<!-- SYSTEM DIAGRAM -->
+<div class="section" id="diagram">
+  <h2 class="section-title">System diagram guide</h2>
+  <p>Your system diagram is the first thing founders look at. If we can't understand your system from the diagram, the gate is closed. Use <strong>Draw.io (diagrams.net)</strong> — it's free and saves directly to Google Drive.</p>
+
+  <h3 class="sub-title">Your diagram must show</h3>
+  <div class="diagram-checklist">
+    <div class="dc-item">
+      <span class="dc-num">01</span>
+      <div class="dc-text"><strong>Three layers clearly separated:</strong> Frontend (what the user sees) → Backend (your API) → Data (your database or storage). Label each layer.</div>
+    </div>
+    <div class="dc-item">
+      <span class="dc-num">02</span>
+      <div class="dc-text"><strong>Every API endpoint:</strong> List each route with its HTTP method and a short description. e.g. <code style="background:var(--blue-lt);padding:2px 6px;border-radius:3px;font-family:var(--font-mono);font-size:12px;">GET /books</code> — returns all books</div>
+    </div>
+    <div class="dc-item">
+      <span class="dc-num">03</span>
+      <div class="dc-text"><strong>Two user types:</strong> Show how Student and Librarian interact with the system differently. Which pages do they use? Which endpoints do their actions trigger?</div>
+    </div>
+    <div class="dc-item">
+      <span class="dc-num">04</span>
+      <div class="dc-text"><strong>Deployment target:</strong> Where does the frontend live? Where does the backend run? How do they talk to each other in production?</div>
+    </div>
+    <div class="dc-item">
+      <span class="dc-num">05</span>
+      <div class="dc-text"><strong>Tech labels:</strong> Label what technology you're using at each box. e.g. "React frontend", "FastAPI backend", "PostgreSQL database".</div>
+    </div>
+  </div>
+
+  <div class="callout callout-gold">
+    <div class="callout-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px;"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 7 7c0 2.5-1.5 4.5-3 6l-1 1H9l-1-1C6.5 13.5 5 11.5 5 9a7 7 0 0 1 7-7z"/></svg>Hint — start simple</div>
+    <p>Don't overthink it. Three rectangles stacked vertically — Frontend, Backend, Database. Arrows between them. Then fill in the details: what tech lives in each box, what routes exist, who calls what. A clear simple diagram beats a complex confusing one every time.</p>
+  </div>
+</div>
+
+<!-- TECH STACK -->
+<div class="section" id="techstack">
+  <h2 class="section-title">Tech stack — your choice</h2>
+  <p>You decide what to build with. There are no wrong answers — but there are <strong>unjustified answers</strong>. Every choice needs a reason. "Everyone uses it" is not a reason. "It fits our data model because..." is a reason.</p>
+
+  <h3 class="sub-title">Questions to answer per layer</h3>
+
+  <div class="callout callout-blue">
+    <div class="callout-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px;"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Frontend</div>
+    <p>Plain HTML/CSS/JS? A framework like React, Vue, or Angular? How complex is the UI? Does the complexity justify a framework, or would vanilla JS be faster to ship?</p>
+  </div>
+  <div class="callout callout-blue">
+    <div class="callout-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px;"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>Backend</div>
+    <p>What language? What framework? How familiar is your team with it? What does it do well for an API like this? How easy is it to set up locally on everyone's machine?</p>
+  </div>
+  <div class="callout callout-blue">
+    <div class="callout-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px;"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>Database</div>
+    <p>SQL or NoSQL? Which one? Why does LibTrack's data fit that model? See the <a href="#database" style="color:var(--blue);">Database choice section</a> for a full breakdown.</p>
+  </div>
+  <div class="callout callout-blue">
+    <div class="callout-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px;"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>Deployment</div>
+    <p>Where does this run? Free tier services? Your own machine for demo? How does the frontend reach the backend in production? What environment variables do you need?</p>
+  </div>
+</div>
+
+<!-- DATABASE -->
+<div class="section" id="database">
+  <h2 class="section-title">Database choice</h2>
+  <p>This is one of the biggest decisions you'll make during Week 1. Think it through carefully and write an ADR for it.</p>
+
+  <h3 class="sub-title">Your options</h3>
+  <div class="db-compare">
+    <div class="db-card">
+      <div class="db-name">PostgreSQL</div>
+      <div class="db-type">Relational · SQL</div>
+      <div class="db-item"><div class="db-dot green"></div><div>Structured data with clear relationships</div></div>
+      <div class="db-item"><div class="db-dot green"></div><div>Transactions — prevent double-booking a book</div></div>
+      <div class="db-item"><div class="db-dot green"></div><div>Strong data integrity</div></div>
+      <div class="db-item"><div class="db-dot amber"></div><div>Needs more setup than NoSQL</div></div>
+      <div class="db-item"><div class="db-dot amber"></div><div>Schema must be defined upfront</div></div>
+    </div>
+    <div class="db-card">
+      <div class="db-name">MySQL / SQLite</div>
+      <div class="db-type">Relational · SQL</div>
+      <div class="db-item"><div class="db-dot green"></div><div>SQLite needs zero setup — file-based</div></div>
+      <div class="db-item"><div class="db-dot green"></div><div>MySQL widely used, lots of tutorials</div></div>
+      <div class="db-item"><div class="db-dot green"></div><div>Same SQL skills as PostgreSQL</div></div>
+      <div class="db-item"><div class="db-dot amber"></div><div>SQLite not for production use</div></div>
+      <div class="db-item"><div class="db-dot amber"></div><div>MySQL slightly less featured than Postgres</div></div>
+    </div>
+    <div class="db-card">
+      <div class="db-name">MongoDB</div>
+      <div class="db-type">Document · NoSQL</div>
+      <div class="db-item"><div class="db-dot green"></div><div>Flexible schema — easy to change</div></div>
+      <div class="db-item"><div class="db-dot green"></div><div>Fast to start, JSON-like documents</div></div>
+      <div class="db-item"><div class="db-dot red"></div><div>LibTrack data is relational — does it fit?</div></div>
+      <div class="db-item"><div class="db-dot red"></div><div>No native transactions in older versions</div></div>
+      <div class="db-item"><div class="db-dot amber"></div><div>You'll need to justify why NoSQL fits here</div></div>
+    </div>
+  </div>
+
+  <h3 class="sub-title">Questions to guide your decision</h3>
+  <div class="db-question">
+    <strong>Think about this</strong>
+    What does LibTrack's data actually look like? You have Books, Students, and Borrow Requests. How do these relate to each other? If a book can only be borrowed once at a time, how does your database enforce that? What happens if two students submit a borrow request at the exact same millisecond?
+  </div>
+  <div class="db-question">
+    <strong>And this</strong>
+    Is your data structured and predictable, or flexible and varied? Do you need to JOIN tables together to answer common questions? Or is each piece of data self-contained? Your answers should point you toward SQL or NoSQL.
+  </div>
+
+  <div class="callout callout-amber">
+    <div class="callout-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>No wrong answer — but you must defend it</div>
+    <p>If you pick MongoDB, explain why document storage fits LibTrack's data model. If you pick PostgreSQL, explain why relational structure and transactions matter here. Founders will ask. "Because I know it" is a partial answer — pair it with a technical reason.</p>
+  </div>
+</div>
+
+<!-- ADR -->
+<div class="section" id="adr">
+  <h2 class="section-title">Writing an ADR</h2>
+  <p>An ADR (Architecture Decision Record) is a short document that captures a technical decision — what you chose, why, and what you considered. Real engineering teams write these so future developers understand <em>why</em> things are built the way they are.</p>
+  <p>You write one ADR per major decision. At minimum: database choice and backend framework. You can write more if you made other significant choices.</p>
+
+  <h3 class="sub-title">Example ADR — database choice</h3>
+  <div class="adr-box">
+    <h4>ADR-001 · Database selection · Team A · [Date]</h4>
+    <div class="adr-row">
+      <div class="adr-key">Status</div>
+      <div class="adr-val"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline;vertical-align:middle;margin-right:5px;"><path d="M2 6l3 3 5-5" stroke="#0F6E56" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Accepted</div>
+    </div>
+    <div class="adr-row">
+      <div class="adr-key">Decision</div>
+      <div class="adr-val">We will use <strong>PostgreSQL</strong> as our database.</div>
+    </div>
+    <div class="adr-row">
+      <div class="adr-key">Context</div>
+      <div class="adr-val">LibTrack has three clearly related entities: Books, Borrow Requests, and Students. A book's availability status depends on whether an active borrow request exists for it. We also need to prevent two students from borrowing the same book simultaneously.</div>
+    </div>
+    <div class="adr-row">
+      <div class="adr-key">Reasoning</div>
+      <div class="adr-val">Our data has clear relationships and we need transactional integrity. PostgreSQL's ACID transactions ensure that if two requests arrive simultaneously, only one can succeed. The relational model maps naturally to our entities and their relationships.</div>
+    </div>
+    <div class="adr-row">
+      <div class="adr-key">Alternatives considered</div>
+      <div class="adr-val">MongoDB — rejected because our data is relational, not document-shaped. There's no natural "document" here that stands alone. Forcing it into MongoDB would require manual relationship management that SQL handles natively.</div>
+    </div>
+    <div class="adr-row">
+      <div class="adr-key">Consequences</div>
+      <div class="adr-val">We need to define our schema upfront and run migrations if it changes. We'll need to set up a local Postgres instance or use a free hosted service like Supabase or Railway.</div>
+    </div>
+  </div>
+
+  <h3 class="sub-title">Your ADR skeleton — fill this in</h3>
+  <div class="adr-box" style="border:2px dashed var(--rule);">
+    <h4>ADR-00? · [What decision] · [Your team] · [Date]</h4>
+    <div class="adr-row">
+      <div class="adr-key">Status</div>
+      <div class="adr-val placeholder">Accepted / Proposed / Superseded</div>
+    </div>
+    <div class="adr-row">
+      <div class="adr-key">Decision</div>
+      <div class="adr-val placeholder">We will use ___ because ___</div>
+    </div>
+    <div class="adr-row">
+      <div class="adr-key">Context</div>
+      <div class="adr-val placeholder">What problem are you solving? What constraints exist? What does LibTrack actually need from this layer?</div>
+    </div>
+    <div class="adr-row">
+      <div class="adr-key">Reasoning</div>
+      <div class="adr-val placeholder">Why does your choice fit the context? Be technical. What specific feature or property made you choose this?</div>
+    </div>
+    <div class="adr-row">
+      <div class="adr-key">Alternatives considered</div>
+      <div class="adr-val placeholder">What else did you look at? Why did you reject it? Be fair — don't dismiss alternatives without a real reason.</div>
+    </div>
+    <div class="adr-row">
+      <div class="adr-key">Consequences</div>
+      <div class="adr-val placeholder">What does this decision mean for your work? Any tradeoffs or setup overhead?</div>
+    </div>
+  </div>
+</div>
+
+<!-- TESTING -->
+<div class="section" id="testing">
+  <h2 class="section-title">Testing & QA</h2>
+  <p>Every feature needs test cases before it's considered done. QA isn't something you do at the end — it's woven into the whole sprint. The QA intern on your team writes and executes test cases. Everyone is responsible for making sure their own work can be tested.</p>
+
+  <h3 class="sub-title">What a test case looks like</h3>
+  <p>Use this format in Google Sheets. One row per test case.</p>
+
+  <table class="tc-table">
+    <thead><tr><th>ID</th><th>Feature</th><th>Test scenario</th><th>Steps</th><th>Expected result</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>TC-01</td>
+        <td>Book list</td>
+        <td>Student sees available books</td>
+        <td>1. Open student page<br>2. Look at book list</td>
+        <td>List shows books with title, author, and status</td>
+        <td><span class="tc-status tc-pass">Pass</span></td>
+      </tr>
+      <tr>
+        <td>TC-02</td>
+        <td>Borrow request</td>
+        <td>Student submits valid borrow request</td>
+        <td>1. Select an available book<br>2. Enter name<br>3. Click Submit</td>
+        <td>Request appears in librarian dashboard with status Pending</td>
+        <td><span class="tc-status tc-pass">Pass</span></td>
+      </tr>
+      <tr>
+        <td>TC-03</td>
+        <td>Borrow request</td>
+        <td>Student submits with empty name</td>
+        <td>1. Select a book<br>2. Leave name blank<br>3. Click Submit</td>
+        <td>Form shows error, request is NOT submitted</td>
+        <td><span class="tc-status tc-fail">Fail</span><div style="font-size:11px;color:var(--faint);margin-top:3px;font-family:var(--font-mono);">example of a logged bug</div></td>
+      </tr>
+      <tr>
+        <td>TC-04</td>
+        <td>Librarian</td>
+        <td>Librarian marks request as Borrowed</td>
+        <td>1. Open librarian view<br>2. Click Borrowed on a Pending request</td>
+        <td>Status updates to Borrowed. Book shows as unavailable.</td>
+        <td><span class="tc-status tc-blank">Not run</span></td>
+      </tr>
+      <tr>
+        <td>TC-05</td>
+        <td>Your turn</td>
+        <td style="color:var(--faint);font-style:italic;">Write the rest of your test cases...</td>
+        <td style="color:var(--faint);">—</td>
+        <td style="color:var(--faint);">—</td>
+        <td><span class="tc-status tc-blank">—</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="font-size:13px;color:var(--faint);margin-top:-8px;">Status options: <span style="font-family:var(--font-mono);background:#DCFCE7;color:#166534;padding:1px 6px;border-radius:4px;font-size:11px;">Pass</span> — works as expected &nbsp;·&nbsp; <span style="font-family:var(--font-mono);background:#FEE2E2;color:#991B1B;padding:1px 6px;border-radius:4px;font-size:11px;">Fail</span> — bug found, create a Jira ticket &nbsp;·&nbsp; <span style="font-family:var(--font-mono);background:#F1F5F9;color:var(--faint);padding:1px 6px;border-radius:4px;font-size:11px;">Not run</span> — not tested yet</p>
+
+  <h3 class="sub-title">What is cross-testing?</h3>
+  <p>Cross-testing means you test a feature you didn't build. If you wrote the borrow form, you don't test it — a teammate does. This matters because the person who built it already knows how it's supposed to work. Someone fresh will find the edge cases they never thought of.</p>
+  <div class="callout callout-green">
+    <div class="callout-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>QA tips</div>
+    <p>Think beyond the happy path. What happens when a student submits with an empty form? What if someone tries to borrow an already-borrowed book? What if the backend is down when the frontend loads? Edge cases are where bugs live.</p>
+  </div>
+
+  <h3 class="sub-title">Daily standup format</h3>
+  <p>Post this in Discord every morning before you start working. Keep it to 3 lines max. <strong>On your very first day, skip Yesterday</strong> — just write Today and any questions you have.</p>
+  <div class="code-block">
+    <pre><span class="ca">[Your name] · [Date]</span>
+<span class="cs">Yesterday:</span> Finished the GET /books endpoint (LTA-02), merged PR
+<span class="cs">Today:</span>     Starting POST /borrow endpoint (LTA-03)
+<span class="cn">Blockers:</span>  None / [describe if any]</pre>
+  </div>
+</div>
+
+<!-- SCORING -->
+<div class="section" id="scoring">
+  <h2 class="section-title">How you're scored</h2>
+  <p>The team with the better UI doesn't automatically win. The team with the better <strong>process</strong> wins. Here's exactly how Demo Day is judged.</p>
+
+  <div class="score-grid">
+    <div class="score-card">
+      <div class="score-pct">40%</div>
+      <div class="score-label">Workflow discipline</div>
+      <div class="score-desc">Jira tickets complete · Branches named correctly · PRs described · No commits to main</div>
+    </div>
+    <div class="score-card">
+      <div class="score-pct">25%</div>
+      <div class="score-label">QA quality</div>
+      <div class="score-desc">Test cases written · Edge cases covered · Bugs found and fixed with tickets</div>
+    </div>
+    <div class="score-card">
+      <div class="score-pct">25%</div>
+      <div class="score-label">Working demo</div>
+      <div class="score-desc">All 7 acceptance criteria met · Frontend talks to real backend · No hardcoded data</div>
+    </div>
+    <div class="score-card">
+      <div class="score-pct">10%</div>
+      <div class="score-label">Demo clarity</div>
+      <div class="score-desc">Can you explain what you built, why you made each decision, and how it works?</div>
+    </div>
+  </div>
+
+  <div class="callout callout-blue">
+    <div class="callout-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px;"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 7 7c0 2.5-1.5 4.5-3 6l-1 1H9l-1-1C6.5 13.5 5 11.5 5 9a7 7 0 0 1 7-7z"/></svg>Read this carefully</div>
+    <p>40% of your score is pure process. You can have a beautiful app and still lose if your Jira board is a mess, your commits have no messages, and your PRs have no descriptions. The code is only half the job.</p>
+  </div>
+</div>
+
+<!-- RULES -->
+<div class="section" id="rules">
+  <h2 class="section-title">Non-negotiables</h2>
+  <p>These rules apply every day, both teams, no exceptions. They're not suggestions.</p>
+
+  <ul class="rules-list">
+    <li>
+      <div class="rule-icon red"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+      <div class="rule-text"><strong>No direct commits to main — ever.</strong> Every change lives on a branch. Every branch ends in a PR. Every PR gets reviewed by a teammate before it merges.</div>
+    </li>
+    <li>
+      <div class="rule-icon red"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+      <div class="rule-text"><strong>No Jira ticket = the work didn't happen.</strong> If you built something that isn't tracked in Jira, it doesn't count. Create the ticket first, then code.</div>
+    </li>
+    <li>
+      <div class="rule-icon red"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+      <div class="rule-text"><strong>No ticket moves to Done without QA sign-off.</strong> You don't decide when your own ticket is done. The QA intern does.</div>
+    </li>
+    <li>
+      <div class="rule-icon red"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+      <div class="rule-text"><strong>No coding during Week 1.</strong> The entire first week is planning. If you're writing code before Week 2, you're doing it wrong.</div>
+    </li>
+    <li>
+      <div class="rule-icon green"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="rule-text"><strong>Daily Discord standup every morning.</strong> Short. Three lines. Yesterday / Today / Blockers. If you miss it, message the team why.</div>
+    </li>
+    <li>
+      <div class="rule-icon green"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="rule-text"><strong>Ask for help early.</strong> If you're stuck for more than 30 minutes, say something in Discord. Staying stuck silently hurts the whole team.</div>
+    </li>
+    <li>
+      <div class="rule-icon blue"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M6 5.5v3M6 3.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <div class="rule-text"><strong>You own your decisions.</strong> If you chose MongoDB and it causes problems later, you solve it. The founders won't bail you out of a technical choice — but they will help you think it through if you ask early enough.</div>
+    </li>
+  </ul>
+
+  <div class="problem-box" style="margin-top:32px;">
+    <h3>One last thing</h3>
+    <p>This challenge is designed to be hard enough to learn from and simple enough to actually finish. The scope is tight on purpose. Don't add features. Don't gold-plate the UI. Ship what's in the acceptance criteria, do it with discipline, and you'll be ahead of most fresh graduates who've never had to work this way before.</p>
+    <p style="margin-top:12px;">Good luck. May the better process win.</p>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<div class="footer">
+  <div class="footer-left">Origin3 Technologies · Intern Program 2026 · Confidential</div>
+  <div class="footer-right">Technology that serves the people.</div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+const sections = document.querySelectorAll('.section');
+const navLinks = document.querySelectorAll('.sidenav a');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      const id = entry.target.id;
+      navLinks.forEach(l => {
+        l.classList.toggle('active', l.getAttribute('href') === '#'+id);
+      });
+    }
+  });
+}, {rootMargin:'-30% 0px -60% 0px'});
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

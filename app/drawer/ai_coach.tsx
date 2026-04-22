@@ -1,27 +1,28 @@
+import { theme } from "@/styles/theme";
 import {
-    Feather,
-    FontAwesome5,
-    Ionicons,
-    MaterialCommunityIcons,
+  Feather,
+  FontAwesome5,
+  Ionicons,
+  MaterialCommunityIcons,
 } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { theme } from "@/styles/theme";
 
 // =========================================================
-// 1. DATA & LOGIC
+// 1. TYPES & MOCK DATA (Replace with real DB hooks later)
 // =========================================================
 
 interface Message {
@@ -32,11 +33,10 @@ interface Message {
   isAnalysis?: boolean;
 }
 
-// The buttons shown when chat is empty
 const QUICK_ACTIONS = [
   { id: 1, text: "Plan a 5K", icon: "running", lib: FontAwesome5 },
-  { id: 2, text: "Find a route", icon: "map-marker-alt", lib: FontAwesome5 },
-  { id: 3, text: "Analyze my pace", icon: "stopwatch", lib: FontAwesome5 },
+  { id: 2, text: "Analyze my pace", icon: "stopwatch", lib: FontAwesome5 },
+  { id: 3, text: "Civic Quests", icon: "users", lib: FontAwesome5 },
   {
     id: 4,
     text: "Gear advice",
@@ -45,59 +45,40 @@ const QUICK_ACTIONS = [
   },
 ];
 
-// -- THE BRAIN: Specific replies for each button --
-const AI_RESPONSES: Record<string, string> = {
-  "Plan a 5K":
-    "Great goal! 🏃‍♂️\n\nHere is a 4-week starter plan:\n• Week 1: Run 2km, Walk 1km (3x)\n• Week 2: Run 3km (3x)\n• Week 3: Run 4km (2x)\n• Week 4: Race Day!\n\nShall I add this to your calendar?",
-
-  "Find a route":
-    "I found 3 popular routes near you:\n\n1. 🌳 City Park Loop (5km)\n2. 🌊 Riverside Trail (8km)\n3. ⛰️ Hillside Climb (Hard)\n\nWhich one would you like to explore?",
-
-  "Analyze my pace":
-    "You are currently averaging 5:30/km. This is a 2% improvement from last week! Try keeping your cadence above 170spm to improve efficiency.",
-
-  "Gear advice":
-    "For your current pace and arch type, I recommend neutral cushioning shoes.\n\nTop picks:\n• Nike Pegasus 40\n• Saucony Ride 17\n• Brooks Ghost 15\n\nDo you want me to check prices?",
-
-  default:
-    "I'm your running coach! You can ask me to plan a race, analyze your stats, or find new routes. How can I help today?",
-};
-
 // =========================================================
-// 2. HELPER COMPONENTS
+// 2. THE BRAIN (Logic Engine)
 // =========================================================
 
-const ChatBubble = ({ message }: { message: Message }) => {
-  const isUser = message.sender === "user";
+const generateAiResponse = (
+  input: string,
+): { text: string; isAnalysis: boolean } => {
+  const query = input.toLowerCase();
 
-  return (
-    <View
-      style={[
-        styles.bubbleWrapper,
-        isUser ? styles.userWrapper : styles.aiWrapper,
-      ]}
-    >
-      {isUser ? (
-        // USER BUBBLE: Green Gradient 50% Opacity
-        <LinearGradient
-          colors={["#7CF20580", "#209F7780"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.userBubble}
-        >
-          <Text style={styles.msgText}>{message.text}</Text>
-        </LinearGradient>
-      ) : (
-        // AI BUBBLE
-        <View style={styles.aiBubble}>
-          {message.isAnalysis && (
-            <Text style={styles.aiHeader}>Analysis Complete. 📉</Text>
-          )}
-          <Text style={styles.msgText}>{message.text}</Text>
-        </View>
-      )}
-    </View>
-  );
+  if (query.includes("plan") || query.includes("5k")) {
+    return {
+      text: "Based on your current stamina, a 4-week 'Consistency' plan is best. We'll focus on Sector-based endurance. Ready to start Week 1?",
+      isAnalysis: false,
+    };
+  }
+
+  if (query.includes("analyze") || query.includes("pace")) {
+    return {
+      text: "Analyzing Sector Data... 📊\n\nYour last run showed 12% Stamina Decay in the final kilometer. I suggest reducing your starting pace by 10s/km to maintain a flat effort profile.",
+      isAnalysis: true,
+    };
+  }
+
+  if (query.includes("civic") || query.includes("quest")) {
+    return {
+      text: "The 'Bayanihan Protocol' is active! There is a Plogging Quest at City Park. Completing it earns you 500 Gems and a 'Local Hero' badge.",
+      isAnalysis: false,
+    };
+  }
+
+  return {
+    text: "I am your Karela Kinetic Coach. Ask me about your pace analysis, gear, or upcoming Bayanihan quests!",
+    isAnalysis: false,
+  };
 };
 
 // =========================================================
@@ -110,52 +91,47 @@ export default function AiCoach() {
 
   const [inputText, setInputText] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
 
-  // Auto-scroll logic
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
+  }, [messages, isTyping]);
 
-  // -- LOGIC: Handle Sending Messages --
   const handleSend = (textOverride?: string) => {
     const textToSend = textOverride || inputText;
+    if (!textToSend.trim() || isTyping) return;
 
-    if (!textToSend.trim()) return;
-
-    // 1. Add User Message immediately
-    const newMsg: Message = {
+    // 1. Add User Message
+    const userMsg: Message = {
       id: Date.now().toString(),
       text: textToSend,
       sender: "user",
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, newMsg]);
-    setInputText(""); // Clear input
+    setMessages((prev) => [...prev, userMsg]);
+    setInputText("");
+    setIsTyping(true);
 
-    // 2. Determine AI Response
-    // We check if the user's text matches one of our "Keys"
-    const responseText = AI_RESPONSES[textToSend] || AI_RESPONSES["default"];
-    const isAnalysis = textToSend === "Analyze my pace"; // Special flag for the header
-
-    // 3. Send AI Reply (Simulated Delay)
+    // 2. Simulated AI Processing (Simulating Gemini/Server latency)
     setTimeout(() => {
+      const { text, isAnalysis } = generateAiResponse(textToSend);
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
-        text: responseText,
+        text: text,
         sender: "ai",
         timestamp: new Date(),
         isAnalysis: isAnalysis,
       };
       setMessages((prev) => [...prev, aiMsg]);
-    }, 1000);
+      setIsTyping(false);
+    }, 1500);
   };
 
   return (
     <View style={theme.container}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Glow Background */}
       <View style={theme.glowContainer}>
         <LinearGradient
           colors={["#209F77", "#1FA279", "#7CF205"]}
@@ -168,17 +144,16 @@ export default function AiCoach() {
         <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
       </View>
 
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Feather name="chevron-left" size={32} color="#fff" />
         </TouchableOpacity>
+        <Text style={styles.headerTitle}>Kinetic Coach</Text>
       </View>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
       >
         <ScrollView
           ref={scrollViewRef}
@@ -187,21 +162,20 @@ export default function AiCoach() {
             messages.length === 0 && { flex: 1, justifyContent: "center" },
           ]}
         >
-          {/* EMPTY STATE */}
           {messages.length === 0 ? (
             <View style={styles.emptyStateContainer}>
-              <Text style={styles.greetingTitle}>👋 Ready to go, Sander?</Text>
+              <Text style={styles.greetingTitle}>
+                👋 Ready to move, Randel?
+              </Text>
               <Text style={styles.greetingSubtitle}>
-                Let's crush some{"\n"}miles!
+                Let's audit{"\n"}your effort.
               </Text>
 
-              {/* Quick Action Chips */}
               <View style={styles.chipsContainer}>
                 {QUICK_ACTIONS.map((action) => (
                   <TouchableOpacity
                     key={action.id}
                     style={styles.chip}
-                    // CLICKING THIS NOW SENDS THE MESSAGE AUTOMATICALLY
                     onPress={() => handleSend(action.text)}
                   >
                     <action.lib
@@ -216,28 +190,62 @@ export default function AiCoach() {
               </View>
             </View>
           ) : (
-            // CHAT HISTORY
             <View style={styles.chatContainer}>
               {messages.map((msg) => (
-                <ChatBubble key={msg.id} message={msg} />
+                <View
+                  key={msg.id}
+                  style={[
+                    styles.bubbleWrapper,
+                    msg.sender === "user"
+                      ? styles.userWrapper
+                      : styles.aiWrapper,
+                  ]}
+                >
+                  {msg.sender === "user" ? (
+                    <LinearGradient
+                      colors={["#7CF20580", "#209F7780"]}
+                      style={styles.userBubble}
+                    >
+                      <Text style={styles.msgText}>{msg.text}</Text>
+                    </LinearGradient>
+                  ) : (
+                    <View style={styles.aiBubble}>
+                      {msg.isAnalysis && (
+                        <Text style={styles.aiHeader}>
+                          STAMINA AUDIT COMPLETE
+                        </Text>
+                      )}
+                      <Text style={styles.msgText}>{msg.text}</Text>
+                    </View>
+                  )}
+                </View>
               ))}
+              {isTyping && (
+                <View style={[styles.bubbleWrapper, styles.aiWrapper]}>
+                  <View style={styles.aiBubble}>
+                    <ActivityIndicator size="small" color="#7CF205" />
+                  </View>
+                </View>
+              )}
             </View>
           )}
         </ScrollView>
 
-        {/* INPUT BAR */}
         <View style={styles.inputWrapper}>
           <TextInput
             style={styles.input}
-            placeholder="Enter a question for your coach"
+            placeholder="Ask your coach..."
             placeholderTextColor="#999"
             value={inputText}
             onChangeText={setInputText}
-            returnKeyType="send"
             onSubmitEditing={() => handleSend()}
           />
           <TouchableOpacity onPress={() => handleSend()} style={styles.sendBtn}>
-            <Ionicons name="paper-plane-outline" size={24} color="#fff" />
+            <Ionicons
+              name="paper-plane"
+              size={20}
+              color={inputText ? "#7CF205" : "#666"}
+            />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -245,16 +253,19 @@ export default function AiCoach() {
   );
 }
 
-// =========================================================
-// 4. STYLES (No changes needed here, keeping it same)
-// =========================================================
-
 const styles = StyleSheet.create({
   header: {
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 10,
-    zIndex: 10,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  headerTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontFamily: "Excon-Bold",
+    marginLeft: 10,
   },
   backBtn: { width: 40, height: 40, justifyContent: "center" },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 20 },
@@ -277,29 +288,31 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#666",
+    borderColor: "#444",
     borderRadius: 20,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    backgroundColor: "rgba(0,0,0,0.3)",
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   chipText: { color: "#fff", fontSize: 14, fontFamily: "Excon-Medium" },
-  chatContainer: { gap: 15, paddingBottom: 20 },
-  bubbleWrapper: { maxWidth: "85%", marginVertical: 5 },
+  chatContainer: { gap: 10, paddingBottom: 20 },
+  bubbleWrapper: { maxWidth: "85%", marginVertical: 4 },
   userWrapper: { alignSelf: "flex-end" },
   aiWrapper: { alignSelf: "flex-start" },
-  userBubble: { padding: 15, borderRadius: 20, borderBottomRightRadius: 5 },
+  userBubble: { padding: 14, borderRadius: 18, borderBottomRightRadius: 4 },
   aiBubble: {
     backgroundColor: "#1A1A1A",
-    padding: 15,
-    borderRadius: 20,
-    borderBottomLeftRadius: 5,
+    padding: 14,
+    borderRadius: 18,
+    borderBottomLeftRadius: 4,
+    borderLeftWidth: 2,
+    borderLeftColor: "#7CF205",
   },
   aiHeader: {
-    color: "#fff",
-    fontSize: 12,
-    opacity: 0.7,
-    marginBottom: 8,
+    color: "#7CF205",
+    fontSize: 10,
+    letterSpacing: 1,
+    marginBottom: 4,
     fontFamily: "Excon-Bold",
   },
   msgText: {
@@ -312,27 +325,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingVertical: 15,
-    paddingBottom: Platform.OS === "ios" ? 40 : 55,
-    backgroundColor: "transparent",
+    paddingBottom: Platform.OS === "ios" ? 40 : 20,
+    paddingTop: 10,
   },
   input: {
     flex: 1,
     height: 50,
     borderWidth: 1,
-    borderColor: "#666",
+    borderColor: "#333",
     borderRadius: 25,
     paddingHorizontal: 20,
-    paddingRight: 50,
     color: "#fff",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.8)",
     fontFamily: "Excon-Regular",
   },
   sendBtn: {
     position: "absolute",
     right: 35,
     height: 50,
-    top: 18,
     justifyContent: "center",
   },
 });
