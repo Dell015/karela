@@ -1,21 +1,23 @@
 import { useAuth } from "@/context/AuthContext";
-import { saveGhostRun } from "@/services/database/sqlite/database";
 import { db } from "@/services/database/firebase/config";
+import { saveGhostRun } from "@/services/database/sqlite/database";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Dimensions,
   SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  Dimensions,
 } from "react-native";
+
+import { generateAndSaveRunSummary } from "@/services/database/firebase/runService";
 
 const { width } = Dimensions.get("window");
 
@@ -51,8 +53,15 @@ export default function SummaryScreen() {
   const handleSaveGhost = () => {
     try {
       if (path) {
-        saveGhostRun(Number(meters), Number(seconds), JSON.parse(path as string));
-        Alert.alert("Ghost Saved", "You can now race against this run in the Map!");
+        saveGhostRun(
+          Number(meters),
+          Number(seconds),
+          JSON.parse(path as string),
+        );
+        Alert.alert(
+          "Ghost Saved",
+          "You can now race against this run in the Map!",
+        );
       }
     } catch (error) {
       Alert.alert("Error", "Could not save Ghost data locally.");
@@ -62,11 +71,33 @@ export default function SummaryScreen() {
   const handleFinalizeMission = async () => {
     setIsSaving(true);
     try {
+      // 2. Log the raw data (your existing function)
       await logRunToFirebase();
+
+      // 3. Trigger the AI "Memory" Generation 🚀
+      // We pass the data we already have from useLocalSearchParams
+      if (user) {
+        const runData = {
+          distance: Number(meters),
+          duration: Number(seconds),
+          avgSpeed: (Number(meters) / Number(seconds)) * 3.6,
+          sectors: [], // If you have sector data, pass it here!
+          pace: (Number(meters) / Number(seconds)) * 3.6,
+        };
+
+        // We don't 'await' this if we want it to happen in the background,
+        // but it's safer to await it here to ensure the "Memory" is saved.
+        await generateAndSaveRunSummary(user.uid, runData);
+      }
+
       if (xp) await gainXP(Number(xp));
+
       router.replace("/drawer/dashboard");
     } catch (error) {
-      Alert.alert("Sync Failed", "Progress saved locally, but cloud sync failed.");
+      Alert.alert(
+        "Sync Failed",
+        "Progress saved locally, but AI analysis failed.",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -74,7 +105,10 @@ export default function SummaryScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={["#0d0d0d", "#1a1a1a"]} style={StyleSheet.absoluteFill} />
+      <LinearGradient
+        colors={["#0d0d0d", "#1a1a1a"]}
+        style={StyleSheet.absoluteFill}
+      />
 
       <SafeAreaView style={{ flex: 1 }}>
         <View style={styles.header}>
@@ -85,7 +119,10 @@ export default function SummaryScreen() {
         <View style={styles.content}>
           {/* Main XP Display */}
           <View style={styles.xpCircleContainer}>
-            <LinearGradient colors={["#7CF205", "#209F77"]} style={styles.xpCircle}>
+            <LinearGradient
+              colors={["#7CF205", "#209F77"]}
+              style={styles.xpCircle}
+            >
               <Text style={styles.xpAmount}>+{xp}</Text>
               <Text style={styles.xpLabel}>XP GAINED</Text>
             </LinearGradient>
@@ -101,7 +138,9 @@ export default function SummaryScreen() {
 
             <View style={styles.statTile}>
               <Ionicons name="time-outline" size={24} color="#7CF205" />
-              <Text style={styles.tileValue}>{formatTime(Number(seconds))}</Text>
+              <Text style={styles.tileValue}>
+                {formatTime(Number(seconds))}
+              </Text>
               <Text style={styles.tileLabel}>DURATION</Text>
             </View>
 
@@ -114,7 +153,9 @@ export default function SummaryScreen() {
             <View style={styles.statTile}>
               <Ionicons name="speedometer-outline" size={24} color="#7CF205" />
               <Text style={styles.tileValue}>
-                {seconds && meters ? ((Number(meters) / Number(seconds)) * 3.6).toFixed(1) : 0}
+                {seconds && meters
+                  ? ((Number(meters) / Number(seconds)) * 3.6).toFixed(1)
+                  : 0}
               </Text>
               <Text style={styles.tileLabel}>AVG KM/H</Text>
             </View>
@@ -123,8 +164,8 @@ export default function SummaryScreen() {
 
         {/* Action Buttons */}
         <View style={styles.footer}>
-          <TouchableOpacity 
-            style={styles.ghostButton} 
+          <TouchableOpacity
+            style={styles.ghostButton}
             onPress={handleSaveGhost}
             activeOpacity={0.7}
           >
@@ -132,8 +173,8 @@ export default function SummaryScreen() {
             <Text style={styles.ghostButtonText}>RECORD AS GHOST</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.primaryButton} 
+          <TouchableOpacity
+            style={styles.primaryButton}
             onPress={handleFinalizeMission}
             disabled={isSaving}
           >
@@ -159,11 +200,21 @@ export default function SummaryScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0d0d0d" },
   header: { alignItems: "center", marginTop: 40 },
-  missionText: { color: "#7CF205", fontSize: 14, letterSpacing: 4, fontWeight: "600" },
-  completeText: { color: "#fff", fontSize: 38, fontWeight: "900", fontStyle: "italic" },
-  
+  missionText: {
+    color: "#7CF205",
+    fontSize: 14,
+    letterSpacing: 4,
+    fontWeight: "600",
+  },
+  completeText: {
+    color: "#fff",
+    fontSize: 38,
+    fontWeight: "900",
+    fontStyle: "italic",
+  },
+
   content: { flex: 1, justifyContent: "center", alignItems: "center" },
-  
+
   xpCircleContainer: {
     width: 200,
     height: 200,
@@ -219,7 +270,17 @@ const styles = StyleSheet.create({
     borderColor: "#7CF205",
   },
   ghostButtonText: { color: "#7CF205", fontWeight: "bold", marginLeft: 10 },
-  primaryButton: { width: "100%", height: 60, borderRadius: 15, overflow: "hidden" },
+  primaryButton: {
+    width: "100%",
+    height: 60,
+    borderRadius: 15,
+    overflow: "hidden",
+  },
   gradientButton: { flex: 1, justifyContent: "center", alignItems: "center" },
-  primaryButtonText: { color: "#ffffff", fontSize: 18, fontWeight: "900", letterSpacing: 1 },
+  primaryButtonText: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
 });

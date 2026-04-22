@@ -1,16 +1,12 @@
 import { theme } from "@/styles/theme";
-import {
-  Feather,
-  FontAwesome5,
-  Ionicons,
-  MaterialCommunityIcons,
-} from "@expo/vector-icons";
+import { Feather, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -21,9 +17,12 @@ import {
   View,
 } from "react-native";
 
-// =========================================================
-// 1. TYPES & MOCK DATA (Replace with real DB hooks later)
-// =========================================================
+// 1. SERVICES & AUTH
+import { useAuth } from "@/context/AuthContext";
+import { db } from "@/services/database/firebase/config"; // Adjust path to your firebase config
+import { getRecentRunMemories } from "@/services/database/firebase/runService";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { doc, getDoc } from "firebase/firestore";
 
 interface Message {
   id: string;
@@ -33,75 +32,89 @@ interface Message {
   isAnalysis?: boolean;
 }
 
-const QUICK_ACTIONS = [
-  { id: 1, text: "Plan a 5K", icon: "running", lib: FontAwesome5 },
-  { id: 2, text: "Analyze my pace", icon: "stopwatch", lib: FontAwesome5 },
-  { id: 3, text: "Civic Quests", icon: "users", lib: FontAwesome5 },
-  {
-    id: 4,
-    text: "Gear advice",
-    icon: "shoe-sneaker",
-    lib: MaterialCommunityIcons,
-  },
-];
-
-// =========================================================
-// 2. THE BRAIN (Logic Engine)
-// =========================================================
-
-const generateAiResponse = (
-  input: string,
-): { text: string; isAnalysis: boolean } => {
-  const query = input.toLowerCase();
-
-  if (query.includes("plan") || query.includes("5k")) {
-    return {
-      text: "Based on your current stamina, a 4-week 'Consistency' plan is best. We'll focus on Sector-based endurance. Ready to start Week 1?",
-      isAnalysis: false,
-    };
-  }
-
-  if (query.includes("analyze") || query.includes("pace")) {
-    return {
-      text: "Analyzing Sector Data... 📊\n\nYour last run showed 12% Stamina Decay in the final kilometer. I suggest reducing your starting pace by 10s/km to maintain a flat effort profile.",
-      isAnalysis: true,
-    };
-  }
-
-  if (query.includes("civic") || query.includes("quest")) {
-    return {
-      text: "The 'Bayanihan Protocol' is active! There is a Plogging Quest at City Park. Completing it earns you 500 Gems and a 'Local Hero' badge.",
-      isAnalysis: false,
-    };
-  }
-
-  return {
-    text: "I am your Karela Kinetic Coach. Ask me about your pace analysis, gear, or upcoming Bayanihan quests!",
-    isAnalysis: false,
-  };
-};
-
-// =========================================================
-// 3. MAIN COMPONENT
-// =========================================================
+// 2. INITIALIZE CLIENT
+// Note: In production, use process.env.EXPO_PUBLIC_GEMINI_API_KEY
+const API_KEY = "AIzaSyD_9TTZcU8rTk5i7JgU24DHDy8U3Q3Hmek";
+const genAI = new GoogleGenerativeAI(API_KEY);
 
 export default function AiCoach() {
   const router = useRouter();
+  const { user } = useAuth();
+  const [userProfile, setUserProfile] = useState<any>(null); // <--- Add this
   const scrollViewRef = useRef<ScrollView>(null);
 
   const [inputText, setInputText] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [recentMemories, setRecentMemories] = useState<any[]>([]);
+
+  // 3. FETCH RECENT SUMMARIES (The Context)
+  useEffect(() => {
+    const fetchContext = async () => {
+      if (user?.uid) {
+        try {
+          const memories = await getRecentRunMemories(user.uid, 3);
+          setRecentMemories(memories);
+        } catch (err) {
+          console.error("Context fetch failed:", err);
+        }
+      }
+    };
+    fetchContext();
+  }, [user]);
 
   useEffect(() => {
-    scrollViewRef.current?.scrollToEnd({ animated: true });
+    const fetchContext = async () => {
+      if (user?.uid) {
+        try {
+          // 1. Fetch the runs (You already have this)
+          const memories = await getRecentRunMemories(user.uid, 3);
+          setRecentMemories(memories);
+
+          // 2. NEW: Fetch the actual Profile Document (Randel/Trishia's stats)
+          const docRef = doc(db, "users", user.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            setUserProfile(docSnap.data());
+          }
+        } catch (err) {
+          console.error("Fetch failed:", err);
+        }
+      }
+    };
+    fetchContext();
+  }, [user]);
+
+  // 4. AUTO-SCROLL
+  useEffect(() => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
   }, [messages, isTyping]);
 
-  const handleSend = (textOverride?: string) => {
+  // 5. QUICK ACTIONS
+  const QUICK_ACTIONS = [
+    {
+      id: 1,
+      text: recentMemories.length > 0 ? "Analyze my last run" : "How to start?",
+      icon: "stopwatch",
+      lib: FontAwesome5,
+    },
+    { id: 2, text: "My progress", icon: "trending-up", lib: Feather },
+    { id: 3, text: "Best shoes for me?", icon: "shopping-bag", lib: Feather },
+  ];
+
+  const clearChat = () => {
+    Alert.alert("Clear Audit", "Wipe conversation history?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Clear", style: "destructive", onPress: () => setMessages([]) },
+    ]);
+  };
+
+  const handleSend = async (textOverride?: string) => {
     const textToSend = textOverride || inputText;
     if (!textToSend.trim() || isTyping) return;
 
-    // 1. Add User Message
     const userMsg: Message = {
       id: Date.now().toString(),
       text: textToSend,
@@ -113,19 +126,66 @@ export default function AiCoach() {
     setInputText("");
     setIsTyping(true);
 
-    // 2. Simulated AI Processing (Simulating Gemini/Server latency)
-    setTimeout(() => {
-      const { text, isAnalysis } = generateAiResponse(textToSend);
+    try {
+      // Prepare localized context
+      const stats = userProfile?.stats;
+      const profileInfo = stats
+        ? `Athlete Stats: Level ${stats.level}, BMI ${stats.bmi}, Total Distance ${stats.total_distance_km}km, Weight ${stats.weight}kg.`
+        : "Athlete Stats: New user, no data yet.";
+
+      const memoryPrompt =
+        recentMemories.length > 0
+          ? `Recent Runs: ${recentMemories.map((m) => m.summary).join(" | ")}`
+          : "No recent runs.";
+
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+      const result = await model.generateContent(`
+        Role: You are Ani, the Karela Kinetic Coach.
+        Athlete Name: ${userProfile?.displayName || "Athlete"}
+        ${profileInfo}
+        ${memoryPrompt}
+        Tone: Supportive, technical, slightly witty, high-performance expert.
+        User: ${user?.displayName || "Stryder"}
+        Context: ${memoryPrompt}
+
+        Instructions:
+        - If the user asks about stats/performance, refer to the Context.
+        - If they ask general gear/training questions (like shoes or pace), provide expert running advice.
+        - If they ask off-topic questions, politely redirect to running.
+        - Be conversational; avoid saying "I don't know." but if you really dont know, just admit it and tell the rason why
+        - Keep responses short for readability but can extend if needed
+        - make it conversational. you can use the word you and not use the users name all the time
+
+        User Message: ${textToSend}
+      `);
+
+      const response = await result.response;
+      const aiText = response.text();
+
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
-        text: text,
+        text: aiText,
         sender: "ai",
         timestamp: new Date(),
-        isAnalysis: isAnalysis,
+        isAnalysis: textToSend.toLowerCase().includes("analyze"),
       };
+
       setMessages((prev) => [...prev, aiMsg]);
+    } catch (error) {
+      console.error("Coach Link Error:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: "err",
+          text: "Kinetic link lost. Let's try that again.",
+          sender: "ai",
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -145,10 +205,18 @@ export default function AiCoach() {
       </View>
 
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Feather name="chevron-left" size={32} color="#fff" />
+        <View style={styles.headerLeft}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backBtn}
+          >
+            <Feather name="chevron-left" size={32} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Kinetic Coach</Text>
+        </View>
+        <TouchableOpacity onPress={clearChat} style={styles.refreshBtn}>
+          <Feather name="refresh-cw" size={20} color="#7CF205" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Kinetic Coach</Text>
       </View>
 
       <KeyboardAvoidingView
@@ -165,12 +233,11 @@ export default function AiCoach() {
           {messages.length === 0 ? (
             <View style={styles.emptyStateContainer}>
               <Text style={styles.greetingTitle}>
-                👋 Ready to move, Randel?
+                👋 Hello, {user?.displayName?.split(" ")[0] || "Stryder"}
               </Text>
               <Text style={styles.greetingSubtitle}>
                 Let's audit{"\n"}your effort.
               </Text>
-
               <View style={styles.chipsContainer}>
                 {QUICK_ACTIONS.map((action) => (
                   <TouchableOpacity
@@ -260,6 +327,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
   headerTitle: {
     color: "#fff",
@@ -344,5 +412,14 @@ const styles = StyleSheet.create({
     right: 35,
     height: 50,
     justifyContent: "center",
+  },
+  headerLeft: { flexDirection: "row", alignItems: "center" },
+  refreshBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(124, 242, 5, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

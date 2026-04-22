@@ -1,39 +1,32 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// 1. Correct Initialization for 2026 SDK
-const ai = new GoogleGenAI({
-  apiKey: process.env.EXPO_PUBLIC_GEMINI_API_KEY || ""
-});
+const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || "AIzaSyD_9TTZcU8rTk5i7JgU24DHDy8U3Q3Hmek";
+const genAI = new GoogleGenerativeAI(API_KEY);
 
 export const summarizeRunForAI = async (runData: any) => {
   try {
-    // 2. Stateless Call via ai.models.generateContent
-    // Note: Use gemini-2.5-flash for the best cost/speed balance in 2026
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash", 
-      contents: [
-        {
-          role: "user",
-          parts: [{
-            text: `You are the Karela Kinetic Coach. Analyze this run data:
-                   Distance: ${runData.distance}m
-                   Avg Speed: ${runData.avgSpeed}km/h
-                   Sectors: ${JSON.stringify(runData.sectors)}
-                   
-                   Create a 2-sentence "DNA Summary" of this run. 
-                   Identify if there was Stamina Decay in later sectors.
-                   Keep it technical but encouraging.`
-          }]
+    const model = genAI.getGenerativeModel({ 
+        model: "gemini-2.5-flash",
+        generationConfig: {
+            maxOutputTokens: 150,
+            temperature: 0.7,
         }
-      ],
-      config: {
-        maxOutputTokens: 150,
-        temperature: 0.7,
-      }
     });
 
-    // 3. Access text directly (it's a property, not a method)
-    return response.text || "Run recorded. No specific DNA patterns detected.";
+    const prompt = `
+        You are the Karela Kinetic Coach named Ani. Analyze this run data:
+        Distance: ${runData.distance}m
+        Avg Speed: ${runData.avgSpeed}km/h
+        Sectors: ${JSON.stringify(runData.sectors)}
+        
+        Create a 2-sentence "DNA Summary" of this run. 
+        Identify if there was Stamina Decay in later sectors.
+        Keep it technical but encouraging.
+    `;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
     
   } catch (error) {
     console.error("Gemini Agent Error:", error);
