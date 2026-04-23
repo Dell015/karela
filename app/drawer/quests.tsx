@@ -7,6 +7,7 @@ import { useNavigation, useRouter } from "expo-router";
 import {
   collection,
   doc,
+  getDoc,
   onSnapshot,
   query,
   updateDoc,
@@ -40,48 +41,69 @@ export default function QuestsScreen() {
 
     setLoading(true);
     const missionsRef = collection(db, "users", user.uid, "missions");
-    const q = query(missionsRef, where("type", "==", activeTab.toLowerCase()));
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const missionData = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        // Only show missions that aren't claimed yet
-        setMissions(missionData.filter((m: any) => m.status !== "claimed"));
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Firestore Error:", error.message);
-        setLoading(false);
-      },
-    );
+    // FIX: Instead of filtering by 'activeTab', filter by 'status'
+    // so you see the missions you sent from the Admin Panel.
+    const q = query(missionsRef, where("status", "==", "active"));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const missionData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setMissions(missionData);
+      setLoading(false);
+    });
 
     return () => unsubscribe();
-  }, [activeTab, user?.uid]);
+  }, [user?.uid]); // Removed activeTab from dependencies for now
 
   // 2. Claim Reward Logic
   const claimReward = async (mission: any) => {
     if (!user?.uid) return;
 
     try {
+      const userDocRef = doc(db, "users", user.uid);
       const missionRef = doc(db, "users", user.uid, "missions", mission.id);
 
-      // Update mission status
-      await updateDoc(missionRef, { status: "claimed" });
+      // 1. Get a fresh snapshot of the user's current data
+      const userSnap = await getDoc(userDocRef);
+      if (!userSnap.exists()) {
+        console.error("User document does not exist");
+        return;
+      }
 
-      // Use the gainXP function from your AuthContext
-      await gainXP(mission.xpReward);
+      const userData = userSnap.data();
 
-      Alert.alert(
-        "Quest Complete!",
-        `Successfully claimed ${mission.xpReward} XP.`,
+      // 2. Safely parse values (Ensure they are numbers!)
+      const currentXP = Number(userData.stats?.xp || 0);
+      const xpReward = Number(mission.xpReward || 0);
+      const currentMissionsCompleted = Number(
+        userData.stats?.total_missions_completed || 0,
       );
+
+      console.log(`Current XP: ${currentXP}, Reward: ${xpReward}`);
+
+      // 3. Mark the mission as claimed first
+      await updateDoc(missionRef, {
+        status: "claimed",
+        claimedAt: new Date().toISOString(),
+      });
+
+      // 4. Update the User Profile Stats
+      await updateDoc(userDocRef, {
+        "stats.xp": currentXP + xpReward,
+        "stats.total_missions_completed": currentMissionsCompleted + 1,
+      });
+
+      // 5. Trigger the Level-Up logic (the gainXP function in AuthContext)
+      // We pass 0 because we already added the XP above; this just triggers the level check.
+      await gainXP(0);
+
+      Alert.alert("QUEST COMPLETE", `Successfully claimed ${xpReward} XP!`);
     } catch (err) {
-      console.error("Claim error:", err);
-      Alert.alert("Error", "Could not process reward.");
+      console.error("Claim error details:", err);
+      Alert.alert("Error", "The Command Center failed to process the reward.");
     }
   };
 
@@ -174,7 +196,8 @@ export default function QuestsScreen() {
                   />
                 </View>
                 <Text style={styles.progressLabel}>
-                  {item.currentValue} / {item.targetValue}
+                  {item.currentValue} / {item.targetValue}{" "}
+                  {item.type === "distance" ? "KM" : "Units"}
                 </Text>
               </View>
 

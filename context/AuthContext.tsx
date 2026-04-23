@@ -1,8 +1,9 @@
 import { onAuthStateChanged, signOut, User } from "firebase/auth";
-import { doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot, setDoc, updateDoc } from "firebase/firestore";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "../services/database/firebase/config";
 
+// 1. STYLED INTERFACE (Matches your Command Center)
 interface UserProfile {
   uid: string;
   email: string;
@@ -58,39 +59,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // 2. SAFER XP GAIN (Using Dot Notation)
   const gainXP = async (amount: number) => {
     if (!user || !profile) return;
 
     const userDocRef = doc(db, "users", user.uid);
+
+    // Calculate new values locally
+    const currentXP = Number(profile.stats?.xp || 0);
+    const currentLevel = Number(profile.stats?.level || 1);
     const XP_THRESHOLD = 1000;
 
-    let newXP = (profile.stats.xp || 0) + amount;
-    let newLevel = profile.stats.level || 1;
+    let newXP = currentXP + amount;
+    let newLevel = currentLevel;
 
-    // Level up logic (handles multiple level-ups if amount is huge)
+    // Level up logic
     while (newXP >= XP_THRESHOLD) {
       newXP -= XP_THRESHOLD;
       newLevel += 1;
-      console.log(`🔥 Level Up! You are now Level ${newLevel}`);
     }
 
     try {
-      // Update Firestore
-      await setDoc(
-        userDocRef,
-        {
-          stats: {
-            ...profile.stats,
-            xp: newXP,
-            level: newLevel,
-          },
-        },
-        { merge: true },
-      );
-
-      // Local state will update automatically via the onSnapshot listener in useEffect
+      // CRITICAL: Use "stats.xp" and "stats.level" (Dot Notation)
+      // This tells Firebase: "Only update these two specific numbers inside the map"
+      await updateDoc(userDocRef, {
+        "stats.xp": newXP,
+        "stats.level": newLevel,
+      });
+      console.log("RPG Stats Synchronized");
     } catch (error) {
-      console.error("Error updating XP:", error);
+      console.error("XP Update Failed:", error);
     }
   };
 
@@ -113,47 +111,75 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
+
       if (firebaseUser) {
         const userDocRef = doc(db, "users", firebaseUser.uid);
-        const unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
+
+        const unsubscribeProfile = onSnapshot(userDocRef, async (docSnap) => {
           if (docSnap.exists()) {
-            const data = docSnap.data() as UserProfile;
-            const XP_THRESHOLD = 1000;
+            const data = docSnap.data() as any; // Using any temporarily for schema check
 
-            // --- AUTO-CORRECTION LOGIC ---
-            // If XP is 3500, this will fix it to 500 XP and increase Level accordingly
-            if (data.stats.xp >= XP_THRESHOLD) {
-              let correctedXP = data.stats.xp;
-              let correctedLevel = data.stats.level;
+            // 3. AUTO-PATCH LOGIC (Fills in the "Missing" fields you noticed)
+            const needsPatch =
+              !data.settings ||
+              data.stats.streak === undefined ||
+              !data.stats.total_calories_burned;
 
-              while (correctedXP >= XP_THRESHOLD) {
-                correctedXP -= XP_THRESHOLD;
-                correctedLevel += 1;
-              }
+            if (needsPatch) {
+              console.log(
+                "🛠 Stryder System: Patching missing data fields for",
+                data.username,
+              );
+              const patchedStats = {
+                ...data.stats,
+                streak: data.stats.streak ?? 0,
+                longest_streak: data.stats.longest_streak ?? 0,
+                last_active_date:
+                  data.stats.last_active_date ?? new Date().toISOString(),
+                total_calories_burned: data.stats.total_calories_burned ?? 0,
+                avg_pace_mins_km: data.stats.avg_pace_mins_km ?? 0,
+                target_weight:
+                  data.stats.target_weight ?? (data.stats.weight || 70),
+                total_missions_completed:
+                  Number(data.stats.total_missions_completed) || 0,
+              };
 
-              // Update Firestore with the "cleaned" numbers
-              setDoc(
+              await setDoc(
                 userDocRef,
                 {
-                  stats: {
-                    ...data.stats,
-                    xp: correctedXP,
-                    level: correctedLevel,
+                  ...data,
+                  stats: patchedStats,
+                  settings: data.settings || {
+                    units: "metric",
+                    notifications: true,
                   },
                 },
                 { merge: true },
               );
-
-              // We don't setProfile here because the next snapshot
-              // will fire immediately with the clean data.
               return;
             }
 
-            setProfile(data);
+            // 4. XP OVERFLOW CORRECTION
+            const XP_THRESHOLD = 1000;
+            if (data.stats.xp >= XP_THRESHOLD) {
+              let cXP = data.stats.xp;
+              let cLvl = data.stats.level;
+              while (cXP >= XP_THRESHOLD) {
+                cXP -= XP_THRESHOLD;
+                cLvl += 1;
+              }
+              await updateDoc(userDocRef, {
+                "stats.xp": cXP,
+                "stats.level": cLvl,
+              });
+              return;
+            }
+
+            setProfile(data as UserProfile);
           } else {
-            // ... (keep your new profile creation logic here)
+            // 5. INITIAL NEW PROFILE CREATION
             const newProfile: UserProfile = {
               uid: firebaseUser.uid,
               email: firebaseUser.email || "",
@@ -181,7 +207,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               settings: { units: "metric", notifications: true },
               createdAt: new Date().toISOString(),
             };
-            setDoc(userDocRef, newProfile);
+            await setDoc(userDocRef, newProfile);
             setProfile(newProfile);
           }
           setLoading(false);
@@ -193,7 +219,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     });
     return () => unsubscribeAuth();
-  }, []);  
+  }, []);
 
   return (
     <AuthContext.Provider

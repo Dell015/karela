@@ -17,6 +17,13 @@ import {
   View,
 } from "react-native";
 
+import {
+  doc, // Add this
+  getDocs,
+  query, // Add this
+  updateDoc, // Add this
+  where,
+} from "firebase/firestore";
 import { generateAndSaveRunSummary } from "@/services/database/firebase/runService";
 
 const { width } = Dimensions.get("window");
@@ -24,7 +31,7 @@ const { width } = Dimensions.get("window");
 export default function SummaryScreen() {
   const router = useRouter();
   const { meters, seconds, kcal, xp, path } = useLocalSearchParams();
-  const { user, gainXP } = useAuth();
+  const { user, profile, gainXP } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
 
   const formatTime = (totalSeconds: number) => {
@@ -70,36 +77,89 @@ export default function SummaryScreen() {
 
   const handleFinalizeMission = async () => {
     setIsSaving(true);
+
+    // Safety check: if there's no user or profile, we can't save stats
+    if (!user || !profile) {
+      Alert.alert("Error", "Profile not loaded. Please wait.");
+      setIsSaving(false);
+      return;
+    }
+
     try {
-      // 2. Log the raw data (your existing function)
+      const userDocRef = doc(db, "users", user.uid);
+      const distanceInKm = Number(meters) / 1000;
+
+      // 1. Update the Main Profile Stats (Total Distance & Calories)
+      await updateDoc(userDocRef, {
+        "stats.total_distance_km": Number(
+          ((profile.stats?.total_distance_km || 0) + distanceInKm).toFixed(2),
+        ),
+        "stats.total_calories_burned": Number(
+          ((profile.stats?.total_calories_burned || 0) + Number(kcal)).toFixed(
+            2,
+          ),
+        ),
+      });
+
+      // 2. Log the raw data to history
       await logRunToFirebase();
 
-      // 3. Trigger the AI "Memory" Generation 🚀
-      // We pass the data we already have from useLocalSearchParams
-      if (user) {
-        const runData = {
-          distance: Number(meters),
-          duration: Number(seconds),
-          avgSpeed: (Number(meters) / Number(seconds)) * 3.6,
-          sectors: [], // If you have sector data, pass it here!
-          pace: (Number(meters) / Number(seconds)) * 3.6,
-        };
+      // 3. Trigger the AI Summary Generation
+      const runData = {
+        distance: Number(meters),
+        duration: Number(seconds),
+        avgSpeed: (Number(meters) / Number(seconds)) * 3.6,
+        sectors: [],
+        pace: (Number(meters) / Number(seconds)) * 3.6,
+      };
+      await generateAndSaveRunSummary(user.uid, runData);
 
-        // We don't 'await' this if we want it to happen in the background,
-        // but it's safer to await it here to ensure the "Memory" is saved.
-        await generateAndSaveRunSummary(user.uid, runData);
-      }
+      // 4. Update the Active Missions (Progress Bars)
+      await syncRunToMissions(user.uid, distanceInKm);
 
+      // 5. Award the Run XP
       if (xp) await gainXP(Number(xp));
 
       router.replace("/drawer/dashboard");
     } catch (error) {
+      console.error("Finalize Error:", error);
       Alert.alert(
         "Sync Failed",
-        "Progress saved locally, but AI analysis failed.",
+        "Could not synchronize stats to the Command Center.",
       );
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const syncRunToMissions = async (userId: string, runKm: number) => {
+    try {
+      const missionsRef = collection(db, "users", userId, "missions");
+      // Find only missions that are 'active' and track 'distance'
+      const q = query(
+        missionsRef,
+        where("status", "==", "active"),
+        where("type", "==", "distance"),
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      const updatePromises = querySnapshot.docs.map((missionDoc) => {
+        const data = missionDoc.data();
+        const newProgress = Number(data.currentValue || 0) + runKm;
+
+        // Update each mission's document
+        return updateDoc(doc(db, "users", userId, "missions", missionDoc.id), {
+          currentValue: Number(newProgress.toFixed(2)), // Keep it clean to 2 decimal places
+        });
+      });
+
+      await Promise.all(updatePromises);
+      console.log(
+        `Synced ${runKm}km to ${updatePromises.length} active missions.`,
+      );
+    } catch (error) {
+      console.error("Mission Sync Error:", error);
     }
   };
 
