@@ -4,14 +4,14 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Dimensions,
-    SafeAreaView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Dimensions,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { LineChart } from "react-native-wagmi-charts";
 
@@ -26,16 +26,14 @@ export default function PerformanceGraph() {
   useEffect(() => {
     const loadData = () => {
       const result = getChartData();
-      setData(result); // If DB is empty, this is an empty array []
+      setData(result);
       setLoading(false);
     };
     loadData();
   }, []);
 
-  // Calculate dynamic values from real DB results
-  const totalKm = data.reduce((acc, curr) => acc + curr.value, 0).toFixed(2);
-  const avgDist =
-    data.length > 0 ? (parseFloat(totalKm) / data.length).toFixed(2) : "0.00";
+  const totalKm = data.reduce((acc, curr) => acc + curr.value, 0);
+  const avgDist = data.length > 0 ? (totalKm / data.length).toFixed(2) : "0.00";
 
   if (loading) {
     return (
@@ -58,7 +56,6 @@ export default function PerformanceGraph() {
         </TouchableOpacity>
         <View style={{ alignItems: "center" }}>
           <Text style={styles.headerTitle}>Activity Analysis</Text>
-          {/* USES USERNAME INSTEAD OF EMAIL */}
           <Text style={styles.userSubtitle}>
             @{profile?.username || "strider"}
           </Text>
@@ -76,17 +73,16 @@ export default function PerformanceGraph() {
             <View>
               <Text style={styles.chartSubtitle}>Total Progress</Text>
               <View style={styles.mainValueRow}>
-                <Text style={styles.chartMainValue}>{totalKm}</Text>
+                <Text style={styles.chartMainValue}>{totalKm.toFixed(2)}</Text>
                 <Text style={styles.mainUnit}>KM</Text>
               </View>
             </View>
-            {/* FIXED BADGE: Added height and vertical centering to prevent overflow */}
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{data.length} SESSIONS</Text>
             </View>
           </View>
 
-          {data.length > 0 ? (
+          {data.length > 1 ? (
             <LineChart.Provider data={data}>
               <LineChart height={220} width={width - 80} yGutter={20}>
                 <LineChart.Path color="#7CF205" width={3}>
@@ -110,19 +106,19 @@ export default function PerformanceGraph() {
                       }}
                     />
                   </LineChart.Tooltip>
-                  <LineChart.Dot at={0} color="#7CF205" size={8} />
                 </LineChart.CursorCrosshair>
               </LineChart>
             </LineChart.Provider>
           ) : (
             <View style={styles.emptyState}>
               <MaterialCommunityIcons
-                name="chart-line-variant"
+                name="radar"
                 size={40}
-                color="#222"
+                color="#7CF205"
+                style={{ opacity: 0.2 }}
               />
               <Text style={styles.emptyText}>
-                No data available for {profile?.username || "user"}
+                Insufficient data for mission telemetry
               </Text>
             </View>
           )}
@@ -147,7 +143,7 @@ export default function PerformanceGraph() {
           <MetricCard
             icon="fire"
             label="Energy"
-            value={Math.floor(parseFloat(totalKm) * 60)}
+            value={Math.floor(totalKm * 60)}
             unit="kcal"
             color="#FF453A"
           />
@@ -279,5 +275,5 @@ const styles = StyleSheet.create({
   cardValue: { color: "white", fontSize: 22, fontWeight: "900" },
   cardUnit: { color: "#444", fontSize: 12, fontWeight: "700" },
   emptyState: { height: 220, justifyContent: "center", alignItems: "center" },
-  emptyText: { color: "#333", marginTop: 10, fontWeight: "600", fontSize: 12 },
+  emptyText: { color: "#444", marginTop: 10, fontWeight: "600", fontSize: 12 },
 });

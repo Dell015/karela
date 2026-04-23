@@ -34,8 +34,9 @@ export const ProgressScreenUI = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: 1,
   },
-  xpText: { color: "#666", fontSize: 12, marginBottom: 15 },
+  xpText: { color: "#666", fontSize: 12 },
   rankButton: {
+    margin: 20,
     width: "60%",
     height: 45,
     borderRadius: 25,

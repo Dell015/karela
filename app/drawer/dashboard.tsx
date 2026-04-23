@@ -1,5 +1,6 @@
 import { QuestCard } from "@/components/QuestCard";
 import { Ionicons } from "@expo/vector-icons";
+import { useIsFocused } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useNavigation } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -24,10 +25,18 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AniView from "@/components/AniModel";
 import { useAuth } from "@/context/AuthContext";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
+import { db } from "@/services/database/firebase/config"; // Ensure this is imported
 import { dashboard_ui } from "@/styles/dashboardStyle";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { theme } from "@/styles/theme";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
+import {
+  collection,
+  limit,
+  onSnapshot,
+  query,
+  where,
+} from "firebase/firestore";
 
 export default function Dashboard() {
   const { profile, loading } = useAuth();
@@ -39,13 +48,30 @@ export default function Dashboard() {
     useLocationEngine(activeGhostData);
 
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const currentXP = profile?.stats?.xp || 0;
-  const currentLevel = profile?.stats?.level || 1;
-  const currentStreak = profile?.stats?.streak || 0;
+  const currentXP = Number(profile?.stats?.xp || 0);
+  const currentLevel = Number(profile?.stats?.level || 1);
+  const currentStreak = Number(profile?.stats?.streak || 0);
   const totalXP = 1000;
-  const progressPercent = Math.min((currentXP / totalXP) * 100, 100);
+  const progressPercent =
+    totalXP > 0 ? Math.min((currentXP / totalXP) * 100, 100) : 0;
   const navigation = useNavigation<DrawerNavigationProp<any>>();
-  const [currentAniAction, setCurrentAniAction] = useState("Female_rig|female_IDLE");
+  const [currentAniAction, setCurrentAniAction] = useState(
+    "Female_rig|female_IDLE",
+  );
+  const [activeMissions, setActiveMissions] = useState<any[]>([]);
+
+  const isFocused = useIsFocused();
+
+  console.log("DEBUG PROFILE STATS:", JSON.stringify(profile?.stats, null, 2));
+
+  useEffect(() => {
+    if (isFocused) {
+      console.log(
+        "Dashboard Focused. Current XP from Context:",
+        profile?.stats?.xp,
+      );
+    }
+  }, [isFocused, profile]);
 
   const [weather, setWeather] = useState<{
     temp: string | number;
@@ -116,6 +142,36 @@ export default function Dashboard() {
   useEffect(() => {
     fetchWeather("Tuguegarao");
   }, []);
+
+  useEffect(() => {
+    if (!profile?.uid) return;
+
+    const missionsRef = collection(db, "users", profile.uid, "missions");
+    const q = query(
+      missionsRef,
+      where("status", "==", "active"),
+      limit(5), // Just show the top 5 on the dashboard
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedMissions = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        // Calculate percentage for the Progress Bar (0.0 to 1.0)
+        const prog =
+          data.targetValue > 0 ? data.currentValue / data.targetValue : 0;
+
+        return {
+          id: doc.id,
+          mission: data.title || "Unknown Mission",
+          progress: Math.min(prog, 1.0), // Cap at 100%
+          xp: data.xpReward || 0,
+        };
+      });
+      setActiveMissions(fetchedMissions);
+    });
+
+    return () => unsubscribe();
+  }, [profile?.uid]);
 
   return (
     <SafeAreaView style={[theme.container, { backgroundColor: "#0d0d0d" }]}>
@@ -321,8 +377,11 @@ export default function Dashboard() {
                   />
                   <View style={dashboard_ui.chatContent}>
                     <Text style={dashboard_ui.chatText}>
-                      my sensors see rain clouds rolling into {weather.city}
-                      —let’s knock out your errands now!
+                      My sensors see {weather.desc} in {weather.city}
+                      {/* Wrap weather.temp in Number() to fix the comparison error */}
+                      {Number(weather.temp) > 30
+                        ? " — It's a bit hot out there, stay hydrated!"
+                        : " — Conditions are optimal for a run!"}
                     </Text>
                     <View style={dashboard_ui.nestedInputContainer}>
                       <TextInput
@@ -343,41 +402,32 @@ export default function Dashboard() {
 
               <Text style={dashboard_ui.sectionTitle}>Quest Progress</Text>
               <View style={{ marginBottom: 20 }}>
-                <QuestCard
-                  overallCompletion={0.7} // 70% Excellent Gauge
-                  quests={[
-                    {
-                      id: "q1",
-                      mission: "Running 15km",
-                      progress: 0.7,
-                      xp: 150,
-                    },
-                    {
-                      id: "q2",
-                      mission: "Running 1km",
-                      progress: 1.0,
-                      xp: 150,
-                    }, // Green if 1.0
-                    {
-                      id: "q3",
-                      mission: "Running 15km",
-                      progress: 0.6,
-                      xp: 150,
-                    },
-                    {
-                      id: "q4",
-                      mission: "Running 15km",
-                      progress: 0.6,
-                      xp: 150,
-                    },
-                    {
-                      id: "q5",
-                      mission: "Running 15km",
-                      progress: 0.6,
-                      xp: 150,
-                    },
-                  ]}
-                />
+                {activeMissions.length > 0 ? (
+                  <QuestCard
+                    // Calculate overall average of all active missions
+                    overallCompletion={
+                      activeMissions.reduce((acc, q) => acc + q.progress, 0) /
+                      activeMissions.length
+                    }
+                    quests={activeMissions}
+                  />
+                ) : (
+                  <TouchableOpacity
+                    style={dashboard_ui.chatCardContainer}
+                    onPress={() => router.push("/drawer/quests")}
+                  >
+                    <View style={[dashboard_ui.chatContent, { padding: 20 }]}>
+                      <Text
+                        style={[
+                          dashboard_ui.chatText,
+                          { textAlign: "center", color: "#888" },
+                        ]}
+                      >
+                        No active missions. Visit the Quest Board to begin!
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
               </View>
               {isKeyboardVisible && <View style={{ height: 100 }} />}
             </View>

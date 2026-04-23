@@ -3,7 +3,7 @@ import { doc, getDoc, onSnapshot, setDoc, updateDoc } from "firebase/firestore";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "../services/database/firebase/config";
 
-// 1. STYLED INTERFACE (Matches your Command Center)
+// 1. STYLED INTERFACE
 interface UserProfile {
   uid: string;
   email: string;
@@ -59,13 +59,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 2. SAFER XP GAIN (Using Dot Notation)
   const gainXP = async (amount: number) => {
     if (!user || !profile) return;
-
     const userDocRef = doc(db, "users", user.uid);
-
-    // Calculate new values locally
     const currentXP = Number(profile.stats?.xp || 0);
     const currentLevel = Number(profile.stats?.level || 1);
     const XP_THRESHOLD = 1000;
@@ -73,20 +69,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     let newXP = currentXP + amount;
     let newLevel = currentLevel;
 
-    // Level up logic
     while (newXP >= XP_THRESHOLD) {
       newXP -= XP_THRESHOLD;
       newLevel += 1;
     }
 
     try {
-      // CRITICAL: Use "stats.xp" and "stats.level" (Dot Notation)
-      // This tells Firebase: "Only update these two specific numbers inside the map"
       await updateDoc(userDocRef, {
         "stats.xp": newXP,
         "stats.level": newLevel,
       });
-      console.log("RPG Stats Synchronized");
     } catch (error) {
       console.error("XP Update Failed:", error);
     }
@@ -119,51 +111,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         const unsubscribeProfile = onSnapshot(userDocRef, async (docSnap) => {
           if (docSnap.exists()) {
-            const data = docSnap.data() as any; // Using any temporarily for schema check
+            const data = docSnap.data() as any;
 
-            // 3. AUTO-PATCH LOGIC (Fills in the "Missing" fields you noticed)
+            // AUTO-PATCH LOGIC
             const needsPatch =
               !data.settings ||
-              data.stats.streak === undefined ||
-              !data.stats.total_calories_burned;
+              data.stats?.streak === undefined ||
+              data.stats?.total_calories_burned === undefined;
 
             if (needsPatch) {
-              console.log(
-                "🛠 Stryder System: Patching missing data fields for",
-                data.username,
-              );
+              console.log("🛠 Stryder System: Patching missing data fields...");
               const patchedStats = {
                 ...data.stats,
-                streak: data.stats.streak ?? 0,
-                longest_streak: data.stats.longest_streak ?? 0,
-                last_active_date:
-                  data.stats.last_active_date ?? new Date().toISOString(),
-                total_calories_burned: data.stats.total_calories_burned ?? 0,
-                avg_pace_mins_km: data.stats.avg_pace_mins_km ?? 0,
-                target_weight:
-                  data.stats.target_weight ?? (data.stats.weight || 70),
-                total_missions_completed:
-                  Number(data.stats.total_missions_completed) || 0,
+                streak: data.stats?.streak ?? 0,
+                longest_streak: data.stats?.longest_streak ?? 0,
+                last_active_date: data.stats?.last_active_date ?? new Date().toISOString(),
+                total_calories_burned: data.stats?.total_calories_burned ?? 0,
+                avg_pace_mins_km: data.stats?.avg_pace_mins_km ?? 0,
+                target_weight: data.stats?.target_weight ?? (data.stats?.weight || 70),
+                total_missions_completed: Number(data.stats?.total_missions_completed) || 0,
               };
 
-              await setDoc(
-                userDocRef,
-                {
-                  ...data,
-                  stats: patchedStats,
-                  settings: data.settings || {
-                    units: "metric",
-                    notifications: true,
-                  },
-                },
-                { merge: true },
-              );
-              return;
+              const updatedData = {
+                ...data,
+                stats: patchedStats,
+                settings: data.settings || { units: "metric", notifications: true },
+              };
+
+              await setDoc(userDocRef, updatedData, { merge: true });
+              // We do NOT return here; let the next logic blocks run
             }
 
-            // 4. XP OVERFLOW CORRECTION
+            // XP OVERFLOW CORRECTION
             const XP_THRESHOLD = 1000;
-            if (data.stats.xp >= XP_THRESHOLD) {
+            if (data.stats?.xp >= XP_THRESHOLD) {
               let cXP = data.stats.xp;
               let cLvl = data.stats.level;
               while (cXP >= XP_THRESHOLD) {
@@ -174,12 +155,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 "stats.xp": cXP,
                 "stats.level": cLvl,
               });
-              return;
             }
 
+            // SET THE PROFILE STATE
             setProfile(data as UserProfile);
           } else {
-            // 5. INITIAL NEW PROFILE CREATION
+            // INITIAL NEW PROFILE CREATION
             const newProfile: UserProfile = {
               uid: firebaseUser.uid,
               email: firebaseUser.email || "",
