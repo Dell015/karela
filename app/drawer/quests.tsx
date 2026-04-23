@@ -1,528 +1,356 @@
+import { useAuth } from "@/context/AuthContext";
+import { db } from "@/services/database/firebase/config";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { DrawerActions } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Stack, router } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
+import {
+  collection,
+  doc,
+  onSnapshot,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-  Modal,
-  Pressable,
+  ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  useWindowDimensions,
 } from "react-native";
-import Animated, {
-  FadeIn,
-  useAnimatedProps,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Circle, Line, Path } from "react-native-svg";
-
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-
-const PaceChart = () => (
-  <View style={styles.chartWrapper}>
-    <Text style={styles.chartTitle}>Pace Consistency (min/km)</Text>
-    <Svg height="80" width="100%">
-      <Line
-        x1="0"
-        y1="20"
-        x2="100%"
-        y2="20"
-        stroke="#3A3A3C"
-        strokeWidth="1"
-        strokeDasharray="4 4"
-      />
-      <Line
-        x1="0"
-        y1="50"
-        x2="100%"
-        y2="50"
-        stroke="#3A3A3C"
-        strokeWidth="1"
-        strokeDasharray="4 4"
-      />
-      <Path
-        d="M0 60 Q 30 20, 60 45 T 120 35 T 180 55 T 240 30 T 300 40"
-        fill="none"
-        stroke="#7CF205"
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
-    </Svg>
-    <View style={styles.chartLabels}>
-      {["1k", "2k", "3k", "4k", "5k"].map((l) => (
-        <Text key={l} style={styles.chartLabelText}>
-          {l}
-        </Text>
-      ))}
-    </View>
-  </View>
-);
-
-const ProgressCircle = ({
-  progress,
-  size,
-  strokeWidth = 5,
-  color = "#7CF205",
-}: any) => {
-  const animatedProgress = useSharedValue(0);
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  useEffect(() => {
-    animatedProgress.value = withTiming(progress, { duration: 1500 });
-  }, [progress]);
-  const animatedProps = useAnimatedProps(() => ({
-    strokeDashoffset: circumference * (1 - animatedProgress.value),
-  }));
-  return (
-    <View style={{ width: size, height: size }}>
-      <Svg
-        width={size}
-        height={size}
-        style={{ transform: [{ rotate: "-90deg" }] }}
-      >
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="#2C2C2E"
-          strokeWidth={strokeWidth}
-          fill="none"
-        />
-        <AnimatedCircle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={color}
-          strokeWidth={strokeWidth}
-          fill="none"
-          strokeDasharray={circumference}
-          animatedProps={animatedProps}
-          strokeLinecap="round"
-        />
-      </Svg>
-    </View>
-  );
-};
 
 export default function QuestsScreen() {
-  const { width } = useWindowDimensions();
+  const { user, profile, gainXP } = useAuth();
+  const router = useRouter();
+  const navigation = useNavigation();
+
   const [activeTab, setActiveTab] = useState<"Standard" | "Limited">(
     "Standard",
   );
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedQuest, setSelectedQuest] = useState<any>(null);
+  const [missions, setMissions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const transition = useSharedValue(0);
+  // 1. Fetch Missions Logic
   useEffect(() => {
-    transition.value = withTiming(activeTab === "Standard" ? 0 : 1, {
-      duration: 300,
-    });
-  }, [activeTab]);
+    if (!user?.uid) return;
 
-  const animatedPillStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: transition.value * ((width - 62) / 2) }],
-  }));
+    setLoading(true);
+    const missionsRef = collection(db, "users", user.uid, "missions");
+    const q = query(missionsRef, where("type", "==", activeTab.toLowerCase()));
 
-  const openDetails = (title: string, xp: string) => {
-    setSelectedQuest({
-      title,
-      xp,
-      rec: "Focus on high-intensity intervals. Keep your back straight and breathe through your nose, Sander.",
-    });
-    setModalVisible(true);
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const missionData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        // Only show missions that aren't claimed yet
+        setMissions(missionData.filter((m: any) => m.status !== "claimed"));
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Firestore Error:", error.message);
+        setLoading(false);
+      },
+    );
+
+    return () => unsubscribe();
+  }, [activeTab, user?.uid]);
+
+  // 2. Claim Reward Logic
+  const claimReward = async (mission: any) => {
+    if (!user?.uid) return;
+
+    try {
+      const missionRef = doc(db, "users", user.uid, "missions", mission.id);
+
+      // Update mission status
+      await updateDoc(missionRef, { status: "claimed" });
+
+      // Use the gainXP function from your AuthContext
+      await gainXP(mission.xpReward);
+
+      Alert.alert(
+        "Quest Complete!",
+        `Successfully claimed ${mission.xpReward} XP.`,
+      );
+    } catch (err) {
+      console.error("Claim error:", err);
+      Alert.alert("Error", "Could not process reward.");
+    }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.headerTitle}>Quests</Text>
-            <View style={styles.statusRow}>
-              <View style={[styles.dot, { backgroundColor: "#7CF205" }]} />
-              <Text style={styles.statusText}>
-                Connected: Sander's Airpods Pro 2
-              </Text>
-            </View>
-          </View>
-          <TouchableOpacity style={styles.bellButton}>
-            <Ionicons name="notifications" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
-
-        {/* --- FLOATING TOGGLE PILL --- */}
-        <View style={styles.tabContainer}>
-          <Animated.View
-            style={[
-              styles.animatedPill,
-              { width: (width - 62) / 2 },
-              animatedPillStyle,
-            ]}
-          >
-            <LinearGradient
-              colors={["#32D74B", "#248A3D"]}
-              style={StyleSheet.absoluteFill}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            />
-          </Animated.View>
-          <TouchableOpacity
-            style={styles.tabButton}
-            onPress={() => setActiveTab("Standard")}
-            activeOpacity={1}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                { color: activeTab === "Standard" ? "white" : "#7CF205" },
-              ]}
-            >
-              Standard
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.tabButton}
-            onPress={() => setActiveTab("Limited")}
-            activeOpacity={1}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                { color: activeTab === "Limited" ? "white" : "#7CF205" },
-              ]}
-            >
-              Limited
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <Text style={styles.sectionTitle}>Daily Missions</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.horizontalScroll}
+    <View style={styles.container}>
+      {/* --- UNIFIED NAV BAR --- */}
+      <View style={styles.navBar}>
+        <TouchableOpacity
+          style={styles.navBtn}
+          onPress={() => router.push("/drawer/dashboard")}
         >
-          <QuestCard
-            title="Morning 5km Run"
-            xp="150xp"
-            progress={0.7}
-            onDetails={() => openDetails("Morning 5km Run", "150xp")}
-          />
-          <QuestCard
-            title="Sprint Intervals"
-            xp="200xp"
-            progress={0.3}
-            onDetails={() => openDetails("Sprint Intervals", "200xp")}
-          />
-        </ScrollView>
+          <Ionicons name="chevron-back" size={28} color="white" />
+        </TouchableOpacity>
 
-        <View style={styles.summaryContainer}>
-          <View style={styles.summaryHeader}>
-            <Text style={styles.summaryTitle}>Weekly Summary</Text>
-            <TouchableOpacity
-              onPress={() => router.push("/drawer/calendar")}
+        <Text style={styles.usernameText}>
+          @{profile?.username || "strider"}
+        </Text>
+
+        <TouchableOpacity
+          style={styles.navBtn}
+          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+        >
+          <Ionicons name="menu" size={32} color="#7CF205" />
+        </TouchableOpacity>
+      </View>
+
+      {/* --- HEADER --- */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Quest Log</Text>
+        <Text style={styles.subtitle}>
+          Audit your efforts, claim your rewards.
+        </Text>
+      </View>
+
+      {/* --- TAB TOGGLE --- */}
+      <View style={styles.tabBar}>
+        {["Standard", "Limited"].map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            onPress={() => setActiveTab(tab as "Standard" | "Limited")}
+            style={[styles.tab, activeTab === tab && styles.activeTab]}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === tab && styles.activeTabText,
+              ]}
             >
-              <Text style={styles.viewAllText}>View All</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.daysRow}>
-            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, i) => (
-              <View key={day} style={styles.dayItem}>
-                <View
-                  style={[styles.circleBase, i < 2 && styles.circleActive]}
-                />
-                <Text style={styles.dayLabel}>{day}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
+              {tab}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-        <Text style={styles.sectionTitle}>Achievements</Text>
-        <View style={styles.achievementsRow}>
-          <View style={styles.achievementCard}>
-            <MaterialCommunityIcons name="trophy" size={40} color="#3A3A3C" />
-            <Text style={styles.achievementLabel}>First 5K</Text>
+      {/* --- QUEST LIST --- */}
+      <ScrollView contentContainerStyle={styles.list}>
+        {loading ? (
+          <ActivityIndicator color="#7CF205" style={{ marginTop: 50 }} />
+        ) : missions.length === 0 ? (
+          <View style={styles.emptyState}>
+            <MaterialCommunityIcons name="ghost" size={80} color="#2C2C2E" />
+            <Text style={styles.emptyText}>No quests available.</Text>
+            <Text style={styles.emptySub}>
+              Come back another time, Stryder.
+            </Text>
           </View>
-          <View style={styles.achievementCard}>
-            <MaterialCommunityIcons name="fire" size={40} color="#3A3A3C" />
-            <Text style={styles.achievementLabel}>7 Day Streak</Text>
-          </View>
-        </View>
+        ) : (
+          missions.map((item) => (
+            <View key={item.id} style={styles.card}>
+              <View style={styles.cardHeader}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.missionTitle}>{item.title}</Text>
+                  <Text style={styles.missionDesc}>{item.description}</Text>
+                </View>
+                <View style={styles.xpBadge}>
+                  <Text style={styles.xpText}>+{item.xpReward} XP</Text>
+                </View>
+              </View>
+
+              {/* Progress Section */}
+              <View style={styles.progressContainer}>
+                <View style={styles.track}>
+                  <View
+                    style={[
+                      styles.fill,
+                      {
+                        width: `${Math.min((item.currentValue / item.targetValue) * 100, 100)}%`,
+                      },
+                    ]}
+                  />
+                </View>
+                <Text style={styles.progressLabel}>
+                  {item.currentValue} / {item.targetValue}
+                </Text>
+              </View>
+
+              {/* Action Button */}
+              {item.currentValue >= item.targetValue ? (
+                <TouchableOpacity onPress={() => claimReward(item)}>
+                  <LinearGradient
+                    colors={["#7CF205", "#209F77"]}
+                    style={styles.claimBtn}
+                  >
+                    <Text style={styles.btnText}>CLAIM REWARD</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.lockedBtn}>
+                  <Text style={styles.lockedText}>IN PROGRESS</Text>
+                </View>
+              )}
+            </View>
+          ))
+        )}
       </ScrollView>
-
-      <Modal visible={modalVisible} animationType="slide" transparent>
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setModalVisible(false)}
-        >
-          <Animated.View
-            entering={FadeIn.duration(300)}
-            style={styles.modalContent}
-          >
-            <View style={styles.handle} />
-            <Text style={styles.modalTitle}>
-              {selectedQuest?.title} Analysis
-            </Text>
-            <View style={styles.detailsGrid}>
-              <View style={styles.detailBox}>
-                <MaterialCommunityIcons
-                  name="lightning-bolt"
-                  size={24}
-                  color="#7CF205"
-                />
-                <Text style={styles.detailValue}>{selectedQuest?.xp}</Text>
-                <Text style={styles.detailLabel}>Reward</Text>
-              </View>
-              <View style={styles.detailBox}>
-                <MaterialCommunityIcons name="fire" size={24} color="#FF453A" />
-                <Text style={styles.detailValue}>340 kcal</Text>
-                <Text style={styles.detailLabel}>Burned</Text>
-              </View>
-            </View>
-            <PaceChart />
-            <View style={styles.recContainer}>
-              <View style={styles.coachHeader}>
-                <MaterialCommunityIcons
-                  name="account-tie-voice"
-                  size={20}
-                  color="#7CF205"
-                />
-                <Text style={styles.recTitle}>Karela's Advice</Text>
-              </View>
-              <Text style={styles.recText}>"{selectedQuest?.rec}"</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.closeBtn}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.closeBtnText}>Dismiss</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        </Pressable>
-      </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
-const QuestCard = ({ title, xp, progress, onDetails }: any) => (
-  <View style={styles.questCard}>
-    <View style={styles.cardTop}>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.cardSub}>Daily Running</Text>
-        <Text style={styles.cardTitle}>{title}</Text>
-        <Text style={styles.xpTextSmall}>{xp}</Text>
-      </View>
-      <ProgressCircle progress={progress} size={50} />
-    </View>
-    <View style={styles.cardButtons}>
-      <TouchableOpacity style={{ flex: 2 }}>
-        <LinearGradient colors={["#32D74B", "#248A3D"]} style={styles.trackBtn}>
-          <Text style={styles.btnText}>Track</Text>
-        </LinearGradient>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.detailsBtn} onPress={onDetails}>
-        <Text style={styles.btnText}>Details</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-);
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#000" },
-  scrollContent: { padding: 25 },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 30,
-  },
-  headerTitle: { fontSize: 38, fontWeight: "bold", color: "white" },
-  statusRow: { flexDirection: "row", alignItems: "center", marginTop: 4 },
-  dot: { width: 6, height: 6, borderRadius: 3, marginRight: 6 },
-  statusText: { color: "#8E8E93", fontSize: 12 },
-  bellButton: { backgroundColor: "#1C1C1E", padding: 12, borderRadius: 25 },
-  tabContainer: {
-    flexDirection: "row",
-    backgroundColor: "#1C1C1E",
-    borderRadius: 32,
-    padding: 6,
-    marginBottom: 35,
-    position: "relative",
-    height: 64,
-  },
-  animatedPill: {
-    position: "absolute",
-    top: 6,
-    left: 6,
-    bottom: 6,
-    borderRadius: 26,
-    overflow: "hidden",
-  },
-  tabButton: {
+  container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1,
+    backgroundColor: "#000",
+    paddingTop: 50,
   },
-  tabText: { fontSize: 18, fontWeight: "bold" },
-  sectionTitle: {
-    color: "white",
-    fontSize: 22,
-    fontWeight: "600",
-    marginBottom: 18,
-  },
-  horizontalScroll: { marginBottom: 35 },
-  questCard: {
-    backgroundColor: "#1C1C1E",
-    borderRadius: 28,
-    padding: 22,
-    width: 280,
-    marginRight: 15,
-  },
-  cardTop: {
+  navBar: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 20,
   },
-  cardSub: { color: "#8E8E93", fontSize: 11 },
-  cardTitle: {
+  navBtn: {
+    padding: 5,
+  },
+  usernameText: {
     color: "white",
-    fontSize: 22,
     fontWeight: "bold",
-    marginVertical: 4,
+    fontSize: 16,
   },
-  xpTextSmall: { color: "#7CF205", fontSize: 10, fontWeight: "600" },
-  cardButtons: { flexDirection: "row", gap: 10 },
-  trackBtn: { paddingVertical: 12, borderRadius: 22, alignItems: "center" },
-  detailsBtn: {
-    backgroundColor: "#3A3A3C",
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    borderRadius: 22,
+  header: {
+    paddingHorizontal: 25,
+    marginBottom: 20,
+    marginTop: 10,
   },
-  btnText: { color: "white", fontSize: 12, fontWeight: "bold" },
-  summaryContainer: {
-    backgroundColor: "#1C1C1E",
-    borderRadius: 28,
-    padding: 24,
-    marginBottom: 35,
+  title: {
+    color: "#fff",
+    fontSize: 32,
+    fontWeight: "bold",
   },
-  summaryHeader: {
+  subtitle: {
+    color: "#8E8E93",
+    fontSize: 14,
+    marginTop: 5,
+  },
+  tabBar: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    marginHorizontal: 25,
+    backgroundColor: "#1C1C1E",
+    borderRadius: 15,
+    padding: 5,
     marginBottom: 20,
   },
-  summaryTitle: { color: "white", fontSize: 16, fontWeight: "600" },
-  viewAllText: { color: "#8E8E93", fontSize: 12 },
-  daysRow: { flexDirection: "row", justifyContent: "space-between" },
-  dayItem: { alignItems: "center" },
-  circleBase: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 2,
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: "center",
+    borderRadius: 10,
+  },
+  activeTab: {
+    backgroundColor: "#2C2C2E",
+  },
+  tabText: {
+    color: "#8E8E93",
+    fontWeight: "600",
+  },
+  activeTabText: {
+    color: "#7CF205",
+  },
+  list: {
+    paddingHorizontal: 25,
+    paddingBottom: 40,
+  },
+  card: {
+    backgroundColor: "#1C1C1E",
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 15,
+    borderWidth: 1,
     borderColor: "#2C2C2E",
   },
-  circleActive: { borderColor: "#7CF205" },
-  dayLabel: { color: "#8E8E93", fontSize: 10, marginTop: 8 },
-  achievementsRow: { flexDirection: "row", gap: 15 },
-  achievementCard: {
-    flex: 1,
-    height: 160,
-    backgroundColor: "#1C1C1E",
-    borderRadius: 28,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  achievementLabel: { color: "#8E8E93", fontSize: 12, marginTop: 10 },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.85)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: "#1C1C1E",
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    padding: 25,
-    minHeight: 520,
-  },
-  handle: {
-    width: 40,
-    height: 5,
-    backgroundColor: "#3A3A3C",
-    borderRadius: 3,
-    alignSelf: "center",
-    marginBottom: 20,
-  },
-  modalTitle: {
-    color: "white",
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 25,
-  },
-  detailsGrid: { flexDirection: "row", gap: 15, marginBottom: 20 },
-  detailBox: {
-    flex: 1,
-    backgroundColor: "#2C2C2E",
-    padding: 15,
-    borderRadius: 20,
-    alignItems: "center",
-  },
-  detailValue: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
-    marginTop: 5,
-  },
-  detailLabel: { color: "#8E8E93", fontSize: 12 },
-  chartWrapper: {
-    backgroundColor: "#2C2C2E",
-    padding: 15,
-    borderRadius: 20,
-    marginBottom: 20,
-  },
-  chartTitle: {
-    color: "#8E8E93",
-    fontSize: 12,
-    marginBottom: 10,
-    fontWeight: "600",
-  },
-  chartLabels: {
+  cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 5,
+    marginBottom: 12,
   },
-  chartLabelText: { color: "#48484A", fontSize: 10, fontWeight: "bold" },
-  recContainer: {
-    backgroundColor: "rgba(124, 242, 5, 0.05)",
-    padding: 20,
-    borderRadius: 20,
-    marginBottom: 25,
-    borderWidth: 1,
-    borderColor: "rgba(124, 242, 5, 0.1)",
+  missionTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
-  coachHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-    gap: 8,
+  missionDesc: {
+    color: "#8E8E93",
+    fontSize: 13,
+    marginTop: 4,
   },
-  recTitle: { color: "#7CF205", fontWeight: "bold", fontSize: 14 },
-  recText: { color: "#E5E5EA", lineHeight: 20, fontStyle: "italic" },
-  closeBtn: {
+  xpBadge: {
+    backgroundColor: "rgba(124, 242, 5, 0.1)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  xpText: {
+    color: "#7CF205",
+    fontWeight: "bold",
+    fontSize: 12,
+  },
+  progressContainer: {
+    marginBottom: 20,
+  },
+  track: {
+    height: 10,
     backgroundColor: "#2C2C2E",
-    paddingVertical: 16,
-    borderRadius: 20,
+    borderRadius: 5,
+    overflow: "hidden",
+    marginBottom: 8,
+  },
+  fill: {
+    height: "100%",
+    backgroundColor: "#7CF205",
+  },
+  progressLabel: {
+    color: "#8E8E93",
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  claimBtn: {
+    paddingVertical: 15,
+    borderRadius: 16,
     alignItems: "center",
   },
-  closeBtnText: { color: "white", fontWeight: "bold", fontSize: 16 },
+  btnText: {
+    color: "#000",
+    fontWeight: "900",
+    letterSpacing: 1.5,
+  },
+  lockedBtn: {
+    paddingVertical: 15,
+    borderRadius: 16,
+    alignItems: "center",
+    backgroundColor: "#2C2C2E",
+  },
+  lockedText: {
+    color: "#555",
+    fontWeight: "bold",
+  },
+  emptyState: {
+    alignItems: "center",
+    marginTop: 80,
+  },
+  emptyText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "bold",
+    marginTop: 20,
+  },
+  emptySub: {
+    color: "#8E8E93",
+    fontSize: 14,
+    marginTop: 8,
+  },
 });
