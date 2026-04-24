@@ -37,31 +37,36 @@ export const summarizeRunForAI = async (runData: any) => {
 export const generateAniQuest = async (userProfile: any) => {
   try {
     const model = genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash", // Using 1.5 flash for speed
+        model: "gemini-2.5-flash", 
         generationConfig: { responseMimeType: "application/json" } 
     });
 
     const stats = userProfile.stats;
     const prompt = `
-        You are Ani, a witty high-performance coach. Based on the athlete's data, generate 1 custom mission.
-        Athlete Profile:
-        - BMI: ${stats.bmi}
+        You are Ani, a witty high-performance coach. Generate 1 custom mission.
+        
+        ATHLETE VITALS:
+        - Age: ${stats.age}
+        - Weight: ${stats.weight}kg
+        - Height: ${stats.height}cm
+        - Target Weight: ${stats.target_weight}kg
         - Level: ${stats.level}
-        - Injury/Notes: ${stats.ai_notes || "None"}
-        - Recent Goal: ${stats.target_weight}kg
+        - Injury/Notes: "${stats.ai_notes || "None"}"
 
-        Return ONLY a JSON object with this exact structure:
+        Return ONLY a JSON object:
         {
-          "id": "string_uuid",
+          "id": "${Date.now()}",
           "title": "Short Catchy Name",
-          "description": "Ani's personal encouragement (max 15 words)",
+          "description": "Ani's personal encouragement based on their specific weight/injury notes (max 15 words)",
           "goalDistance": number (meters),
           "goalSpeed": number (km/h),
           "rewardXP": number
         }
         
-        Logic: If they have injuries, make it a 'Walking' style mission (low speed). 
-        If high BMI, focus on duration rather than intense speed.
+        LOGIC: 
+        1. If "ai_notes" mentions injury, goalSpeed MUST be < 5.0 (Walking).
+        2. If Weight > Target Weight, focus on steady-state distance.
+        3. If Age > 50, include a reminder about joint health.
     `;
 
     const result = await model.generateContent(prompt);

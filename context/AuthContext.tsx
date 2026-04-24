@@ -2,7 +2,6 @@ import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { doc, getDoc, onSnapshot, setDoc, updateDoc } from "firebase/firestore";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "../services/database/firebase/config";
-import { string } from "three/src/nodes/tsl/TSLCore.js";
 
 // 1. STYLED INTERFACE
 interface UserProfile {
@@ -30,6 +29,9 @@ interface UserProfile {
     avg_pace_mins_km: number;
     target_weight: number;
     ai_notes: string;
+    last_daily_reset?: string;
+    last_weekly_reset?: string;
+    last_monthly_reset?: string;
   };
   settings: {
     units: "metric" | "imperial";
@@ -120,7 +122,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               !data.settings ||
               data.stats?.streak === undefined ||
               data.stats?.total_calories_burned === undefined;
-              data.stats?.ai_notes === undefined;
+            data.stats?.ai_notes === undefined;
 
             if (needsPatch) {
               console.log("🛠 Stryder System: Patching missing data fields...");
@@ -128,18 +130,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 ...data.stats,
                 streak: data.stats?.streak ?? 0,
                 longest_streak: data.stats?.longest_streak ?? 0,
-                last_active_date: data.stats?.last_active_date ?? new Date().toISOString(),
+                last_active_date:
+                  data.stats?.last_active_date ?? new Date().toISOString(),
                 total_calories_burned: data.stats?.total_calories_burned ?? 0,
                 avg_pace_mins_km: data.stats?.avg_pace_mins_km ?? 0,
-                target_weight: data.stats?.target_weight ?? (data.stats?.weight || 70),
-                total_missions_completed: Number(data.stats?.total_missions_completed) || 0,
+                target_weight:
+                  data.stats?.target_weight ?? (data.stats?.weight || 70),
+                total_missions_completed:
+                  Number(data.stats?.total_missions_completed) || 0,
                 ai_notes: data.stats?.ai_notes ?? "",
               };
 
               const updatedData = {
                 ...data,
                 stats: patchedStats,
-                settings: data.settings || { units: "metric", notifications: true },
+                settings: data.settings || {
+                  units: "metric",
+                  notifications: true,
+                },
               };
 
               await setDoc(userDocRef, updatedData, { merge: true });
@@ -189,6 +197,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 avg_pace_mins_km: 0,
                 target_weight: 70,
                 ai_notes: "",
+                last_daily_reset: "",
+                last_weekly_reset: "",
+                last_monthly_reset: "",
               },
               settings: { units: "metric", notifications: true },
               createdAt: new Date().toISOString(),

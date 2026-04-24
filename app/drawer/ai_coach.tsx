@@ -50,39 +50,26 @@ export default function AiCoach() {
 
   // 3. FETCH RECENT SUMMARIES (The Context)
   useEffect(() => {
-    const fetchContext = async () => {
-      if (user?.uid) {
-        try {
-          const memories = await getRecentRunMemories(user.uid, 3);
-          setRecentMemories(memories);
-        } catch (err) {
-          console.error("Context fetch failed:", err);
+    const fetchEverything = async () => {
+      if (!user?.uid) return;
+
+      try {
+        // 1. Fetch runs
+        const memories = await getRecentRunMemories(user.uid, 3);
+        setRecentMemories(memories);
+
+        // 2. Fetch profile directly from Firestore
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setUserProfile(docSnap.data());
         }
+      } catch (err) {
+        console.error("AI Coach initialization failed:", err);
       }
     };
-    fetchContext();
-  }, [user]);
 
-  useEffect(() => {
-    const fetchContext = async () => {
-      if (user?.uid) {
-        try {
-          // 1. Fetch the runs (You already have this)
-          const memories = await getRecentRunMemories(user.uid, 3);
-          setRecentMemories(memories);
-
-          // 2. NEW: Fetch the actual Profile Document (Randel/Trishia's stats)
-          const docRef = doc(db, "users", user.uid);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            setUserProfile(docSnap.data());
-          }
-        } catch (err) {
-          console.error("Fetch failed:", err);
-        }
-      }
-    };
-    fetchContext();
+    fetchEverything();
   }, [user]);
 
   // 4. AUTO-SCROLL
@@ -131,16 +118,13 @@ export default function AiCoach() {
       const stats = userProfile?.stats;
       const profileInfo = stats
         ? `Athlete Stats: 
-        Level ${stats.level}, 
-        BMI ${stats.bmi}, 
-        Total Distance ${stats.total_distance_km} km, 
-        Weight ${stats.weight} kg, 
-        Height ${stats.height} ft, 
-        Age ${stats.Age}.
-        target_weight ${stats.target_weight} kg,
-        
-        `
-        : "Athlete Stats: New user, no data yet.";
+          - Age: ${stats.age}
+          - Current Weight: ${stats.weight}kg
+          - Height: ${stats.height}cm
+          - Target Weight: ${stats.target_weight}kg
+          - Level: ${stats.level}
+          - Coach's Briefing: "${stats.ai_notes || "No injuries reported"}"`
+        : "Athlete Stats: New user, no physical data yet.";
 
       const memoryPrompt =
         recentMemories.length > 0
