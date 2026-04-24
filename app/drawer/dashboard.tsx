@@ -1,8 +1,9 @@
 import { QuestCard } from "@/components/QuestCard";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useIsFocused } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useNavigation } from "expo-router";
+import { addDoc, doc, updateDoc } from "firebase/firestore";
 import { useEffect, useRef, useState } from "react";
 import {
   Image,
@@ -25,6 +26,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AniView from "@/components/AniModel";
 import { useAuth } from "@/context/AuthContext";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
+import { generateAniQuest } from "@/services/database/firebase/aiService";
 import { db } from "@/services/database/firebase/config"; // Ensure this is imported
 import { dashboard_ui } from "@/styles/dashboardStyle";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
@@ -147,24 +149,28 @@ export default function Dashboard() {
     if (!profile?.uid) return;
 
     const missionsRef = collection(db, "users", profile.uid, "missions");
+
+    // Update: Filter for Active Solo Daily missions for the main dashboard view
     const q = query(
       missionsRef,
       where("status", "==", "active"),
-      limit(5), // Just show the top 5 on the dashboard
+      where("category", "==", "solo"), // New Filter
+      where("frequency", "==", "daily"), // New Filter
+      limit(5),
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedMissions = snapshot.docs.map((doc) => {
         const data = doc.data();
-        // Calculate percentage for the Progress Bar (0.0 to 1.0)
         const prog =
           data.targetValue > 0 ? data.currentValue / data.targetValue : 0;
 
         return {
           id: doc.id,
           mission: data.title || "Unknown Mission",
-          progress: Math.min(prog, 1.0), // Cap at 100%
+          progress: Math.min(prog, 1.0),
           xp: data.xpReward || 0,
+          frequency: data.frequency, // Good to keep for UI badges
         };
       });
       setActiveMissions(fetchedMissions);
@@ -172,6 +178,44 @@ export default function Dashboard() {
 
     return () => unsubscribe();
   }, [profile?.uid]);
+
+  useEffect(() => {
+    const triggerDailyReset = async () => {
+      if (!profile?.uid || !profile?.stats) return;
+
+      const today = new Date().toISOString().split("T")[0];
+      const lastDaily = profile.stats.last_daily_reset;
+
+      if (lastDaily !== today) {
+        console.log(
+          "Dashboard: New day detected. Initializing Quest Engine...",
+        );
+        const newQuest = await generateAniQuest(profile);
+
+        if (newQuest) {
+          await addDoc(collection(db, "users", profile.uid, "missions"), {
+            title: newQuest.title,
+            description: newQuest.description,
+            targetValue: newQuest.goalDistance / 1000,
+            currentValue: 0,
+            xpReward: newQuest.rewardXP,
+            status: "active",
+            category: "solo",
+            frequency: "daily",
+            createdAt: today,
+          });
+
+          await updateDoc(doc(db, "users", profile.uid), {
+            "stats.last_daily_reset": today,
+          });
+        }
+      }
+    };
+
+    if (isFocused && profile) {
+      triggerDailyReset();
+    }
+  }, [isFocused, profile?.uid]);
 
   return (
     <SafeAreaView style={[theme.container, { backgroundColor: "#0d0d0d" }]}>
@@ -400,30 +444,96 @@ export default function Dashboard() {
                 </View>
               </TouchableOpacity>
 
-              <Text style={dashboard_ui.sectionTitle}>Quest Progress</Text>
+              {/* Quest Progress Section */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "flex-end",
+                  marginBottom: 10,
+                }}
+              >
+                <Text style={[dashboard_ui.sectionTitle, { marginBottom: 0 }]}>
+                  Quest Progress
+                </Text>
+                <TouchableOpacity onPress={() => router.push("/drawer/quests")}>
+                  <Text
+                    style={{
+                      color: "#7CF205",
+                      fontSize: 12,
+                      fontWeight: "bold",
+                      marginRight: 5,
+                    }}
+                  >
+                    VIEW ALL
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
               <View style={{ marginBottom: 20 }}>
                 {activeMissions.length > 0 ? (
-                  <QuestCard
-                    // Calculate overall average of all active missions
-                    overallCompletion={
-                      activeMissions.reduce((acc, q) => acc + q.progress, 0) /
-                      activeMissions.length
-                    }
-                    quests={activeMissions}
-                  />
+                  <View>
+                    {/* Active Status Badge */}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginBottom: 8,
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: 4,
+                          backgroundColor: "#7CF205",
+                          marginRight: 6,
+                        }}
+                      />
+                      <Text
+                        style={{
+                          color: "#7CF205",
+                          fontSize: 10,
+                          fontWeight: "900",
+                          letterSpacing: 1,
+                        }}
+                      >
+                        DAILY SOLO OPS ACTIVE
+                      </Text>
+                    </View>
+
+                    <QuestCard
+                      overallCompletion={
+                        activeMissions.reduce((acc, q) => acc + q.progress, 0) /
+                        activeMissions.length
+                      }
+                      quests={activeMissions}
+                    />
+                  </View>
                 ) : (
                   <TouchableOpacity
                     style={dashboard_ui.chatCardContainer}
                     onPress={() => router.push("/drawer/quests")}
                   >
-                    <View style={[dashboard_ui.chatContent, { padding: 20 }]}>
+                    <View
+                      style={[
+                        dashboard_ui.chatContent,
+                        { padding: 20, alignItems: "center" },
+                      ]}
+                    >
+                      <MaterialCommunityIcons
+                        name="radar"
+                        size={32}
+                        color="#444"
+                      />
                       <Text
                         style={[
                           dashboard_ui.chatText,
-                          { textAlign: "center", color: "#888" },
+                          { textAlign: "center", color: "#888", marginTop: 10 },
                         ]}
                       >
-                        No active missions. Visit the Quest Board to begin!
+                        No active missions detected.{"\n"}Visit the Quest Board
+                        to generate intel.
                       </Text>
                     </View>
                   </TouchableOpacity>

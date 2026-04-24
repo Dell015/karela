@@ -1,4 +1,4 @@
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, UserProfile } from "@/context/AuthContext";
 import { generateAniQuest } from "@/services/database/firebase/aiService";
 import { db } from "@/services/database/firebase/config";
 import {
@@ -48,9 +48,9 @@ export default function QuestsScreen() {
     if (!profile?.uid || !profile?.stats || isGenerating) return;
 
     const now = new Date();
-    const today = now.toISOString().split("T")[0]; // "2026-04-25"
+    const todayKey = now.toISOString().split("T")[0];
 
-    // Logic for Week Number (e.g., "2026-W17")
+    // Helper for Week ID
     const getWeekId = (d: Date) => {
       const tempDate = new Date(d.getTime());
       tempDate.setDate(tempDate.getDate() + 4 - (tempDate.getDay() || 7));
@@ -61,50 +61,66 @@ export default function QuestsScreen() {
       return `${tempDate.getFullYear()}-W${weekNo}`;
     };
 
-    const currentWeek = getWeekId(now);
-    const currentMonth = `${now.getFullYear()}-${now.getMonth() + 1}`;
+    const weekKey = getWeekId(now);
+    const monthKey = `${now.getFullYear()}-${now.getMonth() + 1}`;
 
     const { last_daily_reset, last_weekly_reset, last_monthly_reset } =
       profile.stats;
+    const missionsRef = collection(db, "users", profile.uid, "missions");
+    const userRef = doc(db, "users", profile.uid);
+
+    const saveMission = async (q: any, freq: string, resetKey: string) => {
+      await addDoc(missionsRef, {
+        title: q.title,
+        description: q.description,
+        targetValue: q.goalDistance / 1000,
+        currentValue: 0,
+        xpReward: q.rewardXP,
+        status: "active",
+        category: "solo",
+        frequency: freq,
+        createdAt: todayKey,
+      });
+      await updateDoc(userRef, { [`stats.last_${freq}_reset`]: resetKey });
+    };
 
     try {
-      // 1. DAILY RESET
-      if (last_daily_reset !== today) {
-        setIsGenerating(true);
-        console.log("Ani: Analyzing stats for new Daily Mission...");
-        const newQuest = await generateAniQuest(profile);
+      setIsGenerating(true);
 
-        if (newQuest) {
-          const missionsRef = collection(db, "users", profile.uid, "missions");
-          await addDoc(missionsRef, {
-            title: newQuest.title,
-            description: newQuest.description,
-            targetValue: newQuest.goalDistance / 1000,
-            currentValue: 0,
-            xpReward: newQuest.rewardXP,
-            status: "active",
-            category: "solo",
-            frequency: "daily",
-            type: "distance",
-            createdAt: today,
-          });
-
-          await updateDoc(doc(db, "users", profile.uid), {
-            "stats.last_daily_reset": today,
-          });
+      // --- 1. DAILY ---
+      if (last_daily_reset !== todayKey) {
+        console.log("Generating Daily...");
+        const q = await generateAniQuest(profile as UserProfile);
+        if (q) {
+          await saveMission(q, "daily", todayKey);
+          return; // STOP! Don't do Weekly yet.
         }
       }
 
-      // 2. WEEKLY RESET
-      if (last_weekly_reset !== currentWeek) {
-        console.log("Ani: Drafting Weekly Objective...");
-        // Weekly logic can go here (similar to above but frequency: "weekly")
-        await updateDoc(doc(db, "users", profile.uid), {
-          "stats.last_weekly_reset": currentWeek,
-        });
+      // --- 2. WEEKLY ---
+      if (last_weekly_reset !== weekKey) {
+        console.log("Generating Weekly...");
+        const q = await generateAniQuest(profile as UserProfile);
+        if (q) {
+          await saveMission(q, "weekly", weekKey);
+          return; // STOP! Don't do Monthly yet.
+        }
       }
-    } catch (err) {
-      console.error("Quest Engine Error:", err);
+
+      // --- 3. MONTHLY ---
+      if (last_monthly_reset !== monthKey) {
+        console.log("Generating Monthly...");
+        const q = await generateAniQuest(profile as UserProfile);
+        if (q) {
+          await saveMission(q, "monthly", monthKey);
+        }
+      }
+    } catch (err: any) {
+      if (err.message.includes("429")) {
+        console.warn("Gemini is cooling down. Mission generation paused.");
+      } else {
+        console.error("Gen Error:", err);
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -112,8 +128,10 @@ export default function QuestsScreen() {
 
   // --- EFFECTS ---
   useEffect(() => {
-    if (profile) checkAndGenerateQuests();
-  }, [profile?.stats?.last_daily_reset]);
+    if (profile?.uid) {
+      checkAndGenerateQuests();
+    }
+  }, [profile?.uid]);
 
   useEffect(() => {
     if (!user?.uid) return;

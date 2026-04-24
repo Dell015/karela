@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "../services/database/firebase/config";
 
 // 1. STYLED INTERFACE
-interface UserProfile {
+export interface UserProfile {
   uid: string;
   email: string;
   displayName: string;
@@ -123,6 +123,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               data.stats?.streak === undefined ||
               data.stats?.total_calories_burned === undefined;
             data.stats?.ai_notes === undefined;
+            data.stats?.last_weekly_reset === undefined || // ADD THIS
+              data.stats?.last_monthly_reset === undefined; // ADD THIS
 
             if (needsPatch) {
               console.log("🛠 Stryder System: Patching missing data fields...");
@@ -139,6 +141,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 total_missions_completed:
                   Number(data.stats?.total_missions_completed) || 0,
                 ai_notes: data.stats?.ai_notes ?? "",
+                last_daily_reset: data.stats?.last_daily_reset ?? "",
+                last_weekly_reset: data.stats?.last_weekly_reset ?? "",
+                last_monthly_reset: data.stats?.last_monthly_reset ?? "",
               };
 
               const updatedData = {
