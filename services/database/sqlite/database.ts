@@ -23,7 +23,8 @@ export const initDatabase = () => {
     CREATE TABLE IF NOT EXISTS daily_missions (
       id TEXT PRIMARY KEY,
       title TEXT,
-      goal_distance INTEGER,
+      description TEXT,
+      goal_distanace INTEGER,
       goal_speed REAL,
       xp_reward INTEGER,
       status TEXT DEFAULT 'pending', 
@@ -83,7 +84,7 @@ export const setLocalMissions = (missions: any[]) => {
   
   missions.forEach(m => {
     db.runSync(
-      'INSERT OR REPLACE INTO daily_missions (id, title, goal_distance, goal_speed, xp_reward, date) VALUES (?, ?, ?, ?, ?, ?)',
+      'INSERT OR REPLACE INTO daily_missions (id, title, description, goal_distance, goal_speed, xp_reward, date) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [m.id, m.title, m.goalDistance, m.goalSpeed, m.rewardXP, dateTimestamp]
     );
   });

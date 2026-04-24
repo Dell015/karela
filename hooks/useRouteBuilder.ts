@@ -18,7 +18,7 @@ export interface Checkpoint extends MapCoordinate {
   isReached: boolean;
 }
 
-export const useQuestEngine = (mapRef: React.RefObject<MapView | null>) => {
+export const useRouteBuilder = (mapRef: React.RefObject<MapView | null>) => {
   const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
   const [questPath, setQuestPath] = useState<MapCoordinate[]>([]);
   const [questRewards, setQuestRewards] = useState<{ coins: number; xp: number } | null>(null);

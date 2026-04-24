@@ -2,6 +2,7 @@ import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { doc, getDoc, onSnapshot, setDoc, updateDoc } from "firebase/firestore";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "../services/database/firebase/config";
+import { string } from "three/src/nodes/tsl/TSLCore.js";
 
 // 1. STYLED INTERFACE
 interface UserProfile {
@@ -28,6 +29,7 @@ interface UserProfile {
     total_missions_completed: number;
     avg_pace_mins_km: number;
     target_weight: number;
+    ai_notes: string;
   };
   settings: {
     units: "metric" | "imperial";
@@ -118,6 +120,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               !data.settings ||
               data.stats?.streak === undefined ||
               data.stats?.total_calories_burned === undefined;
+              data.stats?.ai_notes === undefined;
 
             if (needsPatch) {
               console.log("🛠 Stryder System: Patching missing data fields...");
@@ -130,6 +133,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 avg_pace_mins_km: data.stats?.avg_pace_mins_km ?? 0,
                 target_weight: data.stats?.target_weight ?? (data.stats?.weight || 70),
                 total_missions_completed: Number(data.stats?.total_missions_completed) || 0,
+                ai_notes: data.stats?.ai_notes ?? "",
               };
 
               const updatedData = {
@@ -184,6 +188,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 total_missions_completed: 0,
                 avg_pace_mins_km: 0,
                 target_weight: 70,
+                ai_notes: "",
               },
               settings: { units: "metric", notifications: true },
               createdAt: new Date().toISOString(),

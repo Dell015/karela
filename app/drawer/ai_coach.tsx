@@ -130,7 +130,16 @@ export default function AiCoach() {
       // Prepare localized context
       const stats = userProfile?.stats;
       const profileInfo = stats
-        ? `Athlete Stats: Level ${stats.level}, BMI ${stats.bmi}, Total Distance ${stats.total_distance_km}km, Weight ${stats.weight}kg.`
+        ? `Athlete Stats: 
+        Level ${stats.level}, 
+        BMI ${stats.bmi}, 
+        Total Distance ${stats.total_distance_km} km, 
+        Weight ${stats.weight} kg, 
+        Height ${stats.height} ft, 
+        Age ${stats.Age}.
+        target_weight ${stats.target_weight} kg,
+        
+        `
         : "Athlete Stats: New user, no data yet.";
 
       const memoryPrompt =

@@ -3,6 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
   Dimensions,
   KeyboardAvoidingView,
   Modal,
@@ -19,6 +20,7 @@ import {
 
 // Import your Auth Context
 import { useAuth } from "@/context/AuthContext";
+import { updateUserProfileData } from "@/services/database/firebase/firestore";
 
 const { width } = Dimensions.get("window");
 
@@ -49,8 +51,18 @@ const ToggleRow = ({ label, value, onValueChange }: any) => (
   </View>
 );
 
-const ActionRow = ({ label, actionText, onPress, color = "#888", icon }: any) => (
-  <TouchableOpacity style={styles.actionRow} onPress={onPress} activeOpacity={0.7}>
+const ActionRow = ({
+  label,
+  actionText,
+  onPress,
+  color = "#888",
+  icon,
+}: any) => (
+  <TouchableOpacity
+    style={styles.actionRow}
+    onPress={onPress}
+    activeOpacity={0.7}
+  >
     <View style={styles.actionRowLeft}>
       {icon && (
         <Ionicons
@@ -126,6 +138,8 @@ export default function ProfilePage() {
   const totalXP = 1000;
   const progressPercent = Math.min((currentXP / totalXP) * 100, 100);
 
+  const [aiNotes, setAiNotes] = useState(profile?.stats?.ai_notes || "");
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -187,12 +201,33 @@ export default function ProfilePage() {
             </View>
           </View>
 
-          <TouchableOpacity 
-            style={styles.outlineBtn}
-            onPress={() => setShowEditProfile(true)}
+          <TouchableOpacity
+            style={[
+              styles.actionBtn,
+              { backgroundColor: "#209F77", marginTop: 20 },
+            ]}
+            onPress={async () => {
+              if (!profile?.uid) return;
+
+              try {
+                // 2. Map the local states to the Firestore fields
+                await updateUserProfileData(profile.uid, {
+                  displayName: profile.displayName, // or your local state for name
+                  username: profile.username, // or your local state for username
+                  "stats.ai_notes": aiNotes, // This is the key for Ani!
+                });
+
+                setShowEditProfile(false);
+                Alert.alert(
+                  "Success",
+                  "Ani has been briefed on your condition.",
+                );
+              } catch (err) {
+                Alert.alert("Error", "Failed to update profile.");
+              }
+            }}
           >
-            <Ionicons name="pencil" size={16} color="#209F77" style={{ marginRight: 8 }}/>
-            <Text style={styles.outlineBtnText}>Edit Profile</Text>
+            <Text style={styles.actionBtnText}>Save Changes</Text>
           </TouchableOpacity>
 
           {/* 🏆 THE TROPHY CABINET (NEW) */}
@@ -200,19 +235,25 @@ export default function ProfilePage() {
             <Text style={styles.sectionTitle}>Trophy Cabinet</Text>
             <View style={styles.badgesRow}>
               <View style={styles.badgeItem}>
-                <View style={[styles.badgeIconBg, { backgroundColor: '#FFD70020' }]}>
+                <View
+                  style={[styles.badgeIconBg, { backgroundColor: "#FFD70020" }]}
+                >
                   <Ionicons name="flame" size={28} color="#FFD700" />
                 </View>
                 <Text style={styles.badgeText}>7 Day Streak</Text>
               </View>
               <View style={styles.badgeItem}>
-                <View style={[styles.badgeIconBg, { backgroundColor: '#52CC3920' }]}>
+                <View
+                  style={[styles.badgeIconBg, { backgroundColor: "#52CC3920" }]}
+                >
                   <Ionicons name="footsteps" size={28} color="#52CC39" />
                 </View>
                 <Text style={styles.badgeText}>First 5K</Text>
               </View>
               <View style={styles.badgeItem}>
-                <View style={[styles.badgeIconBg, { backgroundColor: '#8A2BE220' }]}>
+                <View
+                  style={[styles.badgeIconBg, { backgroundColor: "#8A2BE220" }]}
+                >
                   <Ionicons name="moon" size={28} color="#8A2BE2" />
                 </View>
                 <Text style={styles.badgeText}>Night Owl</Text>
@@ -227,9 +268,15 @@ export default function ProfilePage() {
               <Text style={styles.seeAllText}>See All</Text>
             </View>
             <View style={styles.squadRow}>
-              <View style={styles.squadAvatar}><Text>🏃‍♂️</Text></View>
-              <View style={styles.squadAvatar}><Text>🚴‍♀️</Text></View>
-              <View style={styles.squadAvatar}><Text>🏋️</Text></View>
+              <View style={styles.squadAvatar}>
+                <Text>🏃‍♂️</Text>
+              </View>
+              <View style={styles.squadAvatar}>
+                <Text>🚴‍♀️</Text>
+              </View>
+              <View style={styles.squadAvatar}>
+                <Text>🏋️</Text>
+              </View>
               <TouchableOpacity style={styles.addFriendBtn}>
                 <Ionicons name="add" size={24} color="#FFF" />
               </TouchableOpacity>
@@ -238,25 +285,24 @@ export default function ProfilePage() {
 
           {/* ⚙️ SETTINGS & SECURITY */}
           <View style={styles.bottomMenuContainer}>
-            <ActionRow 
+            <ActionRow
               icon="apps-outline"
-              label="Connected Apps (Strava, Spotify)" 
+              label="Connected Apps (Strava, Spotify)"
               onPress={() => {}} // Hook this up later if needed!
             />
             <View style={styles.divider} />
-            <ActionRow 
+            <ActionRow
               icon="settings-outline"
-              label="General Settings" 
+              label="General Settings"
               onPress={() => setShowGeneralSettings(true)}
             />
             <View style={styles.divider} />
-            <ActionRow 
+            <ActionRow
               icon="shield-checkmark-outline"
-              label="Account & Security" 
+              label="Account & Security"
               onPress={() => setShowAccountSettings(true)}
             />
           </View>
-
         </View>
       </ScrollView>
 
@@ -265,21 +311,25 @@ export default function ProfilePage() {
       {/* ========================================================= */}
 
       {/* EDIT PROFILE MODAL */}
-      <BottomSheet visible={showEditProfile} onClose={() => setShowEditProfile(false)} title="Edit Profile">
+      <BottomSheet
+        visible={showEditProfile}
+        onClose={() => setShowEditProfile(false)}
+        title="Edit Profile"
+      >
         <View style={styles.modalContent}>
           <Text style={styles.inputLabel}>Display Name</Text>
-          <TextInput 
-            style={styles.input} 
-            defaultValue={profile?.displayName || ""} 
-            placeholder="Enter display name" 
-            placeholderTextColor="#888" 
+          <TextInput
+            style={styles.input}
+            defaultValue={profile?.displayName || ""}
+            placeholder="Enter display name"
+            placeholderTextColor="#888"
           />
           <Text style={styles.inputLabel}>Username</Text>
-          <TextInput 
-            style={styles.input} 
-            defaultValue={profile?.username || ""} 
-            placeholder="Enter username" 
-            placeholderTextColor="#888" 
+          <TextInput
+            style={styles.input}
+            defaultValue={profile?.username || ""}
+            placeholder="Enter username"
+            placeholderTextColor="#888"
           />
           <TouchableOpacity
             style={[
@@ -294,7 +344,11 @@ export default function ProfilePage() {
       </BottomSheet>
 
       {/* GENERAL SETTINGS MODAL */}
-      <BottomSheet visible={showGeneralSettings} onClose={() => setShowGeneralSettings(false)} title="App Preferences">
+      <BottomSheet
+        visible={showGeneralSettings}
+        onClose={() => setShowGeneralSettings(false)}
+        title="App Preferences"
+      >
         <View style={styles.modalContent}>
           <ToggleRow
             label="Metric Units (km/kg)"
@@ -314,21 +368,38 @@ export default function ProfilePage() {
             onValueChange={setIsDarkMode}
           />
           <View style={styles.divider} />
-          <ToggleRow label="Public (Leaderboard Visible)" value={isPublic} onValueChange={setIsPublic} />
-          <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#209F77", marginTop: 20 }]} onPress={() => setShowGeneralSettings(false)}>
+          <ToggleRow
+            label="Public (Leaderboard Visible)"
+            value={isPublic}
+            onValueChange={setIsPublic}
+          />
+          <TouchableOpacity
+            style={[
+              styles.actionBtn,
+              { backgroundColor: "#209F77", marginTop: 20 },
+            ]}
+            onPress={() => setShowGeneralSettings(false)}
+          >
             <Text style={styles.actionBtnText}>Save & Close</Text>
           </TouchableOpacity>
         </View>
       </BottomSheet>
 
       {/* ACCOUNT SETTINGS MODAL */}
-      <BottomSheet visible={showAccountSettings} onClose={() => setShowAccountSettings(false)} title="Account Security">
+      <BottomSheet
+        visible={showAccountSettings}
+        onClose={() => setShowAccountSettings(false)}
+        title="Account Security"
+      >
         <View style={styles.modalContent}>
           <ProfileRow
             label="Email"
             valueComponent={
-              <Text style={[styles.rowValue, { fontSize: 13, textAlign: 'right' }]}>
-                {profile?.email || "No email linked"}{"\n"}
+              <Text
+                style={[styles.rowValue, { fontSize: 13, textAlign: "right" }]}
+              >
+                {profile?.email || "No email linked"}
+                {"\n"}
                 <Text style={styles.successText}>[✅ Verified]</Text>
               </Text>
             }
@@ -338,11 +409,29 @@ export default function ProfilePage() {
           <View style={styles.divider} />
           <ActionRow label="Help & Support" />
           <View style={{ height: 20 }} />
-          <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#333" }]} activeOpacity={0.8}>
-            <Text style={[styles.actionBtnText, { color: "#FFF" }]}>Log Out</Text>
+          <TouchableOpacity
+            style={[styles.actionBtn, { backgroundColor: "#333" }]}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.actionBtnText, { color: "#FFF" }]}>
+              Log Out
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "transparent", borderWidth: 1, borderColor: "#FF4C4C", marginTop: 10 }]} activeOpacity={0.8}>
-            <Text style={[styles.actionBtnText, { color: "#FF4C4C" }]}>Delete Account</Text>
+          <TouchableOpacity
+            style={[
+              styles.actionBtn,
+              {
+                backgroundColor: "transparent",
+                borderWidth: 1,
+                borderColor: "#FF4C4C",
+                marginTop: 10,
+              },
+            ]}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.actionBtnText, { color: "#FF4C4C" }]}>
+              Delete Account
+            </Text>
           </TouchableOpacity>
         </View>
       </BottomSheet>
@@ -358,10 +447,33 @@ const styles = StyleSheet.create({
   scrollContainer: { paddingBottom: 40 },
 
   // --- HEADER & PROFILE ---
-  headerBanner: { height: 160, width: "100%", justifyContent: "center", alignItems: "center", paddingTop: 20 },
-  backButton: { position: "absolute", top: 20, left: 15, zIndex: 10, padding: 5 },
-  thoughtBubbleContainer: { alignItems: "center", marginBottom: 20, marginLeft: 40 },
-  speechBubble: { backgroundColor: "rgba(30, 30, 30, 0.8)", paddingVertical: 10, paddingHorizontal: 20, borderRadius: 20, borderWidth: 1, borderColor: "#333" },
+  headerBanner: {
+    height: 160,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 20,
+  },
+  backButton: {
+    position: "absolute",
+    top: 20,
+    left: 15,
+    zIndex: 10,
+    padding: 5,
+  },
+  thoughtBubbleContainer: {
+    alignItems: "center",
+    marginBottom: 20,
+    marginLeft: 40,
+  },
+  speechBubble: {
+    backgroundColor: "rgba(30, 30, 30, 0.8)",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#333",
+  },
   speechText: { color: "#e0e0e0", fontSize: 14 },
   bubbleDot1: {
     width: 12,
@@ -421,31 +533,93 @@ const styles = StyleSheet.create({
 
   // --- NEW SECTIONS (BADGES & COMMUNITY) ---
   sectionContainer: { marginTop: 25 },
-  sectionHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15 },
-  sectionTitle: { color: "#FFF", fontSize: 18, fontWeight: "bold", marginBottom: 15 },
+  sectionHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    color: "#FFF",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 15,
+  },
   seeAllText: { color: "#209F77", fontSize: 14, fontWeight: "600" },
-  
+
   badgesRow: { flexDirection: "row", justifyContent: "space-between" },
   badgeItem: { alignItems: "center", width: "30%" },
-  badgeIconBg: { width: 60, height: 60, borderRadius: 30, justifyContent: "center", alignItems: "center", marginBottom: 8 },
-  badgeText: { color: "#888", fontSize: 12, fontWeight: "600", textAlign: "center" },
+  badgeIconBg: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  badgeText: {
+    color: "#888",
+    fontSize: 12,
+    fontWeight: "600",
+    textAlign: "center",
+  },
 
   squadRow: { flexDirection: "row", alignItems: "center", gap: 15 },
-  squadAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: "#2a2a2a", justifyContent: "center", alignItems: "center" },
-  addFriendBtn: { width: 50, height: 50, borderRadius: 25, backgroundColor: "#209F77", justifyContent: "center", alignItems: "center", borderStyle: "dashed", borderWidth: 1, borderColor: "#FFF" },
+  squadAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#2a2a2a",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addFriendBtn: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#209F77",
+    justifyContent: "center",
+    alignItems: "center",
+    borderStyle: "dashed",
+    borderWidth: 1,
+    borderColor: "#FFF",
+  },
 
   // --- BOTTOM MENU ---
-  bottomMenuContainer: { marginTop: 30, backgroundColor: "#1e1e1e", borderRadius: 16, paddingHorizontal: 20, paddingVertical: 10 },
-  actionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 12 },
+  bottomMenuContainer: {
+    marginTop: 30,
+    backgroundColor: "#1e1e1e",
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  actionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+  },
   actionRowLeft: { flexDirection: "row", alignItems: "center" },
   divider: { height: 1, backgroundColor: "#2a2a2a", marginVertical: 4 },
-  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   rowLabel: { color: "#888", fontSize: 14, flex: 1 },
   rowValue: { color: "#FFF", fontSize: 14, fontWeight: "500" },
   successText: { color: "#52CC39", fontWeight: "600" },
 
   // --- BUTTONS ---
-  outlineBtn: { flexDirection: "row", borderWidth: 1, borderColor: "#209F77", paddingVertical: 14, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  outlineBtn: {
+    flexDirection: "row",
+    borderWidth: 1,
+    borderColor: "#209F77",
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   outlineBtnText: { color: "#209F77", fontSize: 16, fontWeight: "bold" },
   actionBtn: {
     flexDirection: "row",

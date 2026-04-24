@@ -27,3 +27,14 @@ export const updateFirebaseProgress = async (summary: { distance: number, avgSpe
     console.error("Firebase Sync Failed:", error);
   }
 };
+
+export const updateUserProfileData = async (uid: string, updates: Record<string, any>) => {
+  try {
+    const userRef = doc(db, "users", uid);
+    await updateDoc(userRef, updates);
+    console.log("[Firebase] Profile updated successfully.");
+  } catch (error) {
+    console.error("[Firebase] Profile update failed:", error);
+    throw error;
+  }
+};

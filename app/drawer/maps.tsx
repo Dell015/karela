@@ -13,7 +13,7 @@ import MapView, { Callout, Marker, Polyline } from "react-native-maps";
 // Hooks & Services
 import AniView from "@/components/AniModel";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
-import { useQuestEngine } from "@/hooks/useQuestEngine";
+import { useRouteBuilder } from "@/hooks/useRouteBuilder";
 import { getLatestGhostRun } from "@/services/database/sqlite/database";
 import { PermissionManager } from "@/services/PermissionsManager";
 import { calculateStreak } from "@/services/statsService";
@@ -63,7 +63,7 @@ export default function MapScreen() {
     moveCheckpoint,
     changeCameraHeading,
     updateRemainingPath,
-  } = useQuestEngine(mapRef);
+  } = useRouteBuilder(mapRef);
 
   // --- PHYSICAL DISTANCE TRACKER (Haversine Logic) ---
   useEffect(() => {
