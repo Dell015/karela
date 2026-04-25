@@ -326,7 +326,7 @@ Karela must never be the reason a user puts themselves in danger.
 | Debris Clearing | Clear fallen branches from a public sidewalk | Before/After GPS-tagged photo |
 | Information Scout | Report passability of a specific bridge/road | Photo + GPS (feeds LGU dashboard) |
 | Relief Hub Support | Help sort goods at an evacuation center | Node Master QR at arrival + departure |
-| Wellness Check | Visit 3 vulnerable neighbors to confirm safety | In-app tap-to-confirm from each neighbor |
+| Wellness Check | Visit 3 vulnerable neighbors to confirm safety | In-app picture with one of each neighbor |
 | Water Source Report | Report status of a community water source | GPS-tagged photo (feeds LGU water map) |
 
 ### Proof of Impact — Multi-Factor Verification
