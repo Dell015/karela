@@ -1131,10 +1131,25 @@ The decision to make Civic XP a fully independent progression track from physica
 
 ---
 
-## Creator
+## The Team
 
 **Randel Serafica**
 *Lead Developer & Architect*
+
+**Trishia Rirao**
+*UI Designer & Pitch Presentor*
+
+**Steven Sanidad**
+*UX Designer & Quality Assurance*
+
+**Qarisha Collado**
+*UI/UX Designer & Research*
+
+**Cyduanne Biraquit**
+*Database & 3D Modelling*
+
+**Sander Sedano**
+*Mentor*
 
 Built for the Philippine startup ecosystem as a thesis submission and personal portfolio project demonstrating full-stack mobile engineering with a real social impact thesis. Pilot site: Tuguegarao City, Cagayan Valley, Philippines.
 
