@@ -592,6 +592,11 @@ Karela must never be the reason a user puts themselves in danger. The Safety Tie
 - 2/3 split triggers a 4th Vanguard as tiebreaker.
 - Fraud Ring Detection — if 3 socially-connected Vanguards all approve the same submission, it is auto-flagged for admin review.
 - Vanguards with Review Accuracy Score below 70% are temporarily suspended.
+  
+**Anti-Fraud QR Specification:**
+- Dynamic Rotating QR — regenerates every 15 minutes with a time-bound, single-use token.
+- Geofence Confirmation — GPS must be within 50m of the Quest Node coordinate at moment of scan.
+- Single-Use Token — duplicate scans (screen sharing, photos) are rejected server-side.
 
 ---
 
@@ -641,11 +646,6 @@ SMEs pay a monthly subscription to become a gamified destination on the Karela m
 | Starter Node | ₱500/mo | Single map pin, 1 QR code, monthly aggregate foot traffic report |
 | Active Node | ₱1,500/mo | Highlighted pin with logo, weekly reports, 1 featured Double XP promo/month |
 | Anchor Node | ₱3,500/mo | Premium placement, real-time dashboard, unlimited promos, priority in Ani's mission suggestions |
-
-**Anti-Fraud QR Specification:**
-- Dynamic Rotating QR — regenerates every 15 minutes with a time-bound, single-use token.
-- Geofence Confirmation — GPS must be within 50m of the Quest Node coordinate at moment of scan.
-- Single-Use Token — duplicate scans (screen sharing, photos) are rejected server-side.
 
 **Stream 2 — The Scout Pass (Seasonal Subscription)**
 
