@@ -58,11 +58,6 @@ It is simultaneously built for the neighbor who helped clear drainage before a t
 
 At its core, Karela rests on a single conviction: **consistency beats intensity**. A user who walks 30 minutes every day for a year contributes more to their health and their community than one who runs a marathon once and disappears. The entire system — Ani's coaching, the streak multiplier, the Ghost System, the Bayanihan Protocol — is built to make that kind of sustained, ordinary, everyday movement feel like the heroic act it actually is.
 
-Karela is three things at once:
-- A **thesis project** that tests whether gamification produces measurable civic behavior change in the Filipino context
-- A **startup** competing in the Philippine startup ecosystem with a real, fundable business model
-- A **personal portfolio project** demonstrating full-stack mobile engineering with social impact at its core
-
 ---
 
 ## The Problem It Solves
