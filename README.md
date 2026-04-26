@@ -64,7 +64,7 @@ At its core, Karela rests on a single conviction: **consistency beats intensity*
 
 The Philippines has a specific and urgent health and civic challenge that no existing app is designed to address.
 
-**On the health side:** The country is experiencing a rapid rise in lifestyle-related disease — diabetes, hypertension, and cardiovascular illness — driven in large part by sedentary behavior. But the primary barrier to physical activity for most Filipinos is not laziness. It is *meaninglessness*. People walk significant distances every day — to jeepney stops, across campuses, between markets — and feel nothing for it because no system acknowledges it. The psychological infrastructure of motivation is absent: no feedback, no progress, no reward, no community.
+**On the health side:** The country is experiencing a rapid rise in lifestyle-related disease — diabetes, hypertension, and cardiovascular illness — driven in large part by sedentary behavior. But the primary barrier to physical activity for most Filipinos is not laziness. It is *meaninglessness*. People walk significant distances every day — to tricy stops, across campuses, between markets — and feel nothing for it because no system acknowledges it. The psychological infrastructure of motivation is absent: no feedback, no progress, no reward, no community.
 
 **On the civic side:** The Philippines is among the most disaster-affected countries on Earth. The same communities that walk past flooded drainage channels and damaged roads every day are the ones most harmed when those issues go unreported. The Bayanihan spirit — the Filipino cultural value of communal unity and mutual aid — exists as a value but has no digital expression. Volunteer activity is uncoordinated, unverified, and invisible to local governments that need data to respond effectively.
 
@@ -120,7 +120,7 @@ The honest answer is: Strava, Nike Run Club, and Pacer are excellent apps for th
 Research for Karela drew from observations and informal conversations with university students, daily commuters, and civic volunteers in Tuguegarao and online communities relevant to Filipino health and community life.
 
 **On daily movement going unrecognized:**
-- A consistent pattern emerged among non-athlete users: significant daily walking (campus traversal, jeepney commutes, market errands) that felt psychologically invisible because no system acknowledged it. Users who had tried fitness apps reported abandoning them because the apps made them feel behind rather than ahead — comparing their commute pace to a runner's training pace.
+- A consistent pattern emerged among non-athlete users: significant daily walking (campus traversal, tricy commutes, market errands) that felt psychologically invisible because no system acknowledged it. Users who had tried fitness apps reported abandoning them because the apps made them feel behind rather than ahead — comparing their commute pace to a runner's training pace.
 - Several students described wanting to be more active but finding generic app goals ("Run 5km today") disconnected from their actual life and schedule.
 
 **On the motivational failure of generic apps:**
@@ -729,7 +729,7 @@ Tuguegarao is chosen over Metro Manila for the launch because:
 - Direct outreach to Cagayan State University and University of Cagayan Valley student organizations (JPIA, engineering councils, civic orgs)
 - Tuguegarao Facebook community groups (Mga Taga-Tuguegarao, local buy-sell groups for community reach)
 - Local influencer activation — micro-influencers (1,000–10,000 followers) in Cagayan fitness, lifestyle, and civic content. Authentic, not paid-advertisement tone.
-- Physical presence: flyers at popular walking routes (Peniel Beach, CSU campus perimeter), QR codes at jeepney stops linking to the app
+- Physical presence: flyers at popular walking routes (Peniel Beach, CSU campus perimeter), QR codes at tricy stops linking to the app
 
 **Institutional acquisition:**
 - Barangay captain outreach — Tuguegarao has 68 barangays; 5–10 early adopter barangay captains as "Karela Barangay Champions" provides both users and civic credibility
