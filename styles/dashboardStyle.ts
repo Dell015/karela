@@ -1,4 +1,6 @@
-import { StyleSheet } from "react-native";
+import { Dimensions, StyleSheet } from "react-native";
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export const dashboard_ui = StyleSheet.create({
   dashboard: {
@@ -322,5 +324,118 @@ export const dashboard_ui = StyleSheet.create({
     alignItems: "center",
     borderWidth: 4,
     borderColor: "#0d0d0d", // Creates a gap between the button and the dock
+  },
+
+  // -- NEW: CHARACTER GRID TWEAKS --
+  characterRow_View: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+    zIndex: 50, // Ensures small boxes don't get covered by map
+  },
+  // Ensure Column doesn't hide overflowing animated content
+  characterColumn_View: {
+    width: "48%",
+    overflow: "visible",
+  },
+
+  // -- NEW: EXPANDED CONSOLE VISUALS --
+  consoleOverlay: {
+    position: "absolute",
+    bottom: 100, // Distance from the absolute bottom of the screen
+    width: "100%",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  consoleTitle: {
+    color: "#7CF205", // Your neon green
+    fontSize: 14,
+    fontWeight: "900",
+    letterSpacing: 2,
+    marginBottom: 20,
+    textTransform: "uppercase",
+  },
+  btnRow: {
+    flexDirection: "row",
+    gap: 15, // Gap between the 3 buttons
+  },
+  commandBtn: {
+    backgroundColor: "#000",
+    padding: 15,
+    borderRadius: 15,
+    alignItems: "center",
+    width: 90, // Explicit width for consistency
+    borderWidth: 1,
+    borderColor: "rgba(124, 242, 5, 0.5)",
+  },
+  commandBtnActive: {
+    backgroundColor: "#7CF205",
+    borderColor: "#7CF205",
+    shadowColor: "#7CF205",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  commandBtnText: {
+    color: "#7CF205",
+    fontSize: 10,
+    fontWeight: "900",
+    marginTop: 5,
+  },
+  commandBtnTextActive: {
+    color: "#000",
+  },
+  closeConsoleBtn: {
+    marginTop: 40,
+    padding: 10,
+  },
+  closeConsoleBtnText: {
+    color: "#fff",
+    opacity: 0.5,
+    fontSize: 12,
+    fontWeight: "bold",
+    letterSpacing: 2,
+  },
+  customizeBtn: {
+    backgroundColor: "rgba(124, 242, 5, 0.1)",
+    borderWidth: 1,
+    borderColor: "#7CF205",
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 6,
+    marginTop: 8,
+    gap: 5,
+  },
+  customizeBtnText: {
+    color: "#7CF205",
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+  mapRoundedBox: {
+    borderRadius: 15,
+    overflow: "hidden",
+    height: 200,
+    width: "100%",
+    backgroundColor: "#1a1a1a",
+  },
+  recenterBtn: {
+    position: "absolute",
+    left: 12,
+    top: 12, // Adjusted for better alignment
+    backgroundColor: "#7CF205",
+    padding: 8,
+    borderRadius: 12,
+    zIndex: 10,
+  },
+  loadingText: {
+    flex: 1,
+    textAlign: "center",
+    textAlignVertical: "center",
+    color: "#7CF205",
+    fontWeight: "600",
   },
 });

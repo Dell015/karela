@@ -42,7 +42,7 @@ export const DynamicDock = () => {
         {/* Guilds */}
         <TouchableOpacity
           style={dashboard_ui.islandButton}
-          onPress={() => router.push("/drawer/guilds")}
+          onPress={() => router.push("/homepage/guilds")}
         >
           <Ionicons
             name="shield-half"
@@ -76,7 +76,7 @@ export const DynamicDock = () => {
         {/* Shop */}
         <TouchableOpacity
           style={dashboard_ui.islandButton}
-          onPress={() => router.push("/drawer/shop")}
+          onPress={() => router.push("/homepage/shop")}
         >
           <Ionicons name="cart" size={22} color={getTabColor("shop")} />
           <Text
