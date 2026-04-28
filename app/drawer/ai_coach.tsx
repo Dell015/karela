@@ -34,7 +34,7 @@ interface Message {
 
 // 2. INITIALIZE CLIENT
 // Note: In production, use process.env.EXPO_PUBLIC_GEMINI_API_KEY
-const API_KEY = "AIzaSyD_9TTZcU8rTk5i7JgU24DHDy8U3Q3Hmek";
+const API_KEY = "AIzaSyBw457lQQAfN9BC2bOOcuiTOU0wXt8VIm4";
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 export default function AiCoach() {
@@ -251,9 +251,9 @@ export default function AiCoach() {
             </View>
           ) : (
             <View style={styles.chatContainer}>
-              {messages.map((msg) => (
+              {messages.map((msg, index) => (
                 <View
-                  key={msg.id}
+                  key={`${msg.id}-${index}`}
                   style={[
                     styles.bubbleWrapper,
                     msg.sender === "user"

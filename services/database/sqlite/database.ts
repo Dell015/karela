@@ -80,3 +80,45 @@ export const getLatestGhostRun = () => {
     db.getFirstSync("SELECT * FROM ghost_runs ORDER BY id DESC LIMIT 1") || null
   );
 };
+export const setLocalMissions = (missions: any[]) => {
+  try {
+    // 1. Clear existing missions for the new day
+    db.runSync("DELETE FROM daily_missions");
+
+    // 2. Prepare the insert statement
+    const statement = db.prepareSync(`
+      INSERT INTO daily_missions (
+        id, title, description, goal_distance, goal_speed, xp_reward, date
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    try {
+      missions.forEach((m) => {
+        statement.executeSync([
+          m.id,
+          m.title || "Daily Mission",
+          m.mission || m.description || "", // Handle both system and Ani names
+          m.goalDistance || m.goal_distance || 0,
+          m.goalSpeed || m.goal_speed || 0,
+          m.rewardXP || m.xp_reward || m.xp || 0,
+          Date.now(),
+        ]);
+      });
+    } finally {
+      statement.finalizeSync();
+    }
+
+    console.log(`✅ SQLITE: Successfully saved ${missions.length} missions.`);
+  } catch (err) {
+    console.error("❌ SQLITE: Failed to save missions:", err);
+  }
+};
+
+export const getLocalMissions = () => {
+  try {
+    return db.getAllSync("SELECT * FROM daily_missions") || [];
+  } catch (err) {
+    console.error("Failed to fetch missions:", err);
+    return [];
+  }
+};

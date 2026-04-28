@@ -2,9 +2,7 @@ import { useAuth, UserProfile } from "@/context/AuthContext";
 import { generateAniQuest } from "@/services/database/firebase/aiService";
 import { db } from "@/services/database/firebase/config";
 import {
-  FontAwesome5,
-  Ionicons,
-  MaterialCommunityIcons,
+  Ionicons
 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -16,7 +14,7 @@ import {
   onSnapshot,
   query,
   updateDoc,
-  where,
+  where
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
@@ -73,13 +71,14 @@ export default function QuestsScreen() {
       await addDoc(missionsRef, {
         title: q.title,
         description: q.description,
-        targetValue: q.goalDistance / 1000,
-        currentValue: 0,
+        targetValue: q.goalDistance / 1000, // Storing as KM
+        currentValue: 0, // CRITICAL: Initialize at 0
         xpReward: q.rewardXP,
         status: "active",
         category: "solo",
         frequency: freq,
         createdAt: todayKey,
+        type: "distance",
       });
       await updateDoc(userRef, { [`stats.last_${freq}_reset`]: resetKey });
     };
@@ -87,52 +86,27 @@ export default function QuestsScreen() {
     try {
       setIsGenerating(true);
 
-      // --- 1. DAILY ---
+      // 1. DAILY
       if (last_daily_reset !== todayKey) {
         console.log("Generating Daily...");
         const q = await generateAniQuest(profile as UserProfile);
-        if (q) {
-          await saveMission(q, "daily", todayKey);
-          return; // STOP! Don't do Weekly yet.
-        }
+        if (q) await saveMission(q, "daily", todayKey);
       }
 
-      // --- 2. WEEKLY ---
+      // 2. WEEKLY
       if (last_weekly_reset !== weekKey) {
         console.log("Generating Weekly...");
         const q = await generateAniQuest(profile as UserProfile);
-        if (q) {
-          await saveMission(q, "weekly", weekKey);
-          return; // STOP! Don't do Monthly yet.
-        }
-      }
-
-      // --- 3. MONTHLY ---
-      if (last_monthly_reset !== monthKey) {
-        console.log("Generating Monthly...");
-        const q = await generateAniQuest(profile as UserProfile);
-        if (q) {
-          await saveMission(q, "monthly", monthKey);
-        }
+        if (q) await saveMission(q, "weekly", weekKey);
       }
     } catch (err: any) {
-      if (err.message.includes("429")) {
-        console.warn("Gemini is cooling down. Mission generation paused.");
-      } else {
-        console.error("Gen Error:", err);
-      }
+      console.error("Gen Error:", err);
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // --- EFFECTS ---
-  useEffect(() => {
-    if (profile?.uid) {
-      checkAndGenerateQuests();
-    }
-  }, [profile?.uid]);
-
+  // --- REAL-TIME MISSION LISTENER ---
   useEffect(() => {
     if (!user?.uid) return;
     setLoading(true);
@@ -145,65 +119,61 @@ export default function QuestsScreen() {
       where("frequency", "==", activeFreq),
     );
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const missionData = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setMissions(missionData);
-        setLoading(false);
-      },
-      (err) => {
-        console.error("Firestore Error:", err);
-        setLoading(false);
-      },
-    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const missionData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setMissions(missionData);
+      setLoading(false);
+    });
 
     return () => unsubscribe();
   }, [user?.uid, activeCategory, activeFreq]);
 
-  // --- ACTIONS ---
+  // --- TRIGGER GENERATION ON LOAD ---
+  useEffect(() => {
+    if (profile?.uid) {
+      checkAndGenerateQuests();
+    }
+  }, [profile?.uid]);
+
+  // --- CLAIM LOGIC ---
   const claimReward = async (mission: any) => {
     if (!user?.uid) return;
     try {
       const userDocRef = doc(db, "users", user.uid);
       const missionRef = doc(db, "users", user.uid, "missions", mission.id);
 
-      // 1. Close Mission
       await updateDoc(missionRef, {
         status: "claimed",
         claimedAt: new Date().toISOString(),
       });
 
-      // 2. Add Rewards
       const userSnap = await getDoc(userDocRef);
       const userData = userSnap.data();
       const currentXP = Number(userData?.stats?.xp || 0);
-      const currentMissions = Number(
+      const currentCount = Number(
         userData?.stats?.total_missions_completed || 0,
       );
 
       await updateDoc(userDocRef, {
         "stats.xp": currentXP + Number(mission.xpReward),
-        "stats.total_missions_completed": currentMissions + 1,
+        "stats.total_missions_completed": currentCount + 1,
       });
 
-      // 3. Trigger Level Check
-      await gainXP(0);
+      await gainXP(0); // Trigger level check
       Alert.alert(
         "COMMAND CENTER",
         `Mission Complete. +${mission.xpReward} XP secured.`,
       );
     } catch (err) {
-      Alert.alert("ERROR", "Failed to sync reward with headquarters.");
+      Alert.alert("ERROR", "Sync failed.");
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={28} color="#FFF" />
@@ -212,14 +182,10 @@ export default function QuestsScreen() {
           <Text style={styles.title}>Quest Log</Text>
           <Text style={styles.subtitle}>@{profile?.username || "strider"}</Text>
         </View>
-        <TouchableOpacity style={styles.squadBtn}>
-          <FontAwesome5 name="users" size={18} color="#7CF205" />
-        </TouchableOpacity>
       </View>
 
-      {/* CATEGORY TOGGLE */}
       <View style={styles.categoryContainer}>
-        {(["solo", "team"] as const).map((cat) => (
+        {["solo", "team"].map((cat: any) => (
           <TouchableOpacity
             key={cat}
             onPress={() => setActiveCategory(cat)}
@@ -234,15 +200,14 @@ export default function QuestsScreen() {
                 activeCategory === cat && styles.activeCategoryText,
               ]}
             >
-              {cat === "solo" ? "SOLO OPS" : "TEAM OPS"}
+              {cat.toUpperCase()} OPS
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* FREQUENCY CHIPS */}
       <View style={styles.freqContainer}>
-        {["daily", "weekly", "monthly", "limited"].map((freq: any) => (
+        {["daily", "weekly", "monthly"].map((freq: any) => (
           <TouchableOpacity
             key={freq}
             onPress={() => setActiveFreq(freq)}
@@ -263,79 +228,67 @@ export default function QuestsScreen() {
         ))}
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.list}>
         {loading || isGenerating ? (
-          <View style={{ marginTop: 100, alignItems: "center" }}>
-            <ActivityIndicator color="#7CF205" />
-            {isGenerating && (
-              <Text style={styles.generatingText}>
-                Ani is calculating new missions...
-              </Text>
-            )}
-          </View>
+          <ActivityIndicator color="#7CF205" style={{ marginTop: 50 }} />
         ) : missions.length === 0 ? (
-          <View style={styles.emptyState}>
-            <MaterialCommunityIcons name="radar" size={60} color="#222" />
-            <Text style={styles.emptyText}>
-              NO {activeFreq.toUpperCase()} MISSIONS DETECTED
-            </Text>
-            <Text style={styles.emptySub}>Check back later for new intel.</Text>
-          </View>
+          <Text style={styles.emptyText}>NO MISSIONS DETECTED</Text>
         ) : (
-          missions.map((item) => (
-            <View key={item.id} style={styles.card}>
-              <View style={styles.cardHeader}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.missionTitle}>{item.title}</Text>
-                  <Text style={styles.missionDesc}>{item.description}</Text>
-                </View>
-                <View style={styles.xpBadge}>
-                  <Text style={styles.xpText}>+{item.xpReward} XP</Text>
-                </View>
-              </View>
+          missions.map((item) => {
+            const progress = (item.currentValue || 0) / item.targetValue;
+            const isComplete = progress >= 1;
 
-              <View style={styles.progressContainer}>
-                <View style={styles.track}>
-                  <View
-                    style={[
-                      styles.fill,
-                      {
-                        width: `${Math.min((item.currentValue / item.targetValue) * 100, 100)}%`,
-                      },
-                    ]}
-                  />
+            return (
+              <View key={item.id} style={styles.card}>
+                <View style={styles.cardHeader}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.missionTitle}>{item.title}</Text>
+                    <Text style={styles.missionDesc}>{item.description}</Text>
+                  </View>
+                  <View style={styles.xpBadge}>
+                    <Text style={styles.xpText}>+{item.xpReward} XP</Text>
+                  </View>
                 </View>
-                <Text style={styles.progressLabel}>
-                  {item.currentValue.toFixed(1)} / {item.targetValue}{" "}
-                  {item.type === "distance" ? "KM" : "Units"}
-                </Text>
-              </View>
 
-              {item.currentValue >= item.targetValue ? (
-                <TouchableOpacity onPress={() => claimReward(item)}>
-                  <LinearGradient
-                    colors={["#7CF205", "#209F77"]}
-                    style={styles.claimBtn}
-                  >
-                    <Text style={styles.btnText}>CLAIM REWARD</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              ) : (
-                <View style={styles.lockedBtn}>
-                  <Text style={styles.lockedText}>MISSION ACTIVE</Text>
+                <View style={styles.progressContainer}>
+                  <View style={styles.track}>
+                    <View
+                      style={[
+                        styles.fill,
+                        { width: `${Math.min(progress * 100, 100)}%` },
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.progressLabel}>
+                    {(item.currentValue || 0).toFixed(1)} / {item.targetValue}{" "}
+                    KM
+                  </Text>
                 </View>
-              )}
-            </View>
-          ))
+
+                {isComplete ? (
+                  <TouchableOpacity onPress={() => claimReward(item)}>
+                    <LinearGradient
+                      colors={["#7CF205", "#209F77"]}
+                      style={styles.claimBtn}
+                    >
+                      <Text style={styles.btnText}>CLAIM REWARD</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                ) : (
+                  <View style={styles.lockedBtn}>
+                    <Text style={styles.lockedText}>MISSION ACTIVE</Text>
+                  </View>
+                )}
+              </View>
+            );
+          })
         )}
       </ScrollView>
     </View>
   );
 }
 
+// ... styles remain the same as your previous version ...
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#000", paddingTop: 60 },
   header: {
@@ -346,25 +299,8 @@ const styles = StyleSheet.create({
   },
   backBtn: { width: 40 },
   headerText: { flex: 1 },
-  title: {
-    color: "#FFF",
-    fontSize: 24,
-    fontWeight: "900",
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    color: "#7CF205",
-    fontSize: 12,
-    fontWeight: "bold",
-    opacity: 0.8,
-  },
-  squadBtn: {
-    backgroundColor: "#111",
-    padding: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#222",
-  },
+  title: { color: "#FFF", fontSize: 24, fontWeight: "900" },
+  subtitle: { color: "#7CF205", fontSize: 12, fontWeight: "bold" },
   categoryContainer: {
     flexDirection: "row",
     marginHorizontal: 25,
@@ -392,14 +328,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 25,
     marginBottom: 25,
   },
-  freqChip: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderBottomWidth: 2,
-    borderBottomColor: "transparent",
-  },
-  activeFreqChip: { borderBottomColor: "#7CF205" },
+  freqChip: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8 },
+  activeFreqChip: { borderBottomWidth: 2, borderBottomColor: "#7CF205" },
   freqChipText: { color: "#444", fontSize: 10, fontWeight: "900" },
   activeFreqText: { color: "#FFF" },
   list: { paddingHorizontal: 25, paddingBottom: 40 },
@@ -411,11 +341,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#222",
   },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 15,
-  },
+  cardHeader: { flexDirection: "row", marginBottom: 15 },
   missionTitle: { color: "#FFF", fontSize: 18, fontWeight: "bold" },
   missionDesc: { color: "#888", fontSize: 13, marginTop: 4 },
   xpBadge: {
@@ -423,7 +349,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
-    alignSelf: "flex-start",
   },
   xpText: { color: "#7CF205", fontWeight: "bold", fontSize: 11 },
   progressContainer: { marginBottom: 20 },
@@ -437,7 +362,7 @@ const styles = StyleSheet.create({
   fill: { height: "100%", backgroundColor: "#7CF205" },
   progressLabel: { color: "#555", fontSize: 10, fontWeight: "bold" },
   claimBtn: { paddingVertical: 14, borderRadius: 14, alignItems: "center" },
-  btnText: { color: "#000", fontWeight: "900", letterSpacing: 1 },
+  btnText: { color: "#000", fontWeight: "900" },
   lockedBtn: {
     paddingVertical: 14,
     borderRadius: 14,
@@ -445,13 +370,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#1A1A1A",
   },
   lockedText: { color: "#333", fontWeight: "bold", fontSize: 12 },
-  emptyState: { alignItems: "center", marginTop: 60 },
-  emptyText: { color: "#333", fontWeight: "900", fontSize: 14, marginTop: 15 },
-  emptySub: { color: "#222", fontSize: 12, marginTop: 5 },
-  generatingText: {
-    color: "#7CF205",
-    marginTop: 15,
-    fontSize: 12,
-    fontWeight: "bold",
+  emptyText: {
+    color: "#333",
+    textAlign: "center",
+    marginTop: 100,
+    fontWeight: "900",
   },
 });
