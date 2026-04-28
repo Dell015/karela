@@ -24,6 +24,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 // Custom Hooks & Styles
 import AniView from "@/components/AniModel";
+import { DynamicDock } from "@/components/DynamicDock";
 import { useAuth } from "@/context/AuthContext";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
 import { generateAniQuest } from "@/services/database/firebase/aiService";
@@ -32,7 +33,6 @@ import { dashboard_ui } from "@/styles/dashboardStyle";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { theme } from "@/styles/theme";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
-import { DynamicDock } from "@/components/DynamicDock";
 import {
   collection,
   limit,
@@ -548,7 +548,7 @@ export default function Dashboard() {
 
       {/* 3. THE DOCK - Placed OUTSIDE the ScrollView but INSIDE the root View 
             This ensures it floats on top of the content. */}
-        {!isKeyboardVisible && <DynamicDock />}
+      {!isKeyboardVisible && <DynamicDock />}
     </SafeAreaView>
   );
 }
