@@ -32,6 +32,7 @@ import { dashboard_ui } from "@/styles/dashboardStyle";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { theme } from "@/styles/theme";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
+import { DynamicDock } from "@/components/DynamicDock";
 import {
   collection,
   limit,
@@ -404,7 +405,7 @@ export default function Dashboard() {
                 </View>
 
                 <View style={dashboard_ui.characterColumn}>
-                  <Text style={dashboard_ui.characterTitle}>Sander</Text>
+                  <Text style={dashboard_ui.characterTitle}>Randel</Text>
                   <View style={dashboard_ui.characterBox}>
                     {/* You can put a different model or placeholder here later */}
                   </View>
@@ -545,29 +546,9 @@ export default function Dashboard() {
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
 
-      {!isKeyboardVisible && (
-        <View style={dashboard_ui.floatingButtonContainer}>
-          <TouchableOpacity
-            style={dashboard_ui.floatingIslandCircle}
-            activeOpacity={0.8}
-            onPress={() => router.push("/drawer/maps")}
-          >
-            <LinearGradient
-              colors={["#7CF205", "#209F77"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={dashboard_ui.circularGradient}
-            >
-              <Ionicons
-                name="play"
-                size={40}
-                color="#fff"
-                style={{ marginLeft: 4 }}
-              />
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      )}
+      {/* 3. THE DOCK - Placed OUTSIDE the ScrollView but INSIDE the root View 
+            This ensures it floats on top of the content. */}
+        {!isKeyboardVisible && <DynamicDock />}
     </SafeAreaView>
   );
 }
