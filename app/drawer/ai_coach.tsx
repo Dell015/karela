@@ -34,7 +34,7 @@ interface Message {
 
 // 2. INITIALIZE CLIENT
 // Note: In production, use process.env.EXPO_PUBLIC_GEMINI_API_KEY
-const API_KEY = "AIzaSyBw457lQQAfN9BC2bOOcuiTOU0wXt8VIm4";
+const API_KEY = "AIzaSyAVhBnD5xxs0YhMQ-TXc9X0nWl6dJ87LUA";
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 export default function AiCoach() {
