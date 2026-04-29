@@ -6,6 +6,7 @@ import { router, useNavigation } from "expo-router";
 import { addDoc, doc, updateDoc } from "firebase/firestore";
 import { useEffect, useRef, useState } from "react";
 import {
+  Dimensions,
   Image,
   Keyboard,
   KeyboardAvoidingView,
@@ -24,6 +25,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 // Custom Hooks & Styles
 import AniView from "@/components/AniModel";
+import { DynamicDock } from "@/components/DynamicDock";
 import { useAuth } from "@/context/AuthContext";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
 import { generateAniQuest } from "@/services/database/firebase/aiService";
@@ -39,6 +41,9 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import { useSharedValue } from "react-native-reanimated";
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function Dashboard() {
   const { profile, loading } = useAuth();
@@ -60,6 +65,7 @@ export default function Dashboard() {
   const [currentAniAction, setCurrentAniAction] = useState(
     "Female_rig|female_IDLE",
   );
+  const aniExpandProgress = useSharedValue(0);
   const [activeMissions, setActiveMissions] = useState<any[]>([]);
 
   const isFocused = useIsFocused();
@@ -181,7 +187,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     const triggerDailyReset = async () => {
-      if (!profile?.uid || !profile?.stats) return;
+      // 1. Guard: Don't run if still loading or data is missing
+      if (loading || !profile?.uid || !profile?.stats) return;
 
       const today = new Date().toISOString().split("T")[0];
       const lastDaily = profile.stats.last_daily_reset;
@@ -190,32 +197,39 @@ export default function Dashboard() {
         console.log(
           "Dashboard: New day detected. Initializing Quest Engine...",
         );
-        const newQuest = await generateAniQuest(profile);
 
-        if (newQuest) {
-          await addDoc(collection(db, "users", profile.uid, "missions"), {
-            title: newQuest.title,
-            description: newQuest.description,
-            targetValue: newQuest.goalDistance / 1000,
-            currentValue: 0,
-            xpReward: newQuest.rewardXP,
-            status: "active",
-            category: "solo",
-            frequency: "daily",
-            createdAt: today,
-          });
+        try {
+          const newQuest = await generateAniQuest(profile);
 
-          await updateDoc(doc(db, "users", profile.uid), {
-            "stats.last_daily_reset": today,
-          });
+          if (newQuest) {
+            // 2. Wrap Firestore calls to ensure both succeed or neither "counts" as a reset
+            await addDoc(collection(db, "users", profile.uid, "missions"), {
+              title: newQuest.title,
+              description: newQuest.description,
+              targetValue: newQuest.goalDistance / 1000,
+              currentValue: 0,
+              xpReward: newQuest.rewardXP,
+              status: "active",
+              category: "solo",
+              frequency: "daily",
+              createdAt: today,
+            });
+
+            await updateDoc(doc(db, "users", profile.uid), {
+              "stats.last_daily_reset": today,
+            });
+          }
+        } catch (error) {
+          // This catches the [GoogleGenerativeAI Error] so your app stays functional
+          console.error("Quest Generation Error:", error);
         }
       }
     };
 
-    if (isFocused && profile) {
+    if (isFocused && !loading) {
       triggerDailyReset();
     }
-  }, [isFocused, profile?.uid]);
+  }, [isFocused, profile, loading]); // Added profile and loading for better sync
 
   return (
     <SafeAreaView style={[theme.container, { backgroundColor: "#0d0d0d" }]}>
@@ -243,7 +257,7 @@ export default function Dashboard() {
                     onPress={() => router.push("/drawer/profile")}
                   >
                     <Image
-                      source={require("@/assets/images/sir-sander.jpg")}
+                      source={require("@/assets/images/profile_example.jpg")}
                       style={dashboard_ui.Image}
                     />
                   </TouchableOpacity>
@@ -393,24 +407,45 @@ export default function Dashboard() {
               </View>
 
               {/* Character Avatars */}
-              {/* Character Avatars */}
+              {/* CHARACTER GRID */}
               <View style={dashboard_ui.characterRow}>
+                {/* ANI COLUMN */}
                 <View style={dashboard_ui.characterColumn}>
                   <Text style={dashboard_ui.characterTitle}>Ani</Text>
-                  <View style={dashboard_ui.characterBox}>
-                    {/* THE 3D MODEL LIVES HERE */}
+                  <TouchableOpacity
+                    style={dashboard_ui.characterBox}
+                    onPress={() =>
+                      setCurrentAniAction("Female_rig|female_WAVE")
+                    }
+                  >
                     <AniView action={currentAniAction} />
-                  </View>
+                  </TouchableOpacity>
+                  {/* CUSTOMIZE BUTTON */}
+                  <TouchableOpacity
+                    style={dashboard_ui.customizeBtn}
+                    onPress={() => router.push("/homepage/CustomizeAni")}
+                  >
+                    <MaterialCommunityIcons
+                      name="palette-swatch"
+                      size={14}
+                      color="#7CF205"
+                    />
+                    <Text style={dashboard_ui.customizeBtnText}>CUSTOMIZE</Text>
+                  </TouchableOpacity>
                 </View>
 
+                {/* RANDEL COLUMN */}
                 <View style={dashboard_ui.characterColumn}>
-                  <Text style={dashboard_ui.characterTitle}>Sander</Text>
-                  <View style={dashboard_ui.characterBox}>
-                    {/* You can put a different model or placeholder here later */}
+                  <Text style={dashboard_ui.characterTitle}>Randel</Text>
+                  <View style={[dashboard_ui.characterBox, { opacity: 0.5 }]}>
+                    <MaterialCommunityIcons
+                      name="lock"
+                      size={32}
+                      color="#444"
+                    />
                   </View>
                 </View>
               </View>
-
               {/* Chat with Ani */}
               <Text style={dashboard_ui.sectionTitle}>Chat with Ani</Text>
               <TouchableOpacity onPress={() => router.push("/drawer/ai_coach")}>
@@ -423,7 +458,7 @@ export default function Dashboard() {
                     <Text style={dashboard_ui.chatText}>
                       My sensors see {weather.desc} in {weather.city}
                       {/* Wrap weather.temp in Number() to fix the comparison error */}
-                      {Number(weather.temp) > 30
+                      {weather.temp !== "--" && Number(weather.temp) > 30
                         ? " — It's a bit hot out there, stay hydrated!"
                         : " — Conditions are optimal for a run!"}
                     </Text>
@@ -545,29 +580,9 @@ export default function Dashboard() {
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
 
-      {!isKeyboardVisible && (
-        <View style={dashboard_ui.floatingButtonContainer}>
-          <TouchableOpacity
-            style={dashboard_ui.floatingIslandCircle}
-            activeOpacity={0.8}
-            onPress={() => router.push("/drawer/maps")}
-          >
-            <LinearGradient
-              colors={["#7CF205", "#209F77"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={dashboard_ui.circularGradient}
-            >
-              <Ionicons
-                name="play"
-                size={40}
-                color="#fff"
-                style={{ marginLeft: 4 }}
-              />
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      )}
+      {/* 3. THE DOCK - Placed OUTSIDE the ScrollView but INSIDE the root View 
+            This ensures it floats on top of the content. */}
+      {!isKeyboardVisible && <DynamicDock />}
     </SafeAreaView>
   );
 }

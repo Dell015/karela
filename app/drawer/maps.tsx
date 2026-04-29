@@ -11,7 +11,6 @@ import {
 import MapView, { Callout, Marker, Polyline } from "react-native-maps";
 
 // Hooks & Services
-import AniView from "@/components/AniModel";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
 import { useRouteBuilder } from "@/hooks/useRouteBuilder";
 import { getLatestGhostRun } from "@/services/database/sqlite/database";
@@ -28,6 +27,8 @@ export default function MapScreen() {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [physicalMeters, setPhysicalMeters] = useState(0);
   const [is3DMode, setIs3DMode] = useState(false);
+  const lastInteractionTime = useRef<number>(0);
+  const SNAP_BACK_DELAY = 15000; // 15 seconds in milliseconds
 
   // --- GHOST STATE ---
   const [isGhostEnabled, setIsGhostEnabled] = useState(false);
@@ -133,12 +134,19 @@ export default function MapScreen() {
   // --- FIXED GHOST LOGIC ---
   const toggleGhost = () => {
     if (!isGhostEnabled) {
-      const savedRow: any = getLatestGhostRun(); // Get the row from SQLite
+      const savedRow: any = getLatestGhostRun();
 
       if (savedRow && savedRow.path_data) {
         try {
-          // Parse the JSON string into an array of coordinates
-          const parsedPath = JSON.parse(savedRow.path_data);
+          const rawPath = JSON.parse(savedRow.path_data);
+
+          // --- ADD DATA NORMALIZATION HERE ---
+          const parsedPath = rawPath.map((p: any) => ({
+            latitude: Number(p.latitude),
+            longitude: Number(p.longitude),
+            timestamp: Number(p.timestamp), // Ensure this is a numeric timestamp
+          }));
+
           setActiveGhostData(parsedPath);
           setIsGhostEnabled(true);
         } catch (e) {
@@ -183,9 +191,19 @@ export default function MapScreen() {
   };
 
   // --- CAMERA AUTO-FOLLOW ---
+  // --- CAMERA AUTO-FOLLOW (FIXED) ---
   useEffect(() => {
     if (isRacing && currentLocation && mapRef.current) {
       if (isProcessing.current) return;
+
+      // --- NEW LOGIC: Check the delay ---
+      const timeSinceLastTouch = Date.now() - lastInteractionTime.current;
+      if (timeSinceLastTouch < SNAP_BACK_DELAY) {
+        // User touched the map recently, skip the auto-center
+        return;
+      }
+      // ----------------------------------
+
       isProcessing.current = true;
 
       mapRef.current.animateCamera(
@@ -254,9 +272,14 @@ export default function MapScreen() {
         style={styles.map}
         provider="google"
         //googleRenderer="LATEST"
-        onRegionChangeComplete={handleRegionChangeComplete}
-        showsUserLocation={!is3DMode}
+        onRegionChangeComplete={(region, isGesture) => {
+          // If isGesture is true, the user moved the map manually
+          if (isGesture?.isGesture) {
+            lastInteractionTime.current = Date.now();
+          }
+        }}
         customMapStyle={ghostMapStyle}
+        showsUserLocation={false}
         showsMyLocationButton={false}
         initialRegion={{
           latitude: currentLocation.latitude,
@@ -275,6 +298,7 @@ export default function MapScreen() {
             strokeWidth={4}
             lineCap="round"
             lineJoin="round"
+            miterLimit={10}
             zIndex={500}
             lineDashPattern={[5, 10]}
             geodesic={true}
@@ -316,6 +340,7 @@ export default function MapScreen() {
             strokeWidth={6}
             lineCap="round"
             lineJoin="round"
+            miterLimit={10}
             zIndex={700} // High Z-Index to stay above user path
             geodesic={true}
           />
@@ -345,6 +370,32 @@ export default function MapScreen() {
             />
           );
         })}
+
+        {/* 2. PLACE YOUR CUSTOM DOT MARKER HERE (Inside MapView) */}
+        {currentLocation && (
+          <Marker
+            coordinate={currentLocation}
+            anchor={{ x: 0.5, y: 0.5 }}
+            flat
+            zIndex={999}
+          >
+            <View
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: 10,
+                backgroundColor: "#7CF205",
+                borderWidth: 3,
+                borderColor: "white",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.8,
+                shadowRadius: 2,
+                elevation: 5,
+              }}
+            />
+          </Marker>
+        )}
 
         {/* FLAGS (Checkpoints) */}
         {checkpoints.map((point, index) => {
@@ -395,36 +446,30 @@ export default function MapScreen() {
       </MapView>
 
       {/* 3D CHARACTER OVERLAY (Fix for iOS & Performance) */}
-      {(isRacing || is3DMode) && currentLocation && (
-        <View
-          pointerEvents="none" // Allows you to still touch/pan the map "through" the character
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            width: 150,
-            height: 150,
-            // Centers the 150x150 view perfectly in the middle of the screen
-            transform: [
-              { translateX: -75 },
-              { translateY: -75 },
-              { rotate: `${compassHeading}deg` }, // Optional: keeps her facing the right way
-            ],
-            zIndex: 999,
-          }}
+      {currentLocation && (
+        <Marker
+          coordinate={currentLocation}
+          anchor={{ x: 0.5, y: 0.5 }}
+          flat
+          zIndex={999}
         >
-          <AniView
-            action={
-              isRacing
-                ? currentSpeed > 8
-                  ? "Female_rig|female_RUN"
-                  : "female_WALK"
-                : "female_IDLE"
-            }
+          <View
+            style={{
+              width: 20,
+              height: 20,
+              borderRadius: 10,
+              backgroundColor: "#7CF205",
+              borderWidth: 3,
+              borderColor: "white",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.8,
+              shadowRadius: 2,
+              elevation: 5,
+            }}
           />
-        </View>
+        </Marker>
       )}
-
       {/* HUD */}
       {isRacing && (
         <View style={styles.hudOverlay}>

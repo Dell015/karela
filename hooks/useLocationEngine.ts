@@ -1,18 +1,15 @@
+import { PermissionManager } from "@/services/PermissionsManager";
+import { GhostEngine } from "@/services/tracker/GhostEngine";
 import * as Location from "expo-location";
 import { Magnetometer } from "expo-sensors";
 import { useEffect, useRef, useState } from "react";
 import { useMotionShield } from "./useMotionShield";
-import { GhostEngine } from "@/services/tracker/GhostEngine";
-import { PermissionManager } from "@/services/PermissionsManager";
 
-/**
- * Helper: Haversine formula to calculate distance between two points in meters.
- */
 const getDistance = (
   p1: { latitude: number; longitude: number },
   p2: { latitude: number; longitude: number },
 ) => {
-  const R = 6371000; 
+  const R = 6371000;
   const dLat = ((p2.latitude - p1.latitude) * Math.PI) / 180;
   const dLon = ((p2.longitude - p1.longitude) * Math.PI) / 180;
   const a =
@@ -26,11 +23,9 @@ const getDistance = (
 };
 
 export const useLocationEngine = (savedGhostData: any[]) => {
-  // 1. Hook initializations
   const { isPhysicallyMoving, stepCount } = useMotionShield();
 
-  // 2. State definitions
-  const [path, setPath] = useState<{ latitude: number; longitude: number; isVehicle: boolean }[]>([]);
+  const [path, setPath] = useState<{ latitude: number; longitude: number; isVehicle: boolean; timestamp: number }[]>([]);
   const [ghostPosition, setGhostPosition] = useState<any>(null);
   const [isRacing, setIsRacing] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<any>(null);
@@ -38,64 +33,54 @@ export const useLocationEngine = (savedGhostData: any[]) => {
   const [compassHeading, setCompassHeading] = useState(0);
   const [totalDistance, setTotalDistance] = useState(0);
 
-  // 3. Refs (Must be declared before any useEffect uses them)
   const raceStartTimeRef = useRef<number | null>(null);
   const lastHeadingRef = useRef(0);
   const isRacingRef = useRef(isRacing);
 
-  // ANTI-CHEAT CONSTANTS
-  const VELOCITY_CAP = 35; 
-  const JITTER_THRESHOLD = 2; 
-  const TELEPORT_THRESHOLD = 100; 
+  const VELOCITY_CAP = 35;
+  const JITTER_THRESHOLD = 3; 
+  const TELEPORT_THRESHOLD = 100;
+  const SMOOTHING_WEIGHT = 0.75; 
 
-  // --- 1. RACE STATE SYNC & RESET ---
   useEffect(() => {
     isRacingRef.current = isRacing;
     if (isRacing) {
       raceStartTimeRef.current = Date.now();
       setTotalDistance(0);
-      setPath([]); // Clears the trail for the new run
+      setPath([]);
     } else {
       raceStartTimeRef.current = null;
       setGhostPosition(null);
     }
   }, [isRacing]);
 
-  // --- 2. GHOST SYNC ENGINE ---
+  // --- GHOST ENGINE (FIXED SYNC) ---
   useEffect(() => {
     let ghostTimer: any;
 
     if (isRacing && savedGhostData && savedGhostData.length > 0) {
-      // Get the timestamp of the first point in the saved data
-      const ghostStartTime = savedGhostData[0].timestamp;
-
       ghostTimer = setInterval(() => {
         if (!raceStartTimeRef.current) return;
 
-        // Calculate how many seconds have passed since YOU pressed Start
-        const userElapsedSeconds = (Date.now() - raceStartTimeRef.current) / 1000;
-        
-        // Calculate the "Target Time" within the ghost's timeline
-        const targetTimestamp = ghostStartTime + userElapsedSeconds;
+        // How many MS have passed since YOU hit start
+        const userElapsedMs = Date.now() - raceStartTimeRef.current;
 
-        const pos = GhostEngine.getGhostPosition(savedGhostData, targetTimestamp);
-        
+        // Get ghost position relative to your progress
+        const pos = GhostEngine.getGhostPosition(savedGhostData, userElapsedMs);
+
         if (pos) {
           setGhostPosition({
             latitude: pos.latitude,
-            longitude: pos.longitude
+            longitude: pos.longitude,
           });
-        } else {
-          // If the ghost has finished its recorded path
-          setGhostPosition(savedGhostData[savedGhostData.length - 1]);
         }
-      }, 100); 
+      }, 100);
     }
 
     return () => clearInterval(ghostTimer);
   }, [isRacing, savedGhostData]);
 
-  // --- 3. CORE GPS TRACKING ENGINE ---
+  // --- LOCATION TRACKING ---
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;
 
@@ -103,23 +88,18 @@ export const useLocationEngine = (savedGhostData: any[]) => {
       const isAllowed = await PermissionManager.requestLocation();
       if (!isAllowed) return;
 
-      const lastKnown = await Location.getLastKnownPositionAsync({});
-      if (lastKnown) setCurrentLocation(lastKnown.coords);
-
       subscription = await Location.watchPositionAsync(
         {
           accuracy: isRacing ? Location.Accuracy.High : Location.Accuracy.Balanced,
-          distanceInterval: isRacing ? 2 : 10,
-          timeInterval: isRacing ? 1000 : 5000,
+          distanceInterval: 4, 
+          timeInterval: 1000,
         },
         (location) => {
           const { latitude, longitude, speed, accuracy } = location.coords;
-          
-          // Filter poor signals
-          if (accuracy && accuracy > 40) return;
+          if (accuracy && accuracy > 35) return;
 
-          const newPoint = { latitude, longitude };
-          setCurrentLocation(newPoint);
+          const rawPoint = { latitude, longitude, timestamp: Date.now() };
+          setCurrentLocation(rawPoint);
 
           if (isRacingRef.current) {
             const speedKmH = speed && speed > 0 ? Math.round(speed * 3.6) : 0;
@@ -127,70 +107,50 @@ export const useLocationEngine = (savedGhostData: any[]) => {
             const isVehicle = speedKmH > VELOCITY_CAP;
 
             setPath((current) => {
-              const pointWithStatus = { ...newPoint, isVehicle };
-              if (current.length === 0) return [pointWithStatus];
+              if (current.length === 0) return [{ ...rawPoint, isVehicle }];
 
               const lastPoint = current[current.length - 1];
-              const distanceMoved = getDistance(lastPoint, newPoint);
 
-              // Filter jitter and "teleporting"
-              if (distanceMoved < JITTER_THRESHOLD || distanceMoved > TELEPORT_THRESHOLD) {
-                return current;
-              }
+              // SMOOTHING
+              const smoothedPoint = {
+                latitude: lastPoint.latitude * (1 - SMOOTHING_WEIGHT) + rawPoint.latitude * SMOOTHING_WEIGHT,
+                longitude: lastPoint.longitude * (1 - SMOOTHING_WEIGHT) + rawPoint.longitude * SMOOTHING_WEIGHT,
+                isVehicle,
+                timestamp: Date.now()
+              };
 
-              // Only accumulate distance if moving and not in a vehicle
+              const distanceMoved = getDistance(lastPoint, smoothedPoint);
+
+              if (distanceMoved < JITTER_THRESHOLD || distanceMoved > TELEPORT_THRESHOLD) return current;
+
               if (!isVehicle && isPhysicallyMoving) {
                 setTotalDistance((prev) => prev + distanceMoved);
               }
 
-              return [...current, pointWithStatus];
+              return [...current, smoothedPoint];
             });
           }
-        },
+        }
       );
     };
 
     initLocation();
-    return () => {
-      if (subscription) subscription.remove();
-    };
+    return () => subscription?.remove();
   }, [isRacing, isPhysicallyMoving]);
 
-  // --- 4. COMPASS & CAMERA ENGINE ---
+  // --- COMPASS ---
   useEffect(() => {
-    if (!isRacing) {
-      setCompassHeading(0);
-      return;
-    }
-    let magnetSubscription: any = null;
-    Magnetometer.setUpdateInterval(200);
-    magnetSubscription = Magnetometer.addListener((data) => {
+    if (!isRacing) return;
+    const sub = Magnetometer.addListener((data) => {
       let { x, y } = data;
       let angle = Math.atan2(-x, y) * (180 / Math.PI);
       if (angle < 0) angle += 360;
-
-      // Smoothing filter for the camera rotation
-      const alpha = 0.1;
-      const smoothedAngle = lastHeadingRef.current + (angle - lastHeadingRef.current) * alpha;
-      lastHeadingRef.current = smoothedAngle;
-      setCompassHeading(smoothedAngle);
+      const smoothed = lastHeadingRef.current + (angle - lastHeadingRef.current) * 0.1;
+      lastHeadingRef.current = smoothed;
+      setCompassHeading(smoothed);
     });
-    return () => {
-      if (magnetSubscription) magnetSubscription.remove();
-    };
+    return () => sub.remove();
   }, [isRacing]);
 
-  return {
-    path,
-    totalDistance,
-    ghostPosition,
-    isRacing,
-    setIsRacing,
-    currentLocation,
-    currentSpeed,
-    compassHeading,
-    isPhysicallyMoving,
-    stepCount,
-    setPath,
-  };
+  return { path, totalDistance, ghostPosition, isRacing, setIsRacing, currentLocation, currentSpeed, compassHeading, setPath };
 };
