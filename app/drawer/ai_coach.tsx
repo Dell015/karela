@@ -31,10 +31,7 @@ interface Message {
   timestamp: Date;
   isAnalysis?: boolean;
 }
-
-// 2. INITIALIZE CLIENT
-// Note: In production, use process.env.EXPO_PUBLIC_GEMINI_API_KEY
-const API_KEY = "AIzaSyD_9TTZcU8rTk5i7JgU24DHDy8U3Q3Hmek";
+const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || "";
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 export default function AiCoach() {
@@ -101,6 +98,11 @@ export default function AiCoach() {
   const handleSend = async (textOverride?: string) => {
     const textToSend = textOverride || inputText;
     if (!textToSend.trim() || isTyping) return;
+
+    if (!API_KEY) {
+      Alert.alert("System Error", "Kinetic link failed: API Key missing.");
+      return;
+    }
 
     const userMsg: Message = {
       id: Date.now().toString(),
