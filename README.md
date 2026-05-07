@@ -1,6 +1,8 @@
 # Karela 🏃‍♂️🇵🇭
 ### *A Better You, One Quest at a Time.*
 
+> *"An adaptive fitness platform where personal endurance modeling powers real-world civic intelligence."*
+
 ![Status](https://img.shields.io/badge/Status-Active_Development-brightgreen)
 ![Version](https://img.shields.io/badge/Version-3.0-blue)
 ![Stack](https://img.shields.io/badge/Stack-React_Native_%7C_Expo_%7C_Firebase_%7C_SQLite-orange)
@@ -8,47 +10,78 @@
 ![License](https://img.shields.io/badge/License-All_Rights_Reserved-red)
 ![Pilot](https://img.shields.io/badge/Pilot_City-Tuguegarao%2C_Cagayan-green)
 
+Karela is a **hybrid fitness and civic intelligence platform** that combines **adaptive running algorithms** with **crowdsourced urban sensing** to simultaneously improve personal exercise adherence and community maintenance responsiveness. It turns the movement you already do — your morning commute, your evening walk, your neighborhood cleanup — into something that counts. It tracks your physical activity, adapts to your body and habits through a personalized AI coach named **Ani**, rewards your consistency through an RPG progression system, and connects your daily effort to real civic impact in your community.
+
+This is not a gamified jogging app. Karela's thesis is:
+
+> **"Using predictive physical modeling and decentralized crowdsourced verification to improve exercise adherence and urban maintenance reporting."**
+
 ---
 
 ## Table of Contents
 
-1. [What Is Karela?](#what-is-karela)
-2. [The Problem It Solves](#the-problem-it-solves)
-3. [Who Is Karela For?](#who-is-karela-for)
-4. [Why Not Just Use Strava?](#why-not-just-use-strava)
-5. [User Research & Validation](#user-research--validation)
-6. [How Karela Works](#how-karela-works)
-7. [Tech Stack](#tech-stack)
-8. [Architecture](#architecture)
-9. [Ani — Your AI Coach](#ani--your-ai-coach)
-10. [RPG Mechanics](#rpg-mechanics)
-11. [Sensor Fusion & Anti-Cheat](#sensor-fusion--anti-cheat)
-12. [Onboarding & The First 7 Days](#onboarding--the-first-7-days)
-13. [Social Infrastructure](#social-infrastructure)
-14. [The Bayanihan Protocol](#the-bayanihan-protocol)
-15. [Data Privacy & RA 10173 Compliance](#data-privacy--ra-10173-compliance)
-16. [Business Model](#business-model)
+1. [What Is Karela?](#1-what-is-karela)
+2. [The Problem It Solves](#2-the-problem-it-solves)
+3. [Who Is Karela For?](#3-who-is-karela-for)
+4. [Why Not Just Use Strava?](#4-why-not-just-use-strava)
+5. [User Research & Validation](#5-user-research--validation)
+6. [Core Philosophy](#6-core-philosophy)
+7. [How Karela Works](#7-how-karela-works)
+8. [System Architecture](#8-system-architecture)
+9. [Tech Stack](#9-tech-stack)
+10. [The Running Engine — Adaptive Ghost System](#10-the-running-engine--adaptive-ghost-system)
+    - [Spatial Interpolation](#101-spatial-interpolation)
+    - [Effort Decay Function](#102-effort-decay-function)
+    - [Reinforcement-Style Ghost Calibration](#103-reinforcement-style-ghost-calibration)
+11. [Performance Aggregation Logic](#11-performance-aggregation-logic)
+12. [The Civic Engine — Distributed Urban Sensing](#12-the-civic-engine--distributed-urban-sensing)
+    - [Civic Reporting System](#121-civic-reporting-system)
+    - [Spatial Consensus Algorithm](#122-spatial-consensus-algorithm)
+    - [Temporal Decay Logic](#123-temporal-decay-logic)
+13. [User Roles](#13-user-roles)
+14. [The Resonance System — Fusion Layer](#14-the-resonance-system--fusion-layer)
+15. [Route-Based Civic Integration](#15-route-based-civic-integration)
+16. [Ani — Your AI Coach](#16-ani--your-ai-coach)
+17. [RPG Mechanics](#17-rpg-mechanics)
+18. [Sensor Fusion & Anti-Cheat](#18-sensor-fusion--anti-cheat)
+19. [Onboarding & The First 7 Days](#19-onboarding--the-first-7-days)
+20. [Social Infrastructure](#20-social-infrastructure)
+21. [The Bayanihan Protocol](#21-the-bayanihan-protocol)
+22. [Reward Architecture](#22-reward-architecture)
+23. [Data Privacy & RA 10173 Compliance](#23-data-privacy--ra-10173-compliance)
+24. [Business Model](#24-business-model)
     - [Monetization Streams](#monetization-streams)
     - [Unit Economics](#unit-economics)
     - [Philippine Market Context](#philippine-market-context)
-17. [Go-To-Market Strategy](#go-to-market-strategy)
-18. [Competitive Moat & Defensibility](#competitive-moat--defensibility)
-19. [Notification Architecture](#notification-architecture)
-20. [Accessibility](#accessibility)
-21. [Database Schema](#database-schema)
-22. [Civic Contribution Score](#civic-contribution-score)
-23. [KPIs & Success Metrics](#kpis--success-metrics)
-24. [MVP Definition & Success Criteria](#mvp-definition--success-criteria)
-25. [Ethics & Responsible Design](#ethics--responsible-design)
-26. [Known Open Questions](#known-open-questions)
-27. [Roadmap](#roadmap)
-28. [Creator](#creator)
+25. [Go-To-Market Strategy](#25-go-to-market-strategy)
+26. [Competitive Moat & Defensibility](#26-competitive-moat--defensibility)
+27. [Notification Architecture](#27-notification-architecture)
+28. [Accessibility](#28-accessibility)
+29. [Database Schema](#29-database-schema)
+30. [Civic Contribution Score](#30-civic-contribution-score)
+31. [KPIs & Success Metrics](#31-kpis--success-metrics)
+32. [MVP Definition & Success Criteria](#32-mvp-definition--success-criteria)
+33. [Thesis-Worthy Components](#33-thesis-worthy-components)
+34. [Ethics & Responsible Design](#34-ethics--responsible-design)
+35. [Known Open Questions](#35-known-open-questions)
+36. [Long-Term Vision](#36-long-term-vision)
+37. [Core Technical Domains](#37-core-technical-domains)
+38. [Roadmap](#38-roadmap)
+39. [Glossary](#39-glossary)
+40. [The Team](#40-the-team)
 
 ---
 
-## What Is Karela?
+## 1. What Is Karela?
 
-Karela is a **lifestyle-optimization platform** that turns the movement you already do — your morning commute, your evening walk, your neighborhood cleanup — into something that counts. It tracks your physical activity, adapts to your body and habits through a personalized AI coach named **Ani**, rewards your consistency through an RPG progression system, and connects your daily effort to real civic impact in your community.
+Karela operates on two parallel tracks that are deeply interconnected:
+
+| Track | Purpose |
+|---|---|
+| **Fitness Intelligence** | Adaptive ghost pacing system that models and predicts individual fatigue to improve exercise adherence |
+| **Civic Intelligence** | Crowdsourced spatial verification network that collects, validates, and decays urban maintenance reports |
+
+These two tracks are fused through what Karela calls the **Resonance System** — a layer that uses a user's current physical state to dynamically modulate their civic contribution load. The result is a platform where personal endurance modeling directly powers real-world community responsiveness.
 
 Most fitness apps are built for athletes. They celebrate the person who ran a sub-4-minute kilometer. They ignore the student who walked forty-five minutes across campus every day for a year.
 
@@ -58,9 +91,11 @@ It is simultaneously built for the neighbor who helped clear drainage before a t
 
 At its core, Karela rests on a single conviction: **consistency beats intensity**. A user who walks 30 minutes every day for a year contributes more to their health and their community than one who runs a marathon once and disappears. The entire system — Ani's coaching, the streak multiplier, the Ghost System, the Bayanihan Protocol — is built to make that kind of sustained, ordinary, everyday movement feel like the heroic act it actually is.
 
+**Target Users:** Recreational and habitual runners, urban walkers, community volunteers, and local government units (LGUs) seeking data-driven maintenance prioritization.
+
 ---
 
-## The Problem It Solves
+## 2. The Problem It Solves
 
 The Philippines has a specific and urgent health and civic challenge that no existing app is designed to address.
 
@@ -74,7 +109,7 @@ The Philippines has a specific and urgent health and civic challenge that no exi
 
 ---
 
-## Who Is Karela For?
+## 3. Who Is Karela For?
 
 Karela is not for elite athletes. It is for everyday people whose movement is already happening but going unrecognized.
 
@@ -90,7 +125,7 @@ Karela is not for elite athletes. It is for everyday people whose movement is al
 
 ---
 
-## Why Not Just Use Strava?
+## 4. Why Not Just Use Strava?
 
 The honest answer is: Strava, Nike Run Club, and Pacer are excellent apps for the users they were built for. Karela is built for a different user entirely.
 
@@ -113,7 +148,7 @@ The honest answer is: Strava, Nike Run Club, and Pacer are excellent apps for th
 
 ---
 
-## User Research & Validation
+## 5. User Research & Validation
 
 ### Pain Point Observations
 
@@ -150,7 +185,17 @@ The core thesis hypothesis, to be tested in the Phase 1 pilot:
 
 ---
 
-## How Karela Works
+## 6. Core Philosophy
+
+Most fitness apps optimize for peak performance. Karela optimizes for **sustained participation**.
+
+Most civic apps ask users to stop what they are doing. Karela **integrates contribution into motion**.
+
+The key insight driving both systems is the same: **behavior is not static**. A runner's performance fluctuates. A city's infrastructure degrades and recovers. Static systems — static personal bests, static civic maps — fail to model these realities. Karela is built around dynamic, decay-aware, and adaptive representations of both human effort and urban condition.
+
+---
+
+## 7. How Karela Works
 
 The simplest summary: **Karela turns the movement you already do into a game you can win, a community you belong to, and a city you help build.**
 
@@ -193,30 +238,38 @@ Every session feeds back into the next. Ani uses the completed session data to c
 
 ---
 
-## Tech Stack
-
-| Layer | Technology | Version | Purpose |
-|---|---|---|---|
-| Frontend & Dev | React Native + Expo | SDK 51+ | Unified cross-platform codebase with hot-reloading and sensor testing |
-| Local Database | expo-sqlite | v14+ | Offline mission caching, run telemetry, high-frequency data logging |
-| Cloud Backend | Firebase Firestore | v10+ (modular) | Real-time source of truth for user profiles, RPG stats, Guild sync |
-| Authentication | Firebase Auth | OAuth2 + JWT | Secure Google/Email login; persistent local session management |
-| Media Storage | Firebase Storage | Rules v2 | Encrypted repository for Proof of Impact photos |
-| Maps & Geo | react-native-maps | v1.10+ | Apple Maps (iOS) and Google Maps (Android) for battery-efficient rendering |
-| Weather API | OpenWeatherMap | v3.0 One Call | Environmental context for Ani's mission engine and safety tier system |
-| AI Coaching | Gemini Flash | gemini-1.5-flash | Lightweight LLM for personalized Ani coaching, quest generation, and behavioral adaptation |
-| State Management | Zustand | v4+ | Lightweight global state for session and RPG data |
-| Navigation | React Navigation | v6+ | Stack + Tab navigation with deep linking |
-| Push Notifications | Expo Notifications | SDK 51+ | Streak alerts, Squad events, Bayanihan Protocol alerts |
-
-**Why Gemini Flash for Ani?**
-Ani's coaching is a high-frequency operation — she interacts with the user at session start, mid-run, and session end, and generates personalized quest suggestions daily. This requires a model that is fast, cost-efficient, and capable of conversational coherence across multiple interactions. Gemini Flash's low latency and cost-per-token make it the right choice for this use case. For Ani's deeper behavioral analysis (weekly recap generation, personalized fitness plan revision), a higher-capability model call is triggered at lower frequency and higher token budget.
-
----
-
-## Architecture
+## 8. System Architecture
 
 Karela uses a **Local-First, Cloud-Sync** architecture — a deliberate design for the Philippine market where mobile data is expensive, 4G coverage is inconsistent in peri-urban areas, and users frequently operate on prepaid data promos.
+
+### High-Level Platform Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        KARELA PLATFORM                          │
+│                                                                 │
+│  ┌─────────────────────────┐   ┌─────────────────────────────┐ │
+│  │    RUNNING ENGINE       │   │      CIVIC ENGINE           │ │
+│  │                         │   │                             │ │
+│  │  - GPS Spatial Interp.  │   │  - Report Intake (photo,    │ │
+│  │  - Effort Decay Model   │   │    GPS, timestamp)          │ │
+│  │  - Ghost Calibration    │   │  - Spatial Clustering       │ │
+│  │  - Rolling Aggregation  │   │  - Temporal Decay           │ │
+│  │  - Pacing Feedback      │   │  - Consensus Verification   │ │
+│  └───────────┬─────────────┘   └──────────────┬──────────────┘ │
+│              │                                 │                │
+│              └──────────────┬──────────────────┘                │
+│                             │                                   │
+│              ┌──────────────▼──────────────┐                    │
+│              │      RESONANCE SYSTEM       │                    │
+│              │  (Fusion / Adaptive Layer)  │                    │
+│              │                             │                    │
+│              │  Stamina State → Civic Load │                    │
+│              │  Route → Civic Node Overlay │                    │
+│              │  Fatigue → Task Suppression │                    │
+│              └─────────────────────────────┘                   │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ### The Dual-Engine Stack
 
@@ -260,7 +313,333 @@ When a user completes a run or mission offline, SQLite logs every event with a h
 
 ---
 
-## Ani — Your AI Coach
+## 9. Tech Stack
+
+| Layer | Technology | Version | Purpose |
+|---|---|---|---|
+| Frontend & Dev | React Native + Expo | SDK 51+ | Unified cross-platform codebase with hot-reloading and sensor testing |
+| Local Database | expo-sqlite | v14+ | Offline mission caching, run telemetry, high-frequency data logging |
+| Cloud Backend | Firebase Firestore | v10+ (modular) | Real-time source of truth for user profiles, RPG stats, Guild sync |
+| Authentication | Firebase Auth | OAuth2 + JWT | Secure Google/Email login; persistent local session management |
+| Media Storage | Firebase Storage | Rules v2 | Encrypted repository for Proof of Impact photos |
+| Maps & Geo | react-native-maps | v1.10+ | Apple Maps (iOS) and Google Maps (Android) for battery-efficient rendering |
+| Weather API | OpenWeatherMap | v3.0 One Call | Environmental context for Ani's mission engine and safety tier system |
+| AI Coaching | Gemini Flash | gemini-1.5-flash | Lightweight LLM for personalized Ani coaching, quest generation, and behavioral adaptation |
+| State Management | Zustand | v4+ | Lightweight global state for session and RPG data |
+| Navigation | React Navigation | v6+ | Stack + Tab navigation with deep linking |
+| Push Notifications | Expo Notifications | SDK 51+ | Streak alerts, Squad events, Bayanihan Protocol alerts |
+
+**Why Gemini Flash for Ani?**
+Ani's coaching is a high-frequency operation — she interacts with the user at session start, mid-run, and session end, and generates personalized quest suggestions daily. This requires a model that is fast, cost-efficient, and capable of conversational coherence across multiple interactions. Gemini Flash's low latency and cost-per-token make it the right choice for this use case. For Ani's deeper behavioral analysis (weekly recap generation, personalized fitness plan revision), a higher-capability model call is triggered at lower frequency and higher token budget.
+
+---
+
+## 10. The Running Engine — Adaptive Ghost System
+
+### Problem Statement
+
+Existing fitness apps use **static Personal Best (PB) Ghosts** — a replay of the user's best run. This design has a critical flaw: peak runs represent exceptional conditions, not sustainable effort. Over time, users race against a version of themselves they can rarely match, leading to discouragement and dropout.
+
+Karela replaces the static PB Ghost with a **Dynamic Effort Model** — a ghost that represents the user's sustainable threshold, not their ceiling.
+
+---
+
+### 10.1 Spatial Interpolation
+
+**Purpose:** Clean and normalize raw GPS data before any modeling occurs.
+
+GPS signals in urban environments are frequently unreliable. Signal bounce off buildings (urban canyon effect), indoor transitions, and tunnels create positional noise that, if uncorrected, breaks ghost pacing logic.
+
+**What it does:**
+- Smooths positional data using interpolation across GPS waypoints
+- Fills gaps in route continuity caused by signal loss
+- Prevents ghost jumps or teleports that break pacing reference
+- Ensures distance-per-segment calculations are spatially accurate
+
+**Output:** A clean, continuous spatial path that downstream models can trust.
+
+---
+
+### 10.2 Effort Decay Function
+
+**Purpose:** Model individual-specific fatigue patterns from historical run data.
+
+This is one of Karela's core algorithmic innovations. Rather than treating fatigue as a universal constant, Karela builds a **per-user Effort Decay Curve** from their historical runs.
+
+**What the model captures:**
+- The point in time or distance where the user's pace consistently drops
+- How quickly pace deteriorates after the initial fatigue onset
+- Whether decay is terrain-triggered (e.g., hills, straight flat roads), time-triggered, or effort-triggered
+- Recovery patterns between effort bursts
+
+**Conceptual form of the decay function:**
+
+```
+P(t) = P_baseline × e^(−λ × max(0, t − t_fatigue))
+```
+
+Where:
+- `P(t)` = predicted pace at time `t`
+- `P_baseline` = sustainable baseline pace derived from rolling history
+- `λ` = individual decay rate (learned from historical runs)
+- `t_fatigue` = onset time of fatigue (learned per terrain/conditions)
+
+**Example:**
+A user consistently slows 15 minutes into straight, flat road runs. Karela identifies this as a pacing inefficiency (overexertion in the first segment) rather than a fitness ceiling. The ghost is then calibrated to run slightly slower in the first 15 minutes to extend the user's strong-pace window.
+
+---
+
+### 10.3 Reinforcement-Style Ghost Calibration
+
+**Purpose:** Continuously update the ghost based on each new run's outcome.
+
+The ghost is not fixed between runs. After every session, Karela evaluates:
+
+- Did the user beat or miss pace checkpoints?
+- At what point did decay begin compared to the model prediction?
+- What was the user's weekly recovery state?
+- Did recent runs indicate fatigue accumulation or performance gains?
+
+The ghost adjusts accordingly — nudging slightly forward if the user consistently beats it, or pulling back if they are consistently failing checkpoints.
+
+**Ghost Goal:**
+> Stay slightly ahead of the user's historical **failure point**, not their peak performance.
+
+This is the key behavioral distinction. A good adaptive ghost provides a challenge the user can realistically overcome with sustained effort — not an aspirational ceiling that demoralizes.
+
+---
+
+## 11. Performance Aggregation Logic
+
+**Purpose:** Build a stable, anomaly-resistant pacing profile for the ghost.
+
+Single-run personal bests are brittle. One exceptional day inflates the ghost; one bad day (injury, weather, sleep deprivation) corrupts the model.
+
+**Karela's aggregation approach:**
+
+1. Collect raw data from all runs over a rolling **4-week window**
+2. Group by week and compute **weekly average pacing profiles**
+3. Average those weekly profiles into a **composite adaptive PB**
+4. Use this composite as the ghost's baseline pacing reference
+
+**Benefits:**
+- Resistant to single-run anomalies
+- Naturally reflects recovery and fatigue cycles
+- Adapts to gradual performance improvement without overreacting
+- Prevents overtraining by not chasing anomalous peaks
+
+**Planned enhancements:**
+- **Weighted recency scoring:** More recent weeks carry higher weight in the composite
+- **Terrain classification:** Separate profiles per terrain type (flat, hilly, trail)
+- **Weather influence factor:** Adjust expectations for heat, humidity, rain
+- **Fatigue confidence score:** A meta-score indicating how reliable the current ghost baseline is
+- **Recovery-state detection:** Identify post-rest performance bumps vs. anomaly runs
+
+---
+
+## 12. The Civic Engine — Distributed Urban Sensing
+
+### Problem Statement
+
+Initial designs for Karela's civic side asked runners to stop and clean or report issues during runs. This was immediately identified as a fatal UX flaw — runners do not want to interrupt their flow state for maintenance tasks.
+
+**Pivot:** The user becomes a **distributed sensor node**, not a janitor.
+
+Karela's civic engine treats the collective movement of runners across a city as a **human sensor array** capable of continuously monitoring and verifying urban conditions without burdening any individual user.
+
+---
+
+### 12.1 Civic Reporting System
+
+**User actions during a run (intentionally low-friction):**
+- Quick photo capture
+- Single-tap issue categorization (trash, flooding, drain blockage, damaged infrastructure, unsafe area)
+- Passive GPS + timestamp + device orientation metadata attached automatically
+
+**Report payload:**
+- GPS coordinates (lat/lng)
+- Timestamp
+- Device orientation (for image context)
+- Image evidence
+- Issue category tag
+- User role context (Scout / Vanguard)
+
+Reports are intentionally minimal to capture. The heavy verification work happens in the backend spatial algorithm, not on the user.
+
+---
+
+### 12.2 Spatial Consensus Algorithm
+
+**Purpose:** Eliminate fake, duplicate, and spam reports without requiring manual moderation.
+
+**Problem:** If civic reports earn XP, users will game the system with false reports.
+
+**Solution:** Multi-user spatial verification using a **DBSCAN-inspired clustering algorithm**.
+
+**How it works:**
+
+1. User A submits a report at coordinate `(lat, lng)` → creates a **Pending Civic Node**
+2. The system defines a **spatial radius threshold** around that coordinate
+3. If Users B and C independently report the same category of issue within the radius threshold and within a **temporal window**, the node is promoted to a **Verified Civic Quest**
+4. Nodes that receive no corroboration within the temporal window expire automatically
+
+**Key parameters:**
+- `ε` (epsilon): spatial radius for cluster membership (e.g., 15–30 meters)
+- `minPts`: minimum number of independent reports to form a verified cluster (e.g., 3 reports)
+- `T_window`: temporal window within which corroborating reports must arrive
+
+**What this prevents:**
+- Fake report farming (single user cannot self-verify)
+- Duplicate XP exploitation (same report from one user counts once)
+- Isolated false positives (single outlier never reaches verification threshold)
+
+---
+
+### 12.3 Temporal Decay Logic
+
+**Purpose:** Keep the civic map accurate and time-relevant.
+
+Urban conditions are not static. A flooded drain is fixed within days. A pile of trash is cleared within a week. A verified civic node that persists for months without reconfirmation is likely stale.
+
+**How it works:**
+
+Every verified civic node is assigned a **confidence score** that decays over time:
+
+```
+C(t) = C_0 × e^(−μ × (t − t_verified))
+```
+
+Where:
+- `C(t)` = confidence score at time `t`
+- `C_0` = initial confidence at verification (1.0)
+- `μ` = decay rate (tunable per issue category — structural damage decays slower than trash)
+- `t_verified` = timestamp of initial verification
+
+**Reconfirmation resets the decay:** If a runner passes and taps "Still There," the confidence score resets to `C_0`.
+
+**Node lifecycle:**
+
+```
+Pending → Verified → Aging → Expired
+                 ↑         |
+                 └─────────┘ (reconfirmed)
+```
+
+**Benefits:**
+- Prevents stale data from polluting the civic map
+- Creates passive incentive for runners to reconfirm existing nodes
+- Enables LGUs to trust the freshness of received data
+- Scales cleanly to dense urban environments
+
+---
+
+## 13. User Roles
+
+Karela does not assign civic tasks uniformly. The Resonance System (see Section 14) uses fatigue state to determine which role mode is contextually appropriate.
+
+### Scout (Passive Contributor)
+
+Intended for high-intensity runners in active workout mode.
+
+**Civic actions:**
+- One-tap issue flag
+- Quick photo snapshot
+- "Still There / Cleared" reconfirmation tap while passing a node
+
+The Scout's contribution is volume and coverage. They act as sensor nodes across large distances without stopping.
+
+### Vanguard (Active Contributor)
+
+Intended for walkers, cooldown phases, or low-intensity sessions.
+
+**Civic actions:**
+- Detailed issue verification
+- Actual minor cleanup (litter pickup)
+- Extended photo documentation
+- Community participation tasks (multi-step quests)
+
+The system assigns Vanguard tasks contextually — a user transitioning from a hard run into a cooldown walk may be prompted with a nearby Vanguard task since their physical load has dropped.
+
+**Becoming a Vanguard:**
+
+| Requirement | Specification |
+|---|---|
+| Minimum Level | Level 15 (~90–120 days of consistent use) |
+| Civic XP Threshold | 500 Civic XP from personal Bayanihan completions |
+| Clean Record | Zero Black Marks in past 90 days |
+| Application | Automatic eligibility notification — voluntary acceptance, no form required |
+| Regional Cap | Max 1 Vanguard per 50 active users in a zone |
+
+**Anti-Collusion Governance:**
+- Blind assignment — Vanguards never review submissions from their own Guild or Squad.
+- Geographic separation — submissions assigned to Vanguards in a different barangay wherever possible.
+- 2/3 split triggers a 4th Vanguard as tiebreaker.
+- Fraud Ring Detection — if 3 socially-connected Vanguards all approve the same submission, it is auto-flagged for admin review.
+- Vanguards with Review Accuracy Score below 70% are temporarily suspended.
+
+**Anti-Fraud QR Specification:**
+- Dynamic Rotating QR — regenerates every 15 minutes with a time-bound, single-use token.
+- Geofence Confirmation — GPS must be within 50m of the Quest Node coordinate at moment of scan.
+- Single-Use Token — duplicate scans (screen sharing, photos) are rejected server-side.
+
+---
+
+## 14. The Resonance System — Fusion Layer
+
+The Resonance System is **Karela's defining innovation**. It is the layer that makes Karela more than the sum of its two engines.
+
+**Core concept:** The running algorithm and the civic algorithm are not independent. They share a bidirectional influence relationship mediated by the user's current physical state.
+
+**Fusion logic:**
+
+| User State | Resonance Response |
+|---|---|
+| High stamina, early run | May route ghost near civic verification zones |
+| Mid-run, stable pace | Passive reconfirmation prompts ("Still there?") |
+| High fatigue detected | Civic interaction requests suppressed entirely |
+| Cooldown phase | Vanguard task suggestions surface nearby |
+| Post-run recovery walk | Full Vanguard mode enabled |
+
+**Why this matters:**
+
+Civic contribution becomes **adaptive** rather than forced. The system never asks a runner at their physical limit to stop and photograph a drain. It reserves that request for the moment when the user is already slowing down and has cognitive and physical bandwidth to spare.
+
+This fusion is what elevates Karela from a "fitness app with a report button" to a genuine behavioral optimization system.
+
+**Fusion logic model:**
+
+```
+civic_load(t) = f(stamina_score(t), route_proximity(t), role(t))
+
+where:
+  stamina_score(t) = 1 − normalized_fatigue_index(t)
+  role(t)          = Scout if stamina_score > threshold, else Vanguard
+  civic_load(t)    = 0 if stamina_score < suppression_threshold
+```
+
+**Research claim:** A stamina-aware civic interaction system produces higher civic participation rates without reducing exercise performance metrics, compared to a system that presents civic prompts uniformly regardless of user physical state.
+
+---
+
+## 15. Route-Based Civic Integration
+
+The ghost route is not purely fitness-optimized. When the Resonance System determines that the user has sufficient capacity, the ghost path can be subtly adjusted to:
+
+- Pass through **active civic nodes** for passive reconfirmation
+- Route through **verified issue clusters** for coordinated community verification
+- Suggest **cooldown detours** that overlap with Vanguard tasks
+
+**Examples in practice:**
+
+- Running past a node → "Still there?" tap appears; user can respond without stopping
+- Ghost enters cooldown phase near a high-confidence node → Vanguard cleanup prompt appears
+- Route options presented at junction → one option flagged as passing through a civic priority zone
+
+**Design constraint:** Civic routing must never materially harm the fitness experience. Ghost deviations for civic purposes should be within acceptable distance and pace margins.
+
+---
+
+## 16. Ani — Your AI Coach
 
 Ani is Karela's personalized AI coach and the feature that most fundamentally separates Karela from every other fitness app available to Filipino users.
 
@@ -350,7 +729,7 @@ If a user mentions an injury or medical condition during setup, Ani acknowledges
 
 ---
 
-## RPG Mechanics
+## 17. RPG Mechanics
 
 ### XP, Leveling & The Momentum Multiplier
 
@@ -420,7 +799,7 @@ ghost_routes table (SQLite)
 
 ---
 
-## Sensor Fusion & Anti-Cheat
+## 18. Sensor Fusion & Anti-Cheat
 
 ### Outdoor Mode — The Double Lock
 
@@ -450,7 +829,7 @@ GPS movement without accelerometer cadence (e.g., a car ride) is flagged. Accele
 
 ---
 
-## Onboarding & The First 7 Days
+## 19. Onboarding & The First 7 Days
 
 The cold start problem is Karela's most critical UX challenge: a new user has no Ghost, no Squad, no Guild, and no streak. The First 7 Days protocol ensures every new user feels rewarded within their first **5 minutes**.
 
@@ -478,7 +857,7 @@ On Day 7, Ani delivers a personalized shareable summary card — organic marketi
 
 ---
 
-## Social Infrastructure
+## 20. Social Infrastructure
 
 ### Squads (3–12 Members) — The Inner Circle
 
@@ -527,7 +906,7 @@ Large regional organizations competing for landmark territory.
 
 ---
 
-## The Bayanihan Protocol
+## 21. The Bayanihan Protocol
 
 The feature that fundamentally differentiates Karela from every fitness app in the global market. It transforms the platform from a personal health tool into **civic infrastructure** — a verified volunteer coordination system that generates real, exportable data for local governments during and after disaster events.
 
@@ -574,33 +953,35 @@ Karela must never be the reason a user puts themselves in danger. The Safety Tie
 4. **Vanguard Blind Audit** — 3 independent Vanguards from outside the submitter's Guild must all approve before XP and Gems are released.
 5. **Node Master QR (major missions)** — dynamic QR rotating every 15 minutes; scanned at arrival and departure to verify presence and duration.
 
-### The Vanguard System
+---
 
-**Becoming a Vanguard:**
+## 22. Reward Architecture
 
-| Requirement | Specification |
-|---|---|
-| Minimum Level | Level 15 (~90–120 days of consistent use) |
-| Civic XP Threshold | 500 Civic XP from personal Bayanihan completions |
-| Clean Record | Zero Black Marks in past 90 days |
-| Application | Automatic eligibility notification — voluntary acceptance, no form required |
-| Regional Cap | Max 1 Vanguard per 50 active users in a zone |
+**Design principle:** Immediate feedback with delayed validation.
 
-**Anti-Collusion Governance:**
-- Blind assignment — Vanguards never review submissions from their own Guild or Squad.
-- Geographic separation — submissions assigned to Vanguards in a different barangay wherever possible.
-- 2/3 split triggers a 4th Vanguard as tiebreaker.
-- Fraud Ring Detection — if 3 socially-connected Vanguards all approve the same submission, it is auto-flagged for admin review.
-- Vanguards with Review Accuracy Score below 70% are temporarily suspended.
-  
-**Anti-Fraud QR Specification:**
-- Dynamic Rotating QR — regenerates every 15 minutes with a time-bound, single-use token.
-- Geofence Confirmation — GPS must be within 50m of the Quest Node coordinate at moment of scan.
-- Single-Use Token — duplicate scans (screen sharing, photos) are rejected server-side.
+Karela's reward system is structured to balance user motivation against anti-exploit integrity.
+
+**Immediate (on report submission):**
+- Small XP granted immediately
+- "Report captured. Verifying…" confirmation
+- Keeps the user engaged without waiting
+
+**Delayed (on consensus verification):**
+- Larger XP reward unlocked after spatial consensus is reached
+- "Quest confirmed. +500 XP." notification
+- Creates a genuine sense of community impact
+
+**Anti-cheat systems:**
+- Image hashing for duplicate photo detection
+- Spatial deduplication (same location, same user, same day = one report)
+- Consensus requirement prevents solo farming
+- Verification windows prevent old reports from being recycled
+
+**Effect:** The reward loop reinforces both persistence (keep running, keep reporting) and integrity (your report only pays off if it's real).
 
 ---
 
-## Data Privacy & RA 10173 Compliance
+## 23. Data Privacy & RA 10173 Compliance
 
 Karela is designed to comply with the **Philippine Data Privacy Act of 2012 (Republic Act 10173)** and its Implementing Rules and Regulations.
 
@@ -633,7 +1014,7 @@ Partners **never receive:** individual user names, IDs, GPS trails, movement his
 
 ---
 
-## Business Model
+## 24. Business Model
 
 ### Monetization Streams
 
@@ -711,7 +1092,7 @@ At 5% conversion from free to Scout Pass, a base of 1,000 MAU yields 50 paying u
 
 ---
 
-## Go-To-Market Strategy
+## 25. Go-To-Market Strategy
 
 ### Beachhead Market
 
@@ -741,7 +1122,7 @@ A "Karela Citywide Quest" — a one-day event where registered users complete a 
 
 ---
 
-## Competitive Moat & Defensibility
+## 26. Competitive Moat & Defensibility
 
 **What stops Strava, Google, or a well-funded EdTech from building this in six months?**
 
@@ -761,7 +1142,7 @@ Ani's personalization improves with every session. A user who has logged 6 month
 
 ---
 
-## Notification Architecture
+## 27. Notification Architecture
 
 | Notification | Trigger | Timing | Example |
 |---|---|---|---|
@@ -782,7 +1163,7 @@ Ani's personalization improves with every session. A user who has logged 6 month
 
 ---
 
-## Accessibility
+## 28. Accessibility
 
 ### Physical Accessibility
 
@@ -809,7 +1190,7 @@ Non-running users can participate fully through:
 
 ---
 
-## Database Schema
+## 29. Database Schema
 
 ### Firestore Collections (Cloud)
 
@@ -959,7 +1340,7 @@ cached_at         TEXT
 
 ---
 
-## Civic Contribution Score
+## 30. Civic Contribution Score
 
 The **Civic Contribution Score (C)** is the primary measurable thesis metric — a per-user, per-mission score that aggregates into LGU-level impact reports.
 
@@ -994,7 +1375,7 @@ These metrics are exportable from the LGU Admin Panel as CSV or PDF reports, des
 
 ---
 
-## KPIs & Success Metrics
+## 31. KPIs & Success Metrics
 
 | KPI | Phase 1 Target | Phase 3 Target |
 |---|---|---|
@@ -1012,7 +1393,7 @@ These metrics are exportable from the LGU Admin Panel as CSV or PDF reports, des
 
 ---
 
-## MVP Definition & Success Criteria
+## 32. MVP Definition & Success Criteria
 
 ### MVP Scope
 
@@ -1048,7 +1429,204 @@ Validation target: 50–100 users from the Tuguegarao beachhead, recruited throu
 
 ---
 
-## Ethics & Responsible Design
+## 33. Thesis-Worthy Components
+
+This section documents the components of Karela specifically relevant to academic research, PSC presentation, and thesis defense. Each item identifies the specific algorithm, formula, analytic method, or experimental design element and its role in the system.
+
+---
+
+### 33.1 Primary Research Question
+
+> **"Does a dynamically decay-adjusted Ghost avatar produce statistically higher exercise adherence than a static personal-best Ghost?"**
+
+**Study Design:**
+
+| Group | Ghost Type | Description |
+|---|---|---|
+| Control | Static PB Ghost | Traditional replay of user's best run |
+| Experimental | Adaptive Decay-Adjusted Ghost | Ghost calibrated to the user's failure point, not peak |
+
+**Primary Dependent Variables (Metrics):**
+
+| Metric | Measurement Method |
+|---|---|
+| Run completion rate | Percentage of sessions where user completes target distance/time |
+| Average session duration | Mean run time per session across study period |
+| Weekly exercise adherence | Number of sessions completed per week vs. planned |
+| Dropout rate | Percentage of users who cease activity over study period |
+| Pacing stability | Standard deviation of pace per kilometer across sessions |
+
+---
+
+### 33.2 Effort Decay Function — Algorithmic Contribution
+
+**Thesis relevance:** Novel algorithmic contribution. Distinguishes Karela's ghost system from all prior art in adaptive pacing.
+
+**Proposed model:**
+
+```
+P(t) = P_baseline × e^(−λ × max(0, t − t_fatigue))
+```
+
+| Parameter | Definition | How It's Learned |
+|---|---|---|
+| `P_baseline` | Sustainable pace from rolling aggregation | 4-week weighted average |
+| `λ` | Individual decay rate (steepness of fatigue onset) | Regression on historical runs |
+| `t_fatigue` | Fatigue onset time | Identified from pace-drop inflection points |
+
+**Research contribution:** This function personalizes the ghost's expected pacing behavior to each user's fatigue signature, rather than assuming a universal fatigue model.
+
+---
+
+### 33.3 Rolling Aggregation Model — Statistical Method
+
+**Thesis relevance:** Validates the ghost baseline as statistically robust against single-run anomalies.
+
+**Method:**
+- Rolling 4-week window of run data
+- Compute weekly mean pacing profiles
+- Average weekly profiles into a composite baseline
+- Weight by recency (proposed: exponential decay weighting on weeks)
+
+**Weighted composite formula:**
+
+```
+P_composite = Σ (w_i × P_week_i) / Σ w_i
+
+where w_i = e^(−α × (W_current − W_i))
+```
+
+| Parameter | Definition |
+|---|---|
+| `P_week_i` | Mean pace profile for week `i` |
+| `w_i` | Recency weight for week `i` |
+| `α` | Recency decay rate (tunable hyperparameter) |
+| `W_current` | Current week number |
+
+**Thesis claim:** This aggregation method produces a more stable and representative pacing baseline than single-run PB, as measured by variance across week-to-week ghost targets.
+
+---
+
+### 33.4 Spatial Consensus Algorithm — Algorithmic Contribution
+
+**Thesis relevance:** Novel application of density-based spatial clustering to civic verification — directly addresses the fake report problem in crowdsourced systems.
+
+**Algorithm basis:** DBSCAN (Density-Based Spatial Clustering of Applications with Noise)
+
+**Adapted for Karela:**
+
+```
+cluster = DBSCAN(ε, minPts, T_window)
+
+where:
+  ε        = spatial radius threshold (meters)
+  minPts   = minimum independent corroborating reports
+  T_window = maximum time between first and last report in cluster
+```
+
+**Node state machine:**
+
+```
+Unverified Report → Pending Civic Node → Verified Civic Quest → Aging → Expired
+                                              ↑                         |
+                                              └─── Reconfirmed ─────────┘
+```
+
+**Research contribution:** Extends DBSCAN with a temporal constraint and a domain-specific reconfirmation mechanism, creating a spatiotemporal verification system tailored to moving human reporters.
+
+---
+
+### 33.5 Temporal Decay Logic — Mathematical Model
+
+**Thesis relevance:** Provides a principled model for handling information staleness in crowdsourced systems.
+
+**Confidence decay formula:**
+
+```
+C(t) = C_0 × e^(−μ × (t − t_verified))
+```
+
+| Parameter | Definition |
+|---|---|
+| `C(t)` | Confidence score at time `t` |
+| `C_0` | Initial confidence at verification (normalized to 1.0) |
+| `μ` | Decay rate (per issue category — e.g., structural damage < litter) |
+| `t_verified` | Timestamp of initial consensus verification |
+
+**Variable decay rates by category (proposed):**
+
+| Issue Type | Decay Rate `μ` | Reasoning |
+|---|---|---|
+| Litter / trash | High | Cleared within days |
+| Flooding / drain | Medium | Seasonal, variable |
+| Damaged infrastructure | Low | Persists weeks/months |
+| Unsafe area report | Medium-low | Contextual persistence |
+
+**Research contribution:** Category-aware decay rates allow the civic map to remain calibrated to real-world resolution timelines rather than applying a one-size-fits-all staleness model.
+
+---
+
+### 33.6 Reinforcement-Style Ghost Calibration — Behavioral Algorithm
+
+**Thesis relevance:** Frames ghost adaptation in terms of reinforcement learning concepts (reward/penalty feedback loops), connecting the system to a well-established ML paradigm.
+
+**Calibration signal sources:**
+
+| Input | Positive Signal | Negative Signal |
+|---|---|---|
+| Checkpoint completion | User beat ghost checkpoint | User fell behind checkpoint |
+| Session completion | User completed target | User quit early |
+| Decay onset timing | Decay occurred later than predicted | Decay occurred earlier than predicted |
+| Weekly trend | Improving weekly average | Declining weekly average |
+
+**Adjustment logic (conceptual):**
+
+```
+ghost_target(t+1) = ghost_target(t) + η × (performance_delta)
+
+where:
+  η              = learning rate (controls sensitivity of adjustment)
+  performance_delta = observed outcome − predicted outcome
+```
+
+**Research contribution:** Positions the ghost as a closed-loop adaptive controller rather than a static replay system — a distinction with both behavioral and computational significance.
+
+---
+
+### 33.7 The Resonance System — System-Level Contribution
+
+**Thesis relevance:** The Resonance System is the highest-level contribution of the thesis — a demonstration that a fitness system and a civic system can be fused through shared physiological state modeling.
+
+**Fusion logic model:**
+
+```
+civic_load(t) = f(stamina_score(t), route_proximity(t), role(t))
+
+where:
+  stamina_score(t) = 1 − normalized_fatigue_index(t)
+  role(t)          = Scout if stamina_score > threshold, else Vanguard
+  civic_load(t)    = 0 if stamina_score < suppression_threshold
+```
+
+**Research claim:** A stamina-aware civic interaction system produces higher civic participation rates without reducing exercise performance metrics, compared to a system that presents civic prompts uniformly regardless of user physical state.
+
+---
+
+### 33.8 Summary Table — Thesis Component Inventory
+
+| Component | Type | Algorithm / Method | Thesis Claim |
+|---|---|---|---|
+| Effort Decay Function | Algorithm | Exponential decay, personalized regression | Adaptive ghost improves adherence over static PB |
+| Rolling Aggregation | Statistical Method | Weighted 4-week rolling average | More stable ghost baseline vs. single-run PB |
+| Spatial Consensus | Algorithm | DBSCAN-inspired spatiotemporal clustering | Prevents fake reports without manual moderation |
+| Temporal Decay | Mathematical Model | Exponential confidence decay (category-aware) | Keeps civic map accurate over time |
+| Ghost Calibration | Behavioral Algorithm | RL-style delta feedback loop | Ghost self-corrects per-user across sessions |
+| Resonance System | System Architecture | Stamina-gated civic load function | Integrates civic contribution without harming exercise |
+| Experimental Study | Research Design | Control/experimental, longitudinal adherence metrics | Validates adaptive ghost vs. static PB hypothesis |
+
+---
+
+## 34. Ethics & Responsible Design
 
 ### Safety Primacy
 
@@ -1072,7 +1650,7 @@ The decision to make Civic XP a fully independent progression track from physica
 
 ---
 
-## Known Open Questions
+## 35. Known Open Questions
 
 1. **PAGASA API access.** Tier 2–4 escalation currently relies on manual admin input. A direct PAGASA data feed would make the safety system fully automated. This requires a partnership conversation that is beyond the current development scope.
 
@@ -1090,7 +1668,49 @@ The decision to make Civic XP a fully independent progression track from physica
 
 ---
 
-## Roadmap
+## 36. Long-Term Vision
+
+Karela's long-term trajectory is to become three things simultaneously:
+
+1. **A fitness platform** — adaptive, personalized, and adherence-optimized for habitual runners and beginners alike
+2. **A civic intelligence network** — a real-time, human-powered sensor array for urban maintenance monitoring
+3. **An urban data layer** — a structured, time-stamped, spatially indexed record of civic conditions across a city
+
+**Value to Local Government Units (LGUs):**
+
+- Heatmaps of neglected infrastructure zones
+- Recurring hotspot detection across weeks and months
+- Maintenance prioritization based on verified report frequency
+- Community participation metrics as a governance feedback signal
+
+**Potential partnership angle:** Karela data as a service to city planning offices, urban maintenance contractors, and community organizations — a "human-powered urban sensing through fitness behavior" model.
+
+---
+
+## 37. Core Technical Domains
+
+Karela sits at the intersection of three technical domains:
+
+**Fitness Intelligence**
+- Predictive fatigue modeling
+- Adaptive pacing via reinforcement-style calibration
+- GPS spatial interpolation
+- Rolling statistical aggregation
+
+**Civic Intelligence**
+- Density-based spatial clustering (DBSCAN adaptation)
+- Temporal decay modeling
+- Crowdsourced spatiotemporal verification
+- Geospatial consensus algorithms
+
+**Fusion / Behavioral Intelligence**
+- Stamina-aware civic load modulation (Resonance System)
+- Role-based adaptive task assignment
+- Human behavioral optimization across fitness and civic domains
+
+---
+
+## 38. Roadmap
 
 - [x] System Specification v3.0 (this document)
 - [ ] **Phase 1 — Foundation** *(Month 1–3)*
@@ -1131,7 +1751,43 @@ The decision to make Civic XP a fully independent progression track from physica
 
 ---
 
-## The Team
+## 39. Glossary
+
+| Term | Definition |
+|---|---|
+| **Adaptive Ghost** | A pacing avatar that updates after every run based on the user's fatigue patterns and performance history |
+| **Ani** | Karela's personalized AI coach, powered by Gemini Flash; generates quests, provides post-session recaps, and delivers context-aware coaching |
+| **Bayanihan Protocol** | Karela's disaster-response feature; a tiered safety and civic mission system activated during weather emergencies |
+| **Civic Node** | A spatial record representing a reported urban issue, existing in Pending or Verified state |
+| **Civic Contribution Score (C)** | A per-user, per-mission score aggregating physical and civic effort into an LGU-reportable metric |
+| **Community Coverage Rate (CCR)** | % of registered users in a zone who completed at least 1 Civic Quest during an emergency window |
+| **Confidence Score** | A decaying numeric value representing how current and trustworthy a civic node's data is |
+| **Collective Shield** | A Squad mechanic where members pool Gems to protect a teammate's streak |
+| **DBSCAN** | Density-Based Spatial Clustering of Applications with Noise — the algorithmic basis for Karela's spatial consensus system |
+| **Disaster Response Velocity (DRV)** | Average time from Emergency Mode activation to first verified Recovery Quest in a zone |
+| **Effort Decay Curve** | A per-user mathematical model of how running pace degrades over time or distance |
+| **Failure Point** | The point in a run where the user's pace historically drops below their sustainable threshold |
+| **Fatigue Onset (`t_fatigue`)** | The time or distance at which fatigue-driven pace decay begins for a given user on a given terrain type |
+| **Ghost** | The pacing avatar the user races against during a run |
+| **Guild** | A regional group of 50+ users that competes for landmark territory on the city map |
+| **Pending Civic Node** | A reported issue that has not yet received sufficient corroboration for verification |
+| **PB Ghost** | Personal Best Ghost — a traditional fitness app feature replaying the user's fastest run |
+| **Proof of Impact (PoI)** | Multi-factor photo verification system for civic quest submissions |
+| **Resonance System** | Karela's fusion layer; uses stamina state to modulate civic contribution load |
+| **Scout** | High-intensity user role; passive civic sensor with minimal interaction requirements |
+| **Scout Pass** | Karela's 90-day seasonal subscription; grants cosmetics and Gem bonuses |
+| **Spatial Consensus** | The requirement that multiple independent users report the same issue within a spatial radius before it is verified |
+| **Squad** | A small accountability group of 3–12 users with shared streak support and optional live location sharing |
+| **Streak Multiplier** | An XP bonus (1.0x–3.0x) that grows with consecutive days of activity |
+| **Temporal Decay** | The process by which a civic node's confidence score decreases over time without reconfirmation |
+| **Territory Quest** | A monthly Guild competition to claim ownership of city landmarks via cumulative distance |
+| **Vanguard** | Trusted high-level user (Level 15+) with the ability to review and approve civic quest submissions; also a low-intensity runner role with active civic contribution |
+| **Verified Civic Quest** | A civic node that has reached the multi-user spatial consensus threshold |
+| **Zone Civic Index (ZCI)** | Sum of all Civic Contribution Scores for missions in a barangay zone |
+
+---
+
+## 40. The Team
 
 **Randel Serafica:**
 *Lead Developer & Architect*
