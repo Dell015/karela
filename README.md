@@ -4,8 +4,8 @@
 > *"An adaptive fitness platform where personal endurance modeling powers real-world civic intelligence."*
 
 ![Status](https://img.shields.io/badge/Status-Active_Development-brightgreen)
-![Version](https://img.shields.io/badge/Version-3.0-blue)
-![Stack](https://img.shields.io/badge/Stack-React_Native_%7C_Expo_%7C_Firebase_%7C_SQLite-orange)
+![Version](https://img.shields.io/badge/Version-3.1-blue)
+![Stack](https://img.shields.io/badge/Stack-React_Native_%7C_Expo_%7C_Supabase_%7C_SQLite-orange)
 ![Platform](https://img.shields.io/badge/Platform-iOS_%7C_Android-lightgrey)
 ![License](https://img.shields.io/badge/License-All_Rights_Reserved-red)
 ![Pilot](https://img.shields.io/badge/Pilot_City-Tuguegarao%2C_Cagayan-green)
@@ -62,13 +62,14 @@ This is not a gamified jogging app. Karela's thesis is:
 31. [KPIs & Success Metrics](#31-kpis--success-metrics)
 32. [MVP Definition & Success Criteria](#32-mvp-definition--success-criteria)
 33. [Thesis-Worthy Components](#33-thesis-worthy-components)
-34. [Ethics & Responsible Design](#34-ethics--responsible-design)
-35. [Known Open Questions](#35-known-open-questions)
-36. [Long-Term Vision](#36-long-term-vision)
-37. [Core Technical Domains](#37-core-technical-domains)
-38. [Roadmap](#38-roadmap)
-39. [Glossary](#39-glossary)
-40. [The Team](#40-the-team)
+34. [Research Title & Framework](#34-research-title--framework)
+35. [Ethics & Responsible Design](#35-ethics--responsible-design)
+36. [Known Open Questions](#36-known-open-questions)
+37. [Long-Term Vision](#37-long-term-vision)
+38. [Core Technical Domains](#38-core-technical-domains)
+39. [Roadmap](#39-roadmap)
+40. [Glossary](#40-glossary)
+41. [The Team](#41-the-team)
 
 ---
 
@@ -291,12 +292,14 @@ Karela uses a **Local-First, Cloud-Sync** architecture — a deliberate design f
             │
             ▼
 ┌─────────────────────────────────────────────────────────┐
-│                  FIREBASE (CLOUD)                        │
+│                  SUPABASE (CLOUD)                        │
 │                                                         │
-│  Firestore: User profiles, XP/Level, Guild state        │
-│  Firebase Storage: PoI photos (encrypted)               │
-│  Firebase Auth: Session management                       │
-│  Cloud Functions: Sync reconciliation, fraud detection  │
+│  PostgreSQL: User profiles, XP/Level, Guild state       │
+│  Supabase Storage: PoI photos (encrypted, RLS-gated)    │
+│  Supabase Auth: Session management (OAuth2 + JWT)       │
+│  Edge Functions: Sync reconciliation, fraud detection   │
+│  Realtime: Live Guild/Squad state via CDC channels      │
+│  PostGIS: Spatial queries for civic node clustering     │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -304,8 +307,8 @@ Karela uses a **Local-First, Cloud-Sync** architecture — a deliberate design f
 
 When a user completes a run or mission offline, SQLite logs every event with a high-precision ISO 8601 timestamp and a UUID. When connectivity is restored:
 
-1. The client sends its local event sequence to a Cloud Function.
-2. The function compares timestamps against the Firestore state.
+1. The client sends its local event sequence to a Supabase Edge Function.
+2. The function compares timestamps against the PostgreSQL state.
 3. **Mission completions: local wins** — a user who completed a quest offline is never penalized for poor connectivity.
 4. **XP/Gem balances: server recalculates** from the event log — not from the client total — preventing local manipulation.
 5. **Streak continuity: local timestamp honored** — if the device shows completion before midnight, the streak is preserved regardless of when the sync arrives.
@@ -319,15 +322,20 @@ When a user completes a run or mission offline, SQLite logs every event with a h
 |---|---|---|---|
 | Frontend & Dev | React Native + Expo | SDK 51+ | Unified cross-platform codebase with hot-reloading and sensor testing |
 | Local Database | expo-sqlite | v14+ | Offline mission caching, run telemetry, high-frequency data logging |
-| Cloud Backend | Firebase Firestore | v10+ (modular) | Real-time source of truth for user profiles, RPG stats, Guild sync |
-| Authentication | Firebase Auth | OAuth2 + JWT | Secure Google/Email login; persistent local session management |
-| Media Storage | Firebase Storage | Rules v2 | Encrypted repository for Proof of Impact photos |
+| Cloud Backend | Supabase (PostgreSQL + PostGIS) | Latest | Relational source of truth for user profiles, RPG stats, Guild sync, and geospatial civic queries |
+| Authentication | Supabase Auth | OAuth2 + JWT | Secure Google/Email login; magic link support; persistent local session management |
+| Media Storage | Supabase Storage | Latest | Encrypted repository for Proof of Impact photos, access controlled via Row-Level Security |
+| Realtime | Supabase Realtime | Latest | Live Guild/Squad updates via Postgres Change Data Capture channels |
+| Server Logic | Supabase Edge Functions | Deno runtime | Sync reconciliation, fraud detection, civic consensus scoring |
 | Maps & Geo | react-native-maps | v1.10+ | Apple Maps (iOS) and Google Maps (Android) for battery-efficient rendering |
 | Weather API | OpenWeatherMap | v3.0 One Call | Environmental context for Ani's mission engine and safety tier system |
 | AI Coaching | Gemini Flash | gemini-1.5-flash | Lightweight LLM for personalized Ani coaching, quest generation, and behavioral adaptation |
 | State Management | Zustand | v4+ | Lightweight global state for session and RPG data |
 | Navigation | React Navigation | v6+ | Stack + Tab navigation with deep linking |
 | Push Notifications | Expo Notifications | SDK 51+ | Streak alerts, Squad events, Bayanihan Protocol alerts |
+
+**Why Supabase over Firebase?**
+Supabase's PostgreSQL backend unlocks PostGIS — the spatial extension that handles the DBSCAN-inspired civic clustering natively via `ST_DWithin()` queries, eliminating the need for manual epsilon-radius logic in application code. Row-Level Security (RLS) policies replace Firebase Security Rules with standard SQL, making access control auditable and version-controlled. The relational schema is also a better fit for Karela's structured civic data (missions, poi_submissions, vanguard_reviews) than Firestore's document model. Supabase Realtime's Postgres CDC channels replace Firestore's `onSnapshot` listeners with no behavioral difference for the client.
 
 **Why Gemini Flash for Ani?**
 Ani's coaching is a high-frequency operation — she interacts with the user at session start, mid-run, and session end, and generates personalized quest suggestions daily. This requires a model that is fast, cost-efficient, and capable of conversational coherence across multiple interactions. Gemini Flash's low latency and cost-per-token make it the right choice for this use case. For Ani's deeper behavioral analysis (weekly recap generation, personalized fitness plan revision), a higher-capability model call is triggered at lower frequency and higher token budget.
@@ -474,7 +482,7 @@ Reports are intentionally minimal to capture. The heavy verification work happen
 
 **Problem:** If civic reports earn XP, users will game the system with false reports.
 
-**Solution:** Multi-user spatial verification using a **DBSCAN-inspired clustering algorithm**.
+**Solution:** Multi-user spatial verification using a **DBSCAN-inspired clustering algorithm**, executed server-side via PostGIS `ST_DWithin()` queries on the Supabase PostgreSQL instance.
 
 **How it works:**
 
@@ -654,30 +662,30 @@ Ani knows who you are. Not in a surveillance sense — in a coaching sense. She 
 At account creation and during the onboarding assessment, Ani builds a user profile:
 
 ```
-ani_profile (stored in Firestore, referenced on every Ani call)
+ani_profile (stored in Supabase PostgreSQL users table, referenced on every Ani call)
 ├── body_profile
-│   ├── height_cm          Float
-│   ├── weight_kg          Float
-│   ├── age                Integer
-│   ├── biological_sex     String    'male' | 'female' | 'prefer_not_to_say'
-│   └── fitness_baseline   String    'sedentary' | 'lightly_active' | 'moderately_active'
+│   ├── height_cm          FLOAT
+│   ├── weight_kg          FLOAT
+│   ├── age                INTEGER
+│   ├── biological_sex     TEXT      'male' | 'female' | 'prefer_not_to_say'
+│   └── fitness_baseline   TEXT      'sedentary' | 'lightly_active' | 'moderately_active'
 ├── behavioral_profile
-│   ├── preferred_time     String    'morning' | 'afternoon' | 'evening'
-│   ├── avg_daily_steps    Integer   Rolling 7-day average from SQLite
-│   ├── streak_current     Integer
-│   ├── longest_streak     Integer
-│   ├── completion_rate    Float     Missions completed / missions assigned, last 30 days
-│   └── civic_engagement   Float     Civic quests / total quests, last 30 days
+│   ├── preferred_time     TEXT      'morning' | 'afternoon' | 'evening'
+│   ├── avg_daily_steps    INTEGER   Rolling 7-day average from SQLite
+│   ├── streak_current     INTEGER
+│   ├── longest_streak     INTEGER
+│   ├── completion_rate    FLOAT     Missions completed / missions assigned, last 30 days
+│   └── civic_engagement   FLOAT     Civic quests / total quests, last 30 days
 ├── context_profile
-│   ├── city               String    Tuguegarao, Manila, etc.
-│   ├── current_weather    Object    Fetched from OpenWeatherMap at session start
-│   ├── bayanihan_tier     Integer   Current safety tier (0–4)
-│   └── guild_territory    Array     Landmarks the user's Guild is contesting
+│   ├── city               TEXT      Tuguegarao, Manila, etc.
+│   ├── current_weather    JSONB     Fetched from OpenWeatherMap at session start
+│   ├── bayanihan_tier     INTEGER   Current safety tier (0–4)
+│   └── guild_territory    TEXT[]    Landmarks the user's Guild is contesting
 └── progression_profile
-    ├── level              Integer
-    ├── xp_current         Integer
-    ├── gems               Integer
-    └── recent_hotspots    Array     Areas with frequent GPS activity
+    ├── level              INTEGER
+    ├── xp_current         INTEGER
+    ├── gems               INTEGER
+    └── recent_hotspots    JSONB     Areas with frequent GPS activity
 ```
 
 ### What Ani Does
@@ -761,7 +769,7 @@ ghost_routes table (SQLite)
 ├── best_distance_m
 ├── waypoints_json   → [{lat, lng, elapsed_seconds}] sampled every 5 seconds
 ├── achieved_at      → ISO 8601 timestamp
-└── synced_to_cloud  → 0 or 1 (top 10 routes synced to Firestore)
+└── synced_to_cloud  → 0 or 1 (top 10 routes synced to Supabase)
 ```
 
 **Fallback hierarchy (when no personal best exists):**
@@ -989,18 +997,18 @@ Karela is designed to comply with the **Philippine Data Privacy Act of 2012 (Rep
 
 | Data Type | How Karela Minimizes Collection |
 |---|---|
-| Raw GPS Coordinates | Processed on-device only. Only mission check-in coordinates (start, end, zone entry) sent to Firestore — not the full trail. |
+| Raw GPS Coordinates | Processed on-device only. Only mission check-in coordinates (start, end, zone entry) sent to Supabase — not the full trail. |
 | Accelerometer Data | Never stored or transmitted. Discarded after real-time step counting and anti-cheat detection. |
-| PoI Photos | Stored in Firebase Storage with restricted access rules. Only the owner and assigned Vanguards can access a specific photo. |
+| PoI Photos | Stored in Supabase Storage with Row-Level Security policies. Only the owner and assigned Vanguards can access a specific photo. |
 | Location History | Leaderboards show total distances and Level only — never location data. |
 | Device Identifiers | Used only for Ghost restoration and fraud ring detection. Never shared with B2B partners. |
-| Body Profile (height, weight) | Stored locally in Firestore under the user's account. Never shared with B2B partners. Used exclusively by Ani. |
+| Body Profile (height, weight) | Stored in PostgreSQL under the user's account. Never shared with B2B partners. Used exclusively by Ani. |
 
 ### User Privacy Controls
 
 - **Privacy Zones:** Up to 5 "Blur Zones" (100m radius) around any location. GPS trails inside these zones are never stored — not even in SQLite.
 - **Location Sharing:** Squad Vision is opt-in, off by default, revocable at any time.
-- **Data Deletion:** Full account deletion within 72 hours of request, per RA 10173.
+- **Data Deletion:** Full account deletion within 72 hours of request, per RA 10173. Supabase cascading deletes ensure all related records (missions, poi_submissions, ghost_routes sync) are purged.
 - **Consent:** All permissions granted with plain-language justifications; revocable at OS level without account penalty.
 - **Ani's data use:** Users are explicitly informed during onboarding that body profile data (height, weight, fitness level) is used exclusively to personalize Ani's coaching and is never shared with third parties or used for advertising.
 
@@ -1050,24 +1058,24 @@ This is the primary thesis for institutional sustainability — once an LGU coor
 
 | Cost Category | Estimated Monthly Cost (per MAU) |
 |---|---|
-| Firebase Firestore reads/writes | ~₱3–8 (scales with activity) |
-| Firebase Storage (PoI photos) | ~₱1–3 (only for civic users) |
+| Supabase PostgreSQL (reads/writes) | ~₱2–6 (scales with activity; Supabase free tier covers early MAU) |
+| Supabase Storage (PoI photos) | ~₱1–3 (only for civic users) |
 | Gemini Flash API (Ani coaching) | ~₱2–6 (5–10 Ani interactions/day at 500–1,000 tokens/call) |
 | OpenWeatherMap API | ~₱0.50 (shared call per city, amortized) |
 | Expo push notifications | Free tier covers first 1,000 MAU |
-| **Total estimated cost per MAU** | **~₱7–17/month** |
+| **Total estimated cost per MAU** | **~₱6–16/month** |
 
 **Revenue per paying user:**
 
 | Tier | Monthly Revenue | Margin at 1,000 MAU |
 |---|---|---|
-| Free user | ₱0 | -(₱7–17) |
-| Scout Pass (₱149 / 3 months) | ~₱50/month amortized | +₱33–43/month |
+| Free user | ₱0 | -(₱6–16) |
+| Scout Pass (₱149 / 3 months) | ~₱50/month amortized | +₱34–44/month |
 | B2B Node (₱1,500/mo, shared across visits) | ~₱1.50 per user visit | Additive |
 
 **Break-even analysis:**
 
-At 5% conversion from free to Scout Pass, a base of 1,000 MAU yields 50 paying users. Scout Pass revenue: ₱2,500/month. Infrastructure cost for 1,000 MAU: ₱7,000–17,000/month. Scout Pass alone does not cover costs at this scale.
+At 5% conversion from free to Scout Pass, a base of 1,000 MAU yields 50 paying users. Scout Pass revenue: ₱2,500/month. Infrastructure cost for 1,000 MAU: ₱6,000–16,000/month. Scout Pass alone does not cover costs at this scale.
 
 **The B2B and B2G tiers are the sustainable model.** Five Anchor Node B2B partners (₱3,500/mo each) generate ₱17,500/month — covering the full infrastructure cost of 1,000 MAU. One LGU white-label contract (₱15,000/year = ₱1,250/month minimum) adds further stability. The consumer Scout Pass is a margin layer, not the foundation.
 
@@ -1192,99 +1200,141 @@ Non-running users can participate fully through:
 
 ## 29. Database Schema
 
-### Firestore Collections (Cloud)
+### Supabase PostgreSQL Tables (Cloud)
 
 <details>
-<summary><strong>users/{userId}</strong></summary>
+<summary><strong>users</strong></summary>
 
-```
-uid                   String    Firebase Auth UID
-display_name          String
-level                 Integer   RPG level (1–∞)
-xp_total              Integer   Lifetime XP (never decreases)
-xp_current_level      Integer   xp_total % 1000
-gems                  Integer   Spendable Gem balance
-streak_current        Integer   Days in current streak
-streak_longest        Integer   Lifetime longest streak
-streak_freeze_count   Integer   Unused Streak Freezes
-squad_id              String?   Reference to squads/{id}
-guild_id              String?   Reference to guilds/{id}
-is_vanguard           Boolean
-vanguard_accuracy     Float     0.0–1.0 review accuracy
-civic_xp              Integer   Separate civic XP pool
-privacy_zones         Array     [{lat, lng, radius_m}] up to 5
-notification_prefs    Map       Quiet hours, toggles per type
-preferred_time        String    'morning' | 'afternoon' | 'evening'
-scout_pass_active     Boolean
-scout_pass_season     String    e.g. '2026-Q2'
+```sql
+CREATE TABLE users (
+  uid                   UUID PRIMARY KEY REFERENCES auth.users(id),
+  display_name          TEXT,
+  level                 INTEGER DEFAULT 1,
+  xp_total              INTEGER DEFAULT 0,
+  xp_current_level      INTEGER GENERATED ALWAYS AS (xp_total % 1000) STORED,
+  gems                  INTEGER DEFAULT 0,
+  streak_current        INTEGER DEFAULT 0,
+  streak_longest        INTEGER DEFAULT 0,
+  streak_freeze_count   INTEGER DEFAULT 0,
+  squad_id              UUID REFERENCES squads(squad_id),
+  guild_id              UUID REFERENCES guilds(guild_id),
+  is_vanguard           BOOLEAN DEFAULT FALSE,
+  vanguard_accuracy     FLOAT DEFAULT 0,
+  civic_xp              INTEGER DEFAULT 0,
+  privacy_zones         JSONB DEFAULT '[]',
+  notification_prefs    JSONB DEFAULT '{}',
+  preferred_time        TEXT CHECK (preferred_time IN ('morning','afternoon','evening')),
+  scout_pass_active     BOOLEAN DEFAULT FALSE,
+  scout_pass_season     TEXT,
+  -- Ani Profile
+  height_cm             FLOAT,
+  weight_kg             FLOAT,
+  age                   INTEGER,
+  biological_sex        TEXT,
+  fitness_baseline      TEXT CHECK (fitness_baseline IN ('sedentary','lightly_active','moderately_active')),
+  avg_daily_steps       INTEGER DEFAULT 0,
+  completion_rate       FLOAT DEFAULT 0,
+  civic_engagement      FLOAT DEFAULT 0
+);
 
--- Ani Profile --
-height_cm             Float
-weight_kg             Float
-age                   Integer
-biological_sex        String
-fitness_baseline      String    'sedentary' | 'lightly_active' | 'moderately_active'
-avg_daily_steps       Integer   Rolling 7-day average
-completion_rate       Float     Missions completed / assigned, last 30 days
-civic_engagement      Float     Civic quests / total quests, last 30 days
+-- Row-Level Security
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can read own row" ON users FOR SELECT USING (auth.uid() = uid);
+CREATE POLICY "Users can update own row" ON users FOR UPDATE USING (auth.uid() = uid);
 ```
 </details>
 
 <details>
-<summary><strong>missions/{missionId}</strong></summary>
+<summary><strong>missions</strong></summary>
 
+```sql
+CREATE TABLE missions (
+  mission_id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  type                  TEXT CHECK (type IN ('run','civic','preparation','recovery')),
+  title                 TEXT,
+  assigned_to_uid       UUID REFERENCES users(uid),
+  assigned_by           TEXT CHECK (assigned_by IN ('ani','admin','guild')),
+  status                TEXT CHECK (status IN ('active','completed','expired','pending_verification')),
+  xp_reward             INTEGER,
+  gem_reward            INTEGER,
+  requires_poi          BOOLEAN DEFAULT FALSE,
+  poi_submission_id     UUID,
+  completed_at          TIMESTAMPTZ,
+  expires_at            TIMESTAMPTZ,
+  -- Ani-generated fields
+  distance_target_m     INTEGER,
+  difficulty            TEXT CHECK (difficulty IN ('easy','moderate','challenge')),
+  rationale             TEXT
+);
+
+ALTER TABLE missions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users see own missions" ON missions FOR SELECT USING (auth.uid() = assigned_to_uid);
 ```
-mission_id            String    UUID
-type                  String    'run' | 'civic' | 'preparation' | 'recovery'
-title                 String
-assigned_to_uid       String
-assigned_by           String    'ani' | 'admin' | 'guild'
-status                String    'active' | 'completed' | 'expired' | 'pending_verification'
-xp_reward             Integer   Base XP before multiplier
-gem_reward            Integer
-requires_poi          Boolean
-poi_submission_id     String?
-completed_at          Timestamp?   Server-side
-expires_at            Timestamp    Typically 24h from assignment
+</details>
 
--- Ani-generated fields --
-distance_target_m     Integer   Personalized to user's rolling average × 1.1
-difficulty            String    'easy' | 'moderate' | 'challenge'
-rationale             String    Why Ani assigned this quest (stored for debugging)
+<details>
+<summary><strong>civic_nodes</strong></summary>
+
+```sql
+-- Requires PostGIS extension: CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE TABLE civic_nodes (
+  node_id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  location              GEOGRAPHY(POINT, 4326) NOT NULL,
+  category              TEXT,
+  status                TEXT CHECK (status IN ('pending','verified','aging','expired')),
+  confidence_score      FLOAT DEFAULT 1.0,
+  created_at            TIMESTAMPTZ DEFAULT now(),
+  verified_at           TIMESTAMPTZ,
+  decay_rate            FLOAT DEFAULT 0.1,
+  report_count          INTEGER DEFAULT 1
+);
+
+-- Spatial index for ST_DWithin queries
+CREATE INDEX civic_nodes_location_idx ON civic_nodes USING GIST (location);
 ```
 </details>
 
 <details>
 <summary><strong>squads / guilds / poi_submissions</strong></summary>
 
-```
--- squads --
-squad_id              String    UUID
-name                  String
-is_private            Boolean
-member_uids           Array     Max 12
-gem_pool              Integer   Pooled Gems for Collective Shields
-area_tag              String?
+```sql
+CREATE TABLE squads (
+  squad_id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name                  TEXT,
+  is_private            BOOLEAN DEFAULT FALSE,
+  member_uids           UUID[],
+  gem_pool              INTEGER DEFAULT 0,
+  area_tag              TEXT
+);
 
--- guilds --
-guild_id              String    UUID
-name                  String
-banner_color          String    Hex
-member_uids           Array     50+ for active status
-total_distance_km     Float     Lifetime cumulative
-territories_owned     Array     Landmark IDs currently claimed
-badges                Array     Earned badge IDs
-gem_reserve           Integer   For Territory Defense Boosts
+CREATE TABLE guilds (
+  guild_id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name                  TEXT,
+  banner_color          TEXT,
+  member_uids           UUID[],
+  total_distance_km     FLOAT DEFAULT 0,
+  territories_owned     TEXT[],
+  badges                TEXT[],
+  gem_reserve           INTEGER DEFAULT 0
+);
 
--- poi_submissions --
-submission_id         String    UUID
-mission_id            String
-submitted_by_uid      String
-photo_urls            Array     Firebase Storage URLs (before/after)
-gps_lat / gps_lng     Float     Server-side tagged coordinates
-server_timestamp      Timestamp Not device clock
-vanguard_reviews      Array     [{vanguard_uid, decision, reviewed_at}]
-status                String    'pending' | 'approved' | 'rejected' | 'flagged'
+CREATE TABLE poi_submissions (
+  submission_id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  mission_id            UUID REFERENCES missions(mission_id),
+  submitted_by_uid      UUID REFERENCES users(uid),
+  photo_urls            TEXT[],
+  location              GEOGRAPHY(POINT, 4326),
+  server_timestamp      TIMESTAMPTZ DEFAULT now(),
+  vanguard_reviews      JSONB DEFAULT '[]',
+  status                TEXT CHECK (status IN ('pending','approved','rejected','flagged'))
+);
+
+ALTER TABLE poi_submissions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Owner can insert" ON poi_submissions FOR INSERT WITH CHECK (auth.uid() = submitted_by_uid);
+CREATE POLICY "Vanguards can read assigned" ON poi_submissions FOR SELECT USING (
+  auth.uid() = submitted_by_uid OR
+  EXISTS (SELECT 1 FROM users WHERE uid = auth.uid() AND is_vanguard = TRUE)
+);
 ```
 </details>
 
@@ -1295,46 +1345,54 @@ status                String    'pending' | 'approved' | 'rejected' | 'flagged'
 
 ```sql
 -- run_sessions --
-session_id        TEXT PRIMARY KEY   UUID generated at run start
-mission_id        TEXT
-status            TEXT               'active' | 'completed' | 'synced'
-started_at        TEXT               ISO 8601
-ended_at          TEXT
-total_distance_m  REAL
-total_steps       INTEGER
-mode              TEXT               'outdoor' | 'indoor'
-ghost_route_id    TEXT
-xp_earned_raw     INTEGER            Before multiplier
-gems_earned       INTEGER
-sync_status       TEXT               'pending' | 'synced' | 'failed'
+CREATE TABLE run_sessions (
+  session_id        TEXT PRIMARY KEY,
+  mission_id        TEXT,
+  status            TEXT,
+  started_at        TEXT,
+  ended_at          TEXT,
+  total_distance_m  REAL,
+  total_steps       INTEGER,
+  mode              TEXT,
+  ghost_route_id    TEXT,
+  xp_earned_raw     INTEGER,
+  gems_earned       INTEGER,
+  sync_status       TEXT DEFAULT 'pending'
+);
 
 -- gps_waypoints --
-waypoint_id       INTEGER PRIMARY KEY AUTOINCREMENT
-session_id        TEXT               FK → run_sessions
-latitude          REAL
-longitude         REAL
-altitude_m        REAL
-accuracy_m        REAL
-recorded_at       TEXT               ISO 8601
-is_privacy_zone   INTEGER            1 = inside blur zone, never synced
+CREATE TABLE gps_waypoints (
+  waypoint_id       INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id        TEXT REFERENCES run_sessions(session_id),
+  latitude          REAL,
+  longitude         REAL,
+  altitude_m        REAL,
+  accuracy_m        REAL,
+  recorded_at       TEXT,
+  is_privacy_zone   INTEGER DEFAULT 0
+);
 
 -- ghost_routes --
-route_id          TEXT PRIMARY KEY   Bounding box hash
-best_time_seconds INTEGER
-best_distance_m   REAL
-waypoints_json    TEXT               [{lat, lng, elapsed_seconds}] @ 5s intervals
-achieved_at       TEXT
-synced_to_cloud   INTEGER            0 or 1
+CREATE TABLE ghost_routes (
+  route_id          TEXT PRIMARY KEY,
+  best_time_seconds INTEGER,
+  best_distance_m   REAL,
+  waypoints_json    TEXT,
+  achieved_at       TEXT,
+  synced_to_cloud   INTEGER DEFAULT 0
+);
 
 -- pending_missions --
-mission_id        TEXT PRIMARY KEY   Matches Firestore ID
-type              TEXT
-title             TEXT
-xp_reward         INTEGER
-gem_reward        INTEGER
-requires_poi      INTEGER            0 or 1
-expires_at        TEXT
-cached_at         TEXT
+CREATE TABLE pending_missions (
+  mission_id        TEXT PRIMARY KEY,
+  type              TEXT,
+  title             TEXT,
+  xp_reward         INTEGER,
+  gem_reward        INTEGER,
+  requires_poi      INTEGER DEFAULT 0,
+  expires_at        TEXT,
+  cached_at         TEXT
+);
 ```
 </details>
 
@@ -1511,7 +1569,7 @@ where w_i = e^(−α × (W_current − W_i))
 
 **Thesis relevance:** Novel application of density-based spatial clustering to civic verification — directly addresses the fake report problem in crowdsourced systems.
 
-**Algorithm basis:** DBSCAN (Density-Based Spatial Clustering of Applications with Noise)
+**Algorithm basis:** DBSCAN (Density-Based Spatial Clustering of Applications with Noise), executed via PostGIS `ST_DWithin()` on Supabase PostgreSQL.
 
 **Adapted for Karela:**
 
@@ -1618,7 +1676,7 @@ where:
 |---|---|---|---|
 | Effort Decay Function | Algorithm | Exponential decay, personalized regression | Adaptive ghost improves adherence over static PB |
 | Rolling Aggregation | Statistical Method | Weighted 4-week rolling average | More stable ghost baseline vs. single-run PB |
-| Spatial Consensus | Algorithm | DBSCAN-inspired spatiotemporal clustering | Prevents fake reports without manual moderation |
+| Spatial Consensus | Algorithm | DBSCAN-inspired spatiotemporal clustering (PostGIS) | Prevents fake reports without manual moderation |
 | Temporal Decay | Mathematical Model | Exponential confidence decay (category-aware) | Keeps civic map accurate over time |
 | Ghost Calibration | Behavioral Algorithm | RL-style delta feedback loop | Ghost self-corrects per-user across sessions |
 | Resonance System | System Architecture | Stamina-gated civic load function | Integrates civic contribution without harming exercise |
@@ -1626,7 +1684,130 @@ where:
 
 ---
 
-## 34. Ethics & Responsible Design
+## 34. Research Title & Framework
+
+### 34.1 Proposed Research Title
+
+**Primary Title:**
+> **Karela: A Dual-Engine Mobile Platform Integrating Adaptive Athletic Performance Modeling and Geospatial Crowdsourced Civic Engagement for Sustained Behavioral Change**
+
+**Alternative Titles (shorter, panel-friendly):**
+> - *"Synthetic Best Run: Adaptive Ghost Pacing and Spatiotemporal Civic Crowdsourcing in a Dual-Purpose Mobile Application"*
+> - *"From Stride to Street: Fusing Predictive Endurance Modeling with Geospatial Hazard Reporting in a Gamified Civic Fitness Platform"*
+
+---
+
+### 34.2 Research Framework
+
+#### Study Type
+Mixed-methods, longitudinal experimental study with a quantitative primary strand and a qualitative secondary strand.
+
+---
+
+#### Research Questions
+
+**RQ1 (Fitness Engine):**
+Does an AI-generated Synthetic Best Run — a ghost pacing avatar calibrated to an individual's fatigue decay curve rather than their static personal best — produce statistically higher exercise adherence, session completion rates, and pacing consistency compared to a static PB ghost?
+
+**RQ2 (Civic Engine):**
+Does a geospatial crowdsourcing system that scales Civic Quest complexity from individual reports to collaborative multi-user verification tasks — triggered by localized report density — produce higher civic participation rates and lower false-report rates compared to a flat single-submission reporting system?
+
+**RQ3 (Resonance System):**
+Does a stamina-aware Resonance System — which suppresses civic interaction prompts during high-fatigue states and surfaces them during low-intensity phases — produce higher combined fitness-civic engagement without degrading exercise performance metrics, compared to a system that presents civic prompts uniformly?
+
+---
+
+#### Conceptual Framework
+
+The framework rests on three theoretical pillars:
+
+**1. Self-Determination Theory (SDT) — Deci & Ryan**
+SDT posits that sustained motivation requires competence, autonomy, and relatedness. The Synthetic Best Run directly addresses *competence* — by targeting the user's sustainable threshold rather than their peak, it ensures the challenge remains achievable. The Resonance System addresses *autonomy* — civic tasks are never forced during high-effort states. The Squad and Guild systems address *relatedness* — civic and fitness effort are socially visible and rewarded.
+
+**2. Crowdsourced Spatiotemporal Verification — DBSCAN adaptation**
+The civic engine draws from density-based spatial clustering literature (Ester et al., 1996) and extends it with a temporal constraint window and a domain-specific reconfirmation mechanism. This positions the civic system within the broader field of participatory sensing and volunteered geographic information (VGI), while addressing VGI's primary weakness: data veracity.
+
+**3. Adaptive Pacing & Fatigue Modeling**
+The Synthetic Best Run is grounded in exercise science literature on critical power and pacing strategy (Foster et al., 2004; Abbiss & Laursen, 2008), which demonstrates that athletes who pace relative to their sustainable threshold — rather than their peak — show superior completion rates and lower dropout. Karela operationalizes this in a consumer mobile context for non-elite users.
+
+---
+
+#### Independent Variables
+
+| Variable | Engine | Description |
+|---|---|---|
+| Ghost type | Fitness | Static PB ghost vs. Synthetic Best Run (adaptive decay-adjusted) |
+| Civic prompt timing | Civic | Uniform prompts vs. stamina-gated (Resonance System) |
+| Report density threshold | Civic | Single-submission vs. density-scaled collaborative quest triggering |
+
+#### Dependent Variables
+
+| Variable | Engine | Measurement |
+|---|---|---|
+| Exercise adherence rate | Fitness | Sessions completed / sessions assigned, 30-day window |
+| Session completion rate | Fitness | % of sessions where target distance/time is reached |
+| Pacing stability | Fitness | Standard deviation of pace per km across sessions |
+| Dropout rate | Fitness | % of users with zero sessions in the final 2 weeks of the study |
+| Civic participation rate | Civic | % of active users completing ≥1 Civic Quest per month |
+| False report rate | Civic | % of submitted reports rejected by Vanguard consensus |
+| Report-to-verification latency | Civic | Median time from first report submission to Verified status |
+| Ani relevance score | Both | % of users rating Ani's suggestions as "relevant to me personally" |
+
+#### Control Variables
+
+Geography (all participants in Tuguegarao City), device type (mid-range Android, 2–4GB RAM), connectivity conditions (prepaid data environment), and baseline physical activity level (measured via onboarding fitness assessment).
+
+---
+
+#### Study Design
+
+**Phase 1 — Baseline (Week 1–2):**
+All participants use the app with a static PB ghost and no Resonance System (civic prompts appear uniformly). This establishes individual baseline adherence and pacing profiles.
+
+**Phase 2 — Experimental Intervention (Week 3–6):**
+Participants are randomly assigned to one of two conditions:
+- Control group: static PB ghost, uniform civic prompts
+- Experimental group: Synthetic Best Run ghost, Resonance-gated civic prompts
+
+**Phase 3 — Washout & Qualitative (Week 7–8):**
+Both groups revert to free use. Semi-structured interviews (n=20, purposive sample across both groups) explore subjective experience of the ghost system, Ani's relevance, and civic motivation.
+
+---
+
+#### Analysis Plan
+
+**Quantitative:** Independent samples t-tests or Mann-Whitney U tests (depending on normality) for primary DVs between groups. Effect size reported as Cohen's d. Significance threshold α = 0.05.
+
+**Qualitative:** Thematic analysis of interview transcripts using open and axial coding, with themes mapped against SDT constructs (competence, autonomy, relatedness).
+
+**Mixed integration:** Quantitative results explain *whether* the system works; qualitative results explain *why*, and surface edge cases not captured by the metrics (e.g., users who engaged civically but not athletically, or vice versa).
+
+---
+
+#### Ethical Considerations
+
+- Informed consent required from all participants prior to enrollment, with explicit disclosure of data collected (GPS, step count, body profile).
+- Body profile data (height, weight) used exclusively for Ani modeling; never shared externally.
+- Right to withdraw at any time without penalty to streak or XP.
+- All data anonymized before quantitative analysis.
+- Compliance with RA 10173 (Philippine Data Privacy Act).
+- IRB/ethics clearance sought from Cagayan State University prior to Phase 1.
+
+---
+
+#### Expected Contributions
+
+**To mobile health informatics:** A validated methodology for adaptive pacing in consumer fitness applications using per-user fatigue decay modeling, applicable beyond the Philippine context.
+
+**To participatory sensing / VGI research:** A DBSCAN-adapted spatiotemporal verification model that addresses false-report inflation in gamified civic systems — a known weakness in prior crowdsourced reporting literature.
+
+**To behavioral technology design:** Empirical evidence (or refutation) of the hypothesis that stamina-aware civic prompt timing (the Resonance System) can sustain dual-track engagement without degrading either track's performance metrics.
+
+**To Philippine civic technology:** A replicable, open-methodology framework for LGU-integrated volunteer coordination that generates exportable, verified civic impact data — usable for DRRMO assessments and barangay performance reviews.
+
+---
+
+## 35. Ethics & Responsible Design
 
 ### Safety Primacy
 
@@ -1650,7 +1831,7 @@ The decision to make Civic XP a fully independent progression track from physica
 
 ---
 
-## 35. Known Open Questions
+## 36. Known Open Questions
 
 1. **PAGASA API access.** Tier 2–4 escalation currently relies on manual admin input. A direct PAGASA data feed would make the safety system fully automated. This requires a partnership conversation that is beyond the current development scope.
 
@@ -1666,9 +1847,11 @@ The decision to make Civic XP a fully independent progression track from physica
 
 7. **Battery impact on low-end devices.** GPS + accelerometer fusion on devices with 2–3GB RAM and older chipsets may cause significant battery drain. The dynamic GPS sampling rate is the primary mitigation, but real-world testing on target devices (Samsung A-series, Realme, Xiaomi Redmi) is required before Phase 1 launch.
 
+8. **Supabase RLS policy complexity.** Migrating from Firebase's Security Rules to PostgreSQL Row-Level Security requires careful policy design, particularly for Vanguard access to poi_submissions from other users. All RLS policies must be audited prior to launch to prevent unauthorized data exposure.
+
 ---
 
-## 36. Long-Term Vision
+## 37. Long-Term Vision
 
 Karela's long-term trajectory is to become three things simultaneously:
 
@@ -1687,7 +1870,7 @@ Karela's long-term trajectory is to become three things simultaneously:
 
 ---
 
-## 37. Core Technical Domains
+## 38. Core Technical Domains
 
 Karela sits at the intersection of three technical domains:
 
@@ -1698,7 +1881,7 @@ Karela sits at the intersection of three technical domains:
 - Rolling statistical aggregation
 
 **Civic Intelligence**
-- Density-based spatial clustering (DBSCAN adaptation)
+- Density-based spatial clustering (DBSCAN adaptation via PostGIS)
 - Temporal decay modeling
 - Crowdsourced spatiotemporal verification
 - Geospatial consensus algorithms
@@ -1710,14 +1893,15 @@ Karela sits at the intersection of three technical domains:
 
 ---
 
-## 38. Roadmap
+## 39. Roadmap
 
-- [x] System Specification v3.0 (this document)
+- [x] System Specification v3.1 (this document)
 - [ ] **Phase 1 — Foundation** *(Month 1–3)*
   - Sensor fusion (GPS + accelerometer, outdoor and indoor modes)
   - Ghost System with personal + Ani Pacer fallback
   - Ani coaching (body profile, quest generation, post-session recap, weekly plan)
-  - SQLite offline logging + Firebase sync (TSR model)
+  - SQLite offline logging + Supabase sync (TSR model)
+  - Supabase Auth + RLS policy setup
   - XP / Streak / Gem system
   - First 7-Day onboarding arc
   - Basic Squad formation
@@ -1751,7 +1935,7 @@ Karela sits at the intersection of three technical domains:
 
 ---
 
-## 39. Glossary
+## 40. Glossary
 
 | Term | Definition |
 |---|---|
@@ -1763,7 +1947,7 @@ Karela sits at the intersection of three technical domains:
 | **Community Coverage Rate (CCR)** | % of registered users in a zone who completed at least 1 Civic Quest during an emergency window |
 | **Confidence Score** | A decaying numeric value representing how current and trustworthy a civic node's data is |
 | **Collective Shield** | A Squad mechanic where members pool Gems to protect a teammate's streak |
-| **DBSCAN** | Density-Based Spatial Clustering of Applications with Noise — the algorithmic basis for Karela's spatial consensus system |
+| **DBSCAN** | Density-Based Spatial Clustering of Applications with Noise — the algorithmic basis for Karela's spatial consensus system, executed via PostGIS |
 | **Disaster Response Velocity (DRV)** | Average time from Emergency Mode activation to first verified Recovery Quest in a zone |
 | **Effort Decay Curve** | A per-user mathematical model of how running pace degrades over time or distance |
 | **Failure Point** | The point in a run where the user's pace historically drops below their sustainable threshold |
@@ -1772,13 +1956,17 @@ Karela sits at the intersection of three technical domains:
 | **Guild** | A regional group of 50+ users that competes for landmark territory on the city map |
 | **Pending Civic Node** | A reported issue that has not yet received sufficient corroboration for verification |
 | **PB Ghost** | Personal Best Ghost — a traditional fitness app feature replaying the user's fastest run |
+| **PostGIS** | PostgreSQL spatial extension used for ST_DWithin() queries in the civic consensus algorithm |
 | **Proof of Impact (PoI)** | Multi-factor photo verification system for civic quest submissions |
 | **Resonance System** | Karela's fusion layer; uses stamina state to modulate civic contribution load |
+| **Row-Level Security (RLS)** | Supabase/PostgreSQL access control mechanism replacing Firebase Security Rules |
 | **Scout** | High-intensity user role; passive civic sensor with minimal interaction requirements |
 | **Scout Pass** | Karela's 90-day seasonal subscription; grants cosmetics and Gem bonuses |
 | **Spatial Consensus** | The requirement that multiple independent users report the same issue within a spatial radius before it is verified |
 | **Squad** | A small accountability group of 3–12 users with shared streak support and optional live location sharing |
 | **Streak Multiplier** | An XP bonus (1.0x–3.0x) that grows with consecutive days of activity |
+| **Supabase** | The open-source Firebase alternative powering Karela's cloud backend, using PostgreSQL + PostGIS, Auth, Storage, Realtime, and Edge Functions |
+| **Synthetic Best Run** | The research term for Karela's adaptive ghost — a generated optimal pacing model based on the user's historical fatigue signature, not their peak run |
 | **Temporal Decay** | The process by which a civic node's confidence score decreases over time without reconfirmation |
 | **Territory Quest** | A monthly Guild competition to claim ownership of city landmarks via cumulative distance |
 | **Vanguard** | Trusted high-level user (Level 15+) with the ability to review and approve civic quest submissions; also a low-intensity runner role with active civic contribution |
@@ -1787,7 +1975,7 @@ Karela sits at the intersection of three technical domains:
 
 ---
 
-## 40. The Team
+## 41. The Team
 
 **Randel Serafica:**
 *Lead Developer & Architect*
