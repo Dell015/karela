@@ -3,21 +3,21 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { theme } from "../../styles/theme";
-// Import the registration function we updated in auth.ts
-import { registerUser } from "../../services/database/firebase/auth";
+// Supabase registration
+import { registerUser } from "../../services/database/supabase/auth";
 
 /**
  * REUSABLE INPUT COMPONENT
@@ -131,10 +131,12 @@ export default function Signup() {
     } catch (error: any) {
       console.error("Signup failed:", error);
       let msg = "An error occurred during signup.";
-      if (error.code === 'auth/email-already-in-use') msg = "This email is already registered.";
-      if (error.code === 'auth/invalid-email') msg = "Invalid email format.";
-      if (error.code === 'auth/weak-password') msg = "Password is too weak (min 6 chars).";
-      
+      const m = (error?.message || "").toLowerCase();
+      if (m.includes("already registered") || m.includes("already been registered"))
+        msg = "This email is already registered.";
+      if (m.includes("invalid email")) msg = "Invalid email format.";
+      if (m.includes("password")) msg = "Password is too weak (min 6 chars).";
+
       Alert.alert("Signup Error", msg);
     } finally {
       setLoading(false);

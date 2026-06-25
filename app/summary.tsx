@@ -1,30 +1,26 @@
 import { useAuth } from "@/context/AuthContext";
-import { db } from "@/services/database/firebase/config";
 import { saveGhostRun } from "@/services/database/sqlite/database";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
+import { syncRunToMissions } from "@/services/database/supabase/missions";
+import { incrementStats } from "@/services/database/supabase/profiles";
 import {
-  doc, // Add this
-  getDocs,
-  query, // Add this
-  updateDoc, // Add this
-  where,
-} from "firebase/firestore";
-import { generateAndSaveRunSummary } from "@/services/database/firebase/runService";
+    generateAndSaveRunSummary,
+    logRunHistory,
+} from "@/services/database/supabase/runService";
 
 const { width } = Dimensions.get("window");
 
@@ -40,19 +36,17 @@ export default function SummaryScreen() {
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
-  const logRunToFirebase = async () => {
+  const logRunToHistory = async () => {
     if (!user) return;
     try {
-      const historyRef = collection(db, "users", user.uid, "run_history");
-      await addDoc(historyRef, {
+      await logRunHistory(user.uid, {
         distance_meters: Number(meters),
         duration_seconds: Number(seconds),
         calories: Number(kcal),
         xp_earned: Number(xp),
-        completed_at: serverTimestamp(),
       });
     } catch (error) {
-      console.error("Firebase Log Error:", error);
+      console.error("Run history log error:", error);
       throw error;
     }
   };
@@ -86,23 +80,16 @@ export default function SummaryScreen() {
     }
 
     try {
-      const userDocRef = doc(db, "users", user.uid);
       const distanceInKm = Number(meters) / 1000;
 
       // 1. Update the Main Profile Stats (Total Distance & Calories)
-      await updateDoc(userDocRef, {
-        "stats.total_distance_km": Number(
-          ((profile.stats?.total_distance_km || 0) + distanceInKm).toFixed(2),
-        ),
-        "stats.total_calories_burned": Number(
-          ((profile.stats?.total_calories_burned || 0) + Number(kcal)).toFixed(
-            2,
-          ),
-        ),
+      await incrementStats(user.uid, {
+        total_distance_km: Number(distanceInKm.toFixed(2)),
+        total_calories_burned: Number(Number(kcal).toFixed(2)),
       });
 
       // 2. Log the raw data to history
-      await logRunToFirebase();
+      await logRunToHistory();
 
       // 3. Trigger the AI Summary Generation
       const runData = {
@@ -129,37 +116,6 @@ export default function SummaryScreen() {
       );
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const syncRunToMissions = async (userId: string, runKm: number) => {
-    try {
-      const missionsRef = collection(db, "users", userId, "missions");
-      // Find only missions that are 'active' and track 'distance'
-      const q = query(
-        missionsRef,
-        where("status", "==", "active"),
-        where("type", "==", "distance"),
-      );
-
-      const querySnapshot = await getDocs(q);
-
-      const updatePromises = querySnapshot.docs.map((missionDoc) => {
-        const data = missionDoc.data();
-        const newProgress = Number(data.currentValue || 0) + runKm;
-
-        // Update each mission's document
-        return updateDoc(doc(db, "users", userId, "missions", missionDoc.id), {
-          currentValue: Number(newProgress.toFixed(2)), // Keep it clean to 2 decimal places
-        });
-      });
-
-      await Promise.all(updatePromises);
-      console.log(
-        `Synced ${runKm}km to ${updatePromises.length} active missions.`,
-      );
-    } catch (error) {
-      console.error("Mission Sync Error:", error);
     }
   };
 

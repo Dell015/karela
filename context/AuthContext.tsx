@@ -1,9 +1,12 @@
-import { onAuthStateChanged, signOut, User } from "firebase/auth";
-import { doc, getDoc, onSnapshot, setDoc, updateDoc } from "firebase/firestore";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { auth, db } from "../services/database/firebase/config";
+import { supabase } from "../services/database/supabase/config";
+import {
+    getProfile,
+    setStats,
+    subscribeToProfile,
+} from "../services/database/supabase/profiles";
 
-// 1. STYLED INTERFACE
+// 1. STYLED INTERFACE (unchanged — keeps the rest of the app compatible)
 export interface UserProfile {
   uid: string;
   email: string;
@@ -40,8 +43,15 @@ export interface UserProfile {
   createdAt: string;
 }
 
+// Normalized user object so existing `user.uid` / `user.displayName` usages keep working.
+interface AppUser {
+  uid: string;
+  email: string;
+  displayName: string;
+}
+
 interface AuthContextType {
-  user: User | null;
+  user: AppUser | null;
   profile: UserProfile | null;
   loading: boolean;
   reloadProfile: () => Promise<void>;
@@ -58,169 +68,178 @@ const AuthContext = createContext<AuthContextType>({
   gainXP: async () => {},
 });
 
+const DEFAULT_STATS = {
+  age: 20,
+  weight: 70,
+  height: 170,
+  bmi: 24.2,
+  level: 1,
+  xp: 0,
+  fitness_score: 1.0,
+  ghostWins: 0,
+  streak: 0,
+  longest_streak: 0,
+  last_active_date: new Date().toISOString(),
+  total_distance_km: 0,
+  total_calories_burned: 0,
+  total_missions_completed: 0,
+  avg_pace_mins_km: 0,
+  target_weight: 70,
+  ai_notes: "",
+  last_daily_reset: "",
+  last_weekly_reset: "",
+  last_monthly_reset: "",
+};
+
+// Maps a Supabase profiles row → the app's UserProfile shape.
+const mapRowToProfile = (row: any): UserProfile => ({
+  uid: row.id,
+  email: row.email || "",
+  displayName: row.display_name || "New Strider",
+  username: row.username,
+  isVerified: row.is_verified ?? false,
+  profilePicture: row.profile_picture,
+  stats: { ...DEFAULT_STATS, ...(row.stats || {}) },
+  settings: row.settings || { units: "metric", notifications: true },
+  createdAt: row.created_at,
+});
+
+// If accumulated XP has crossed the 1000 threshold, roll it into levels
+// and persist the correction. Returns true if a correction was applied.
+const normalizeXP = async (uid: string, stats: any): Promise<boolean> => {
+  const XP_THRESHOLD = 1000;
+  let xp = Number(stats?.xp || 0);
+  let level = Number(stats?.level || 1);
+  if (xp < XP_THRESHOLD) return false;
+
+  while (xp >= XP_THRESHOLD) {
+    xp -= XP_THRESHOLD;
+    level += 1;
+  }
+  try {
+    await setStats(uid, { xp, level });
+  } catch (e) {
+    console.warn("XP normalization failed (non-fatal):", e);
+  }
+  return true;
+};
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   const gainXP = async (amount: number) => {
     if (!user || !profile) return;
-    const userDocRef = doc(db, "users", user.uid);
     const currentXP = Number(profile.stats?.xp || 0);
     const currentLevel = Number(profile.stats?.level || 1);
     const XP_THRESHOLD = 1000;
 
     let newXP = currentXP + amount;
     let newLevel = currentLevel;
-
     while (newXP >= XP_THRESHOLD) {
       newXP -= XP_THRESHOLD;
       newLevel += 1;
     }
 
     try {
-      await updateDoc(userDocRef, {
-        "stats.xp": newXP,
-        "stats.level": newLevel,
-      });
+      await setStats(user.uid, { xp: newXP, level: newLevel });
     } catch (error) {
       console.error("XP Update Failed:", error);
     }
   };
 
-  const reloadProfile = async () => {
-    if (user) {
-      const userDocRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(userDocRef);
-      if (docSnap.exists()) {
-        setProfile(docSnap.data() as UserProfile);
+  const loadProfile = async (uid: string) => {
+    try {
+      const row = await getProfile(uid);
+      const mapped = mapRowToProfile(row);
+
+      // Patch any missing stat fields (older rows / partial signup data)
+      const missingKeys = Object.keys(DEFAULT_STATS).filter(
+        (k) => (row.stats || {})[k] === undefined,
+      );
+      if (missingKeys.length > 0) {
+        const patch: Record<string, any> = {};
+        missingKeys.forEach((k) => {
+          patch[k] = (DEFAULT_STATS as any)[k];
+        });
+        try {
+          await setStats(uid, patch);
+        } catch (e) {
+          console.warn("Stat patch failed (non-fatal):", e);
+        }
       }
+
+      setProfile(mapped);
+
+      // Auto-level if XP crossed the threshold (realtime will deliver the corrected row)
+      await normalizeXP(uid, mapped.stats);
+    } catch (error) {
+      console.error("Profile load failed:", error);
     }
+  };
+
+  const reloadProfile = async () => {
+    if (user) await loadProfile(user.uid);
   };
 
   const logout = async () => {
     try {
-      await signOut(auth);
+      await supabase.auth.signOut();
     } catch (error) {
       console.error("Logout Error:", error);
     }
   };
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
+    let unsubscribeProfile: (() => void) | null = null;
 
-      if (firebaseUser) {
-        const userDocRef = doc(db, "users", firebaseUser.uid);
+    const handleSession = async (session: any) => {
+      if (session?.user) {
+        const su = session.user;
+        const appUser: AppUser = {
+          uid: su.id,
+          email: su.email || "",
+          displayName:
+            su.user_metadata?.display_name || su.email?.split("@")[0] || "Strider",
+        };
+        setUser(appUser);
 
-        const unsubscribeProfile = onSnapshot(userDocRef, async (docSnap) => {
-          if (docSnap.exists()) {
-            const data = docSnap.data() as any;
+        await loadProfile(su.id);
 
-            // AUTO-PATCH LOGIC
-            const needsPatch =
-              !data.settings ||
-              data.stats?.streak === undefined ||
-              data.stats?.total_calories_burned === undefined;
-            data.stats?.ai_notes === undefined;
-            data.stats?.last_weekly_reset === undefined || // ADD THIS
-              data.stats?.last_monthly_reset === undefined; // ADD THIS
-
-            if (needsPatch) {
-              console.log("🛠 Stryder System: Patching missing data fields...");
-              const patchedStats = {
-                ...data.stats,
-                streak: data.stats?.streak ?? 0,
-                longest_streak: data.stats?.longest_streak ?? 0,
-                last_active_date:
-                  data.stats?.last_active_date ?? new Date().toISOString(),
-                total_calories_burned: data.stats?.total_calories_burned ?? 0,
-                avg_pace_mins_km: data.stats?.avg_pace_mins_km ?? 0,
-                target_weight:
-                  data.stats?.target_weight ?? (data.stats?.weight || 70),
-                total_missions_completed:
-                  Number(data.stats?.total_missions_completed) || 0,
-                ai_notes: data.stats?.ai_notes ?? "",
-                last_daily_reset: data.stats?.last_daily_reset ?? "",
-                last_weekly_reset: data.stats?.last_weekly_reset ?? "",
-                last_monthly_reset: data.stats?.last_monthly_reset ?? "",
-              };
-
-              const updatedData = {
-                ...data,
-                stats: patchedStats,
-                settings: data.settings || {
-                  units: "metric",
-                  notifications: true,
-                },
-              };
-
-              await setDoc(userDocRef, updatedData, { merge: true });
-              // We do NOT return here; let the next logic blocks run
-            }
-
-            // XP OVERFLOW CORRECTION
-            const XP_THRESHOLD = 1000;
-            if (data.stats?.xp >= XP_THRESHOLD) {
-              let cXP = data.stats.xp;
-              let cLvl = data.stats.level;
-              while (cXP >= XP_THRESHOLD) {
-                cXP -= XP_THRESHOLD;
-                cLvl += 1;
-              }
-              await updateDoc(userDocRef, {
-                "stats.xp": cXP,
-                "stats.level": cLvl,
-              });
-            }
-
-            // SET THE PROFILE STATE
-            setProfile(data as UserProfile);
-          } else {
-            // INITIAL NEW PROFILE CREATION
-            const newProfile: UserProfile = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email || "",
-              displayName: firebaseUser.displayName || "New Strider",
-              username: "Strider_" + firebaseUser.uid.slice(0, 4),
-              isVerified: false,
-              stats: {
-                age: 20,
-                weight: 70,
-                height: 170,
-                bmi: 24.2,
-                level: 1,
-                xp: 0,
-                fitness_score: 1.0,
-                ghostWins: 0,
-                streak: 0,
-                longest_streak: 0,
-                last_active_date: new Date().toISOString(),
-                total_distance_km: 0,
-                total_calories_burned: 0,
-                total_missions_completed: 0,
-                avg_pace_mins_km: 0,
-                target_weight: 70,
-                ai_notes: "",
-                last_daily_reset: "",
-                last_weekly_reset: "",
-                last_monthly_reset: "",
-              },
-              settings: { units: "metric", notifications: true },
-              createdAt: new Date().toISOString(),
-            };
-            await setDoc(userDocRef, newProfile);
-            setProfile(newProfile);
-          }
-          setLoading(false);
+        // Realtime profile subscription (replaces Firestore onSnapshot)
+        if (unsubscribeProfile) unsubscribeProfile();
+        unsubscribeProfile = subscribeToProfile(su.id, (row) => {
+          const mapped = mapRowToProfile(row);
+          setProfile(mapped);
+          // Correct XP overflow if a write pushed xp past the threshold
+          normalizeXP(su.id, mapped.stats);
         });
-        return () => unsubscribeProfile();
       } else {
+        if (unsubscribeProfile) {
+          unsubscribeProfile();
+          unsubscribeProfile = null;
+        }
+        setUser(null);
         setProfile(null);
-        setLoading(false);
       }
+      setLoading(false);
+    };
+
+    // Initial session check
+    supabase.auth.getSession().then(({ data }) => handleSession(data.session));
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      handleSession(session);
     });
-    return () => unsubscribeAuth();
+
+    return () => {
+      subscription.unsubscribe();
+      if (unsubscribeProfile) unsubscribeProfile();
+    };
   }, []);
 
   return (

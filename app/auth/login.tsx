@@ -3,21 +3,20 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  Alert,
-  ActivityIndicator,
+    ActivityIndicator,
+    Alert,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
+import { signIn } from "../../services/database/supabase/auth";
 import { theme } from "../../styles/theme";
-import { signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { auth } from "../../services/database/firebase/config";
 
 export default function Login() {
   const router = useRouter();
@@ -34,33 +33,24 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // 1. Attempt to sign in
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      // Supabase enforces email confirmation server-side (if enabled):
+      // an unconfirmed user gets an "Email not confirmed" error here.
+      await signIn(email, password);
 
-      // 2. THESIS SECURITY: Check if email is verified
-      if (!user.emailVerified) {
-        // If not verified, kick them out and alert them
-        await signOut(auth); 
-        Alert.alert(
-          "Email Not Verified",
-          "Please click the link sent to your email before logging in. Check your spam folder if you don't see it!",
-          [{ text: "OK" }]
-        );
-        setLoading(false);
-        return;
-      }
-
-      // 3. Success! Move to Dashboard
+      // Success! Move to Dashboard
       router.replace("/drawer/dashboard");
-
     } catch (error: any) {
       console.error(error);
       let errorMessage = "Invalid email or password.";
-      
-      if (error.code === 'auth/user-not-found') errorMessage = "No account found with this email.";
-      if (error.code === 'auth/wrong-password') errorMessage = "Incorrect password.";
-      
+
+      const msg = (error?.message || "").toLowerCase();
+      if (msg.includes("email not confirmed")) {
+        errorMessage =
+          "Please verify your email before logging in. Check your inbox (and spam folder) for the confirmation link.";
+      } else if (msg.includes("invalid login credentials")) {
+        errorMessage = "Incorrect email or password.";
+      }
+
       Alert.alert("Login Failed", errorMessage);
     } finally {
       setLoading(false);

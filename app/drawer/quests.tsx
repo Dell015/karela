@@ -1,30 +1,26 @@
 import { useAuth, UserProfile } from "@/context/AuthContext";
 import { generateAniQuest } from "@/services/database/firebase/aiService";
-import { db } from "@/services/database/firebase/config";
 import {
-  Ionicons
-} from "@expo/vector-icons";
+    addMission,
+    subscribeToMissions,
+    updateMission
+} from "@/services/database/supabase/missions";
+import {
+    incrementStats,
+    setStats,
+} from "@/services/database/supabase/profiles";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import {
-  addDoc,
-  collection,
-  doc,
-  getDoc,
-  onSnapshot,
-  query,
-  updateDoc,
-  where
-} from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 export default function QuestsScreen() {
@@ -64,23 +60,19 @@ export default function QuestsScreen() {
 
     const { last_daily_reset, last_weekly_reset, last_monthly_reset } =
       profile.stats;
-    const missionsRef = collection(db, "users", profile.uid, "missions");
-    const userRef = doc(db, "users", profile.uid);
 
     const saveMission = async (q: any, freq: string, resetKey: string) => {
-      await addDoc(missionsRef, {
+      await addMission(profile.uid, {
         title: q.title,
         description: q.description,
-        targetValue: q.goalDistance / 1000, // Storing as KM
-        currentValue: 0, // CRITICAL: Initialize at 0
-        xpReward: q.rewardXP,
-        status: "active",
+        target_value: q.goalDistance / 1000, // Storing as KM
+        xp_reward: q.rewardXP,
         category: "solo",
         frequency: freq,
-        createdAt: todayKey,
         type: "distance",
+        created_at_key: todayKey,
       });
-      await updateDoc(userRef, { [`stats.last_${freq}_reset`]: resetKey });
+      await setStats(profile.uid, { [`last_${freq}_reset`]: resetKey });
     };
 
     try {
@@ -111,22 +103,27 @@ export default function QuestsScreen() {
     if (!user?.uid) return;
     setLoading(true);
 
-    const missionsRef = collection(db, "users", user.uid, "missions");
-    const q = query(
-      missionsRef,
-      where("status", "==", "active"),
-      where("category", "==", activeCategory),
-      where("frequency", "==", activeFreq),
+    const unsubscribe = subscribeToMissions(
+      user.uid,
+      {
+        status: "active",
+        category: activeCategory,
+        frequency: activeFreq,
+      },
+      (rows) => {
+        const missionData = rows.map((r) => ({
+          id: r.id,
+          title: r.title,
+          description: r.description,
+          currentValue: r.current_value,
+          targetValue: r.target_value,
+          xpReward: r.xp_reward,
+          status: r.status,
+        }));
+        setMissions(missionData);
+        setLoading(false);
+      },
     );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const missionData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setMissions(missionData);
-      setLoading(false);
-    });
 
     return () => unsubscribe();
   }, [user?.uid, activeCategory, activeFreq]);
@@ -142,24 +139,13 @@ export default function QuestsScreen() {
   const claimReward = async (mission: any) => {
     if (!user?.uid) return;
     try {
-      const userDocRef = doc(db, "users", user.uid);
-      const missionRef = doc(db, "users", user.uid, "missions", mission.id);
-
-      await updateDoc(missionRef, {
+      await updateMission(mission.id, {
         status: "claimed",
-        claimedAt: new Date().toISOString(),
       });
 
-      const userSnap = await getDoc(userDocRef);
-      const userData = userSnap.data();
-      const currentXP = Number(userData?.stats?.xp || 0);
-      const currentCount = Number(
-        userData?.stats?.total_missions_completed || 0,
-      );
-
-      await updateDoc(userDocRef, {
-        "stats.xp": currentXP + Number(mission.xpReward),
-        "stats.total_missions_completed": currentCount + 1,
+      await incrementStats(user.uid, {
+        xp: Number(mission.xpReward),
+        total_missions_completed: 1,
       });
 
       await gainXP(0); // Trigger level check

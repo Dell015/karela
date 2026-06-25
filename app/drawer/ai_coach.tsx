@@ -5,24 +5,23 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 // 1. SERVICES & AUTH
 import { useAuth } from "@/context/AuthContext";
-import { db } from "@/services/database/firebase/config"; // Adjust path to your firebase config
-import { getRecentRunMemories } from "@/services/database/firebase/runService";
+import { getProfile } from "@/services/database/supabase/profiles";
+import { getRecentRunMemories } from "@/services/database/supabase/runService";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { doc, getDoc } from "firebase/firestore";
 
 interface Message {
   id: string;
@@ -33,8 +32,7 @@ interface Message {
 }
 
 // 2. INITIALIZE CLIENT
-// Note: In production, use process.env.EXPO_PUBLIC_GEMINI_API_KEY
-const API_KEY = "AIzaSyAVhBnD5xxs0YhMQ-TXc9X0nWl6dJ87LUA";
+const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || "";
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 export default function AiCoach() {
@@ -58,11 +56,13 @@ export default function AiCoach() {
         const memories = await getRecentRunMemories(user.uid, 3);
         setRecentMemories(memories);
 
-        // 2. Fetch profile directly from Firestore
-        const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setUserProfile(docSnap.data());
+        // 2. Fetch profile from Supabase
+        const row = await getProfile(user.uid);
+        if (row) {
+          setUserProfile({
+            displayName: row.display_name,
+            stats: row.stats,
+          });
         }
       } catch (err) {
         console.error("AI Coach initialization failed:", err);

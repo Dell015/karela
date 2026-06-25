@@ -1,6 +1,4 @@
 import * as SQLite from "expo-sqlite";
-import { doc, increment, updateDoc } from "firebase/firestore";
-import { auth, db as firestore } from "../firebase/config";
 
 export const db = SQLite.openDatabaseSync("karela.db");
 
@@ -55,17 +53,20 @@ export const saveGhostRun = async (
       ],
     );
 
-    // Firebase Sync
-    const user = auth.currentUser;
+    // Supabase Sync
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user) {
-      const userRef = doc(firestore, "users", user.uid);
       const km = distance / 1000;
-      await updateDoc(userRef, {
-        "stats.total_distance_km": increment(parseFloat(km.toFixed(2))),
-        "stats.total_calories_burned": increment(Math.floor(km * 60)),
-        "stats.total_missions_completed": increment(1),
-        "stats.xp": increment(150),
-        "stats.last_active_date": new Date(date).toISOString(),
+      await incrementStats(user.id, {
+        total_distance_km: parseFloat(km.toFixed(2)),
+        total_calories_burned: Math.floor(km * 60),
+        total_missions_completed: 1,
+        xp: 150,
+      });
+      await setStats(user.id, {
+        last_active_date: new Date(date).toISOString(),
       });
     }
     return { success: true, avgSpeed, distance, duration };

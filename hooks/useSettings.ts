@@ -1,7 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
-import { db as firestore } from "@/services/database/firebase/config";
 import { db, initDatabase } from "@/services/database/sqlite/database";
-import { doc, increment, setDoc, updateDoc } from "firebase/firestore";
 import { Alert } from "react-native";
 
 export const useSettings = () => {
@@ -48,31 +46,14 @@ export const useSettings = () => {
         );
       }
 
-      // 2. Sync Firebase (Cloud Totals)
+      // 2. Sync Supabase (Cloud Totals)
       if (profile?.uid) {
-        const userRef = doc(firestore, "users", profile.uid);
-        try {
-          await updateDoc(userRef, {
-            "stats.xp": increment(3500),
-            "stats.total_distance_km": increment(66.3),
-            "stats.ghostWins": increment(14),
-            "stats.level": 4,
-          });
-        } catch (e) {
-          // Fallback if update fails
-          await setDoc(
-            userRef,
-            {
-              stats: {
-                xp: 3500,
-                total_distance_km: 66.3,
-                ghostWins: 14,
-                level: 4,
-              },
-            },
-            { merge: true },
-          );
-        }
+        await incrementStats(profile.uid, {
+          xp: 3500,
+          total_distance_km: 66.3,
+          ghostWins: 14,
+        });
+        await setStats(profile.uid, { level: 4 });
       }
 
       await reloadProfile();
@@ -105,15 +86,12 @@ export const useSettings = () => {
               db.execSync("DROP TABLE IF EXISTS daily_missions");
               initDatabase();
 
-              // 2. Reset Firebase
+              // 2. Reset Supabase
               if (profile?.uid) {
-                const userRef = doc(firestore, "users", profile.uid);
-                await updateDoc(userRef, {
-                  "stats.xp": 3500, // Total RPG Progress
-                  "stats.level": 4, // Total RPG Level
-                  "stats.ghostWins": 14, // Lifetime Wins
-                  // We stop updating total_distance_km here because
-                  // progress.tsx will now get it from SQLite.
+                await setStats(profile.uid, {
+                  xp: 3500, // Total RPG Progress
+                  level: 4, // Total RPG Level
+                  ghostWins: 14, // Lifetime Wins
                 });
               }
 

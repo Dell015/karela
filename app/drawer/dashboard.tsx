@@ -3,22 +3,21 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useIsFocused } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useNavigation } from "expo-router";
-import { addDoc, doc, updateDoc } from "firebase/firestore";
 import { useEffect, useRef, useState } from "react";
 import {
-  Dimensions,
-  Image,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
+    Dimensions,
+    Image,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
 } from "react-native";
 import MapView from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -29,18 +28,15 @@ import { DynamicDock } from "@/components/DynamicDock";
 import { useAuth } from "@/context/AuthContext";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
 import { generateAniQuest } from "@/services/database/firebase/aiService";
-import { db } from "@/services/database/firebase/config"; // Ensure this is imported
+import {
+    addMission,
+    subscribeToMissions,
+} from "@/services/database/supabase/missions";
+import { setStats } from "@/services/database/supabase/profiles";
 import { dashboard_ui } from "@/styles/dashboardStyle";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { theme } from "@/styles/theme";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
-import {
-  collection,
-  limit,
-  onSnapshot,
-  query,
-  where,
-} from "firebase/firestore";
 import { useSharedValue } from "react-native-reanimated";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -69,8 +65,6 @@ export default function Dashboard() {
   const [activeMissions, setActiveMissions] = useState<any[]>([]);
 
   const isFocused = useIsFocused();
-
-  console.log("DEBUG PROFILE STATS:", JSON.stringify(profile?.stats, null, 2));
 
   useEffect(() => {
     if (isFocused) {
@@ -154,33 +148,25 @@ export default function Dashboard() {
   useEffect(() => {
     if (!profile?.uid) return;
 
-    const missionsRef = collection(db, "users", profile.uid, "missions");
-
-    // Update: Filter for Active Solo Daily missions for the main dashboard view
-    const q = query(
-      missionsRef,
-      where("status", "==", "active"),
-      where("category", "==", "solo"), // New Filter
-      where("frequency", "==", "daily"), // New Filter
-      limit(5),
+    // Realtime subscription to active daily solo missions
+    const unsubscribe = subscribeToMissions(
+      profile.uid,
+      { status: "active", category: "solo", frequency: "daily" },
+      (rows) => {
+        const fetchedMissions = rows.slice(0, 5).map((data) => {
+          const prog =
+            data.target_value > 0 ? data.current_value / data.target_value : 0;
+          return {
+            id: data.id,
+            mission: data.title || "Unknown Mission",
+            progress: Math.min(prog, 1.0),
+            xp: data.xp_reward || 0,
+            frequency: data.frequency,
+          };
+        });
+        setActiveMissions(fetchedMissions);
+      },
     );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedMissions = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        const prog =
-          data.targetValue > 0 ? data.currentValue / data.targetValue : 0;
-
-        return {
-          id: doc.id,
-          mission: data.title || "Unknown Mission",
-          progress: Math.min(prog, 1.0),
-          xp: data.xpReward || 0,
-          frequency: data.frequency, // Good to keep for UI badges
-        };
-      });
-      setActiveMissions(fetchedMissions);
-    });
 
     return () => unsubscribe();
   }, [profile?.uid]);
@@ -202,22 +188,18 @@ export default function Dashboard() {
           const newQuest = await generateAniQuest(profile);
 
           if (newQuest) {
-            // 2. Wrap Firestore calls to ensure both succeed or neither "counts" as a reset
-            await addDoc(collection(db, "users", profile.uid, "missions"), {
+            await addMission(profile.uid, {
               title: newQuest.title,
               description: newQuest.description,
-              targetValue: newQuest.goalDistance / 1000,
-              currentValue: 0,
-              xpReward: newQuest.rewardXP,
-              status: "active",
+              target_value: newQuest.goalDistance / 1000,
+              xp_reward: newQuest.rewardXP,
               category: "solo",
               frequency: "daily",
-              createdAt: today,
+              type: "distance",
+              created_at_key: today,
             });
 
-            await updateDoc(doc(db, "users", profile.uid), {
-              "stats.last_daily_reset": today,
-            });
+            await setStats(profile.uid, { last_daily_reset: today });
           }
         } catch (error) {
           // This catches the [GoogleGenerativeAI Error] so your app stays functional

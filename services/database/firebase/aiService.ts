@@ -1,9 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// 1. FIXED: Added a check. DO NOT use the expired hardcoded key.
-// Go to https://aistudio.google.com/ to get a new one.
-const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || "AIzaSyD7993y1VEE1FWEADoY9_9rsdWDHYe68Cc";
-const genAI = new GoogleGenerativeAI(API_KEY);
+const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+if (!API_KEY) {
+  console.warn("⚠️ EXPO_PUBLIC_GEMINI_API_KEY is not set. Ani coaching will use fallback responses.");
+}
+const genAI = new GoogleGenerativeAI(API_KEY || "");
 
 export const summarizeRunForAI = async (runData: any) => {
   try {

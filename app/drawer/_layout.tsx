@@ -1,13 +1,12 @@
-import { auth } from "@/services/database/firebase/config";
+import { signOutUser } from "@/services/database/supabase/auth";
 import { Ionicons } from "@expo/vector-icons";
 import {
-  DrawerContentScrollView,
-  DrawerItem,
-  DrawerItemList,
+    DrawerContentScrollView,
+    DrawerItem,
+    DrawerItemList,
 } from "@react-navigation/drawer";
 import { useRouter } from "expo-router";
 import { Drawer } from "expo-router/drawer";
-import { signOut } from "firebase/auth";
 import React from "react";
 import { Alert, StyleSheet, View } from "react-native";
 
@@ -22,7 +21,7 @@ function CustomDrawerContent(props: any) {
         style: "destructive",
         onPress: async () => {
           try {
-            await signOut(auth);
+            await signOutUser();
             router.replace("/auth/login");
           } catch (error) {
             Alert.alert("Error", "Failed to log out.");
