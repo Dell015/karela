@@ -104,7 +104,19 @@ export default function SummaryScreen() {
       // 4. Update the Active Missions (Progress Bars)
       await syncRunToMissions(user.uid, distanceInKm);
 
-      // 5. Award the Run XP
+      // 5. Sync streak to Supabase (used by streak multiplier)
+      const currentStreak = calculateStreak();
+      const longestStreak = Math.max(
+        currentStreak,
+        Number(profile?.stats?.longest_streak || 0)
+      );
+      await setStats(user.uid, {
+        streak: currentStreak,
+        longest_streak: longestStreak,
+        last_active_date: new Date().toISOString(),
+      });
+
+      // 6. Award the Run XP (multiplied by streak tier)
       if (xp) await gainXP(Number(xp));
 
       router.replace("/drawer/dashboard");

@@ -131,11 +131,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const gainXP = async (amount: number) => {
     if (!user || !profile) return;
+    
+    // Apply streak multiplier to the raw XP amount
+    const streak = Number(profile.stats?.streak || 0);
+    const boostedAmount = amount > 0 ? applyStreakMultiplier(amount, streak) : 0;
+    
     const currentXP = Number(profile.stats?.xp || 0);
     const currentLevel = Number(profile.stats?.level || 1);
     const XP_THRESHOLD = 1000;
 
-    let newXP = currentXP + amount;
+    let newXP = currentXP + boostedAmount;
     let newLevel = currentLevel;
     while (newXP >= XP_THRESHOLD) {
       newXP -= XP_THRESHOLD;

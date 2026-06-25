@@ -7,7 +7,7 @@
 
 ## ✅ Completed
 
-- **API keys moved to `.env`** — Firebase config and Gemini key no longer hardcoded. Also found and removed a **second** hardcoded Gemini key in `ai_coach.tsx`. `.env.example` committed, `.env` gitignored. (was Issue #1)
+- **✅ All API keys configured and working.** Gemini (Ani chat + quest gen), Supabase, OpenWeatherMap all connected via `.env`. No more hardcoded keys anywhere in the codebase.
 - **`package.json` broken `"undefined"` entry removed.** (was Issue #3)
 - **`tsconfig.json` invalid `ignoreDeprecations` removed.**
 - **Expo SDK downgraded 56 → 54** to match the App Store Expo Go.
@@ -17,7 +17,7 @@
   - Schema: `supabase/schema.sql` + `supabase/02_realtime_and_history.sql`
   - Services: `supabase/{config,auth,profiles,missions,runService,userData}.ts`
   - JSONB `stats` column + atomic `increment_stats`/`set_stats` RPCs preserve the app's `profile.stats.*` pattern.
-  - Realtime subscriptions replace Firestore `onSnapshot`.
+  - Realtime subscriptions replace Firestore `onSnapshot`. Fixed channel-name collisions for multi-screen subscriptions.
   - **Still TODO in migration:** remove `firebase` package from `package.json` (kept installed for now; `aiService.ts` Gemini wrapper still lives in the `firebase/` folder but doesn't use the Firebase SDK). Civic engine tables (PostGIS) are Phase 2.
 
 ---
