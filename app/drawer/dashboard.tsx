@@ -1,4 +1,5 @@
 import { QuestCard } from "@/components/QuestCard";
+import { KARELA } from "@/styles/designSystem";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useIsFocused } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -25,6 +26,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 // Custom Hooks & Styles
 import AniView from "@/components/AniModel";
 import { DynamicDock } from "@/components/DynamicDock";
+import { PlayerCard } from "@/components/PlayerCard";
 import { useAuth } from "@/context/AuthContext";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
 import { generateAniQuest } from "@/services/database/firebase/aiService";
@@ -214,7 +216,7 @@ export default function Dashboard() {
   }, [isFocused, profile, loading]); // Added profile and loading for better sync
 
   return (
-    <SafeAreaView style={[theme.container, { backgroundColor: "#0d0d0d" }]}>
+    <SafeAreaView style={[theme.container, { backgroundColor: KARELA.color.bg }]}>
       <StatusBar barStyle="light-content" />
 
       <KeyboardAvoidingView
@@ -225,10 +227,10 @@ export default function Dashboard() {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView
             showsVerticalScrollIndicator={false}
-            style={{ backgroundColor: "#0d0d0d" }}
+            style={{ backgroundColor: KARELA.color.bg }}
             contentContainerStyle={{
               paddingBottom: isKeyboardVisible ? 20 : 160,
-              backgroundColor: "#0d0d0d",
+              backgroundColor: KARELA.color.bg,
             }}
           >
             <View style={dashboard_ui.dashboard}>
@@ -257,72 +259,30 @@ export default function Dashboard() {
                   style={dashboard_ui.menuButton}
                   onPress={() => navigation.openDrawer()}
                 >
-                  <Ionicons name="menu" size={32} color="#7CF205" />
+                  <Ionicons name="menu" size={32} color={KARELA.color.brand} />
                 </TouchableOpacity>
               </View>
 
-              {/* Stats Card */}
-              <TouchableOpacity
-                activeOpacity={0.9}
+              {/* Player Card */}
+              <PlayerCard
+                level={currentLevel}
+                username={profile?.username || "Strider_01"}
+                streak={currentStreak}
+                xp={currentXP}
+                gems={Number(profile?.stats?.gems || 0)}
                 onPress={() => router.push("/drawer/progress")}
-              >
-                <LinearGradient
-                  colors={["#7CF205", "#209F77"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={dashboard_ui.RunCard}
-                >
-                  <View style={dashboard_ui.CardOverlay}>
-                    <View style={dashboard_ui.CardContent}>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <View>
-                          <Text style={dashboard_ui.LevelLabel}>
-                            LVL {currentLevel} STRIDER
-                          </Text>
-                          <Text style={dashboard_ui.nameLabel}>
-                            {profile?.username || "Strider_01"}
-                          </Text>
-                        </View>
-                        <View style={{ alignItems: "flex-end" }}>
-                          <Text style={dashboard_ui.LevelLabel}>STREAK</Text>
-                          <Text style={dashboard_ui.nameLabel}>
-                            {currentStreak} 🔥
-                          </Text>
-                        </View>
-                      </View>
-                      <View style={dashboard_ui.progressContainer}>
-                        <View style={dashboard_ui.progressBarTrack}>
-                          <View
-                            style={[
-                              dashboard_ui.progressBarFill,
-                              { width: `${progressPercent}%` },
-                            ]}
-                          />
-                        </View>
-                        <Text style={dashboard_ui.xpText}>
-                          {currentXP}/{totalXP} XP
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
+              />
 
               {/* Map Preview Section */}
               <Text style={dashboard_ui.sectionTitle}>Active Path-Maker</Text>
               <View style={dashboard_ui.mapPreviewContainer}>
                 <View
                   style={{
-                    borderRadius: 15,
+                    borderRadius: KARELA.radius.md,
                     overflow: "hidden",
                     height: 200,
                     width: "100%",
-                    backgroundColor: "#1a1a1a",
+                    backgroundColor: KARELA.color.surface,
                   }}
                 >
                   {currentLocation?.latitude ? (
@@ -332,7 +292,7 @@ export default function Dashboard() {
                       style={StyleSheet.absoluteFillObject}
                       customMapStyle={ghostMapStyle}
                       showsUserLocation={true}
-                      tintColor="#7CF205"
+                      tintColor={KARELA.color.brand}
                       initialRegion={{
                         latitude: currentLocation.latitude,
                         longitude: currentLocation.longitude,
@@ -348,7 +308,7 @@ export default function Dashboard() {
                         alignItems: "center",
                       }}
                     >
-                      <Text style={{ color: "#7CF205", fontWeight: "600" }}>
+                      <Text style={{ color: KARELA.color.brand, fontFamily: KARELA.font.medium }}>
                         INITIALIZING SENSORS...
                       </Text>
                     </View>
@@ -359,18 +319,18 @@ export default function Dashboard() {
                 <TouchableOpacity
                   style={{
                     position: "absolute",
-                    left: 12,
+                    left: KARELA.space.md,
                     top: 1,
-                    backgroundColor: "#7CF205",
-                    borderColor: "#7CF205",
+                    backgroundColor: KARELA.color.brand,
+                    borderColor: KARELA.color.brand,
                     padding: 5,
-                    borderRadius: 12,
+                    borderRadius: KARELA.radius.sm,
                     borderWidth: 1,
                     zIndex: 10,
                   }}
                   onPress={recenterMap}
                 >
-                  <Ionicons name="navigate" size={20} color="#ffffff" />
+                  <Ionicons name="navigate" size={20} color={KARELA.color.textPrimary} />
                 </TouchableOpacity>
 
                 <Image
@@ -410,7 +370,7 @@ export default function Dashboard() {
                     <MaterialCommunityIcons
                       name="palette-swatch"
                       size={14}
-                      color="#7CF205"
+                      color={KARELA.color.brand}
                     />
                     <Text style={dashboard_ui.customizeBtnText}>CUSTOMIZE</Text>
                   </TouchableOpacity>
@@ -423,7 +383,7 @@ export default function Dashboard() {
                     <MaterialCommunityIcons
                       name="lock"
                       size={32}
-                      color="#444"
+                      color={KARELA.color.textFaint}
                     />
                   </View>
                 </View>
@@ -433,7 +393,7 @@ export default function Dashboard() {
               <TouchableOpacity onPress={() => router.push("/drawer/ai_coach")}>
                 <View style={dashboard_ui.chatCardContainer}>
                   <LinearGradient
-                    colors={["#7CF205", "#209F77"]}
+                    colors={KARELA.gradients.brand as unknown as string[]}
                     style={dashboard_ui.chatSideBar}
                   />
                   <View style={dashboard_ui.chatContent}>
@@ -447,14 +407,14 @@ export default function Dashboard() {
                     <View style={dashboard_ui.nestedInputContainer}>
                       <TextInput
                         placeholder="Ask Ani anything..."
-                        placeholderTextColor="#8A8A8A"
+                        placeholderTextColor={KARELA.color.textMuted}
                         style={dashboard_ui.nestedInput}
                         returnKeyType="send"
                       />
                       <TouchableOpacity
                         onPress={() => router.push("/drawer/ai_coach")}
                       >
-                        <Text style={{ color: "#fff", fontSize: 18 }}>➔</Text>
+                        <Text style={{ color: KARELA.color.textPrimary, fontSize: 18 }}>➔</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -476,9 +436,9 @@ export default function Dashboard() {
                 <TouchableOpacity onPress={() => router.push("/drawer/quests")}>
                   <Text
                     style={{
-                      color: "#7CF205",
-                      fontSize: 12,
-                      fontWeight: "bold",
+                      color: KARELA.color.brand,
+                      fontSize: KARELA.size.label,
+                      fontFamily: KARELA.font.bold,
                       marginRight: 5,
                     }}
                   >
@@ -502,16 +462,16 @@ export default function Dashboard() {
                         style={{
                           width: 8,
                           height: 8,
-                          borderRadius: 4,
-                          backgroundColor: "#7CF205",
+                          borderRadius: KARELA.space.xs,
+                          backgroundColor: KARELA.color.brand,
                           marginRight: 6,
                         }}
                       />
                       <Text
                         style={{
-                          color: "#7CF205",
-                          fontSize: 10,
-                          fontWeight: "900",
+                          color: KARELA.color.brand,
+                          fontSize: KARELA.size.caption,
+                          fontFamily: KARELA.font.black,
                           letterSpacing: 1,
                         }}
                       >
@@ -541,12 +501,12 @@ export default function Dashboard() {
                       <MaterialCommunityIcons
                         name="radar"
                         size={32}
-                        color="#444"
+                        color={KARELA.color.textFaint}
                       />
                       <Text
                         style={[
                           dashboard_ui.chatText,
-                          { textAlign: "center", color: "#888", marginTop: 10 },
+                          { textAlign: "center", color: KARELA.color.textMuted, marginTop: 10 },
                         ]}
                       >
                         No active missions detected.{"\n"}Visit the Quest Board

@@ -1,69 +1,64 @@
 /**
- * 6. STYLES
+ * 6. STYLES — Karela Design System
  */
 
 import { StyleSheet } from "react-native";
+import { KARELA } from "./designSystem";
 
 export const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    backgroundColor: '#f5f5f5' 
+    justifyContent: "center", 
+    alignItems: "center", 
+    backgroundColor: KARELA.color.bg,
   },
   title: { 
-    fontSize: 24, 
-    fontWeight: 'bold', 
-    marginBottom: 20,
-    color: '#333'
+    fontSize: KARELA.size.h1, 
+    fontFamily: KARELA.font.bold,
+    marginBottom: KARELA.space.xl,
+    color: KARELA.color.textPrimary,
   },
   statsBox: { 
-    backgroundColor: 'white', 
-    padding: 20, 
-    borderRadius: 15, 
-    width: '85%', 
-    // Shadow for iOS
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    // Elevation for Android
-    elevation: 5, 
-    marginBottom: 30 
+    backgroundColor: KARELA.color.surface, 
+    padding: KARELA.space.xl, 
+    borderRadius: KARELA.radius.md, 
+    width: "85%", 
+    ...KARELA.glow.soft,
+    marginBottom: 30,
   },
   label: {
     fontSize: 16,
     marginVertical: 5,
-    color: '#555',
-    fontFamily: 'monospace' // Makes numbers easier to read
+    color: KARELA.color.textSecondary,
+    fontFamily: KARELA.font.regular,
   },
   button: { 
     paddingVertical: 18, 
-    borderRadius: 30, 
-    width: '80%', 
-    alignItems: 'center' 
+    borderRadius: KARELA.radius.xl, 
+    width: "80%", 
+    alignItems: "center",
   },
-  startBtn: { backgroundColor: '#4CAF50' }, // Green for Go
-  stopBtn: { backgroundColor: '#F44336' },  // Red for Stop
+  startBtn: { backgroundColor: KARELA.color.brand },
+  stopBtn: { backgroundColor: KARELA.color.danger },
   buttonText: { 
-    color: 'white', 
-    fontSize: 18, 
-    fontWeight: 'bold',
-    letterSpacing: 1
+    color: KARELA.color.textPrimary, 
+    fontSize: KARELA.size.h2, 
+    fontFamily: KARELA.font.bold,
+    letterSpacing: 1,
   },
   loadBtn: {
     marginTop: 10,
-    backgroundColor: '#4CAF50',
+    backgroundColor: KARELA.color.brand,
     paddingVertical: 18, 
-    borderRadius: 30, 
-    width: '80%', 
-    alignItems: 'center' 
+    borderRadius: KARELA.radius.xl, 
+    width: "80%", 
+    alignItems: "center",
   },
 
   btnText: {
-    color: 'white', 
-    fontSize: 18, 
-    fontWeight: 'bold',
-    letterSpacing: 1
-  }
+    color: KARELA.color.textPrimary, 
+    fontSize: KARELA.size.h2, 
+    fontFamily: KARELA.font.bold,
+    letterSpacing: 1,
+  },
 });

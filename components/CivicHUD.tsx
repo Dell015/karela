@@ -6,6 +6,7 @@ import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
 import {
+    ActivityIndicator,
     Alert,
     Dimensions,
     Modal,
@@ -25,6 +26,33 @@ import Animated, {
 
 const { width } = Dimensions.get("window");
 
+/* ============================================================
+   DESIGN TOKENS — single source of truth for the Civic HUD
+   ============================================================ */
+const KARELA_GRADIENT = ["#7CF205", "#209F77"] as const; // signature brand gradient
+const CIVIC_GRADIENT = ["#FF6B35", "#F7411D"] as const;   // civic-action accent
+
+const C = {
+  brand: "#7CF205",
+  brandDeep: "#209F77",
+  civic: "#FF6B35",
+  gold: "#FFB347",
+  bgSheet: "#141414",
+  surface: "#161616",
+  surfaceAlt: "#1F1F1F",
+  cancel: "#202020",
+  border: "rgba(255,255,255,0.08)",
+  borderSoft: "rgba(255,255,255,0.05)",
+  textPrimary: "#FFFFFF",
+  textSecondary: "#A0A0A0",
+  textMuted: "#6B6B6B",
+};
+
+// 4-point spacing scale
+const SP = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28 };
+// Radius scale
+const R = { sm: 12, md: 16, lg: 20, xl: 28, pill: 999 };
+
 interface CivicHUDProps {
   isRacing: boolean;
   resonance: ResonanceState | null;
@@ -34,19 +62,19 @@ interface CivicHUDProps {
 
 const ROLE_CONFIG = {
   scout: {
-    color: "#7CF205",
+    color: C.brand,
     label: "SCOUT",
     sub: "Passive sensing active",
     icon: "scan-outline" as const,
   },
   vanguard: {
-    color: "#FFB347",
+    color: C.gold,
     label: "VANGUARD",
     sub: "Civic tasks available",
     icon: "shield-checkmark-outline" as const,
   },
   suppressed: {
-    color: "#666",
+    color: C.textMuted,
     label: "FOCUS",
     sub: "Push hard, civic paused",
     icon: "fitness-outline" as const,
@@ -85,6 +113,7 @@ export const CivicHUD = ({
   const config = ROLE_CONFIG[role];
   const stamina = resonance ? Math.round(resonance.staminaScore * 100) : 100;
   const suppressed = role === "suppressed";
+  const isScout = role === "scout";
 
   const handlePick = async (category: CivicCategory) => {
     // 1. Request camera permission
@@ -99,7 +128,7 @@ export const CivicHUD = ({
 
     // 2. Open the in-app camera (gallery disabled — Proof of Impact requires live capture)
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
       quality: 0.6,
       allowsEditing: false,
       exif: false,
@@ -120,19 +149,36 @@ export const CivicHUD = ({
     <>
       {/* RESONANCE INDICATOR PILL (top) */}
       <View style={styles.resonanceWrap} pointerEvents="none">
-        <BlurView intensity={40} tint="dark" style={styles.resonancePill}>
-          <View style={[styles.roleDot, { backgroundColor: config.color }]} />
-          <View>
+        <BlurView intensity={45} tint="dark" style={styles.resonancePill}>
+          {/* Scout mode gets the signature Karela gradient dot; others a solid color */}
+          {isScout ? (
+            <LinearGradient
+              colors={KARELA_GRADIENT}
+              style={styles.roleDot}
+            />
+          ) : (
+            <View style={[styles.roleDot, { backgroundColor: config.color }]} />
+          )}
+
+          <View style={styles.roleTextGroup}>
             <Text style={[styles.roleLabel, { color: config.color }]}>
               {config.label}
             </Text>
             <Text style={styles.roleSub}>{config.sub}</Text>
           </View>
-          {/* Stamina ring */}
-          <View style={styles.staminaRing}>
-            <Text style={styles.staminaText}>{stamina}</Text>
-            <Text style={styles.staminaPct}>%</Text>
-          </View>
+
+          {/* Stamina ring — gradient-filled when fresh, dimmed when fatigued */}
+          {stamina >= 60 ? (
+            <LinearGradient colors={KARELA_GRADIENT} style={styles.staminaRing}>
+              <Text style={styles.staminaTextOnBrand}>{stamina}</Text>
+              <Text style={styles.staminaPctOnBrand}>%</Text>
+            </LinearGradient>
+          ) : (
+            <View style={styles.staminaRingDim}>
+              <Text style={styles.staminaText}>{stamina}</Text>
+              <Text style={styles.staminaPct}>%</Text>
+            </View>
+          )}
         </BlurView>
       </View>
 
@@ -147,8 +193,8 @@ export const CivicHUD = ({
           disabled={suppressed}
         >
           <LinearGradient
-            colors={suppressed ? ["#444", "#333"] : ["#FF6B35", "#F7411D"]}
-            style={styles.fab}
+            colors={suppressed ? ["#3A3A3A", "#2A2A2A"] : CIVIC_GRADIENT}
+            style={[styles.fab, !suppressed && styles.fabActiveShadow]}
           >
             <Ionicons
               name={suppressed ? "lock-closed" : "camera"}
@@ -156,9 +202,9 @@ export const CivicHUD = ({
               color="#fff"
             />
             {nearbyCount > 0 && !suppressed && (
-              <View style={styles.fabBadge}>
+              <LinearGradient colors={KARELA_GRADIENT} style={styles.fabBadge}>
                 <Text style={styles.fabBadgeText}>{nearbyCount}</Text>
-              </View>
+              </LinearGradient>
             )}
           </LinearGradient>
         </TouchableOpacity>
@@ -170,13 +216,24 @@ export const CivicHUD = ({
         visible={sheetOpen}
         transparent
         animationType="slide"
-        onRequestClose={() => setSheetOpen(false)}
+        onRequestClose={() => !submitting && setSheetOpen(false)}
       >
-        <Pressable style={styles.backdrop} onPress={() => setSheetOpen(false)} />
+        <Pressable
+          style={styles.backdrop}
+          onPress={() => !submitting && setSheetOpen(false)}
+        />
         <View style={styles.sheet}>
+          {/* Signature gradient accent at the very top of the sheet */}
+          <LinearGradient
+            colors={KARELA_GRADIENT}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.sheetAccent}
+          />
           <View style={styles.sheetHandle} />
+
           <View style={styles.sheetHeader}>
-            <View>
+            <View style={styles.sheetHeaderText}>
               <Text style={styles.sheetTitle}>Report an Issue</Text>
               <Text style={styles.sheetSub}>
                 {submitting
@@ -184,7 +241,9 @@ export const CivicHUD = ({
                   : "Pick a category, then snap a photo. 3 reports verify a node."}
               </Text>
             </View>
-            <Ionicons name="camera" size={28} color="#FF6B35" />
+            <View style={styles.sheetHeaderIcon}>
+              <Ionicons name="camera" size={22} color={C.civic} />
+            </View>
           </View>
 
           <View style={styles.grid}>
@@ -197,19 +256,28 @@ export const CivicHUD = ({
                 onPress={() => handlePick(cat.id)}
               >
                 <View style={styles.categoryIcon}>
-                  <Ionicons name={cat.icon as any} size={24} color="#FF6B35" />
+                  <Ionicons name={cat.icon as any} size={22} color={C.civic} />
                 </View>
-                <Text style={styles.categoryLabel}>{cat.label}</Text>
+                <Text style={styles.categoryLabel} numberOfLines={2}>
+                  {cat.label}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <TouchableOpacity
-            style={styles.cancelBtn}
-            onPress={() => setSheetOpen(false)}
-          >
-            <Text style={styles.cancelText}>Cancel</Text>
-          </TouchableOpacity>
+          {submitting ? (
+            <View style={styles.submittingRow}>
+              <ActivityIndicator color={C.brand} />
+              <Text style={styles.submittingText}>Submitting report…</Text>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={() => setSheetOpen(false)}
+            >
+              <Text style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </Modal>
     </>
@@ -217,7 +285,7 @@ export const CivicHUD = ({
 };
 
 const styles = StyleSheet.create({
-  // Resonance pill
+  /* ---------- Resonance pill ---------- */
   resonanceWrap: {
     position: "absolute",
     top: 110,
@@ -227,124 +295,161 @@ const styles = StyleSheet.create({
   resonancePill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 30,
+    gap: SP.md,
+    paddingLeft: SP.md,
+    paddingRight: SP.xs + 2,
+    paddingVertical: SP.xs + 2,
+    borderRadius: R.pill,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    borderColor: C.border,
   },
   roleDot: { width: 10, height: 10, borderRadius: 5 },
-  roleLabel: { fontSize: 13, fontWeight: "900", letterSpacing: 1 },
-  roleSub: { color: "#aaa", fontSize: 10, marginTop: 1 },
+  roleTextGroup: { justifyContent: "center" },
+  roleLabel: { fontSize: 13, fontWeight: "900", letterSpacing: 1.2 },
+  roleSub: { color: C.textSecondary, fontSize: 10, marginTop: 1 },
   staminaRing: {
     flexDirection: "row",
-    alignItems: "flex-end",
-    marginLeft: 8,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: SP.md,
+    paddingVertical: SP.xs + 2,
+    borderRadius: R.pill,
   },
-  staminaText: { color: "#fff", fontSize: 16, fontWeight: "800" },
-  staminaPct: { color: "#888", fontSize: 10, marginBottom: 2, marginLeft: 1 },
+  staminaRingDim: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: SP.md,
+    paddingVertical: SP.xs + 2,
+    borderRadius: R.pill,
+    backgroundColor: "rgba(255,255,255,0.08)",
+  },
+  staminaText: { color: C.textPrimary, fontSize: 15, fontWeight: "800" },
+  staminaPct: { color: C.textMuted, fontSize: 10, marginLeft: 1 },
+  staminaTextOnBrand: { color: "#04210A", fontSize: 15, fontWeight: "900" },
+  staminaPctOnBrand: { color: "#04210A", fontSize: 10, marginLeft: 1, fontWeight: "800" },
 
-  // FAB
+  /* ---------- FAB ---------- */
   fabWrap: {
     position: "absolute",
-    left: 16,
+    left: SP.lg,
     bottom: 150,
     alignItems: "center",
     zIndex: 50,
   },
   fab: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: "center",
     alignItems: "center",
-    elevation: 8,
-    shadowColor: "#FF6B35",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
+  },
+  fabActiveShadow: {
+    elevation: 10,
+    shadowColor: C.civic,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.55,
+    shadowRadius: 8,
   },
   fabBadge: {
     position: "absolute",
-    top: -2,
-    right: -2,
-    backgroundColor: "#7CF205",
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
+    top: -3,
+    right: -3,
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 4,
+    paddingHorizontal: SP.xs,
     borderWidth: 2,
-    borderColor: "#000",
+    borderColor: "#0d0d0d",
   },
-  fabBadgeText: { color: "#000", fontSize: 10, fontWeight: "900" },
+  fabBadgeText: { color: "#04210A", fontSize: 10, fontWeight: "900" },
   fabLabel: {
-    color: "#fff",
+    color: C.textPrimary,
     fontSize: 10,
     fontWeight: "700",
-    marginTop: 4,
-    textShadowColor: "#000",
+    marginTop: SP.xs + 2,
+    letterSpacing: 0.5,
+    textShadowColor: "rgba(0,0,0,0.8)",
     textShadowRadius: 4,
   },
 
-  // Bottom sheet
+  /* ---------- Bottom sheet ---------- */
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.6)",
+    backgroundColor: "rgba(0,0,0,0.65)",
   },
   sheet: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "#141414",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingHorizontal: 20,
-    paddingTop: 12,
+    backgroundColor: C.bgSheet,
+    borderTopLeftRadius: R.xl,
+    borderTopRightRadius: R.xl,
+    paddingHorizontal: SP.xl,
+    paddingTop: SP.md,
     paddingBottom: 40,
     borderTopWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
+    borderColor: C.border,
+    overflow: "hidden",
+  },
+  sheetAccent: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
   },
   sheetHandle: {
-    width: 40,
+    width: 44,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "#444",
+    backgroundColor: "#3A3A3A",
     alignSelf: "center",
-    marginBottom: 18,
+    marginBottom: SP.xl,
   },
   sheetHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 20,
+    alignItems: "center",
+    marginBottom: SP.xl,
+    gap: SP.md,
   },
-  sheetTitle: { color: "#fff", fontSize: 20, fontWeight: "800" },
-  sheetSub: { color: "#888", fontSize: 12, marginTop: 4, maxWidth: width * 0.7 },
+  sheetHeaderText: { flex: 1 },
+  sheetHeaderIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,107,53,0.12)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sheetTitle: { color: C.textPrimary, fontSize: 20, fontWeight: "800", letterSpacing: 0.3 },
+  sheetSub: {
+    color: C.textSecondary,
+    fontSize: 12,
+    marginTop: SP.xs + 1,
+    lineHeight: 17,
+  },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    gap: 12,
+    rowGap: SP.md,
   },
   categoryCard: {
-    width: (width - 40 - 12) / 2,
-    backgroundColor: "#1F1F1F",
-    borderRadius: 16,
-    padding: 16,
+    width: (width - SP.xl * 2 - SP.md) / 2,
+    backgroundColor: C.surfaceAlt,
+    borderRadius: R.md,
+    padding: SP.lg,
     alignItems: "center",
     flexDirection: "row",
-    gap: 12,
+    gap: SP.md,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
+    borderColor: C.borderSoft,
   },
   categoryIcon: {
     width: 44,
@@ -354,13 +459,24 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  categoryLabel: { color: "#fff", fontSize: 13, fontWeight: "600", flex: 1 },
+  categoryLabel: { color: C.textPrimary, fontSize: 13, fontWeight: "600", flex: 1 },
   cancelBtn: {
-    marginTop: 20,
-    paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: "#222",
+    marginTop: SP.xl,
+    paddingVertical: SP.lg,
+    borderRadius: R.md,
+    backgroundColor: C.cancel,
     alignItems: "center",
   },
-  cancelText: { color: "#888", fontWeight: "700" },
+  cancelText: { color: C.textSecondary, fontWeight: "700", fontSize: 14 },
+  submittingRow: {
+    marginTop: SP.xl,
+    paddingVertical: SP.lg,
+    borderRadius: R.md,
+    backgroundColor: C.cancel,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: SP.md,
+  },
+  submittingText: { color: C.textSecondary, fontWeight: "700", fontSize: 13 },
 });

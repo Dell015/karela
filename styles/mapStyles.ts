@@ -1,4 +1,5 @@
 import { Dimensions, Platform, StyleSheet } from "react-native";
+import { KARELA } from "./designSystem";
 
 const { width, height } = Dimensions.get("window");
 
@@ -18,7 +19,7 @@ export const MAP_CONFIG = {
     lineDashPattern: Platform.OS === "ios" ? iOSSolidFiber : undefined,
   },
   questPath: {
-    strokeColor: "rgba(255, 215, 0, 0.6)", // Slightly more opaque gold
+    strokeColor: "rgba(255, 215, 0, 0.6)",
     strokeWidth: 6,
     zIndex: 150,
     lineDashPattern: Platform.OS === "ios" ? iOSSolidFiber : undefined,
@@ -28,7 +29,7 @@ export const MAP_CONFIG = {
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1A1A1A", // Dark theme background
+    backgroundColor: KARELA.color.surface,
   },
   map: {
     width: width,
@@ -38,38 +39,38 @@ export const styles = StyleSheet.create({
   hudOverlay: {
     position: "absolute",
     top: 50,
-    left: 10, // Reduced side margins to give more room
+    left: 10,
     right: 10,
     flexDirection: "row",
-    backgroundColor: "rgba(0, 0, 0, 0.9)", // Slightly darker for better contrast
-    borderRadius: 12,
-    paddingVertical: 12,
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
+    borderRadius: KARELA.radius.sm,
+    paddingVertical: KARELA.space.md,
     paddingHorizontal: 5,
     borderWidth: 1.5,
-    borderColor: "#7CF205",
+    borderColor: KARELA.color.brand,
     justifyContent: "space-around",
     alignItems: "center",
     zIndex: 1000,
   },
   hudStat: {
     alignItems: "center",
-    flex: 1, // Ensures each of the 5 stats takes up equal space
+    flex: 1,
   },
   hudLabel: {
-    color: "#888",
-    fontSize: 8, // Smaller label
-    fontWeight: "bold",
+    color: KARELA.color.textMuted,
+    fontSize: 8,
+    fontFamily: KARELA.font.bold,
     marginBottom: 2,
   },
   hudValue: {
-    color: "#FFF",
-    fontSize: 14, // Slightly smaller to prevent text wrapping on smaller phones
-    fontWeight: "900",
+    color: KARELA.color.textPrimary,
+    fontSize: KARELA.size.body,
+    fontFamily: KARELA.font.black,
   },
   hudDivider: {
     width: 1,
-    height: "60%", // Shorter divider for a cleaner look
-    backgroundColor: "#333",
+    height: "60%",
+    backgroundColor: KARELA.color.surfaceSoft,
   },
   // --- Markers & Ghost ---
   markerWrapper: {
@@ -82,9 +83,9 @@ export const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: "rgba(32, 159, 119, 1)",
+    backgroundColor: KARELA.color.brandDeep,
     borderWidth: 2,
-    borderColor: "#fff",
+    borderColor: KARELA.color.textPrimary,
   },
   // --- Quest System UI ---
   checkpointLabel: {
@@ -93,14 +94,14 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderWidth: 1,
-    borderColor: "#FFD700",
+    borderColor: KARELA.color.gold,
     marginBottom: -5,
     zIndex: 1,
   },
   checkpointText: {
-    color: "#FFD700",
-    fontSize: 10,
-    fontWeight: "bold",
+    color: KARELA.color.gold,
+    fontSize: KARELA.size.caption,
+    fontFamily: KARELA.font.bold,
   },
   questCard: {
     position: "absolute",
@@ -108,51 +109,49 @@ export const styles = StyleSheet.create({
     alignSelf: "center",
     backgroundColor: "rgba(0, 0, 0, 0.85)",
     paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
+    paddingHorizontal: KARELA.space.xl,
+    borderRadius: KARELA.radius.lg,
     borderWidth: 1.5,
-    borderColor: "#FFD700",
+    borderColor: KARELA.color.gold,
     alignItems: "center",
     zIndex: 50,
   },
   rewardText: {
-    color: "#FFD700",
-    fontWeight: "bold",
-    fontSize: 14,
+    color: KARELA.color.gold,
+    fontFamily: KARELA.font.bold,
+    fontSize: KARELA.size.body,
   },
 
   // --- Flags---
   calloutBubble: {
     backgroundColor: "rgba(0, 0, 0, 0.9)",
-    borderRadius: 12,
+    borderRadius: KARELA.radius.sm,
     paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingVertical: KARELA.space.sm,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "#FFD700",
-    // CRITICAL: Callouts need a defined width on Android
+    borderColor: KARELA.color.gold,
     width: 140,
     minHeight: 40,
   },
   calloutText: {
-    color: "white",
+    color: KARELA.color.textPrimary,
     fontSize: 13,
-    fontWeight: "bold",
-    marginRight: 8,
+    fontFamily: KARELA.font.bold,
+    marginRight: KARELA.space.sm,
     textAlign: "center",
   },
   // --- Control Buttons ---
-  // Remove individual 'top' from these so we can control them easily
   rightButtonBase: {
     position: "absolute",
-    right: 20,
+    right: KARELA.space.xl,
     backgroundColor: "rgba(0, 0, 0, 0.85)",
-    padding: 12,
-    borderRadius: 30,
+    padding: KARELA.space.md,
+    borderRadius: KARELA.radius.xl,
     borderWidth: 1.5,
-    borderColor: "#FFD700",
+    borderColor: KARELA.color.gold,
     zIndex: 100,
   },
   compassButton: { top: 50 },
@@ -162,8 +161,8 @@ export const styles = StyleSheet.create({
   backButton: {
     position: "absolute",
     top: 50,
-    left: 20,
-    backgroundColor: "#7CF205",
+    left: KARELA.space.xl,
+    backgroundColor: KARELA.color.brand,
     width: 45,
     height: 45,
     borderRadius: 22.5,
@@ -175,14 +174,14 @@ export const styles = StyleSheet.create({
     position: "absolute",
     top: -8,
     left: -8,
-    backgroundColor: "#FF3B30",
+    backgroundColor: KARELA.color.danger,
     borderRadius: 10,
     width: 20,
     height: 20,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1.5,
-    borderColor: "white",
+    borderColor: KARELA.color.textPrimary,
   },
   // --- Trash System ---
   trashBinContainer: {
@@ -195,10 +194,10 @@ export const styles = StyleSheet.create({
   },
   trashBin: {
     backgroundColor: "rgba(255, 59, 48, 0.2)",
-    padding: 20,
+    padding: KARELA.space.xl,
     borderRadius: 60,
     borderWidth: 2,
-    borderColor: "#FF3B30",
+    borderColor: KARELA.color.danger,
     borderStyle: "dashed",
     alignItems: "center",
     justifyContent: "center",
@@ -206,16 +205,16 @@ export const styles = StyleSheet.create({
     height: 110,
   },
   trashText: {
-    color: "#FF3B30",
-    fontSize: 10,
-    fontWeight: "bold",
+    color: KARELA.color.danger,
+    fontSize: KARELA.size.caption,
+    fontFamily: KARELA.font.bold,
     marginTop: 5,
     textAlign: "center",
   },
   // --- Start/Stop Button ---
   buttonContainer: {
     position: "absolute",
-    bottom: 40,
+    bottom: KARELA.space.xxxl,
     width: "100%",
     alignItems: "center",
   },
@@ -226,9 +225,9 @@ export const styles = StyleSheet.create({
     elevation: 8,
   },
   buttonText: {
-    color: "#FFFFFF",
-    fontSize: 20,
-    fontWeight: "bold",
+    color: KARELA.color.textPrimary,
+    fontSize: KARELA.space.xl,
+    fontFamily: KARELA.font.bold,
     letterSpacing: 2,
   },
 });

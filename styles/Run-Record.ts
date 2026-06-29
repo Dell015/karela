@@ -1,46 +1,53 @@
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet } from "react-native";
+import { KARELA } from "./designSystem";
 
 export const styles = StyleSheet.create({
     container: { 
         flex: 1, 
-        backgroundColor: '#121212', 
-        alignItems: 'center', 
-        justifyContent: 'center' 
+        backgroundColor: KARELA.color.bg, 
+        alignItems: "center", 
+        justifyContent: "center",
     },
     
     header: { 
-        color: '#fff', 
+        color: KARELA.color.textPrimary, 
         fontSize: 28, 
-        fontWeight: 'bold', 
-        marginBottom: 40 
+        fontFamily: KARELA.font.bold, 
+        marginBottom: KARELA.space.xxxl,
     },
 
     dashboard: { 
-        backgroundColor: '#1e1e1e', 
+        backgroundColor: KARELA.color.surface, 
         padding: 30, 
-        borderRadius: 20, 
-        width: '80%', 
-        marginBottom: 40 },
+        borderRadius: KARELA.radius.lg, 
+        width: "80%", 
+        marginBottom: KARELA.space.xxxl,
+    },
 
     label: { 
-        color: '#00FF00', 
-        fontSize: 20, 
-        fontFamily: 'monospace', 
-        marginVertical: 10 },
+        color: KARELA.color.brand, 
+        fontSize: KARELA.space.xl, 
+        fontFamily: KARELA.font.medium, 
+        marginVertical: 10,
+    },
 
     btn: { 
-        width: '80%', 
-        padding: 20, 
-        borderRadius: 50, 
-        alignItems: 'center' },
+        width: "80%", 
+        padding: KARELA.space.xl, 
+        borderRadius: KARELA.radius.pill, 
+        alignItems: "center",
+    },
 
     startBtn: { 
-        backgroundColor: '#00FF00' },
+        backgroundColor: KARELA.color.brand,
+    },
 
     stopBtn: { 
-        backgroundColor: '#FF3B30' },
+        backgroundColor: KARELA.color.danger,
+    },
 
     btnText: { 
-        fontWeight: 'bold', 
-        fontSize: 18 }
-})
+        fontFamily: KARELA.font.bold, 
+        fontSize: KARELA.size.h2,
+    },
+});

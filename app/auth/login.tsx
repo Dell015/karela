@@ -1,4 +1,5 @@
-import { BlurView } from "expo-blur";
+import { KARELA } from "@/styles/designSystem";
+import { Screen } from "@/components/ui/Screen";
 import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -16,7 +17,6 @@ import {
     View,
 } from "react-native";
 import { signIn } from "../../services/database/supabase/auth";
-import { theme } from "../../styles/theme";
 
 export default function Login() {
   const router = useRouter();
@@ -33,11 +33,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Supabase enforces email confirmation server-side (if enabled):
-      // an unconfirmed user gets an "Email not confirmed" error here.
       await signIn(email, password);
-
-      // Success! Move to Dashboard
       router.replace("/drawer/dashboard");
     } catch (error: any) {
       console.error(error);
@@ -58,14 +54,8 @@ export default function Login() {
   };
 
   return (
-    <View style={theme.container}>
+    <Screen variant="default">
       <Stack.Screen options={{ headerShown: false }} />
-
-      <View style={theme.glowContainer}>
-        <LinearGradient colors={["#209F77", "#7CF205"]} style={theme.rightBlur} />
-        <LinearGradient colors={["#7CF205", "#209F77"]} style={theme.leftBlur} />
-        <BlurView intensity={90} tint="dark" style={StyleSheet.absoluteFill} />
-      </View>
 
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -108,10 +98,10 @@ export default function Login() {
               disabled={loading}
             >
               <LinearGradient
-                colors={["#7CF205", "#209F77"]}
+                colors={KARELA.gradients.brand as unknown as string[]}
                 style={styles.gradientBtn}
               >
-                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.loginBtnText}>Log In</Text>}
+                {loading ? <ActivityIndicator color={KARELA.color.textPrimary} /> : <Text style={styles.loginBtnText}>Log In</Text>}
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -124,23 +114,23 @@ export default function Login() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   scrollContent: { padding: 24, paddingTop: 100 },
-  header: { alignItems: "center", marginBottom: 40 },
-  logo: { width: 80, height: 80, marginBottom: 20, tintColor: "#7CF205" },
-  title: { fontSize: 32, fontFamily: "Excon-Bold", color: "#fff" },
-  subtitle: { color: "rgba(255,255,255,0.6)", marginTop: 10 },
-  form: { gap: 20 },
+  header: { alignItems: "center", marginBottom: KARELA.space.xxxl },
+  logo: { width: 80, height: 80, marginBottom: KARELA.space.xl, tintColor: KARELA.color.brand },
+  title: { fontSize: KARELA.size.display, fontFamily: KARELA.font.bold, color: KARELA.color.textPrimary },
+  subtitle: { color: "rgba(255,255,255,0.6)", marginTop: 10, fontFamily: KARELA.font.regular },
+  form: { gap: KARELA.space.xl },
   inputContainer: { borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.3)" },
-  input: { color: "#fff", paddingVertical: 12, fontSize: 16 },
-  loginBtn: { borderRadius: 30, overflow: "hidden", marginTop: 20 },
-  gradientBtn: { paddingVertical: 16, alignItems: "center" },
-  loginBtnText: { color: "#fff", fontSize: 18, fontFamily: "Excon-Bold" },
-  footer: { flexDirection: "row", justifyContent: "center", marginTop: 40 },
-  footerText: { color: "#888" },
-  signupText: { color: "#7CF205", fontFamily: "Excon-Bold" },
+  input: { color: KARELA.color.textPrimary, paddingVertical: KARELA.space.md, fontSize: 16, fontFamily: KARELA.font.regular },
+  loginBtn: { borderRadius: KARELA.radius.xl, overflow: "hidden", marginTop: KARELA.space.xl },
+  gradientBtn: { paddingVertical: KARELA.space.lg, alignItems: "center" },
+  loginBtnText: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h2, fontFamily: KARELA.font.bold },
+  footer: { flexDirection: "row", justifyContent: "center", marginTop: KARELA.space.xxxl },
+  footerText: { color: KARELA.color.textMuted, fontFamily: KARELA.font.regular },
+  signupText: { color: KARELA.color.brand, fontFamily: KARELA.font.bold },
 });

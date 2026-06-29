@@ -1,3 +1,4 @@
+import { KARELA } from "@/styles/designSystem";
 import { db } from '@/services/database/sqlite/database';
 import { PermissionManager } from '@/services/PermissionsManager';
 import MaskedView from '@react-native-masked-view/masked-view';
@@ -14,14 +15,6 @@ import {
 
 // --- 1. CONFIGURATION & ASSETS ---
 const LOGO_IMAGE = require('@/assets/images/Onboarding/karela_logo.png');
-
-const THEME = {
-    background: '#0F0F0F',
-    primary: '#7CF205',
-    secondary: '#209F77',
-    text: '#FFFFFF',
-    textDim: '#A1A1AA',
-};
 
 const SLIDES = [
     { id: '1', title: 'Your journey starts \nwith one step.', description: 'The hardest part is showing up. Let us handle the rest.', image: LOGO_IMAGE },
@@ -47,7 +40,7 @@ const BackgroundGradients = () => (
 
 const GradientText = ({ text, style }: { text: string, style?: any }) => (
     <MaskedView maskElement={<Text style={[style, { backgroundColor: 'transparent' }]}>{text}</Text>}>
-        <LinearGradient colors={['#FFFFFF', '#7CF205']} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }}>
+        <LinearGradient colors={[KARELA.color.textPrimary, KARELA.color.brand]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }}>
             <Text style={[style, { opacity: 0 }]}>{text}</Text>
         </LinearGradient>
     </MaskedView>
@@ -82,7 +75,7 @@ export const seedTestData = () => {
   
   for (let i = 1; i <= 30; i++) {
     const fakeDate = new Date();
-    fakeDate.setDate(fakeDate.getDate() - i); // Go back i days
+    fakeDate.setDate(fakeDate.getDate() - i);
     
     db.runSync(
       'INSERT INTO ghost_runs (date, distance, duration) VALUES (?, ?, ?)',
@@ -98,11 +91,9 @@ export default function Index() {
     const router = useRouter();
     const { width } = useWindowDimensions();
 
-    // State
     const [showSplash, setShowSplash] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
 
-    // Animated Refs
     const scrollX = useRef(new Animated.Value(0)).current;
     const morphAnim = useRef(new Animated.Value(0)).current;
     const slidesRef = useRef<FlatList>(null);
@@ -114,7 +105,6 @@ export default function Index() {
         "Excon-Black": require("@/assets/fonts/Excon-Black.otf"),
     });
 
-    // Handle Button Morph Effect
     useEffect(() => {        
         Animated.spring(morphAnim, {
             toValue: currentIndex === SLIDES.length - 1 ? 1 : 0,
@@ -131,21 +121,16 @@ export default function Index() {
     }).current;
 
     const scrollToNext = async () => {
-        // 1. If we aren't on the last slide, just scroll forward
         if (currentIndex < SLIDES.length - 1) {
             slidesRef.current?.scrollToIndex({ index: currentIndex + 1 });
             return; 
         } 
 
-        // 2. We are on the last slide. Use your PermissionManager!
         const hasPermission = await PermissionManager.requestLocation();
 
         if (hasPermission) {
-            // Success: The user said 'Allow'
             router.push("/auth/login");
         } else {
-            // Fail: The user said 'Deny'. 
-            // Your PermissionManager already showed the Alert with the 'Settings' button.
             console.log("Permission denied by user.");
         }
     };
@@ -199,7 +184,6 @@ export default function Index() {
             {/* FOOTER ACTIONS */}
             <View style={styles.footer}>
                 <View style={styles.footerRow}>
-                    {/* Skip Button */}
                     <Animated.View style={[styles.skipContainer, {
                         opacity: morphAnim.interpolate({ inputRange: [0, 0.3], outputRange: [1, 0], extrapolate: 'clamp' })
                     }]}>
@@ -208,7 +192,6 @@ export default function Index() {
                         </TouchableOpacity>
                     </Animated.View>
 
-                    {/* Next / Access Button */}
                     <View style={styles.centerWrapper}>
                         <Animated.View style={[styles.morphedButtonContainer, {
                             width: morphAnim.interpolate({ inputRange: [0, 1], outputRange: [120, width - 60] }),
@@ -238,29 +221,29 @@ export default function Index() {
 // --- 4. STYLES ---
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: THEME.background },
+    container: { flex: 1, backgroundColor: KARELA.color.bg },
     splashContainer: { ...StyleSheet.absoluteFillObject, backgroundColor: '#000', zIndex: 100, alignItems: 'center', justifyContent: 'center' },
     splashLogo: { width: 120, height: 120, resizeMode: 'contain' },
     splashLogoContainer: { flex: 1, justifyContent: 'center' },
-    loadingBarTrack: { width: '60%', height: 4, backgroundColor: '#333', borderRadius: 2, marginBottom: 100, overflow: 'hidden' },
-    loadingBarFill: { height: '100%', backgroundColor: '#FFF' },
+    loadingBarTrack: { width: '60%', height: 4, backgroundColor: KARELA.color.surfaceSoft, borderRadius: 2, marginBottom: 100, overflow: 'hidden' },
+    loadingBarFill: { height: '100%', backgroundColor: KARELA.color.textPrimary },
     itemContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     imageContainer: { flex: 0.6, justifyContent: 'center', alignItems: 'center' },
     image: { height: '65%', resizeMode: 'contain' },
     textContainer: { flex: 0.4, width: '85%', alignItems: 'center' },
     titleWrapper: { height: 100, width: '100%', alignItems: 'center', justifyContent: 'center' },
-    title: { fontFamily: 'Excon-Black', fontSize: 28, textAlign: 'center', lineHeight: 34 },
-    description: { fontFamily: 'Excon-Regular', fontSize: 16, color: THEME.textDim, textAlign: 'center', paddingHorizontal: 20, lineHeight: 24 },
+    title: { fontFamily: KARELA.font.black, fontSize: 28, textAlign: 'center', lineHeight: 34 },
+    description: { fontFamily: KARELA.font.regular, fontSize: 16, color: KARELA.color.textSecondary, textAlign: 'center', paddingHorizontal: KARELA.space.xl, lineHeight: 24 },
     paginatorContainer: { flexDirection: 'row', height: 40, justifyContent: 'center', alignItems: 'center' },
-    dot: { height: 6, borderRadius: 4, backgroundColor: THEME.primary, marginHorizontal: 4 },
+    dot: { height: 6, borderRadius: KARELA.space.xs, backgroundColor: KARELA.color.brand, marginHorizontal: KARELA.space.xs },
     footer: { height: 120, width: '100%', justifyContent: 'center' },
     footerRow: { width: '100%', height: 60, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 30 },
     skipContainer: { position: 'absolute', left: 30, zIndex: 2 },
     centerWrapper: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     skipButton: { padding: 10 },
-    skipText: { color: THEME.textDim, fontFamily: 'Excon-Bold', fontSize: 16 },
-    morphedButtonContainer: { height: 56, backgroundColor: THEME.primary, borderRadius: 28, overflow: 'hidden' },
+    skipText: { color: KARELA.color.textSecondary, fontFamily: KARELA.font.bold, fontSize: 16 },
+    morphedButtonContainer: { height: 56, backgroundColor: KARELA.color.brand, borderRadius: KARELA.radius.xl, overflow: 'hidden' },
     primaryButtonFill: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     buttonTextWrapper: { alignItems: 'center', justifyContent: 'center', width: '100%' },
-    primaryButtonText: { color: '#000', fontFamily: 'Excon-Bold', fontSize: 16 },
+    primaryButtonText: { color: KARELA.color.onBright, fontFamily: KARELA.font.bold, fontSize: 16 },
 });

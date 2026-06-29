@@ -1,4 +1,6 @@
 import { useAuth, UserProfile } from "@/context/AuthContext";
+import { ScreenHeader } from "@/components/ui";
+import { Screen } from "@/components/ui/Screen";
 import { generateAniQuest } from "@/services/database/firebase/aiService";
 import {
     addMission,
@@ -9,6 +11,7 @@ import {
     incrementStats,
     setStats,
 } from "@/services/database/supabase/profiles";
+import { KARELA } from "@/styles/designSystem";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -159,16 +162,12 @@ export default function QuestsScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={28} color="#FFF" />
-        </TouchableOpacity>
-        <View style={styles.headerText}>
-          <Text style={styles.title}>Quest Log</Text>
-          <Text style={styles.subtitle}>@{profile?.username || "strider"}</Text>
-        </View>
-      </View>
+    <Screen>
+      <ScreenHeader
+        title="Quest Log"
+        subtitle={`@${profile?.username || "strider"}`}
+        onBack={() => router.back()}
+      />
 
       <View style={styles.categoryContainer}>
         {["solo", "team"].map((cat: any) => (
@@ -216,9 +215,15 @@ export default function QuestsScreen() {
 
       <ScrollView contentContainerStyle={styles.list}>
         {loading || isGenerating ? (
-          <ActivityIndicator color="#7CF205" style={{ marginTop: 50 }} />
+          <ActivityIndicator color={KARELA.color.brand} style={{ marginTop: 50 }} />
         ) : missions.length === 0 ? (
-          <Text style={styles.emptyText}>NO MISSIONS DETECTED</Text>
+          <View style={styles.emptyWrap}>
+            <Ionicons name="radio-outline" size={40} color="#2A2A2A" />
+            <Text style={styles.emptyText}>No missions detected</Text>
+            <Text style={styles.emptySub}>
+              Ani is calibrating your next quest.
+            </Text>
+          </View>
         ) : (
           missions.map((item) => {
             const progress = (item.currentValue || 0) / item.targetValue;
@@ -238,7 +243,10 @@ export default function QuestsScreen() {
 
                 <View style={styles.progressContainer}>
                   <View style={styles.track}>
-                    <View
+                    <LinearGradient
+                      colors={KARELA.gradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
                       style={[
                         styles.fill,
                         { width: `${Math.min(progress * 100, 100)}%` },
@@ -246,15 +254,16 @@ export default function QuestsScreen() {
                     />
                   </View>
                   <Text style={styles.progressLabel}>
-                    {(item.currentValue || 0).toFixed(1)} / {item.targetValue}{" "}
-                    KM
+                    {(item.currentValue || 0).toFixed(1)} / {item.targetValue} KM
                   </Text>
                 </View>
 
                 {isComplete ? (
                   <TouchableOpacity onPress={() => claimReward(item)}>
                     <LinearGradient
-                      colors={["#7CF205", "#209F77"]}
+                      colors={KARELA.gradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
                       style={styles.claimBtn}
                     >
                       <Text style={styles.btnText}>CLAIM REWARD</Text>
@@ -270,96 +279,96 @@ export default function QuestsScreen() {
           })
         )}
       </ScrollView>
-    </View>
+    </Screen>
   );
 }
 
-// ... styles remain the same as your previous version ...
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#000", paddingTop: 60 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 25,
-    marginBottom: 25,
-  },
-  backBtn: { width: 40 },
-  headerText: { flex: 1 },
-  title: { color: "#FFF", fontSize: 24, fontWeight: "900" },
-  subtitle: { color: "#7CF205", fontSize: 12, fontWeight: "bold" },
   categoryContainer: {
     flexDirection: "row",
-    marginHorizontal: 25,
-    backgroundColor: "#111",
-    borderRadius: 15,
+    marginHorizontal: KARELA.space.xl,
+    backgroundColor: KARELA.color.surface,
+    borderRadius: KARELA.radius.md,
     padding: 5,
-    marginBottom: 20,
+    marginBottom: KARELA.space.xl,
+    borderWidth: 1,
+    borderColor: KARELA.color.lineSoft,
   },
   categoryTab: {
     flex: 1,
     paddingVertical: 12,
     alignItems: "center",
-    borderRadius: 12,
+    borderRadius: KARELA.radius.sm,
   },
   activeCategoryTab: {
-    backgroundColor: "#1A1A1A",
+    backgroundColor: KARELA.color.surfaceSoft,
     borderWidth: 1,
     borderColor: "#333",
   },
-  categoryTabText: { color: "#444", fontWeight: "900", fontSize: 12 },
-  activeCategoryText: { color: "#7CF205" },
+  categoryTabText: { color: "#555", fontFamily: KARELA.font.bold, fontSize: 12 },
+  activeCategoryText: { color: KARELA.color.brand },
   freqContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginHorizontal: 25,
-    marginBottom: 25,
+    justifyContent: "center",
+    gap: KARELA.space.xl,
+    marginHorizontal: KARELA.space.xl,
+    marginBottom: KARELA.space.xl,
   },
-  freqChip: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8 },
-  activeFreqChip: { borderBottomWidth: 2, borderBottomColor: "#7CF205" },
-  freqChipText: { color: "#444", fontSize: 10, fontWeight: "900" },
+  freqChip: { paddingVertical: 6, paddingHorizontal: 14, borderRadius: 8 },
+  activeFreqChip: { borderBottomWidth: 2, borderBottomColor: KARELA.color.brand },
+  freqChipText: { color: "#555", fontSize: 11, fontFamily: KARELA.font.bold, letterSpacing: 1 },
   activeFreqText: { color: "#FFF" },
-  list: { paddingHorizontal: 25, paddingBottom: 40 },
+  list: { paddingHorizontal: KARELA.space.xl, paddingBottom: 140 },
   card: {
-    backgroundColor: "#111",
-    borderRadius: 24,
-    padding: 20,
-    marginBottom: 15,
+    backgroundColor: KARELA.color.surface,
+    borderRadius: KARELA.radius.lg,
+    padding: KARELA.space.xl,
+    marginBottom: KARELA.space.lg,
     borderWidth: 1,
-    borderColor: "#222",
+    borderColor: KARELA.color.lineSoft,
   },
-  cardHeader: { flexDirection: "row", marginBottom: 15 },
-  missionTitle: { color: "#FFF", fontSize: 18, fontWeight: "bold" },
-  missionDesc: { color: "#888", fontSize: 13, marginTop: 4 },
+  cardHeader: { flexDirection: "row", marginBottom: KARELA.space.lg, gap: KARELA.space.md },
+  missionTitle: { color: "#FFF", fontSize: 17, fontFamily: KARELA.font.bold },
+  missionDesc: {
+    color: KARELA.color.textMuted,
+    fontSize: 13,
+    marginTop: 4,
+    fontFamily: KARELA.font.regular,
+    lineHeight: 18,
+  },
   xpBadge: {
     backgroundColor: "rgba(124, 242, 5, 0.1)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    alignSelf: "flex-start",
   },
-  xpText: { color: "#7CF205", fontWeight: "bold", fontSize: 11 },
-  progressContainer: { marginBottom: 20 },
+  xpText: { color: KARELA.color.brand, fontFamily: KARELA.font.bold, fontSize: 11 },
+  progressContainer: { marginBottom: KARELA.space.xl },
   track: {
     height: 8,
-    backgroundColor: "#222",
+    backgroundColor: KARELA.color.surfaceSoft,
     borderRadius: 4,
     overflow: "hidden",
     marginBottom: 8,
   },
-  fill: { height: "100%", backgroundColor: "#7CF205" },
-  progressLabel: { color: "#555", fontSize: 10, fontWeight: "bold" },
-  claimBtn: { paddingVertical: 14, borderRadius: 14, alignItems: "center" },
-  btnText: { color: "#000", fontWeight: "900" },
+  fill: { height: "100%", borderRadius: 4 },
+  progressLabel: { color: "#555", fontSize: 10, fontFamily: KARELA.font.medium },
+  claimBtn: { paddingVertical: 14, borderRadius: KARELA.radius.sm, alignItems: "center" },
+  btnText: { color: "#04210A", fontFamily: KARELA.font.bold, letterSpacing: 0.5 },
   lockedBtn: {
     paddingVertical: 14,
-    borderRadius: 14,
+    borderRadius: KARELA.radius.sm,
     alignItems: "center",
-    backgroundColor: "#1A1A1A",
+    backgroundColor: KARELA.color.surfaceSoft,
   },
-  lockedText: { color: "#333", fontWeight: "bold", fontSize: 12 },
+  lockedText: { color: "#444", fontFamily: KARELA.font.bold, fontSize: 12 },
+  emptyWrap: { alignItems: "center", marginTop: 100, gap: KARELA.space.md },
   emptyText: {
-    color: "#333",
+    color: "#555",
     textAlign: "center",
-    marginTop: 100,
-    fontWeight: "900",
+    fontFamily: KARELA.font.bold,
+    fontSize: 15,
   },
+  emptySub: { color: "#444", fontSize: 12, fontFamily: KARELA.font.regular },
 });

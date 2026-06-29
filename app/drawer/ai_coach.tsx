@@ -1,7 +1,6 @@
-import { theme } from "@/styles/theme";
+import { KARELA } from "@/styles/designSystem";
+import { Screen } from "@/components/ui/Screen";
 import { Feather, FontAwesome5, Ionicons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -38,7 +37,7 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 export default function AiCoach() {
   const router = useRouter();
   const { user } = useAuth();
-  const [userProfile, setUserProfile] = useState<any>(null); // <--- Add this
+  const [userProfile, setUserProfile] = useState<any>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
   const [inputText, setInputText] = useState("");
@@ -52,11 +51,9 @@ export default function AiCoach() {
       if (!user?.uid) return;
 
       try {
-        // 1. Fetch runs
         const memories = await getRecentRunMemories(user.uid, 3);
         setRecentMemories(memories);
 
-        // 2. Fetch profile from Supabase
         const row = await getProfile(user.uid);
         if (row) {
           setUserProfile({
@@ -119,7 +116,6 @@ export default function AiCoach() {
     setIsTyping(true);
 
     try {
-      // Prepare localized context
       const stats = userProfile?.stats;
       const profileInfo = stats
         ? `Athlete Stats: 
@@ -187,20 +183,8 @@ export default function AiCoach() {
   };
 
   return (
-    <View style={theme.container}>
+    <Screen variant="calm">
       <Stack.Screen options={{ headerShown: false }} />
-
-      <View style={theme.glowContainer}>
-        <LinearGradient
-          colors={["#209F77", "#1FA279", "#7CF205"]}
-          style={theme.rightBlur}
-        />
-        <LinearGradient
-          colors={["#7CF205", "#1FA279", "#7CF205"]}
-          style={theme.leftBlur}
-        />
-        <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
-      </View>
 
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -208,12 +192,12 @@ export default function AiCoach() {
             onPress={() => router.back()}
             style={styles.backBtn}
           >
-            <Feather name="chevron-left" size={32} color="#fff" />
+            <Feather name="chevron-left" size={32} color={KARELA.color.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Kinetic Coach</Text>
         </View>
         <TouchableOpacity onPress={clearChat} style={styles.refreshBtn}>
-          <Feather name="refresh-cw" size={20} color="#7CF205" />
+          <Feather name="refresh-cw" size={20} color={KARELA.color.brand} />
         </TouchableOpacity>
       </View>
 
@@ -246,8 +230,8 @@ export default function AiCoach() {
                     <action.lib
                       name={action.icon as any}
                       size={16}
-                      color="#7CF205"
-                      style={{ marginRight: 8 }}
+                      color={KARELA.color.brand}
+                      style={{ marginRight: KARELA.space.sm }}
                     />
                     <Text style={styles.chipText}>{action.text}</Text>
                   </TouchableOpacity>
@@ -267,12 +251,9 @@ export default function AiCoach() {
                   ]}
                 >
                   {msg.sender === "user" ? (
-                    <LinearGradient
-                      colors={["#7CF20580", "#209F7780"]}
-                      style={styles.userBubble}
-                    >
+                    <View style={styles.userBubble}>
                       <Text style={styles.msgText}>{msg.text}</Text>
-                    </LinearGradient>
+                    </View>
                   ) : (
                     <View style={styles.aiBubble}>
                       {msg.isAnalysis && (
@@ -288,7 +269,7 @@ export default function AiCoach() {
               {isTyping && (
                 <View style={[styles.bubbleWrapper, styles.aiWrapper]}>
                   <View style={styles.aiBubble}>
-                    <ActivityIndicator size="small" color="#7CF205" />
+                    <ActivityIndicator size="small" color={KARELA.color.brand} />
                   </View>
                 </View>
               )}
@@ -300,7 +281,7 @@ export default function AiCoach() {
           <TextInput
             style={styles.input}
             placeholder="Ask your coach..."
-            placeholderTextColor="#999"
+            placeholderTextColor={KARELA.color.textMuted}
             value={inputText}
             onChangeText={setInputText}
             onSubmitEditing={() => handleSend()}
@@ -309,43 +290,43 @@ export default function AiCoach() {
             <Ionicons
               name="paper-plane"
               size={20}
-              color={inputText ? "#7CF205" : "#666"}
+              color={inputText ? KARELA.color.brand : KARELA.color.textFaint}
             />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   header: {
     paddingTop: 60,
-    paddingHorizontal: 20,
+    paddingHorizontal: KARELA.space.xl,
     paddingBottom: 10,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
   headerTitle: {
-    color: "#fff",
-    fontSize: 18,
-    fontFamily: "Excon-Bold",
+    color: KARELA.color.textPrimary,
+    fontSize: KARELA.size.h2,
+    fontFamily: KARELA.font.bold,
     marginLeft: 10,
   },
   backBtn: { width: 40, height: 40, justifyContent: "center" },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 20 },
+  scrollContent: { paddingHorizontal: KARELA.space.xl, paddingBottom: KARELA.space.xl },
   emptyStateContainer: { marginBottom: 50 },
   greetingTitle: {
-    color: "#fff",
-    fontSize: 18,
-    fontFamily: "Excon-Medium",
+    color: KARELA.color.textPrimary,
+    fontSize: KARELA.size.h2,
+    fontFamily: KARELA.font.medium,
     marginBottom: 5,
   },
   greetingSubtitle: {
-    color: "#fff",
+    color: KARELA.color.textPrimary,
     fontSize: 36,
-    fontFamily: "Excon-Bold",
+    fontFamily: KARELA.font.bold,
     lineHeight: 42,
     marginBottom: 30,
   },
@@ -354,56 +335,56 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#444",
-    borderRadius: 20,
+    borderColor: KARELA.color.textFaint,
+    borderRadius: KARELA.radius.lg,
     paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: KARELA.space.lg,
     backgroundColor: "rgba(0,0,0,0.5)",
   },
-  chipText: { color: "#fff", fontSize: 14, fontFamily: "Excon-Medium" },
-  chatContainer: { gap: 10, paddingBottom: 20 },
-  bubbleWrapper: { maxWidth: "85%", marginVertical: 4 },
+  chipText: { color: KARELA.color.textPrimary, fontSize: KARELA.size.body, fontFamily: KARELA.font.medium },
+  chatContainer: { gap: 10, paddingBottom: KARELA.space.xl },
+  bubbleWrapper: { maxWidth: "85%", marginVertical: KARELA.space.xs },
   userWrapper: { alignSelf: "flex-end" },
   aiWrapper: { alignSelf: "flex-start" },
-  userBubble: { padding: 14, borderRadius: 18, borderBottomRightRadius: 4 },
+  userBubble: { padding: KARELA.space.lg, borderRadius: KARELA.radius.lg, borderBottomRightRadius: KARELA.space.xs, backgroundColor: "rgba(124, 242, 5, 0.2)" },
   aiBubble: {
-    backgroundColor: "#1A1A1A",
-    padding: 14,
-    borderRadius: 18,
-    borderBottomLeftRadius: 4,
+    backgroundColor: KARELA.color.surface,
+    padding: KARELA.space.lg,
+    borderRadius: KARELA.radius.lg,
+    borderBottomLeftRadius: KARELA.space.xs,
     borderLeftWidth: 2,
-    borderLeftColor: "#7CF205",
+    borderLeftColor: KARELA.color.brand,
   },
   aiHeader: {
-    color: "#7CF205",
-    fontSize: 10,
+    color: KARELA.color.brand,
+    fontSize: KARELA.size.caption,
     letterSpacing: 1,
-    marginBottom: 4,
-    fontFamily: "Excon-Bold",
+    marginBottom: KARELA.space.xs,
+    fontFamily: KARELA.font.bold,
   },
   msgText: {
-    color: "#fff",
+    color: KARELA.color.textPrimary,
     fontSize: 15,
     lineHeight: 22,
-    fontFamily: "Excon-Regular",
+    fontFamily: KARELA.font.regular,
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingBottom: Platform.OS === "ios" ? 40 : 20,
+    paddingHorizontal: KARELA.space.xl,
+    paddingBottom: Platform.OS === "ios" ? 40 : KARELA.space.xl,
     paddingTop: 10,
   },
   input: {
     flex: 1,
     height: 50,
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: KARELA.color.surfaceSoft,
     borderRadius: 25,
-    paddingHorizontal: 20,
-    color: "#fff",
+    paddingHorizontal: KARELA.space.xl,
+    color: KARELA.color.textPrimary,
     backgroundColor: "rgba(0,0,0,0.8)",
-    fontFamily: "Excon-Regular",
+    fontFamily: KARELA.font.regular,
   },
   sendBtn: {
     position: "absolute",
@@ -415,7 +396,7 @@ const styles = StyleSheet.create({
   refreshBtn: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: KARELA.radius.lg,
     backgroundColor: "rgba(124, 242, 5, 0.1)",
     justifyContent: "center",
     alignItems: "center",

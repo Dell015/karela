@@ -1,3 +1,4 @@
+import { KARELA } from "@/styles/designSystem";
 import { supabase } from "@/services/database/supabase/config";
 import { getStreakTier } from "@/services/streakMultiplier";
 import { Ionicons } from "@expo/vector-icons";
@@ -82,19 +83,19 @@ export const RunHistory = ({ userId, streak, gems }: RunHistoryProps) => {
       {/* STREAK & GEMS BAR */}
       <View style={styles.metricsBar}>
         <View style={styles.metricPill}>
-          <Ionicons name="flame" size={14} color="#FFD700" />
+          <Ionicons name="flame" size={14} color={KARELA.color.gold} />
           <Text style={styles.metricValue}>{streak}d</Text>
           <Text style={styles.metricLabel}>
             {tier.multiplier}x
           </Text>
         </View>
         <View style={styles.metricPill}>
-          <Ionicons name="diamond" size={14} color="#7CF205" />
+          <Ionicons name="diamond" size={14} color={KARELA.color.brand} />
           <Text style={styles.metricValue}>{gems}</Text>
           <Text style={styles.metricLabel}>gems</Text>
         </View>
         <View style={styles.metricPill}>
-          <Ionicons name="fitness" size={14} color="#FF6B35" />
+          <Ionicons name="fitness" size={14} color={KARELA.color.civic} />
           <Text style={styles.metricValue}>{runs.length}</Text>
           <Text style={styles.metricLabel}>runs</Text>
         </View>
@@ -113,16 +114,16 @@ export const RunHistory = ({ userId, streak, gems }: RunHistoryProps) => {
             <Ionicons
               name={expanded ? "chevron-up" : "chevron-down"}
               size={18}
-              color="#666"
+              color={KARELA.color.textFaint}
             />
           </View>
         </TouchableOpacity>
 
         {loading ? (
-          <ActivityIndicator color="#7CF205" style={{ marginTop: 20 }} />
+          <ActivityIndicator color={KARELA.color.brand} style={{ marginTop: KARELA.space.xl }} />
         ) : !expanded ? null : runs.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="footsteps-outline" size={32} color="#333" />
+            <Ionicons name="footsteps-outline" size={32} color={KARELA.color.surfaceSoft} />
             <Text style={styles.emptyText}>
               No runs recorded yet.{"\n"}Start a run to see your history here.
             </Text>
@@ -177,28 +178,28 @@ export const RunHistory = ({ userId, streak, gems }: RunHistoryProps) => {
 };
 
 const styles = StyleSheet.create({
-  container: { marginTop: 20 },
+  container: { marginTop: KARELA.space.xl },
   metricsBar: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: 12,
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    gap: KARELA.space.md,
+    paddingHorizontal: KARELA.space.xl,
+    marginBottom: KARELA.space.xl,
   },
   metricPill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "#1A1A1A",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+    backgroundColor: KARELA.color.surface,
+    paddingHorizontal: KARELA.space.lg,
+    paddingVertical: KARELA.space.sm,
+    borderRadius: KARELA.radius.lg,
     borderWidth: 1,
-    borderColor: "#222",
+    borderColor: KARELA.color.surfaceSoft,
   },
-  metricValue: { color: "#fff", fontWeight: "800", fontSize: 14 },
-  metricLabel: { color: "#666", fontSize: 11 },
-  section: { paddingHorizontal: 20 },
+  metricValue: { color: KARELA.color.textPrimary, fontFamily: KARELA.font.black, fontSize: KARELA.size.body },
+  metricLabel: { color: KARELA.color.textFaint, fontSize: 11, fontFamily: KARELA.font.regular },
+  section: { paddingHorizontal: KARELA.space.xl },
   collapseHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -210,59 +211,60 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
   },
-  runCount: { color: "#555", fontSize: 12, fontWeight: "600" },
+  runCount: { color: KARELA.color.textFaint, fontSize: KARELA.size.label, fontFamily: KARELA.font.medium },
   sectionTitle: {
-    color: "#fff",
+    color: KARELA.color.textPrimary,
     fontSize: 16,
-    fontWeight: "900",
-    marginBottom: 14,
+    fontFamily: KARELA.font.black,
+    marginBottom: KARELA.space.lg,
     letterSpacing: 0.5,
   },
   emptyState: {
     alignItems: "center",
-    paddingVertical: 40,
+    paddingVertical: KARELA.space.xxxl,
     gap: 10,
   },
   emptyText: {
-    color: "#555",
+    color: KARELA.color.textFaint,
     textAlign: "center",
     fontSize: 13,
+    fontFamily: KARELA.font.regular,
     lineHeight: 20,
   },
-  runCard: { marginBottom: 4 },
+  runCard: { marginBottom: KARELA.space.xs },
   runHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: KARELA.space.sm,
   },
-  runDate: { color: "#888", fontSize: 12, fontWeight: "600" },
+  runDate: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.medium },
   xpBadge: {
     backgroundColor: "rgba(124,242,5,0.1)",
-    paddingHorizontal: 8,
+    paddingHorizontal: KARELA.space.sm,
     paddingVertical: 3,
-    borderRadius: 8,
+    borderRadius: KARELA.space.sm,
   },
-  xpText: { color: "#7CF205", fontSize: 11, fontWeight: "700" },
+  xpText: { color: KARELA.color.brand, fontSize: 11, fontFamily: KARELA.font.bold },
   runStats: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#111",
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    borderRadius: KARELA.radius.md,
+    paddingVertical: KARELA.space.lg,
+    paddingHorizontal: KARELA.space.lg,
   },
   runStat: { flex: 1, alignItems: "center" },
-  runStatValue: { color: "#fff", fontSize: 16, fontWeight: "800" },
-  runStatLabel: { color: "#666", fontSize: 10, marginTop: 2, letterSpacing: 0.5 },
+  runStatValue: { color: KARELA.color.textPrimary, fontSize: 16, fontFamily: KARELA.font.black },
+  runStatLabel: { color: KARELA.color.textFaint, fontSize: KARELA.size.caption, fontFamily: KARELA.font.regular, marginTop: 2, letterSpacing: 0.5 },
   divider: {
     width: 1,
     height: 28,
-    backgroundColor: "#222",
+    backgroundColor: KARELA.color.surfaceSoft,
   },
   separator: {
     height: 1,
-    backgroundColor: "#1A1A1A",
-    marginVertical: 12,
+    backgroundColor: KARELA.color.surface,
+    marginVertical: KARELA.space.md,
   },
 });

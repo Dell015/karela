@@ -1,12 +1,13 @@
 import { Dimensions, StyleSheet } from "react-native";
+import { KARELA } from "./designSystem";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export const dashboard_ui = StyleSheet.create({
   dashboard: {
     flex: 1,
-    paddingHorizontal: 20,
-    backgroundColor: "#0d0d0d",
+    paddingHorizontal: KARELA.space.xl,
+    backgroundColor: KARELA.color.bg,
     zIndex: 10,
   },
   ProfileHeader: {
@@ -14,7 +15,7 @@ export const dashboard_ui = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginTop: 10,
-    marginBottom: 20,
+    marginBottom: KARELA.space.xl,
   },
   LeftGroup: {
     flexDirection: "row",
@@ -25,16 +26,17 @@ export const dashboard_ui = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: "#209F77",
+    backgroundColor: KARELA.color.brandDeep,
   },
   welcomeText: {
-    color: "#8A8A8A",
-    fontSize: 14,
+    color: KARELA.color.textMuted,
+    fontSize: KARELA.size.body,
+    fontFamily: KARELA.font.regular,
   },
   nameText: {
-    color: "#fff",
-    fontSize: 24,
-    fontWeight: "bold",
+    color: KARELA.color.textPrimary,
+    fontSize: KARELA.size.h1,
+    fontFamily: KARELA.font.bold,
   },
 
   menuButton: { padding: 5 },
@@ -42,11 +44,11 @@ export const dashboard_ui = StyleSheet.create({
   // --- PROGRESS CARD STYLES ---
   RunCard: {
     height: 130,
-    borderRadius: 15,
+    borderRadius: KARELA.radius.md,
     overflow: "hidden",
-    marginBottom: 8,
+    marginBottom: KARELA.space.sm,
     borderWidth: 1,
-    padding: 4,
+    padding: KARELA.space.xs,
     borderColor: "rgba(124, 242, 5, 0.3)",
   },
   CardOverlay: {
@@ -60,15 +62,16 @@ export const dashboard_ui = StyleSheet.create({
     justifyContent: "center",
   },
   LevelLabel: {
-    color: "#fff",
-    fontSize: 10,
+    color: KARELA.color.textPrimary,
+    fontSize: KARELA.size.caption,
+    fontFamily: KARELA.font.medium,
     opacity: 0.7,
     letterSpacing: 1,
   },
   nameLabel: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "bold",
+    color: KARELA.color.textPrimary,
+    fontSize: KARELA.space.xl,
+    fontFamily: KARELA.font.bold,
   },
   progressContainer: {
     width: "100%",
@@ -77,44 +80,46 @@ export const dashboard_ui = StyleSheet.create({
   progressBarTrack: {
     width: "100%",
     height: 10,
-    backgroundColor: "rgba(255,255,255,0.1)",
+    backgroundColor: KARELA.color.line,
     borderRadius: 5,
     overflow: "hidden",
   },
   progressBarFill: {
     height: "100%",
-    backgroundColor: "#7CF205",
+    backgroundColor: KARELA.color.brand,
     borderRadius: 5,
   },
   xpText: {
-    color: "#8A8A8A",
-    fontSize: 10,
+    color: KARELA.color.textMuted,
+    fontSize: KARELA.size.caption,
+    fontFamily: KARELA.font.regular,
     textAlign: "right",
-    marginTop: 4,
+    marginTop: KARELA.space.xs,
   },
 
   // --- MAP PREVIEW STYLES ---
   sectionTitle: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 8,
-    marginTop: 8,
+    color: KARELA.color.textPrimary,
+    fontSize: KARELA.size.h2,
+    fontFamily: KARELA.font.bold,
+    marginBottom: KARELA.space.sm,
+    marginTop: KARELA.space.sm,
   },
   mapPreviewContainer: {
     height: 180,
-    backgroundColor: "#1A1A1A",
-    borderRadius: 15,
+    backgroundColor: KARELA.color.surface,
+    borderRadius: KARELA.radius.md,
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
     overflow: "visible",
     marginTop: 10,
-    marginBottom: 8,
+    marginBottom: KARELA.space.sm,
   },
   mapPlaceholder: {
-    color: "#444",
-    fontSize: 12,
+    color: KARELA.color.textFaint,
+    fontSize: KARELA.size.label,
+    fontFamily: KARELA.font.regular,
   },
   weatherOverlayIcon: {
     position: "absolute",
@@ -128,15 +133,15 @@ export const dashboard_ui = StyleSheet.create({
     position: "absolute",
     bottom: 15,
     right: 15,
-    backgroundColor: "#7CF205",
-    paddingHorizontal: 12,
+    backgroundColor: KARELA.color.brand,
+    paddingHorizontal: KARELA.space.md,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: KARELA.space.sm,
   },
   mapButtonText: {
     fontSize: 11,
-    fontWeight: "bold",
-    color: "#ffffff",
+    fontFamily: KARELA.font.bold,
+    color: KARELA.color.textPrimary,
   },
 
   // --- CHARACTER GRID STYLES ---
@@ -149,30 +154,31 @@ export const dashboard_ui = StyleSheet.create({
     width: "48%",
   },
   characterTitle: {
-    color: "#fff",
+    color: KARELA.color.textPrimary,
     fontSize: 16,
-    fontWeight: "bold",
-    marginTop: 8,
-    marginBottom: 8,
+    fontFamily: KARELA.font.bold,
+    marginTop: KARELA.space.sm,
+    marginBottom: KARELA.space.sm,
   },
   characterBox: {
     height: 300,
-    backgroundColor: "#1A1A1A",
-    borderRadius: 15,
+    backgroundColor: KARELA.color.surface,
+    borderRadius: KARELA.radius.md,
   },
 
   // --- QUEST OVERVIEW STYLES ---
   questOverviewCard: {
-    backgroundColor: "#1A1A1A",
-    borderRadius: 15,
-    padding: 20,
+    backgroundColor: KARELA.color.surface,
+    borderRadius: KARELA.radius.md,
+    padding: KARELA.space.xl,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
   questOverviewText: {
-    color: "#8A8A8A",
-    fontSize: 14,
+    color: KARELA.color.textMuted,
+    fontSize: KARELA.size.body,
+    fontFamily: KARELA.font.regular,
     flex: 1,
     marginRight: 10,
     lineHeight: 20,
@@ -180,32 +186,33 @@ export const dashboard_ui = StyleSheet.create({
   questSmallBox: {
     width: 60,
     height: 60,
-    backgroundColor: "#333",
-    borderRadius: 12,
+    backgroundColor: KARELA.color.surfaceSoft,
+    borderRadius: KARELA.radius.sm,
   },
 
   // --- CHAT WITH ANI (INTEGRATED NESTED DESIGN) ---
   chatCardContainer: {
-    backgroundColor: "#1A1A1A",
-    borderRadius: 20,
+    backgroundColor: KARELA.color.surface,
+    borderRadius: KARELA.radius.lg,
     flexDirection: "row",
     overflow: "hidden",
     minHeight: 150,
     marginTop: 5,
-    marginBottom: 20,
+    marginBottom: KARELA.space.xl,
   },
   chatSideBar: {
-    width: 12,
+    width: KARELA.space.md,
     height: "100%",
   },
   chatContent: {
     flex: 1,
-    padding: 20,
+    padding: KARELA.space.xl,
     justifyContent: "space-between",
   },
   chatText: {
-    color: "#fff",
-    fontSize: 14,
+    color: KARELA.color.textPrimary,
+    fontSize: KARELA.size.body,
+    fontFamily: KARELA.font.regular,
     lineHeight: 20,
     marginBottom: 15,
   },
@@ -213,34 +220,35 @@ export const dashboard_ui = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#444",
+    borderColor: KARELA.color.textFaint,
     borderRadius: 25,
     paddingHorizontal: 15,
-    paddingVertical: 8,
+    paddingVertical: KARELA.space.sm,
     backgroundColor: "rgba(0,0,0,0.2)",
   },
   nestedInput: {
     flex: 1,
-    color: "#fff",
+    color: KARELA.color.textPrimary,
     fontSize: 13,
+    fontFamily: KARELA.font.regular,
   },
 
   // --- FLOATING ISLAND BUTTON STYLES ---
   islandWrapper: {
-    position: "absolute", // This makes it "float" so it doesn't take up space
-    bottom: 0, // Pins it to the bottom
+    position: "absolute",
+    bottom: 0,
     left: 0,
     right: 0,
     height: 120,
-    backgroundColor: "transparent", // Ensures the wrapper itself is invisible
+    backgroundColor: "transparent",
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 1000, // Keeps it on top of the cards
+    zIndex: 1000,
   },
 
   floatingButtonContainer: {
     position: "absolute",
-    bottom: 40,
+    bottom: KARELA.space.xxxl,
     left: 0,
     right: 0,
     alignItems: "center",
@@ -248,53 +256,44 @@ export const dashboard_ui = StyleSheet.create({
     zIndex: 999,
   },
   floatingIslandCircle: {
-    width: 80, // Equal width and height
+    width: 80,
     height: 80,
-    borderRadius: 40, // Half of width/height
-    shadowColor: "#7CF205",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
+    borderRadius: KARELA.space.xxxl,
+    ...KARELA.glow.brand,
     elevation: 12,
   },
   circularGradient: {
     flex: 1,
-    borderRadius: 40,
+    borderRadius: KARELA.space.xxxl,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "rgba(255, 255, 255, 0.2)", // Subtle inner ring
+    borderColor: "rgba(255, 255, 255, 0.2)",
   },
   // --- THE FLOATING ISLAND ---
   islandContainer: {
     position: "absolute",
-    bottom: 25, // Distance from the very bottom of the screen
+    bottom: 25,
     left: 0,
     right: 0,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 20,
-    // CRITICAL: Ensure it doesn't capture touch events for the whole screen
+    paddingHorizontal: KARELA.space.xl,
     height: 100,
     zIndex: -999,
   },
   islandDock: {
     flexDirection: "row",
-    backgroundColor: "rgba(28, 28, 28, 0.95)", // The bar itself has a color
-    borderRadius: 40,
+    backgroundColor: "rgba(28, 28, 28, 0.95)",
+    borderRadius: KARELA.space.xxxl,
     height: 70,
-    width: "90%", // Don't take full width to keep the "floating" look
+    width: "90%",
     alignItems: "center",
     justifyContent: "space-around",
     paddingHorizontal: 10,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
-
-    // Shadow for depth
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 15,
+    borderColor: KARELA.color.line,
+    ...KARELA.glow.soft,
     elevation: 20,
   },
   islandButton: {
@@ -303,15 +302,15 @@ export const dashboard_ui = StyleSheet.create({
     width: 60,
   },
   islandButtonText: {
-    color: "#8A8A8A",
-    fontSize: 10,
-    fontWeight: "600",
-    marginTop: 4,
+    color: KARELA.color.textMuted,
+    fontSize: KARELA.size.caption,
+    fontFamily: KARELA.font.medium,
+    marginTop: KARELA.space.xs,
   },
   // --- CENTER PLAY BUTTON ---
   playButtonOuter: {
-    top: -25, // Pops the button out of the dock
-    shadowColor: "#7CF205",
+    top: -25,
+    shadowColor: KARELA.color.brand,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
@@ -323,7 +322,7 @@ export const dashboard_ui = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 4,
-    borderColor: "#0d0d0d", // Creates a gap between the button and the dock
+    borderColor: KARELA.color.bg,
   },
 
   // -- NEW: CHARACTER GRID TWEAKS --
@@ -331,9 +330,8 @@ export const dashboard_ui = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 10,
-    zIndex: 50, // Ensures small boxes don't get covered by map
+    zIndex: 50,
   },
-  // Ensure Column doesn't hide overflowing animated content
   characterColumn_View: {
     width: "48%",
     overflow: "visible",
@@ -342,100 +340,100 @@ export const dashboard_ui = StyleSheet.create({
   // -- NEW: EXPANDED CONSOLE VISUALS --
   consoleOverlay: {
     position: "absolute",
-    bottom: 100, // Distance from the absolute bottom of the screen
+    bottom: 100,
     width: "100%",
     alignItems: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: KARELA.space.xl,
   },
   consoleTitle: {
-    color: "#7CF205", // Your neon green
-    fontSize: 14,
-    fontWeight: "900",
+    color: KARELA.color.brand,
+    fontSize: KARELA.size.body,
+    fontFamily: KARELA.font.black,
     letterSpacing: 2,
-    marginBottom: 20,
+    marginBottom: KARELA.space.xl,
     textTransform: "uppercase",
   },
   btnRow: {
     flexDirection: "row",
-    gap: 15, // Gap between the 3 buttons
+    gap: 15,
   },
   commandBtn: {
     backgroundColor: "#000",
     padding: 15,
-    borderRadius: 15,
+    borderRadius: KARELA.radius.md,
     alignItems: "center",
-    width: 90, // Explicit width for consistency
+    width: 90,
     borderWidth: 1,
     borderColor: "rgba(124, 242, 5, 0.5)",
   },
   commandBtnActive: {
-    backgroundColor: "#7CF205",
-    borderColor: "#7CF205",
-    shadowColor: "#7CF205",
+    backgroundColor: KARELA.color.brand,
+    borderColor: KARELA.color.brand,
+    shadowColor: KARELA.color.brand,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
   },
   commandBtnText: {
-    color: "#7CF205",
-    fontSize: 10,
-    fontWeight: "900",
+    color: KARELA.color.brand,
+    fontSize: KARELA.size.caption,
+    fontFamily: KARELA.font.black,
     marginTop: 5,
   },
   commandBtnTextActive: {
     color: "#000",
   },
   closeConsoleBtn: {
-    marginTop: 40,
+    marginTop: KARELA.space.xxxl,
     padding: 10,
   },
   closeConsoleBtnText: {
-    color: "#fff",
+    color: KARELA.color.textPrimary,
     opacity: 0.5,
-    fontSize: 12,
-    fontWeight: "bold",
+    fontSize: KARELA.size.label,
+    fontFamily: KARELA.font.bold,
     letterSpacing: 2,
   },
   customizeBtn: {
     backgroundColor: "rgba(124, 242, 5, 0.1)",
     borderWidth: 1,
-    borderColor: "#7CF205",
-    borderRadius: 8,
+    borderColor: KARELA.color.brand,
+    borderRadius: KARELA.space.sm,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 6,
-    marginTop: 8,
+    marginTop: KARELA.space.sm,
     gap: 5,
   },
   customizeBtnText: {
-    color: "#7CF205",
-    fontSize: 10,
-    fontWeight: "900",
+    color: KARELA.color.brand,
+    fontSize: KARELA.size.caption,
+    fontFamily: KARELA.font.black,
     letterSpacing: 1,
   },
   mapRoundedBox: {
-    borderRadius: 15,
+    borderRadius: KARELA.radius.md,
     overflow: "hidden",
     height: 200,
     width: "100%",
-    backgroundColor: "#1a1a1a",
+    backgroundColor: KARELA.color.surface,
   },
   recenterBtn: {
     position: "absolute",
-    left: 12,
-    top: 12, // Adjusted for better alignment
-    backgroundColor: "#7CF205",
-    padding: 8,
-    borderRadius: 12,
+    left: KARELA.space.md,
+    top: KARELA.space.md,
+    backgroundColor: KARELA.color.brand,
+    padding: KARELA.space.sm,
+    borderRadius: KARELA.radius.sm,
     zIndex: 10,
   },
   loadingText: {
     flex: 1,
     textAlign: "center",
     textAlignVertical: "center",
-    color: "#7CF205",
-    fontWeight: "600",
+    color: KARELA.color.brand,
+    fontFamily: KARELA.font.medium,
   },
 });

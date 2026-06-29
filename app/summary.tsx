@@ -1,4 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
+import { KARELA } from "@/styles/designSystem";
 import { saveGhostRun } from "@/services/database/sqlite/database";
 import { onRunCompleted } from "@/services/engines/GhostModelManager";
 import { GEM_EARNINGS, getTotalSectors } from "@/services/gemSystem";
@@ -63,7 +64,6 @@ export default function SummaryScreen() {
           JSON.parse(path as string),
         );
 
-        // Trigger adaptive ghost calibration (reinforcement feedback)
         const parsedPath = JSON.parse(path as string);
         onRunCompleted({
           id: Date.now(),
@@ -87,7 +87,6 @@ export default function SummaryScreen() {
   const handleFinalizeMission = async () => {
     setIsSaving(true);
 
-    // Safety check: if there's no user or profile, we can't save stats
     if (!user || !profile) {
       Alert.alert("Error", "Profile not loaded. Please wait.");
       setIsSaving(false);
@@ -97,16 +96,13 @@ export default function SummaryScreen() {
     try {
       const distanceInKm = Number(meters) / 1000;
 
-      // 1. Update the Main Profile Stats (Total Distance & Calories)
       await incrementStats(user.uid, {
         total_distance_km: Number(distanceInKm.toFixed(2)),
         total_calories_burned: Number(Number(kcal).toFixed(2)),
       });
 
-      // 2. Log the raw data to history
       await logRunToHistory();
 
-      // 3. Trigger the AI Summary Generation
       const runData = {
         distance: Number(meters),
         duration: Number(seconds),
@@ -116,10 +112,8 @@ export default function SummaryScreen() {
       };
       await generateAndSaveRunSummary(user.uid, runData);
 
-      // 4. Update the Active Missions (Progress Bars)
       await syncRunToMissions(user.uid, distanceInKm);
 
-      // 5. Sync streak to Supabase (used by streak multiplier)
       const currentStreak = calculateStreak();
       const longestStreak = Math.max(
         currentStreak,
@@ -131,10 +125,8 @@ export default function SummaryScreen() {
         last_active_date: new Date().toISOString(),
       });
 
-      // 6. Award the Run XP (multiplied by streak tier)
       if (xp) await gainXP(Number(xp));
 
-      // 7. Award Sector Bonus Gems (flat rate, not multiplied)
       const totalSectors = getTotalSectors(Number(meters));
       if (totalSectors > 0) {
         const gemsEarned = totalSectors * GEM_EARNINGS.SECTOR_BONUS;
@@ -156,7 +148,7 @@ export default function SummaryScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={["#0d0d0d", "#1a1a1a"]}
+        colors={[KARELA.color.bg, KARELA.color.surface]}
         style={StyleSheet.absoluteFill}
       />
 
@@ -170,7 +162,7 @@ export default function SummaryScreen() {
           {/* Main XP Display */}
           <View style={styles.xpCircleContainer}>
             <LinearGradient
-              colors={["#7CF205", "#209F77"]}
+              colors={KARELA.gradients.brand as unknown as string[]}
               style={styles.xpCircle}
             >
               <Text style={styles.xpAmount}>+{xp}</Text>
@@ -181,13 +173,13 @@ export default function SummaryScreen() {
           {/* Stats Grid */}
           <View style={styles.statsGrid}>
             <View style={styles.statTile}>
-              <Ionicons name="location-outline" size={24} color="#7CF205" />
+              <Ionicons name="location-outline" size={24} color={KARELA.color.brand} />
               <Text style={styles.tileValue}>{meters}m</Text>
               <Text style={styles.tileLabel}>DISTANCE</Text>
             </View>
 
             <View style={styles.statTile}>
-              <Ionicons name="time-outline" size={24} color="#7CF205" />
+              <Ionicons name="time-outline" size={24} color={KARELA.color.brand} />
               <Text style={styles.tileValue}>
                 {formatTime(Number(seconds))}
               </Text>
@@ -195,13 +187,13 @@ export default function SummaryScreen() {
             </View>
 
             <View style={styles.statTile}>
-              <Ionicons name="flame-outline" size={24} color="#7CF205" />
+              <Ionicons name="flame-outline" size={24} color={KARELA.color.brand} />
               <Text style={styles.tileValue}>{kcal}</Text>
               <Text style={styles.tileLabel}>CALORIES</Text>
             </View>
 
             <View style={styles.statTile}>
-              <Ionicons name="speedometer-outline" size={24} color="#7CF205" />
+              <Ionicons name="speedometer-outline" size={24} color={KARELA.color.brand} />
               <Text style={styles.tileValue}>
                 {seconds && meters
                   ? ((Number(meters) / Number(seconds)) * 3.6).toFixed(1)
@@ -219,7 +211,7 @@ export default function SummaryScreen() {
             onPress={handleSaveGhost}
             activeOpacity={0.7}
           >
-            <Ionicons name="copy-outline" size={20} color="#7CF205" />
+            <Ionicons name="copy-outline" size={20} color={KARELA.color.brand} />
             <Text style={styles.ghostButtonText}>RECORD AS GHOST</Text>
           </TouchableOpacity>
 
@@ -229,13 +221,13 @@ export default function SummaryScreen() {
             disabled={isSaving}
           >
             <LinearGradient
-              colors={["#7CF205", "#209F77"]}
+              colors={KARELA.gradients.brand as unknown as string[]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.gradientButton}
             >
               {isSaving ? (
-                <ActivityIndicator color="#000" />
+                <ActivityIndicator color={KARELA.color.onBright} />
               ) : (
                 <Text style={styles.primaryButtonText}>RETURN TO BASE</Text>
               )}
@@ -248,18 +240,18 @@ export default function SummaryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0d0d0d" },
-  header: { alignItems: "center", marginTop: 40 },
+  container: { flex: 1, backgroundColor: KARELA.color.bg },
+  header: { alignItems: "center", marginTop: KARELA.space.xxxl },
   missionText: {
-    color: "#7CF205",
-    fontSize: 14,
+    color: KARELA.color.brand,
+    fontSize: KARELA.size.body,
+    fontFamily: KARELA.font.medium,
     letterSpacing: 4,
-    fontWeight: "600",
   },
   completeText: {
-    color: "#fff",
+    color: KARELA.color.textPrimary,
     fontSize: 38,
-    fontWeight: "900",
+    fontFamily: KARELA.font.black,
     fontStyle: "italic",
   },
 
@@ -273,7 +265,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(124, 242, 5, 0.1)",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: KARELA.space.xxxl,
   },
   xpCircle: {
     width: 170,
@@ -282,31 +274,31 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     elevation: 20,
-    shadowColor: "#7CF205",
+    shadowColor: KARELA.color.brand,
     shadowOpacity: 0.5,
     shadowRadius: 15,
   },
-  xpAmount: { fontSize: 48, fontWeight: "900", color: "#ffffff" },
-  xpLabel: { fontSize: 12, fontWeight: "bold", color: "#ffffff", opacity: 0.7 },
+  xpAmount: { fontSize: 48, fontFamily: KARELA.font.black, color: KARELA.color.textPrimary },
+  xpLabel: { fontSize: KARELA.size.label, fontFamily: KARELA.font.bold, color: KARELA.color.textPrimary, opacity: 0.7 },
 
   statsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: KARELA.space.xl,
   },
   statTile: {
     width: width * 0.4,
-    backgroundColor: "#1a1a1a",
-    margin: 8,
-    padding: 20,
-    borderRadius: 20,
+    backgroundColor: KARELA.color.surface,
+    margin: KARELA.space.sm,
+    padding: KARELA.space.xl,
+    borderRadius: KARELA.radius.lg,
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: KARELA.color.surfaceSoft,
     alignItems: "center",
   },
-  tileValue: { color: "#fff", fontSize: 20, fontWeight: "bold", marginTop: 8 },
-  tileLabel: { color: "#888", fontSize: 10, letterSpacing: 1, marginTop: 4 },
+  tileValue: { color: KARELA.color.textPrimary, fontSize: KARELA.space.xl, fontFamily: KARELA.font.bold, marginTop: KARELA.space.sm },
+  tileLabel: { color: KARELA.color.textMuted, fontSize: KARELA.size.caption, fontFamily: KARELA.font.medium, letterSpacing: 1, marginTop: KARELA.space.xs },
 
   footer: { padding: 30, width: "100%" },
   ghostButton: {
@@ -315,22 +307,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 15,
     marginBottom: 15,
-    borderRadius: 15,
+    borderRadius: KARELA.radius.md,
     borderWidth: 1,
-    borderColor: "#7CF205",
+    borderColor: KARELA.color.brand,
   },
-  ghostButtonText: { color: "#7CF205", fontWeight: "bold", marginLeft: 10 },
+  ghostButtonText: { color: KARELA.color.brand, fontFamily: KARELA.font.bold, marginLeft: 10 },
   primaryButton: {
     width: "100%",
     height: 60,
-    borderRadius: 15,
+    borderRadius: KARELA.radius.md,
     overflow: "hidden",
   },
   gradientButton: { flex: 1, justifyContent: "center", alignItems: "center" },
   primaryButtonText: {
-    color: "#ffffff",
-    fontSize: 18,
-    fontWeight: "900",
+    color: KARELA.color.textPrimary,
+    fontSize: KARELA.size.h2,
+    fontFamily: KARELA.font.black,
     letterSpacing: 1,
   },
 });

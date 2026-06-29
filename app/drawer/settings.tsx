@@ -1,15 +1,16 @@
 import { useSettings } from "@/hooks/useSettings";
+import { KARELA } from "@/styles/designSystem";
+import { Screen } from "@/components/ui/Screen";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  StatusBar
+  StatusBar,
 } from "react-native";
 
 export default function SettingsScreen() {
@@ -17,7 +18,7 @@ export default function SettingsScreen() {
   const { handleResetData, injectFakeData, logout, profile } = useSettings();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <Screen variant="calm" glow={false}>
       <StatusBar barStyle="light-content" />
       
       {/* Header */}
@@ -26,7 +27,7 @@ export default function SettingsScreen() {
           style={styles.backButton}
           onPress={() => router.replace("/drawer/dashboard")}
         >
-          <Ionicons name="chevron-back" size={24} color="white" />
+          <Ionicons name="chevron-back" size={24} color={KARELA.color.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>System Settings</Text>
         <View style={{ width: 44 }} /> 
@@ -59,13 +60,13 @@ export default function SettingsScreen() {
                 activeOpacity={0.7}
             >
               <View style={[styles.iconBox, { backgroundColor: "rgba(124, 242, 5, 0.1)" }]}>
-                <Ionicons name="flask" size={20} color="#7CF205" />
+                <Ionicons name="flask" size={20} color={KARELA.color.brand} />
               </View>
               <View style={{ flex: 1, marginLeft: 15 }}>
                 <Text style={styles.itemLabel}>Seed 30-Day History</Text>
                 <Text style={styles.itemSublabel}>Populate graphs with mock mission data</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#333" />
+              <Ionicons name="chevron-forward" size={18} color={KARELA.color.surfaceSoft} />
             </TouchableOpacity>
           </View>
         </View>
@@ -80,10 +81,10 @@ export default function SettingsScreen() {
                 activeOpacity={0.7}
             >
               <View style={[styles.iconBox, { backgroundColor: "rgba(255, 69, 58, 0.1)" }]}>
-                <Ionicons name="trash-outline" size={20} color="#FF453A" />
+                <Ionicons name="trash-outline" size={20} color={KARELA.color.danger} />
               </View>
               <View style={{ flex: 1, marginLeft: 15 }}>
-                <Text style={[styles.itemLabel, { color: "#FF453A" }]}>Clear Local Storage</Text>
+                <Text style={[styles.itemLabel, { color: KARELA.color.danger }]}>Clear Local Storage</Text>
                 <Text style={styles.itemSublabel}>Wipe ghost runs and local cache</Text>
               </View>
             </TouchableOpacity>
@@ -94,7 +95,7 @@ export default function SettingsScreen() {
               activeOpacity={0.7}
             >
               <View style={styles.iconBox}>
-                <Ionicons name="log-out-outline" size={20} color="#8E8E93" />
+                <Ionicons name="log-out-outline" size={20} color={KARELA.color.textMuted} />
               </View>
               <View style={{ flex: 1, marginLeft: 15 }}>
                 <Text style={styles.itemLabel}>Terminate Session</Text>
@@ -110,85 +111,85 @@ export default function SettingsScreen() {
         </View>
 
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#000" },
+  container: { flex: 1, backgroundColor: KARELA.color.bg },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 20,
+    paddingHorizontal: KARELA.space.xl,
+    paddingTop: 60,
+    paddingBottom: KARELA.space.xl,
   },
   backButton: { 
-    backgroundColor: "#111", 
+    backgroundColor: KARELA.color.surface, 
     width: 44, 
     height: 44, 
-    borderRadius: 14, 
-    justifyContent: 'center', 
-    alignItems: 'center' 
+    borderRadius: KARELA.radius.md, 
+    justifyContent: "center", 
+    alignItems: "center",
   },
-  headerTitle: { color: "white", fontSize: 18, fontWeight: "900", letterSpacing: 0.5 },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 40 },
+  headerTitle: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h2, fontFamily: KARELA.font.black, letterSpacing: 0.5 },
+  scrollContent: { paddingHorizontal: KARELA.space.xl, paddingBottom: KARELA.space.xxxl },
   profileCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#0A0A0A",
-    padding: 20,
-    borderRadius: 28,
+    backgroundColor: KARELA.color.bg,
+    padding: KARELA.space.xl,
+    borderRadius: KARELA.radius.xl,
     marginBottom: 30,
     borderWidth: 1,
-    borderColor: "#111"
+    borderColor: KARELA.color.surface,
   },
   avatar: {
     width: 56,
     height: 56,
-    borderRadius: 18,
-    backgroundColor: "#7CF205",
+    borderRadius: KARELA.radius.lg,
+    backgroundColor: KARELA.color.brand,
     justifyContent: "center",
     alignItems: "center",
   },
-  avatarText: { fontSize: 24, fontWeight: "bold", color: "#000" },
-  username: { color: "white", fontSize: 20, fontWeight: "800" },
-  userEmail: { color: "#666", fontSize: 13, marginTop: 2 },
+  avatarText: { fontSize: KARELA.size.h1, fontFamily: KARELA.font.bold, color: KARELA.color.onBright },
+  username: { color: KARELA.color.textPrimary, fontSize: KARELA.space.xl, fontFamily: KARELA.font.black },
+  userEmail: { color: KARELA.color.textFaint, fontSize: 13, fontFamily: KARELA.font.regular, marginTop: 2 },
   section: { marginBottom: 30 },
   sectionLabel: {
-    color: "#444",
+    color: KARELA.color.textFaint,
     fontSize: 11,
-    fontWeight: "900",
-    marginBottom: 12,
-    marginLeft: 8,
+    fontFamily: KARELA.font.black,
+    marginBottom: KARELA.space.md,
+    marginLeft: KARELA.space.sm,
     letterSpacing: 1,
   },
   groupCard: {
-    backgroundColor: "#0A0A0A",
-    borderRadius: 28,
+    backgroundColor: KARELA.color.bg,
+    borderRadius: KARELA.radius.xl,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#111"
+    borderColor: KARELA.color.surface,
   },
   itemRow: {
     flexDirection: "row",
     alignItems: "center",
     padding: 18,
     borderBottomWidth: 1,
-    borderBottomColor: "#111",
+    borderBottomColor: KARELA.color.surface,
   },
   iconBox: {
     width: 40,
     height: 40,
-    borderRadius: 12,
-    backgroundColor: "#161616",
+    borderRadius: KARELA.radius.sm,
+    backgroundColor: KARELA.color.surfaceAlt,
     justifyContent: "center",
     alignItems: "center",
   },
-  itemLabel: { color: "white", fontSize: 16, fontWeight: "700" },
-  itemSublabel: { color: "#555", fontSize: 12, marginTop: 2 },
-  footer: { alignItems: 'center', marginTop: 10 },
-  versionText: { color: "#222", fontSize: 10, fontWeight: "900", letterSpacing: 1 },
-  buildText: { color: "#111", fontSize: 9, fontWeight: "700", marginTop: 4 }
+  itemLabel: { color: KARELA.color.textPrimary, fontSize: 16, fontFamily: KARELA.font.bold },
+  itemSublabel: { color: KARELA.color.textFaint, fontSize: KARELA.size.label, fontFamily: KARELA.font.regular, marginTop: 2 },
+  footer: { alignItems: "center", marginTop: 10 },
+  versionText: { color: KARELA.color.surfaceSoft, fontSize: KARELA.size.caption, fontFamily: KARELA.font.black, letterSpacing: 1 },
+  buildText: { color: KARELA.color.surface, fontSize: 9, fontFamily: KARELA.font.bold, marginTop: KARELA.space.xs },
 });

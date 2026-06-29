@@ -1,110 +1,120 @@
-import { dashboard_ui } from "@/styles/dashboardStyle";
+import { KARELA } from "@/styles/designSystem";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
 import { usePathname, useRouter } from "expo-router";
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+
+const TAB_ITEMS = [
+  { route: "/drawer/dashboard", icon: "home", label: "Home" },
+  { route: "/drawer/quests", icon: "trophy", label: "Quests" },
+  { route: "/drawer/maps", icon: "map", label: "Run" },
+  { route: "/homepage/guilds", icon: "shield-half", label: "Guilds" },
+  { route: "/homepage/shop", icon: "cart", label: "Shop" },
+] as const;
 
 export const DynamicDock = () => {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Helper to highlight the active tab based on the current route
-  const getTabColor = (route: string) =>
-    pathname.includes(route) ? "#7CF205" : "#8A8A8A";
+  const isActive = (route: string) => pathname.includes(route.split("/").pop() || "");
 
   return (
-    <View 
-      style={dashboard_ui.islandWrapper} 
-      pointerEvents="box-none" // Allows touches to pass through the transparent wrapper to the map/content behind it
-    >
-      <View style={dashboard_ui.islandDock}>
-        {/* Dashboard / Home */}
-        <TouchableOpacity
-          style={dashboard_ui.islandButton}
-          onPress={() => router.push("/drawer/dashboard")}
-        >
-          <Ionicons
-            name="stats-chart"
-            size={22}
-            color={getTabColor("dashboard")}
-          />
-          <Text
-            style={[
-              dashboard_ui.islandButtonText,
-              { color: getTabColor("dashboard") },
-            ]}
-          >
-            Home
-          </Text>
-        </TouchableOpacity>
-
-        {/* Guilds */}
-        <TouchableOpacity
-          style={dashboard_ui.islandButton}
-          onPress={() => router.push("/homepage/guilds")}
-        >
-          <Ionicons
-            name="shield-half"
-            size={22}
-            color={getTabColor("guilds")}
-          />
-          <Text
-            style={[
-              dashboard_ui.islandButtonText,
-              { color: getTabColor("guilds") },
-            ]}
-          >
-            Guilds
-          </Text>
-        </TouchableOpacity>
-
-        {/* MAIN PLAY BUTTON - Central RPG Action */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          style={dashboard_ui.playButtonOuter}
-          onPress={() => router.push("/drawer/maps")}
-        >
-          <LinearGradient
-            colors={["#7CF205", "#5BB104"]}
-            style={dashboard_ui.playButtonInner}
-          >
-            <Ionicons name="play" size={32} color="black" />
-          </LinearGradient>
-        </TouchableOpacity>
-
-        {/* Shop */}
-        <TouchableOpacity
-          style={dashboard_ui.islandButton}
-          onPress={() => router.push("/homepage/shop")}
-        >
-          <Ionicons name="cart" size={22} color={getTabColor("shop")} />
-          <Text
-            style={[
-              dashboard_ui.islandButtonText,
-              { color: getTabColor("shop") },
-            ]}
-          >
-            Shop
-          </Text>
-        </TouchableOpacity>
-
-        {/* Profile */}
-        <TouchableOpacity
-          style={dashboard_ui.islandButton}
-          onPress={() => router.push("/drawer/profile")}
-        >
-          <Ionicons name="person" size={22} color={getTabColor("profile")} />
-          <Text
-            style={[
-              dashboard_ui.islandButtonText,
-              { color: getTabColor("profile") },
-            ]}
-          >
-            Profile
-          </Text>
-        </TouchableOpacity>
+    <View style={styles.container} pointerEvents="box-none">
+      <View style={styles.dockOuter}>
+        <BlurView intensity={50} tint="dark" style={styles.blur}>
+          <View style={styles.dockInner}>
+            {TAB_ITEMS.map((tab, idx) => {
+              const active = isActive(tab.route);
+              return (
+                <TouchableOpacity
+                  key={idx}
+                  style={styles.tab}
+                  onPress={() => router.push(tab.route as any)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name={tab.icon as any}
+                    size={22}
+                    color={active ? KARELA.color.brand : KARELA.color.textMuted}
+                  />
+                  <Text
+                    style={[
+                      styles.tabLabel,
+                      active && styles.tabLabelActive,
+                    ]}
+                  >
+                    {tab.label}
+                  </Text>
+                  {active && <View style={styles.indicator} />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </BlurView>
       </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    paddingBottom: Platform.OS === "ios" ? 28 : 16,
+    zIndex: 1000,
+  },
+  dockOuter: {
+    width: "88%",
+    borderRadius: KARELA.radius.xl,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(124,242,5,0.12)",
+    // Glow shadow
+    shadowColor: KARELA.color.brand,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 20,
+  },
+  blur: {
+    borderRadius: KARELA.radius.xl,
+    overflow: "hidden",
+  },
+  dockInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    height: 64,
+    paddingHorizontal: KARELA.space.sm,
+    backgroundColor: "rgba(18,18,18,0.75)",
+  },
+  tab: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 56,
+    height: 56,
+    position: "relative",
+  },
+  tabLabel: {
+    color: KARELA.color.textMuted,
+    fontSize: 9,
+    fontFamily: KARELA.font.medium,
+    marginTop: 3,
+    letterSpacing: 0.3,
+  },
+  tabLabelActive: {
+    color: KARELA.color.brand,
+  },
+  indicator: {
+    position: "absolute",
+    top: 4,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: KARELA.color.brand,
+  },
+});

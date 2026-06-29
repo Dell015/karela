@@ -1,3 +1,4 @@
+import { KARELA } from "@/styles/designSystem";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -375,7 +376,7 @@ export default function MapScreen() {
           },
         ]}
       >
-        <ActivityIndicator size="large" color="#7CF205" />
+        <ActivityIndicator size="large" color={KARELA.color.brand} />
         <Text style={{ color: "white", marginTop: 10 }}>
           Locating in Philippines...
         </Text>
@@ -472,7 +473,7 @@ export default function MapScreen() {
           const prevPoint = path[index - 1];
 
           // We define the color here
-          const segmentColor = point.isVehicle ? "#FF3B30" : "#7CF205";
+          const segmentColor = point.isVehicle ? KARELA.color.danger : KARELA.color.brand;
 
           return (
             <Polyline
@@ -683,7 +684,7 @@ export default function MapScreen() {
             style={[styles.rightButtonBase, styles.compassButton]}
             onPress={() => changeCameraHeading("N", currentLocation)}
           >
-            <Ionicons name="compass" size={24} color="#FFD700" />
+            <Ionicons name="compass" size={24} color={KARELA.color.gold} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -692,7 +693,7 @@ export default function MapScreen() {
               styles.ghostButton,
               {
                 backgroundColor: isGhostEnabled
-                  ? "#7CF205"
+                  ? KARELA.color.brand
                   : "rgba(0,0,0,0.85)",
               },
             ]}
@@ -701,7 +702,7 @@ export default function MapScreen() {
             <Ionicons
               name="flash"
               size={24}
-              color={isGhostEnabled ? "black" : "#FFD700"}
+              color={isGhostEnabled ? "black" : KARELA.color.gold}
             />
           </TouchableOpacity>
 
@@ -712,16 +713,15 @@ export default function MapScreen() {
             {checkpoints.length > 0 && (
               <View style={styles.flagCountBadge}>
                 <Text
-                  style={{ color: "white", fontSize: 10, fontWeight: "bold" }}
+                  style={{ color: KARELA.color.textPrimary, fontSize: KARELA.size.caption, fontFamily: KARELA.font.bold }}
                 >
                   {checkpoints.length}
                 </Text>
               </View>
             )}
-            <Ionicons name="flag" size={24} color="#FFD700" />
+            <Ionicons name="flag" size={24} color={KARELA.color.gold} />
           </TouchableOpacity>
-        </>
-      )}
+        </>      )}
 
       {/* CIVIC HUD — Resonance indicator + Report FAB + Report sheet */}
       <CivicHUD
@@ -736,7 +736,7 @@ export default function MapScreen() {
         <TouchableOpacity
           style={[
             styles.actionButton,
-            { backgroundColor: isRacing ? "#FF3B30" : "#7CF205" },
+            { backgroundColor: isRacing ? KARELA.color.danger : KARELA.color.brand },
           ]}
           onPress={() => (isRacing ? handleStopRace() : handleStartRace())}
         >

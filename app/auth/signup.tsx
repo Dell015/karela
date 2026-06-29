@@ -1,4 +1,5 @@
-import { BlurView } from "expo-blur";
+import { KARELA } from "@/styles/designSystem";
+import { Screen } from "@/components/ui/Screen";
 import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -15,8 +16,6 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { theme } from "../../styles/theme";
-// Supabase registration
 import { registerUser } from "../../services/database/supabase/auth";
 
 /**
@@ -53,7 +52,6 @@ const UserInput = ({
 export default function Signup() {
   const router = useRouter();
 
-  // -- AUTH STATE --
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -61,16 +59,11 @@ export default function Signup() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // -- ADAPTIVE ENGINE STATE (Bio-Data) --
-  const [weight, setWeight] = useState(""); // kg
-  const [height, setHeight] = useState(""); // cm
+  const [weight, setWeight] = useState("");
+  const [height, setHeight] = useState("");
   const [age, setAge] = useState("");
 
-  /**
-   * HANDLER: Registration & Initial Analytics
-   */
   const handleSignup = async () => {
-    // 1. Basic Validation
     if (!email || !password || !weight || !height || !age) {
       Alert.alert("Required Fields", "Please fill in your physical profile so we can generate your missions.");
       return;
@@ -84,21 +77,18 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      // 2. Calculate Baseline Metrics for the Thesis Engine
       const hMeters = parseFloat(height) / 100;
       const wKg = parseFloat(weight);
       const bmi = wKg / (hMeters * hMeters);
 
-      // 3. Construct the Personalized User Object
       const userData = {
-        displayName: fullName, // Use 'displayName' to match Firebase/AuthContext
+        displayName: fullName,
         username: username,
-        stats: {                // Change 'bio' to 'stats' to match your Interface
+        stats: {
           weight: wKg,
           height: parseFloat(height),
           age: parseInt(age),
           bmi: parseFloat(bmi.toFixed(2)),
-          // Add these defaults so the user isn't missing fields!
           level: 1,
           xp: 0,
           fitness_score: 1.0,
@@ -118,10 +108,8 @@ export default function Signup() {
         createdAt: new Date().toISOString(),
       };
 
-      // 4. Call the Firebase Auth Service (Now includes Email Verification)
       await registerUser(email, password, userData);
 
-      // 5. Success Feedback
       Alert.alert(
         "Verify Your Email", 
         `A verification link has been sent to ${email}. Please verify your email before logging in.`,
@@ -144,15 +132,8 @@ export default function Signup() {
   };
 
   return (
-    <View style={theme.container}>
+    <Screen variant="default">
       <Stack.Screen options={{ headerShown: false }} />
-
-      {/* BACKGROUND VISUALS */}
-      <View style={theme.glowContainer}>
-        <LinearGradient colors={["#209F77", "#1FA279", "#7CF205"]} style={theme.rightBlur} />
-        <LinearGradient colors={["#7CF205", "#1FA279", "#7CF205"]} style={theme.leftBlur} />
-        <BlurView intensity={90} tint="dark" style={StyleSheet.absoluteFill} />
-      </View>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -200,12 +181,12 @@ export default function Signup() {
                 disabled={loading}
             >
               <LinearGradient
-                colors={["#7CF205", "#209F77"]}
+                colors={KARELA.gradients.brand as unknown as string[]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={styles.gradientBtn}
               >
                 {loading ? (
-                    <ActivityIndicator color="#fff" />
+                    <ActivityIndicator color={KARELA.color.textPrimary} />
                 ) : (
                     <Text style={styles.signupBtnText}>Analyze & Sign up</Text>
                 )}
@@ -222,7 +203,7 @@ export default function Signup() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </View>
+    </Screen>
   );
 }
 
@@ -230,7 +211,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 24,
     paddingTop: 60,
-    paddingBottom: 40,
+    paddingBottom: KARELA.space.xxxl,
   },
   header: {
     marginBottom: 30,
@@ -239,28 +220,28 @@ const styles = StyleSheet.create({
   logo: {
     width: 60,
     height: 60,
-    marginBottom: 20,
-    tintColor: "#7CF205",
+    marginBottom: KARELA.space.xl,
+    tintColor: KARELA.color.brand,
   },
   title: {
-    fontSize: 28,
-    fontFamily: "Excon-Bold",
-    color: "#fff",
+    fontSize: KARELA.size.h1 + 4,
+    fontFamily: KARELA.font.bold,
+    color: KARELA.color.textPrimary,
     textAlign: "center",
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: KARELA.size.body,
     color: "rgba(255,255,255,0.6)",
-    textAlign: 'center',
-    marginTop: 8,
-    fontFamily: "Excon-Regular",
+    textAlign: "center",
+    marginTop: KARELA.space.sm,
+    fontFamily: KARELA.font.regular,
   },
   form: {
     gap: 18,
   },
   bioRow: {
-    flexDirection: 'row',
-    gap: 12,
+    flexDirection: "row",
+    gap: KARELA.space.md,
   },
   inputContainer: {
     borderBottomWidth: 1,
@@ -268,26 +249,26 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
   },
   input: {
-    fontFamily: "Excon-Regular",
-    color: "#fff",
+    fontFamily: KARELA.font.regular,
+    color: KARELA.color.textPrimary,
     fontSize: 16,
     paddingVertical: 10,
   },
   signupBtn: {
-    marginTop: 20,
-    borderRadius: 30,
+    marginTop: KARELA.space.xl,
+    borderRadius: KARELA.radius.xl,
     overflow: "hidden",
   },
   gradientBtn: {
-    paddingVertical: 16,
+    paddingVertical: KARELA.space.lg,
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 55, // Prevents button shrinking when loading
+    minHeight: 55,
   },
   signupBtnText: {
-    color: "#fff",
-    fontFamily: "Excon-Bold",
-    fontSize: 18,
+    color: KARELA.color.textPrimary,
+    fontFamily: KARELA.font.bold,
+    fontSize: KARELA.size.h2,
   },
   footer: {
     flexDirection: "row",
@@ -295,11 +276,11 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   footerText: {
-    color: "#888",
-    fontFamily: "Excon-Regular",
+    color: KARELA.color.textMuted,
+    fontFamily: KARELA.font.regular,
   },
   loginText: {
-    color: "#7CF205",
-    fontFamily: "Excon-Bold",
+    color: KARELA.color.brand,
+    fontFamily: KARELA.font.bold,
   },
 });

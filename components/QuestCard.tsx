@@ -1,3 +1,4 @@
+import { KARELA } from "@/styles/designSystem";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -32,7 +33,7 @@ const SemiCircleGauge = ({
   percentage: number;
   size: number;
 }) => {
-  const strokeWidth = 20;
+  const strokeWidth = STROKE_WIDTH;
   const radius = (size - strokeWidth) / 2;
   const cx = size / 2;
   const cy = size / 2;
@@ -43,27 +44,22 @@ const SemiCircleGauge = ({
     A ${radius}, ${radius} 0 0, 1 ${cx + radius}, ${cy}
   `;
 
-  // Calculate length for dashing
   const arcLength = Math.PI * radius;
   const strokeDashoffset = arcLength - percentage * arcLength;
 
   return (
-    <Svg
-      width={size}
-      height={size / 2 + 10}
-      viewBox={`0 0 ${size} ${size / 2}`}
-    >
+    <Svg width={size} height={size / 2 + 10} viewBox={`0 0 ${size} ${size / 2}`}>
       <Defs>
         <SvgGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-          <Stop offset="0%" stopColor="#209F77" stopOpacity="1" />
-          <Stop offset="100%" stopColor="#7CF205" stopOpacity="1" />
+          <Stop offset="0%" stopColor={KARELA.color.brandDeep} stopOpacity="1" />
+          <Stop offset="100%" stopColor={KARELA.color.brand} stopOpacity="1" />
         </SvgGradient>
       </Defs>
       {/* Background Track */}
       <Path
         d={pathData}
         fill="none"
-        stroke="#222"
+        stroke={KARELA.color.surfaceSoft}
         strokeWidth={strokeWidth}
         strokeLinecap="round"
       />
@@ -81,6 +77,14 @@ const SemiCircleGauge = ({
   );
 };
 
+// Status word derived from completion (keeps copy lively)
+const statusFor = (pct: number) => {
+  if (pct >= 0.9) return "Elite";
+  if (pct >= 0.6) return "Excellent";
+  if (pct >= 0.3) return "On Track";
+  return "Warming Up";
+};
+
 // 2. MAIN COMPONENT
 export const QuestCard = ({ overallCompletion, quests }: QuestCardProps) => {
   const completionText = `${Math.round(overallCompletion * 100)}%`;
@@ -94,8 +98,7 @@ export const QuestCard = ({ overallCompletion, quests }: QuestCardProps) => {
           onPress={() => router.push("/drawer/quests")}
         >
           <LinearGradient
-            // Using your "Quest Green" colors
-            colors={["#7CF205", "#209F77"]}
+            colors={KARELA.gradients.brand}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.gradientBackground}
@@ -103,7 +106,7 @@ export const QuestCard = ({ overallCompletion, quests }: QuestCardProps) => {
             <Ionicons
               name="arrow-up-outline"
               size={18}
-              color="white"
+              color={KARELA.color.onBright}
               style={{ transform: [{ rotate: "45deg" }] }}
             />
           </LinearGradient>
@@ -115,9 +118,9 @@ export const QuestCard = ({ overallCompletion, quests }: QuestCardProps) => {
         <View style={styles.gaugeWrapper}>
           <SemiCircleGauge percentage={overallCompletion} size={200} />
           <View style={styles.gaugeTextOverlay}>
-            <Text style={styles.statusText}>Excellent</Text>
+            <Text style={styles.statusText}>{statusFor(overallCompletion)}</Text>
             <Text style={styles.percentageText}>{completionText}</Text>
-            <Text style={styles.subText}>task completed this week</Text>
+            <Text style={styles.subText}>tasks completed this week</Text>
           </View>
         </View>
       </View>
@@ -129,17 +132,19 @@ export const QuestCard = ({ overallCompletion, quests }: QuestCardProps) => {
         {quests.map((quest) => (
           <View key={quest.id} style={styles.questRow}>
             {/* Title */}
-            <Text style={styles.questMissionText}>{quest.mission}</Text>
+            <Text style={styles.questMissionText} numberOfLines={1}>
+              {quest.mission}
+            </Text>
 
             {/* Horizontal Progress Bar */}
             <View style={styles.progressBarTrack}>
               <LinearGradient
-                colors={["#FFD700", "#FFA500"]} // Orange/Yellow like picture
+                colors={KARELA.gradients.energy}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={[
                   styles.progressBarFill,
-                  { width: `${quest.progress * 100}%` },
+                  { width: `${Math.min(quest.progress * 100, 100)}%` },
                 ]}
               />
             </View>
@@ -155,28 +160,25 @@ export const QuestCard = ({ overallCompletion, quests }: QuestCardProps) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#1A1A1A", // Match dashboard background
-    borderRadius: 30,
-    padding: 25,
-    width: "100%", // Take full width of parent padding
+    backgroundColor: KARELA.color.surface,
+    borderRadius: KARELA.radius.xl,
+    padding: KARELA.space.xxl,
+    width: "100%",
     alignSelf: "center",
+    borderWidth: 1,
+    borderColor: KARELA.color.lineSoft,
   },
   headerRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
     alignItems: "center",
-    marginBottom: 20,
-  },
-  iconButton: {
-    backgroundColor: "#1A1A1A",
-    padding: 8,
-    borderRadius: 12,
+    marginBottom: KARELA.space.xl,
   },
   gaugeSection: {
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 30,
-    height: 120, // Constrain height for semi-circle
+    marginBottom: KARELA.space.xxl,
+    height: 120,
   },
   gaugeWrapper: {
     alignItems: "center",
@@ -185,56 +187,58 @@ const styles = StyleSheet.create({
   },
   gaugeTextOverlay: {
     position: "absolute",
-    top: STROKE_WIDTH + 10, // Adjust based on stroke width
+    top: STROKE_WIDTH + 10,
     alignItems: "center",
   },
   statusText: {
-    color: "#A1A1AA",
-    fontSize: 12,
-    fontFamily: "Excon-Regular",
+    color: KARELA.color.textSecondary,
+    fontSize: KARELA.size.label,
+    fontFamily: KARELA.font.regular,
   },
   percentageText: {
-    color: "white",
+    color: KARELA.color.textPrimary,
     fontSize: 36,
-    fontFamily: "Excon-Black",
+    fontFamily: KARELA.font.black,
     marginVertical: -2,
   },
   subText: {
-    color: "#A1A1AA",
+    color: KARELA.color.textSecondary,
     fontSize: 8,
-    fontFamily: "Excon-Thin",
+    fontFamily: KARELA.font.thin,
   },
   questsListSection: {
-    marginTop: 10,
+    marginTop: KARELA.space.md,
   },
   sectionTitle: {
-    color: "white",
-    fontSize: 16,
-    fontFamily: "Excon-Bold",
-    marginBottom: 15,
+    color: KARELA.color.textPrimary,
+    fontSize: KARELA.size.h2,
+    fontFamily: KARELA.font.bold,
+    marginBottom: KARELA.space.lg,
   },
   questRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 12,
-    backgroundColor: "#1A1A1A", // Slightly lighter than card
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 15,
+    marginBottom: KARELA.space.md,
+    backgroundColor: KARELA.color.surfaceAlt,
+    paddingVertical: KARELA.space.md,
+    paddingHorizontal: KARELA.space.lg,
+    borderRadius: KARELA.radius.md,
+    borderWidth: 1,
+    borderColor: KARELA.color.lineSoft,
   },
   questMissionText: {
-    color: "white",
-    fontSize: 14,
-    fontFamily: "Excon-Bold",
-    flex: 2, // Take more space
+    color: KARELA.color.textPrimary,
+    fontSize: KARELA.size.body,
+    fontFamily: KARELA.font.bold,
+    flex: 2,
   },
   progressBarTrack: {
-    flex: 3, // Take most space
+    flex: 3,
     height: 12,
-    backgroundColor: "#333",
+    backgroundColor: KARELA.color.surfaceSoft,
     borderRadius: 6,
-    marginHorizontal: 15,
+    marginHorizontal: KARELA.space.lg,
     overflow: "hidden",
   },
   progressBarFill: {
@@ -242,28 +246,22 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   questXpText: {
-    color: "#7CF205", // Lime green XP
-    fontSize: 12,
-    fontFamily: "Excon-Bold",
+    color: KARELA.color.brand,
+    fontSize: KARELA.size.label,
+    fontFamily: KARELA.font.bold,
     width: 45,
     textAlign: "right",
   },
   iconButtonContainer: {
-    // Keeps the hit-box clean
-    borderRadius: 12,
-    overflow: 'hidden',
-    alignSelf: 'flex-end', // Keeps it on the right since you removed the title
+    borderRadius: KARELA.radius.sm,
+    overflow: "hidden",
+    alignSelf: "flex-end",
   },
   gradientBackground: {
     padding: 10,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    // Adding a slight shadow/glow makes it pop against the #111 background
-    shadowColor: "#7CF205",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 8,
+    borderRadius: KARELA.radius.sm,
+    justifyContent: "center",
+    alignItems: "center",
+    ...KARELA.glow.brand,
   },
 });

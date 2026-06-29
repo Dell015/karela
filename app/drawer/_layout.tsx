@@ -1,3 +1,4 @@
+import { KARELA } from "@/styles/designSystem";
 import { signOutUser } from "@/services/database/supabase/auth";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -33,15 +34,15 @@ function CustomDrawerContent(props: any) {
 
   return (
     <DrawerContentScrollView {...props} contentContainerStyle={{ flex: 1 }}>
-      <View style={{ flex: 1, paddingTop: 20 }}>
+      <View style={{ flex: 1, paddingTop: KARELA.space.xl }}>
         <DrawerItemList {...props} />
       </View>
       <View style={styles.logoutContainer}>
         <DrawerItem
           label="Logout"
-          labelStyle={{ color: "#FF4444", fontWeight: "bold" }}
+          labelStyle={{ color: KARELA.color.danger, fontFamily: KARELA.font.bold }}
           icon={({ size }) => (
-            <Ionicons name="log-out-outline" size={size} color="#FF4444" />
+            <Ionicons name="log-out-outline" size={size} color={KARELA.color.danger} />
           )}
           onPress={handleLogout}
         />
@@ -58,10 +59,10 @@ export default function DrawerLayout() {
       screenOptions={{
         headerShown: false,
         drawerPosition: "right",
-        drawerStyle: { backgroundColor: "#1A1A1A", width: 280 },
-        drawerActiveTintColor: "#7CF205",
-        drawerInactiveTintColor: "#FFFFFF",
-        drawerLabelStyle: { fontSize: 16, fontWeight: "700" },
+        drawerStyle: { backgroundColor: KARELA.color.surface, width: 280 },
+        drawerActiveTintColor: KARELA.color.brand,
+        drawerInactiveTintColor: KARELA.color.textPrimary,
+        drawerLabelStyle: { fontSize: 16, fontFamily: KARELA.font.bold },
       }}
     >
       <Drawer.Screen
@@ -149,7 +150,7 @@ export default function DrawerLayout() {
 const styles = StyleSheet.create({
   logoutContainer: {
     borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.1)",
-    paddingBottom: 20,
+    borderTopColor: KARELA.color.line,
+    paddingBottom: KARELA.space.xl,
   },
 });
