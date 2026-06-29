@@ -132,27 +132,15 @@ export default function AiCoach() {
           ? `Recent Runs: ${recentMemories.map((m) => m.summary).join(" | ")}`
           : "No recent runs.";
 
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.0-flash",
+        generationConfig: { maxOutputTokens: 200 },
+      });
 
-      const result = await model.generateContent(`
-        Role: You are Ani, the Karela Kinetic Coach.
-        Athlete Name: ${userProfile?.displayName || "Athlete"}
-        ${profileInfo}
-        ${memoryPrompt}
-        Tone: Supportive, technical, slightly witty, high-performance expert.
-        User: ${user?.displayName || "Stryder"}
-        Context: ${memoryPrompt}
-
-        Instructions:
-        - If the user asks about stats/performance, refer to the Context.
-        - If they ask general gear/training questions (like shoes or pace), provide expert running advice.
-        - If they ask off-topic questions, politely redirect to running.
-        - Be conversational; avoid saying "I don't know." but if you really dont know, just admit it and tell the rason why
-        - Keep responses short for readability but can extend if needed
-        - make it conversational. you can use the word you and not use the users name all the time
-
-        User Message: ${textToSend}
-      `);
+      // OPTIMIZED: Compact system context — saves ~50% tokens per message
+      const result = await model.generateContent(
+        `You are Ani, a supportive running coach. Athlete: ${userProfile?.displayName || "Strider"}, ${stats?.weight || 70}kg, level ${stats?.level || 1}. ${memoryPrompt} Be conversational, short, witty. If off-topic, redirect to running.\n\nUser: ${textToSend}`
+      );
 
       const response = await result.response;
       const aiText = response.text();

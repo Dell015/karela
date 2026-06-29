@@ -1,4 +1,4 @@
-import { generateAniQuest } from "./database/firebase/aiService";
+import { generateAniQuest } from "./ai/aiService";
 import { setLocalMissions } from "./database/sqlite/database";
 
 export const QuestGenerator = {

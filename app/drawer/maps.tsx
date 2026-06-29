@@ -13,6 +13,7 @@ import MapView, { Callout, Marker, Polyline } from "react-native-maps";
 
 // Hooks & Services
 import { CivicHUD } from "@/components/CivicHUD";
+import { NodeDetailModal } from "@/components/NodeDetailModal";
 import { useAuth } from "@/context/AuthContext";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
 import { useRouteBuilder } from "@/hooks/useRouteBuilder";
@@ -38,7 +39,7 @@ import { styles } from "@/styles/mapStyles";
 
 export default function MapScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, earnGems, gainXP } = useAuth();
   const mapRef = useRef<MapView>(null);
   const [hasZoomed, setHasZoomed] = useState(false);
   const isProcessing = useRef(false);
@@ -55,6 +56,7 @@ export default function MapScreen() {
   // --- CIVIC STATE ---
   const [nearbyNodes, setNearbyNodes] = useState<CivicNode[]>([]);
   const [resonance, setResonance] = useState<ResonanceState | null>(null);
+  const [selectedNode, setSelectedNode] = useState<CivicNode | null>(null);
 
   // --- HOOKS ---
   const {
@@ -282,12 +284,23 @@ export default function MapScreen() {
     );
 
     if (result.success) {
-      Alert.alert(
-        result.consensus_reached ? "Node Verified!" : "Report Submitted",
-        result.consensus_reached
-          ? "Enough reports confirmed this issue. Civic Quest generated!"
-          : "Your report is pending. Others nearby can corroborate it.",
-      );
+      if (result.consensus_reached) {
+        // Node verified — full reward
+        await gainXP(200);
+        await earnGems(20);
+        Alert.alert(
+          "Node Verified! 🎉",
+          "Community confirmed this issue!\n+200 XP  •  +20 Gems",
+        );
+      } else {
+        // Report submitted — small reward
+        await gainXP(50);
+        await earnGems(5);
+        Alert.alert(
+          "Report Submitted 📸",
+          "Pending verification. Others nearby can corroborate.\n+50 XP  •  +5 Gems",
+        );
+      }
     } else {
       Alert.alert("Report Failed", result.message || "Could not submit report.");
     }
@@ -572,18 +585,7 @@ export default function MapScreen() {
             coordinate={{ latitude: node.latitude, longitude: node.longitude }}
             anchor={{ x: 0.5, y: 0.5 }}
             zIndex={400}
-            onPress={() => {
-              if (node.status === "verified" || node.status === "aging") {
-                Alert.alert(
-                  `${node.category.replace("_", " ").toUpperCase()}`,
-                  `Status: ${node.status} | Confidence: ${(node.confidence * 100).toFixed(0)}%\nReporters: ${node.report_count}`,
-                  [
-                    { text: "Cancel", style: "cancel" },
-                    { text: "Still There", onPress: () => handleReconfirm(node.id) },
-                  ]
-                );
-              }
-            }}
+            onPress={() => setSelectedNode(node)}
           >
             <View style={{
               width: 28,
@@ -729,6 +731,14 @@ export default function MapScreen() {
         resonance={resonance}
         nearbyCount={nearbyNodes.length}
         onSubmitReport={handleCivicReport}
+      />
+
+      {/* NODE DETAIL MODAL */}
+      <NodeDetailModal
+        visible={!!selectedNode}
+        node={selectedNode}
+        onClose={() => setSelectedNode(null)}
+        onReconfirm={handleReconfirm}
       />
 
       {/* ACTION BUTTON */}

@@ -1,4 +1,4 @@
-import { summarizeRunForAI } from "../firebase/aiService";
+import { summarizeRunForAI } from "../../ai/aiService";
 import { supabase } from "./config";
 
 /**

@@ -1,3 +1,4 @@
+import { AuthGate } from "@/components/AuthGate";
 import { AuthProvider } from "@/context/AuthContext";
 import { initDatabase } from "@/services/database/sqlite/database";
 import { initGhostModelTable } from "@/services/engines/GhostModelManager";
@@ -19,26 +20,28 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            gestureEnabled: false,
-          }}
-        >
-          {/* Onboarding / Landing */}
-          <Stack.Screen name="index" />
+        <AuthGate>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              gestureEnabled: false,
+            }}
+          >
+            {/* Onboarding / Landing */}
+            <Stack.Screen name="index" />
 
-          {/* Auth */}
-          <Stack.Screen name="auth/login" />
-          <Stack.Screen name="auth/signup" />
+            {/* Auth */}
+            <Stack.Screen name="auth/login" />
+            <Stack.Screen name="auth/signup" />
 
-          {/* Main App (drawer) */}
-          <Stack.Screen name="drawer" />
+            {/* Main App (drawer) */}
+            <Stack.Screen name="drawer" />
 
-          {/* Full Screen Modes */}
-          <Stack.Screen name="summary" />
-          <Stack.Screen name="homepage/active-run" />
-        </Stack>
+            {/* Full Screen Modes */}
+            <Stack.Screen name="summary" />
+            <Stack.Screen name="homepage/active-run" />
+          </Stack>
+        </AuthGate>
       </AuthProvider>
     </GestureHandlerRootView>
   );

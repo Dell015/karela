@@ -29,12 +29,16 @@ import { DynamicDock } from "@/components/DynamicDock";
 import { PlayerCard } from "@/components/PlayerCard";
 import { useAuth } from "@/context/AuthContext";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
-import { generateAniQuest } from "@/services/database/firebase/aiService";
+import { generateAniQuest } from "@/services/ai/aiService";
 import {
     addMission,
     subscribeToMissions,
 } from "@/services/database/supabase/missions";
 import { setStats } from "@/services/database/supabase/profiles";
+import {
+    assignOnboardingQuest,
+    shouldAssignOnboardingQuest,
+} from "@/services/onboarding";
 import { dashboard_ui } from "@/styles/dashboardStyle";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { theme } from "@/styles/theme";
@@ -173,6 +177,9 @@ export default function Dashboard() {
     return () => unsubscribe();
   }, [profile?.uid]);
 
+  // Track whether we've already attempted quest gen this session to avoid retry loops
+  const questGenAttempted = useRef(false);
+
   useEffect(() => {
     const triggerDailyReset = async () => {
       // 1. Guard: Don't run if still loading or data is missing
@@ -181,32 +188,42 @@ export default function Dashboard() {
       const today = new Date().toISOString().split("T")[0];
       const lastDaily = profile.stats.last_daily_reset;
 
-      if (lastDaily !== today) {
-        console.log(
-          "Dashboard: New day detected. Initializing Quest Engine...",
-        );
+      // Already done today OR already attempted this session — skip entirely
+      if (lastDaily === today || questGenAttempted.current) return;
 
-        try {
-          const newQuest = await generateAniQuest(profile);
+      questGenAttempted.current = true; // Mark as attempted (even if it fails)
+      console.log("Dashboard: New day detected. Initializing Quest Engine...");
 
-          if (newQuest) {
-            await addMission(profile.uid, {
-              title: newQuest.title,
-              description: newQuest.description,
-              target_value: newQuest.goalDistance / 1000,
-              xp_reward: newQuest.rewardXP,
-              category: "solo",
-              frequency: "daily",
-              type: "distance",
-              created_at_key: today,
-            });
-
+      try {
+        // ONBOARDING PRIORITY: If user hasn't finished the 7-day arc, assign the next guided quest
+        if (shouldAssignOnboardingQuest(profile.stats)) {
+          const assigned = await assignOnboardingQuest(profile.uid, profile.stats);
+          if (assigned) {
             await setStats(profile.uid, { last_daily_reset: today });
+            return;
           }
-        } catch (error) {
-          // This catches the [GoogleGenerativeAI Error] so your app stays functional
-          console.error("Quest Generation Error:", error);
         }
+
+        // Regular Ani quest generation (post-onboarding users)
+        const newQuest = await generateAniQuest(profile);
+
+        if (newQuest) {
+          await addMission(profile.uid, {
+            title: newQuest.title,
+            description: newQuest.description,
+            target_value: newQuest.goalDistance / 1000,
+            xp_reward: newQuest.rewardXP,
+            category: "solo",
+            frequency: "daily",
+            type: "distance",
+            created_at_key: today,
+          });
+
+          await setStats(profile.uid, { last_daily_reset: today });
+        }
+      } catch (error) {
+        console.error("Quest Generation Error:", error);
+      }
       }
     };
 

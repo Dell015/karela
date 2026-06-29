@@ -1,7 +1,7 @@
 import { useAuth, UserProfile } from "@/context/AuthContext";
 import { ScreenHeader } from "@/components/ui";
 import { Screen } from "@/components/ui/Screen";
-import { generateAniQuest } from "@/services/database/firebase/aiService";
+import { generateAniQuest } from "@/services/ai/aiService";
 import {
     addMission,
     subscribeToMissions,
