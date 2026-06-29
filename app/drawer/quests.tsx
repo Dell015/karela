@@ -1,16 +1,10 @@
 import { useAuth, UserProfile } from "@/context/AuthContext";
 import { ScreenHeader } from "@/components/ui";
 import { Screen } from "@/components/ui/Screen";
-import { generateAniQuest } from "@/services/ai/aiService";
+import { QuestEngine } from "@/services/engines/QuestEngine";
 import {
-    addMission,
     subscribeToMissions,
-    updateMission
 } from "@/services/database/supabase/missions";
-import {
-    incrementStats,
-    setStats,
-} from "@/services/database/supabase/profiles";
 import { KARELA } from "@/styles/designSystem";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -44,58 +38,24 @@ export default function QuestsScreen() {
   const checkAndGenerateQuests = async () => {
     if (!profile?.uid || !profile?.stats || isGenerating) return;
 
-    const now = new Date();
-    const todayKey = now.toISOString().split("T")[0];
-
-    // Helper for Week ID
-    const getWeekId = (d: Date) => {
-      const tempDate = new Date(d.getTime());
-      tempDate.setDate(tempDate.getDate() + 4 - (tempDate.getDay() || 7));
-      const yearStart = new Date(tempDate.getFullYear(), 0, 1);
-      const weekNo = Math.ceil(
-        ((tempDate.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
-      );
-      return `${tempDate.getFullYear()}-W${weekNo}`;
-    };
-
-    const weekKey = getWeekId(now);
-    const monthKey = `${now.getFullYear()}-${now.getMonth() + 1}`;
-
-    const { last_daily_reset, last_weekly_reset, last_monthly_reset } =
-      profile.stats;
-
-    const saveMission = async (q: any, freq: string, resetKey: string) => {
-      await addMission(profile.uid, {
-        title: q.title,
-        description: q.description,
-        target_value: q.goalDistance / 1000, // Storing as KM
-        xp_reward: q.rewardXP,
-        category: "solo",
-        frequency: freq,
-        type: "distance",
-        created_at_key: todayKey,
-      });
-      await setStats(profile.uid, { [`last_${freq}_reset`]: resetKey });
-    };
-
     try {
       setIsGenerating(true);
 
-      // 1. DAILY
-      if (last_daily_reset !== todayKey) {
-        console.log("Generating Daily...");
-        const q = await generateAniQuest(profile as UserProfile);
-        if (q) await saveMission(q, "daily", todayKey);
-      }
+      const result = await QuestEngine.generateQuests({
+        userId: profile.uid,
+        stats: profile.stats,
+        decayModel: null, // TODO: Load from GhostModelManager when available
+        runHistory: [],   // TODO: Load recent run history
+      });
 
-      // 2. WEEKLY
-      if (last_weekly_reset !== weekKey) {
-        console.log("Generating Weekly...");
-        const q = await generateAniQuest(profile as UserProfile);
-        if (q) await saveMission(q, "weekly", weekKey);
+      if (result.errors.length > 0) {
+        console.warn("Quest generation errors:", result.errors);
+      }
+      if (result.generated.length > 0) {
+        console.log("Generated:", result.generated);
       }
     } catch (err: any) {
-      console.error("Gen Error:", err);
+      console.error("Quest Engine Error:", err);
     } finally {
       setIsGenerating(false);
     }
@@ -122,6 +82,8 @@ export default function QuestsScreen() {
           targetValue: r.target_value,
           xpReward: r.xp_reward,
           status: r.status,
+          type: r.type,
+          frequency: r.frequency,
         }));
         setMissions(missionData);
         setLoading(false);
@@ -142,20 +104,22 @@ export default function QuestsScreen() {
   const claimReward = async (mission: any) => {
     if (!user?.uid) return;
     try {
-      await updateMission(mission.id, {
-        status: "claimed",
-      });
-
-      await incrementStats(user.uid, {
-        xp: Number(mission.xpReward),
-        total_missions_completed: 1,
-      });
-
-      await gainXP(0); // Trigger level check
-      Alert.alert(
-        "COMMAND CENTER",
-        `Mission Complete. +${mission.xpReward} XP secured.`,
+      const { xpAwarded, gemsAwarded } = await QuestEngine.claimQuest(
+        user.uid,
+        mission.id,
+        {
+          xpReward: Number(mission.xpReward),
+          type: mission.type,
+          frequency: mission.frequency,
+        },
+        Number(profile?.stats?.streak || 0)
       );
+
+      await gainXP(0); // Trigger level check / profile reload
+
+      let message = `Mission Complete. +${xpAwarded} XP secured.`;
+      if (gemsAwarded > 0) message += ` +${gemsAwarded} Gems.`;
+      Alert.alert("COMMAND CENTER", message);
     } catch (err) {
       Alert.alert("ERROR", "Sync failed.");
     }

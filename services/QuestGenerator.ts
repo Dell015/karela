@@ -1,37 +1,29 @@
-import { generateAniQuest } from "./ai/aiService";
-import { setLocalMissions } from "./database/sqlite/database";
+import { QuestEngine } from "./engines/QuestEngine";
 
+/**
+ * @deprecated Use QuestEngine.generateQuests() instead.
+ * This file is kept for backward compatibility only.
+ */
 export const QuestGenerator = {
   /**
-   * Generates the daily set of missions
+   * Generates the daily set of missions.
+   * @deprecated Use QuestEngine.generateQuests() for full lifecycle management.
    */
   generateDailySet: async (userProfile: any) => {
-    const quests = [];
+    console.warn("QuestGenerator.generateDailySet is deprecated. Use QuestEngine.generateQuests() instead.");
 
-    // 1. GENERATE SYSTEM QUEST (The "Normal" one)
-    // Basic logic: Level 1 = 1km, Level 2 = 1.5km, etc.
-    const level = userProfile.stats?.level || 1;
-    const systemQuest = {
-      id: `sys_${Date.now()}`,
-      title: "Daily Baseline",
-      goalDistance: 1000 + (level * 500), 
-      goalSpeed: 8.0,
-      rewardXP: 100,
-    };
-    quests.push(systemQuest);
-
-    // 2. GENERATE ANI QUEST (The "Special" one)
-    const aniQuest = await generateAniQuest(userProfile);
-    if (aniQuest) {
-      // Add a flag or prefix to identify Ani's quest in the UI
-      quests.push({ ...aniQuest, id: `ani_${aniQuest.id}` });
+    if (!userProfile?.uid || !userProfile?.stats) {
+      return [];
     }
 
-    // 3. SAVE TO SQLITE
-    if (quests.length > 0) {
-      setLocalMissions(quests);
-    }
+    const result = await QuestEngine.generateQuests({
+      userId: userProfile.uid,
+      stats: userProfile.stats,
+    });
 
-    return quests;
-  }
+    // Return a compatible shape for any legacy callers
+    return result.generated.length > 0
+      ? [{ id: "delegated", title: "Generated via QuestEngine" }]
+      : [];
+  },
 };

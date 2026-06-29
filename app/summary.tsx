@@ -18,13 +18,13 @@ import {
     View,
 } from "react-native";
 
-import { syncRunToMissions } from "@/services/database/supabase/missions";
 import { incrementStats, setStats } from "@/services/database/supabase/profiles";
 import {
     generateAndSaveRunSummary,
     logRunHistory,
 } from "@/services/database/supabase/runService";
 import { calculateStreak } from "@/services/statsService";
+import { QuestEngine } from "@/services/engines/QuestEngine";
 
 const { width } = Dimensions.get("window");
 
@@ -112,7 +112,8 @@ export default function SummaryScreen() {
       };
       await generateAndSaveRunSummary(user.uid, runData);
 
-      await syncRunToMissions(user.uid, distanceInKm);
+      // Sync run distance to all active missions via QuestEngine
+      await QuestEngine.syncRunProgress(user.uid, distanceInKm, (Number(meters) / Number(seconds)) * 3.6);
 
       const currentStreak = calculateStreak();
       const longestStreak = Math.max(

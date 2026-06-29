@@ -29,16 +29,10 @@ import { DynamicDock } from "@/components/DynamicDock";
 import { PlayerCard } from "@/components/PlayerCard";
 import { useAuth } from "@/context/AuthContext";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
-import { generateAniQuest } from "@/services/ai/aiService";
+import { QuestEngine } from "@/services/engines/QuestEngine";
 import {
-    addMission,
     subscribeToMissions,
 } from "@/services/database/supabase/missions";
-import { setStats } from "@/services/database/supabase/profiles";
-import {
-    assignOnboardingQuest,
-    shouldAssignOnboardingQuest,
-} from "@/services/onboarding";
 import { dashboard_ui } from "@/styles/dashboardStyle";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { theme } from "@/styles/theme";
@@ -195,35 +189,21 @@ export default function Dashboard() {
       console.log("Dashboard: New day detected. Initializing Quest Engine...");
 
       try {
-        // ONBOARDING PRIORITY: If user hasn't finished the 7-day arc, assign the next guided quest
-        if (shouldAssignOnboardingQuest(profile.stats)) {
-          const assigned = await assignOnboardingQuest(profile.uid, profile.stats);
-          if (assigned) {
-            await setStats(profile.uid, { last_daily_reset: today });
-            return;
-          }
+        const result = await QuestEngine.generateQuests({
+          userId: profile.uid,
+          stats: profile.stats,
+          decayModel: null, // TODO: Load from GhostModelManager when available
+          runHistory: [],
+        });
+
+        if (result.errors.length > 0) {
+          console.warn("Quest Engine errors:", result.errors);
         }
-
-        // Regular Ani quest generation (post-onboarding users)
-        const newQuest = await generateAniQuest(profile);
-
-        if (newQuest) {
-          await addMission(profile.uid, {
-            title: newQuest.title,
-            description: newQuest.description,
-            target_value: newQuest.goalDistance / 1000,
-            xp_reward: newQuest.rewardXP,
-            category: "solo",
-            frequency: "daily",
-            type: "distance",
-            created_at_key: today,
-          });
-
-          await setStats(profile.uid, { last_daily_reset: today });
+        if (result.generated.length > 0) {
+          console.log("Quest Engine generated:", result.generated);
         }
       } catch (error) {
-        console.error("Quest Generation Error:", error);
-      }
+        console.error("Quest Engine Error:", error);
       }
     };
 

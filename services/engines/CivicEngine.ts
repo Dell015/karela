@@ -25,6 +25,7 @@
 import { decode } from "base64-arraybuffer";
 import * as FileSystem from "expo-file-system/legacy";
 import { supabase } from "../database/supabase/config";
+import { QuestEngine } from "./QuestEngine";
 
 // ============================================================
 // TYPES
@@ -111,6 +112,7 @@ export const CONSENSUS_CONFIG = {
  * Submits a civic report.
  * Handles node creation/clustering + consensus check server-side.
  * Returns whether consensus was reached (node promoted to verified).
+ * Also syncs progress to any active civic quests.
  */
 export const submitCivicReport = async (
   userId: string,
@@ -133,6 +135,13 @@ export const submitCivicReport = async (
   if (error) {
     console.error("Civic report submission failed:", error);
     return { success: false, error: error.message };
+  }
+
+  // Sync to quest engine — increment civic mission progress
+  try {
+    await QuestEngine.syncCivicProgress(userId);
+  } catch (e) {
+    console.warn("Civic quest sync failed (non-fatal):", e);
   }
 
   return data as SubmitReportResult;

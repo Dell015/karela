@@ -59,6 +59,19 @@
 - **✅ Streak Multiplier** — 1.0x–3.0x, synced to Supabase, applied in `gainXP()`
 - **✅ Gems currency** — sector bonuses (5 per 500m), `earnGems()`, `useStreakFreeze()` (80 gems)
 - **✅ XP + leveling** — 1000 XP/level, overflow auto-correction
+- **✅ Quest Engine** — `services/engines/QuestEngine.ts`
+  - Centralized quest generation (replaces inline logic in UI screens)
+  - Daily (1 AI + 1 system), Weekly (1 distance + 1 variety), Monthly (1 challenge)
+  - Difficulty scaling via Adaptive Ghost decay model (blended with level-based)
+  - Quest type diversity: distance, speed, civic, streak
+  - Auto-expiration (24h daily, 7d weekly, 30d monthly)
+  - Claim flow with streak multiplier on XP + flat gem rewards
+  - `syncRunProgress()` — updates distance/speed/streak missions after runs
+  - `syncCivicProgress()` — increments civic missions on report submit
+  - Onboarding arc integration (delegates to 7-day system during first week)
+  - `useQuestEngine` hook for plug-and-play React integration
+  - Dashboard + Quests screen both delegating to engine (no duplicate logic)
+  - Legacy `QuestGenerator.ts` deprecated with backward-compat wrapper
 
 ### UI / Design System
 - **✅ Centralized design system** (`styles/designSystem.ts`) — single source of truth for colors, gradients, fonts, spacing, radius, shadows
@@ -85,43 +98,65 @@
 
 ## 🟠 Remaining Work (Priority Order)
 
+### P0 — Quest Engine Improvements (recently built, needs hardening)
+
+| # | Item | Effort | Status |
+|---|------|--------|--------|
+| 0a | **GhostModelManager integration** — feed real DecayModel into QuestEngine for personalized difficulty | 2-3 hrs | TODO |
+| 0b | **Run history injection** — load recent runs from Supabase and pass to AI quest generation | 1-2 hrs | TODO |
+| 0c | **Team quest generation** — UI tab exists, no backend logic for team missions | 1-2 days | Not started |
+| 0d | **Quest progress real-time badge** — show "ready to claim" badge on dock/dashboard | 2-3 hrs | Not started |
+| 0e | **Speed quest validation** — track avg speed during run and compare to target threshold | 3-4 hrs | Not started |
+| 0f | **Quest failure handling** — what happens when a quest expires with partial progress (partial XP? penalty?) | 2-3 hrs | Design needed |
+| 0g | **Monthly quest mid-progress display** — show cumulative distance across multiple runs visually | 2-3 hrs | Not started |
+| 0h | **AI quest fallback robustness** — retry logic + rate limiting for Gemini API failures | 1-2 hrs | Not started |
+| 0i | **Onboarding → Quest Engine handoff** — verify Day 7 completion correctly unlocks full quest generation | 1 hr | Needs testing |
+| 0j | **LinearGradient TS type errors** — fix `KARELA.gradients.brand` tuple typing (pre-existing across 6+ files) | 1 hr | Not started |
+
 ### P1 — Must-have for team testing / thesis pilot
 
 | # | Item | Effort | Status |
 |---|------|--------|--------|
 | 1 | **Auth route guards** — redirect unauthenticated users | 2-3 hrs | Not started |
-| 2 | **Civic rewards wiring** — XP + gems on report submit/verify | 1-2 hrs | Not started |
-| 3 | **7-day onboarding arc** — guided Day 1–7 quest flow | 1-2 days | Not started |
+| 2 | **Civic rewards wiring** — XP + gems on report submit/verify | 1-2 hrs | ✅ Partially done (syncCivicProgress wired in CivicEngine) |
+| 3 | **7-day onboarding arc** — guided Day 1–7 quest flow | 1-2 days | ✅ Logic exists (`services/onboarding.ts`), needs UI polish |
 | 4 | **Node detail modal** — view submitted photo on map tap | 2-3 hrs | Not started |
 | 5 | **Remove `firebase` package** from package.json + move aiService | 30 min | Not started |
+| 6 | **Quest completion notifications** — push/local when a quest becomes claimable | 2-3 hrs | Not started |
 
 ### P2 — Important for thesis demo
 
 | # | Item | Effort |
 |---|------|--------|
-| 6 | **Bayanihan Protocol** — 5-tier safety system, disaster quests | 2-3 days |
-| 7 | **Vanguard review flow** — approve/reject civic submissions | 1-2 days |
-| 8 | **Error boundaries** — crash resilience | 1-2 hrs |
-| 9 | **Notification system** — streak-at-risk, quest reminders | 1-2 days |
+| 7 | **Bayanihan Protocol** — 5-tier safety system, disaster quests | 2-3 days |
+| 8 | **Vanguard review flow** — approve/reject civic submissions | 1-2 days |
+| 9 | **Error boundaries** — crash resilience | 1-2 hrs |
+| 10 | **Notification system** — streak-at-risk, quest reminders | 1-2 days |
+| 11 | **Quest analytics/telemetry** — track generation success rate, claim rate, expiration rate for thesis data | 1 day |
+| 12 | **Difficulty calibration dashboard** — dev tool to visualize how decay model affects quest targets | 1 day |
 
 ### P3 — Social layer (post-pilot)
 
 | # | Item | Effort |
 |---|------|--------|
-| 10 | **Squad formation** — 3-12 members, Collective Shield | 1 week |
-| 11 | **Guild + Territory** — 50+ members, landmark claiming | 2 weeks |
-| 12 | **Scout Pass** — seasonal subscription | 3-5 days |
-| 13 | **B2B Quest Nodes** — partner QR scanning | 1 week |
+| 13 | **Squad formation** — 3-12 members, Collective Shield | 1 week |
+| 14 | **Guild + Territory** — 50+ members, landmark claiming | 2 weeks |
+| 15 | **Scout Pass** — seasonal subscription | 3-5 days |
+| 16 | **B2B Quest Nodes** — partner QR scanning | 1 week |
+| 17 | **Team quest assignment** — squad-wide missions with shared progress | 1 week |
 
 ### P4 — Polish
 
 | # | Item | Effort |
 |---|------|--------|
-| 14 | Gems shop UI | 1 day |
-| 15 | TypeScript strict mode cleanup | 2-3 days |
-| 16 | Unit tests for engine algorithms | 2-3 days |
-| 17 | Indoor mode (treadmill) | 2-3 days |
-| 18 | Privacy Zones implementation | 1 day |
+| 18 | Gems shop UI | 1 day |
+| 19 | TypeScript strict mode cleanup | 2-3 days |
+| 20 | Unit tests for engine algorithms (Ghost, Civic, Resonance, QuestEngine) | 2-3 days |
+| 21 | Indoor mode (treadmill) | 2-3 days |
+| 22 | Privacy Zones implementation | 1 day |
+| 23 | Quest history / past missions log (completed + expired) | 1 day |
+| 24 | Animated quest completion celebration (confetti, XP flyup) | 1 day |
+| 25 | Offline quest generation fallback (system templates when no network) | 3-4 hrs |
 
 ---
 
@@ -131,13 +166,14 @@
 |---|---|
 | Running Engine (GPS tracking) | ✅ 85% — Kalman filter, anti-cheat, vehicle detection |
 | Adaptive Ghost System | ✅ 85% — full algorithm, needs real-data validation |
-| Civic Engine | ✅ 80% — PostGIS + consensus + decay + photo. Needs rewards + review flow |
+| Civic Engine | ✅ 85% — PostGIS + consensus + decay + photo + quest sync |
 | Resonance System | ✅ 80% — algorithm complete + map UI integrated |
+| Quest Engine | ✅ 80% — daily/weekly/monthly gen, AI + system, claim flow, progress sync. Needs team quests + speed validation |
 | Ani AI Coach | ✅ 55% — chat + quests working. No weekly plans/greetings yet |
-| RPG Mechanics | ✅ 75% — XP/levels/gems/streak/multiplier/freezes. No shop UI |
+| RPG Mechanics | ✅ 80% — XP/levels/gems/streak/multiplier/freezes/quest rewards. No shop UI |
 | Squads & Guilds | ❌ 0% |
 | Bayanihan Protocol | ❌ 0% |
-| Onboarding Arc | ❌ 5% |
+| Onboarding Arc | ✅ 70% — 7-day logic + QuestEngine integration. Needs UI polish + testing |
 | Offline-First | 🟡 45% — SQLite for runs + Supabase sync |
 | Sensor Fusion & Anti-Cheat | 🟡 50% — Kalman + pedometer + speed. No G-force/shake |
 | Database Schema | ✅ 85% — all core tables + PostGIS + RLS |
@@ -147,7 +183,7 @@
 | B2B Quest Nodes | ❌ 0% |
 | Scout Pass | ❌ 0% |
 
-**Overall README-to-Code alignment: ~55-60%** (up from ~15-20% at audit start)
+**Overall README-to-Code alignment: ~60-65%** (up from ~55-60% pre-QuestEngine)
 
 ---
 
@@ -156,10 +192,23 @@
 | Research Question | Algorithm Built | Integrated | Data Collection Ready |
 |---|---|---|---|
 | **RQ1** — Adaptive Ghost vs Static PB | ✅ | ✅ | ⚠️ Needs 3+ runs per user |
-| **RQ2** — Spatial Consensus Civic | ✅ | ✅ | ⚠️ Needs rewards wired + 3+ testers per area |
-| **RQ3** — Resonance (stamina-gated civic) | ✅ | ✅ | ⚠️ Needs civic rewards + longer runs for role switching |
+| **RQ2** — Spatial Consensus Civic | ✅ | ✅ | ⚠️ Needs 3+ testers per area |
+| **RQ3** — Resonance (stamina-gated civic) | ✅ | ✅ | ⚠️ Needs longer runs for role switching |
 
-**Key blocker for thesis pilot:** Auth guards (security) + civic rewards (motivation to report) + onboarding (retention). All three are P1 items.
+**Key blocker for thesis pilot:** Auth guards (security) + node detail modal (usability) + quest completion notifications (engagement).
+
+---
+
+## 🔧 Known Technical Debt
+
+| Issue | Impact | Fix Effort |
+|---|---|---|
+| `LinearGradient` TS type errors across 6+ files | Build warnings (not blocking Expo) | 1 hr — cast `KARELA.gradients.brand as [string, string]` |
+| `applyStreakMultiplier` missing import in `AuthContext.tsx` | May cause runtime crash if `gainXP(amount > 0)` is called | 5 min |
+| Legacy SQLite `setLocalMissions` import in deprecated `QuestGenerator.ts` | Dead code path, no runtime effect | Remove file entirely |
+| `syncRunToMissions` still called in `summary.tsx` alongside `QuestEngine.syncRunProgress` | Double-syncing distance missions (additive duplication) | ✅ Fixed — old call removed |
+| No error boundary around Gemini API calls in quest generation | AI failure = no daily quest generated (system quest still works as fallback) | Add retry + exponential backoff |
+| `KARELA.gradient` vs `KARELA.gradients.brand` inconsistency | Some components use old `gradient` key | Audit and unify |
 
 ---
 
