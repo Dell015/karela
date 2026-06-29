@@ -4,6 +4,7 @@ import {
   getChartData,
   getDynamicStats,
 } from "@/services/statsService";
+import { RunHistory } from "@/components/RunHistory";
 import { ProgressScreenUI } from "@/styles/progressScreenStyle";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
@@ -285,6 +286,15 @@ export default function ProgressScreen() {
           )}
         </View>
       </View>
+
+      {/* Run History + Analytics */}
+      {profile?.uid && (
+        <RunHistory
+          userId={profile.uid}
+          streak={profile.stats?.streak || 0}
+          gems={profile.stats?.gems || 0}
+        />
+      )}
     </ScrollView>
   );
 }

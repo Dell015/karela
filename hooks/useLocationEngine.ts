@@ -40,6 +40,7 @@ export const useLocationEngine = (savedGhostData: any[]) => {
   const raceStartTimeRef = useRef<number | null>(null);
   const lastHeadingRef = useRef(0);
   const isRacingRef = useRef(isRacing);
+  const isMovingRef = useRef(isPhysicallyMoving);
   const kalmanRef = useRef(new GpsKalmanFilter(3));
   const lastAcceptedRef = useRef<{ latitude: number; longitude: number; timestamp: number } | null>(null);
 
@@ -54,17 +55,19 @@ export const useLocationEngine = (savedGhostData: any[]) => {
 
   useEffect(() => {
     isRacingRef.current = isRacing;
+    isMovingRef.current = isPhysicallyMoving;
     if (isRacing) {
       raceStartTimeRef.current = Date.now();
       setTotalDistance(0);
       setPath([]);
-      kalmanRef.current.reset();
+      // Don't reset kalmanRef — we want currentLocation to stay visible
+      // Only reset the path-recording reference
       lastAcceptedRef.current = null;
     } else {
       raceStartTimeRef.current = null;
       setGhostPosition(null);
     }
-  }, [isRacing]);
+  }, [isRacing, isPhysicallyMoving]);
 
   // --- GHOST ENGINE (FIXED SYNC) ---
   useEffect(() => {
@@ -94,11 +97,9 @@ export const useLocationEngine = (savedGhostData: any[]) => {
 
       subscription = await Location.watchPositionAsync(
         {
-          // BestForNavigation gives the highest-precision fixes during a race
-          accuracy: isRacing
-            ? Location.Accuracy.BestForNavigation
-            : Location.Accuracy.Balanced,
-          distanceInterval: isRacing ? 2 : 10,
+          // Always use high accuracy — the display gate handles low-quality fixes
+          accuracy: Location.Accuracy.BestForNavigation,
+          distanceInterval: 2,
           timeInterval: 1000,
         },
         (location) => {
@@ -168,7 +169,7 @@ export const useLocationEngine = (savedGhostData: any[]) => {
           lastAcceptedRef.current = filteredPoint;
 
           // 4. DISTANCE ACCUMULATION — only count human-powered movement
-          if (!isVehicle && isPhysicallyMoving) {
+          if (!isVehicle && isMovingRef.current) {
             setTotalDistance((prev) => prev + distanceMoved);
           }
 
@@ -179,7 +180,7 @@ export const useLocationEngine = (savedGhostData: any[]) => {
 
     initLocation();
     return () => subscription?.remove();
-  }, [isRacing, isPhysicallyMoving]);
+  }, []);
 
   // --- COMPASS (Magnetometer fallback for low-speed / stationary) ---
   useEffect(() => {
