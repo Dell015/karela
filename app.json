@@ -19,7 +19,8 @@
         ],
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Karela tracks your race against the ghost even when the screen is locked.",
         "NSLocationAlwaysUsageDescription": "Karela requires background location to sync your progress with the ghost runner.",
-        "NSLocationWhenInUseUsageDescription": "Karela uses your location to show your progress on the map."
+        "NSLocationWhenInUseUsageDescription": "Karela uses your location to show your progress on the map.",
+        "NSCameraUsageDescription": "Karela uses your camera to capture photo proof for civic reports during your runs."
       }
     },
     "android": {
@@ -36,7 +37,8 @@
         "ACCESS_BACKGROUND_LOCATION",
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_LOCATION",
-        "POST_NOTIFICATIONS"
+        "POST_NOTIFICATIONS",
+        "CAMERA"
       ],
       "foregroundService": {
         "types": [

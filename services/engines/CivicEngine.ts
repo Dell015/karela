@@ -22,6 +22,8 @@
  *                └─── Reconfirmed ────┘
  */
 
+import { decode } from "base64-arraybuffer";
+import * as FileSystem from "expo-file-system/legacy";
 import { supabase } from "../database/supabase/config";
 
 // ============================================================
@@ -138,6 +140,7 @@ export const submitCivicReport = async (
 
 /**
  * Fetches civic nodes near a given location (for map overlay).
+ * The get_nearby_nodes RPC now returns explicit latitude/longitude columns.
  */
 export const getNearbyNodes = async (
   latitude: number,
@@ -157,12 +160,52 @@ export const getNearbyNodes = async (
     return [];
   }
 
-  // Parse PostGIS GEOGRAPHY to lat/lng for the app
+  // RPC returns latitude/longitude as plain floats (via ST_Y/ST_X)
   return (data || []).map((node: any) => ({
     ...node,
-    latitude: parsePointLatitude(node.location),
-    longitude: parsePointLongitude(node.location),
+    latitude: Number(node.latitude),
+    longitude: Number(node.longitude),
   }));
+};
+
+/**
+ * Uploads a civic report photo to Supabase Storage.
+ * Returns the public URL, or null on failure.
+ */
+export const uploadCivicPhoto = async (
+  userId: string,
+  fileUri: string
+): Promise<string | null> => {
+  try {
+    // Read the local file as base64, then convert to ArrayBuffer for upload
+    const base64 = await FileSystem.readAsStringAsync(fileUri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    const arrayBuffer = decode(base64);
+
+    const filePath = `${userId}/${Date.now()}.jpg`;
+
+    const { error } = await supabase.storage
+      .from("civic-photos")
+      .upload(filePath, arrayBuffer, {
+        contentType: "image/jpeg",
+        upsert: false,
+      });
+
+    if (error) {
+      console.error("Photo upload failed:", error);
+      return null;
+    }
+
+    const { data } = supabase.storage
+      .from("civic-photos")
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  } catch (e) {
+    console.error("Photo upload error:", e);
+    return null;
+  }
 };
 
 /**
@@ -257,25 +300,4 @@ export const calculateCivicScore = (
 // ============================================================
 // UTILITIES
 // ============================================================
-
-/**
- * Parses latitude from PostGIS GEOGRAPHY/GEOMETRY point format.
- * Handles both GeoJSON and WKT-hex formats.
- */
-const parsePointLatitude = (location: any): number => {
-  if (!location) return 0;
-  // If Supabase returns it as a string (WKT hex), we need the RPC to return lat/lng directly
-  // For now, return 0 — the get_nearby_nodes RPC should ideally include ST_Y/ST_X in the SELECT
-  if (typeof location === "object" && location.coordinates) {
-    return location.coordinates[1]; // GeoJSON: [lng, lat]
-  }
-  return 0;
-};
-
-const parsePointLongitude = (location: any): number => {
-  if (!location) return 0;
-  if (typeof location === "object" && location.coordinates) {
-    return location.coordinates[0]; // GeoJSON: [lng, lat]
-  }
-  return 0;
-};
+// (coordinate parsing now handled server-side via ST_Y/ST_X in get_nearby_nodes)

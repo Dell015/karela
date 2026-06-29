@@ -1,5 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import { saveGhostRun } from "@/services/database/sqlite/database";
+import { onRunCompleted } from "@/services/engines/GhostModelManager";
 import { GEM_EARNINGS, getTotalSectors } from "@/services/gemSystem";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,11 +18,12 @@ import {
 } from "react-native";
 
 import { syncRunToMissions } from "@/services/database/supabase/missions";
-import { incrementStats } from "@/services/database/supabase/profiles";
+import { incrementStats, setStats } from "@/services/database/supabase/profiles";
 import {
     generateAndSaveRunSummary,
     logRunHistory,
 } from "@/services/database/supabase/runService";
+import { calculateStreak } from "@/services/statsService";
 
 const { width } = Dimensions.get("window");
 

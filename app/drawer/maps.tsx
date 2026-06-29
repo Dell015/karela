@@ -11,16 +11,18 @@ import {
 import MapView, { Callout, Marker, Polyline } from "react-native-maps";
 
 // Hooks & Services
+import { CivicHUD } from "@/components/CivicHUD";
 import { useAuth } from "@/context/AuthContext";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
 import { useRouteBuilder } from "@/hooks/useRouteBuilder";
 import { getLatestGhostRun } from "@/services/database/sqlite/database";
 import {
-  CIVIC_CATEGORIES,
+  CivicCategory,
   CivicNode,
   getNearbyNodes,
   reconfirmNode,
   submitCivicReport,
+  uploadCivicPhoto
 } from "@/services/engines/CivicEngine";
 import { getGhost } from "@/services/engines/GhostModelManager";
 import {
@@ -52,8 +54,6 @@ export default function MapScreen() {
   // --- CIVIC STATE ---
   const [nearbyNodes, setNearbyNodes] = useState<CivicNode[]>([]);
   const [resonance, setResonance] = useState<ResonanceState | null>(null);
-  const [showReportSheet, setShowReportSheet] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // --- HOOKS ---
   const {
@@ -222,27 +222,27 @@ export default function MapScreen() {
     return () => clearInterval(interval);
   }, [isRacing]);
 
-  // --- RESONANCE SYSTEM (Updates every 10 seconds during a run) ---
+  // --- RESONANCE SYSTEM (Updates immediately + every 5 seconds during a run) ---
   useEffect(() => {
     if (!isRacing) {
       setResonance(null);
       return;
     }
 
-    const interval = setInterval(() => {
+    const computeResonance = () => {
       const avgSpeed = elapsedTime > 0 ? physicalMeters / elapsedTime : 0;
       const runContext: RunContext = {
         elapsedTimeS: elapsedTime,
         currentSpeedMps: (currentSpeed || 0) / 3.6, // km/h → m/s
         averageSpeedMps: avgSpeed,
         totalDistanceM: physicalMeters,
-        isGhostAhead: false, // TODO: compare ghost vs user position
+        isGhostAhead: false,
       };
+      setResonance(getResonanceState(runContext, null, nearbyNodes.length));
+    };
 
-      const state = getResonanceState(runContext, null, nearbyNodes.length);
-      setResonance(state);
-    }, 10000); // Every 10 seconds
-
+    computeResonance(); // immediate
+    const interval = setInterval(computeResonance, 5000); // every 5s
     return () => clearInterval(interval);
   }, [isRacing, elapsedTime, physicalMeters, currentSpeed, nearbyNodes.length]);
 
@@ -265,20 +265,20 @@ export default function MapScreen() {
   }, [currentLocation?.latitude, currentLocation?.longitude]);
 
   // --- CIVIC REPORT HANDLER ---
-  const handleCivicReport = async (category: string) => {
+  const handleCivicReport = async (category: CivicCategory, photoUri: string) => {
     if (!user || !currentLocation) return;
+
+    // Upload the captured photo to Supabase Storage first
+    const photoUrl = await uploadCivicPhoto(user.uid, photoUri);
 
     const result = await submitCivicReport(
       user.uid,
       currentLocation.latitude,
       currentLocation.longitude,
-      category as any,
-      undefined, // photo (future)
+      category,
+      photoUrl ?? undefined,
       compassHeading
     );
-
-    setShowReportSheet(false);
-    setSelectedCategory(null);
 
     if (result.success) {
       Alert.alert(
@@ -723,121 +723,13 @@ export default function MapScreen() {
         </>
       )}
 
-      {/* RESONANCE HUD (Shows during run when role is active) */}
-      {isRacing && resonance && resonance.currentRole !== "suppressed" && (
-        <View style={{
-          position: "absolute",
-          top: 130,
-          left: 12,
-          backgroundColor: "rgba(0,0,0,0.85)",
-          paddingHorizontal: 10,
-          paddingVertical: 6,
-          borderRadius: 12,
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 6,
-        }}>
-          <View style={{
-            width: 8,
-            height: 8,
-            borderRadius: 4,
-            backgroundColor: resonance.currentRole === "scout" ? "#7CF205" : "#FFB347",
-          }} />
-          <Text style={{ color: "#fff", fontSize: 10, fontWeight: "bold", letterSpacing: 1 }}>
-            {resonance.currentRole.toUpperCase()}
-          </Text>
-          <Text style={{ color: "#888", fontSize: 9 }}>
-            {Math.round(resonance.staminaScore * 100)}%
-          </Text>
-        </View>
-      )}
-
-      {/* CIVIC REPORT BUTTON (During run, when resonance allows) */}
-      {isRacing && resonance && resonance.currentRole !== "suppressed" && (
-        <TouchableOpacity
-          style={{
-            position: "absolute",
-            left: 12,
-            bottom: 180,
-            backgroundColor: "#FF6B35",
-            width: 50,
-            height: 50,
-            borderRadius: 25,
-            justifyContent: "center",
-            alignItems: "center",
-            elevation: 5,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.5,
-            shadowRadius: 3,
-          }}
-          onPress={() => setShowReportSheet(true)}
-        >
-          <Ionicons name="camera-outline" size={24} color="#fff" />
-        </TouchableOpacity>
-      )}
-
-      {/* CIVIC REPORT CATEGORY SHEET */}
-      {showReportSheet && (
-        <View style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: "#1A1A1A",
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          padding: 20,
-          paddingBottom: 40,
-        }}>
-          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold", marginBottom: 15 }}>
-            Report Issue
-          </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-            {CIVIC_CATEGORIES.map((cat) => (
-              <TouchableOpacity
-                key={cat.id}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  backgroundColor: selectedCategory === cat.id ? "#FF6B35" : "#333",
-                  paddingHorizontal: 14,
-                  paddingVertical: 10,
-                  borderRadius: 20,
-                  gap: 6,
-                }}
-                onPress={() => setSelectedCategory(cat.id)}
-              >
-                <Ionicons name={cat.icon as any} size={16} color="#fff" />
-                <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>{cat.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}>
-            <TouchableOpacity
-              style={{ flex: 1, padding: 14, borderRadius: 12, backgroundColor: "#333", alignItems: "center" }}
-              onPress={() => { setShowReportSheet(false); setSelectedCategory(null); }}
-            >
-              <Text style={{ color: "#888", fontWeight: "bold" }}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={{
-                flex: 2,
-                padding: 14,
-                borderRadius: 12,
-                backgroundColor: selectedCategory ? "#FF6B35" : "#555",
-                alignItems: "center",
-              }}
-              disabled={!selectedCategory}
-              onPress={() => selectedCategory && handleCivicReport(selectedCategory)}
-            >
-              <Text style={{ color: "#fff", fontWeight: "bold" }}>
-                Submit Report
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
+      {/* CIVIC HUD — Resonance indicator + Report FAB + Report sheet */}
+      <CivicHUD
+        isRacing={isRacing}
+        resonance={resonance}
+        nearbyCount={nearbyNodes.length}
+        onSubmitReport={handleCivicReport}
+      />
 
       {/* ACTION BUTTON */}
       <View style={styles.buttonContainer}>

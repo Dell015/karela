@@ -1,32 +1,43 @@
 import { AuthProvider } from "@/context/AuthContext";
+import { initDatabase } from "@/services/database/sqlite/database";
+import { initGhostModelTable } from "@/services/engines/GhostModelManager";
 import { Stack } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function RootLayout() {
+  // Initialize local SQLite tables once at app startup
+  useEffect(() => {
+    try {
+      initDatabase();
+      initGhostModelTable();
+    } catch (e) {
+      console.error("Database init failed:", e);
+    }
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        {/* Added gestureEnabled: false here to lock the screens */}
         <Stack
           screenOptions={{
             headerShown: false,
-            gestureEnabled: false, // This stops the "swipe back to index" behavior globally
+            gestureEnabled: false,
           }}
         >
-          {/* 1. Onboarding / Landing */}
+          {/* Onboarding / Landing */}
           <Stack.Screen name="index" />
 
-          {/* 2. Auth Group */}
+          {/* Auth */}
           <Stack.Screen name="auth/login" />
           <Stack.Screen name="auth/signup" />
 
-          {/* 3. The Drawer Group (Main App) */}
-          <Stack.Screen name="(drawer)" />
+          {/* Main App (drawer) */}
+          <Stack.Screen name="drawer" />
 
-          {/* 4. Full Screen Modes (No Drawer here) */}
-          <Stack.Screen name="test/active-run" />
-          <Stack.Screen name="homepage/summary" />
+          {/* Full Screen Modes */}
+          <Stack.Screen name="summary" />
+          <Stack.Screen name="homepage/active-run" />
         </Stack>
       </AuthProvider>
     </GestureHandlerRootView>
