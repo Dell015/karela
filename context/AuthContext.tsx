@@ -21,6 +21,8 @@ export interface UserProfile {
     bmi: number;
     level: number;
     xp: number;
+    gems: number;
+    streak_freeze_count: number;
     fitness_score: number;
     ghostWins: number;
     streak: number;
@@ -57,6 +59,8 @@ interface AuthContextType {
   reloadProfile: () => Promise<void>;
   logout: () => Promise<void>;
   gainXP: (amount: number) => Promise<void>;
+  earnGems: (amount: number) => Promise<void>;
+  useStreakFreeze: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -66,6 +70,8 @@ const AuthContext = createContext<AuthContextType>({
   reloadProfile: async () => {},
   logout: async () => {},
   gainXP: async () => {},
+  earnGems: async () => {},
+  useStreakFreeze: async () => false,
 });
 
 const DEFAULT_STATS = {
@@ -75,6 +81,8 @@ const DEFAULT_STATS = {
   bmi: 24.2,
   level: 1,
   xp: 0,
+  gems: 0,
+  streak_freeze_count: 0,
   fitness_score: 1.0,
   ghostWins: 0,
   streak: 0,
@@ -151,6 +159,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await setStats(user.uid, { xp: newXP, level: newLevel });
     } catch (error) {
       console.error("XP Update Failed:", error);
+    }
+  };
+
+  const earnGems = async (amount: number) => {
+    if (!user || !profile || amount <= 0) return;
+    const currentGems = Number(profile.stats?.gems || 0);
+    try {
+      await setStats(user.uid, { gems: currentGems + amount });
+    } catch (error) {
+      console.error("Gem Update Failed:", error);
+    }
+  };
+
+  const useStreakFreeze = async (): Promise<boolean> => {
+    if (!user || !profile) return false;
+    const currentGems = Number(profile.stats?.gems || 0);
+    const FREEZE_COST = 80;
+
+    if (currentGems < FREEZE_COST) return false;
+
+    try {
+      const currentFreezes = Number(profile.stats?.streak_freeze_count || 0);
+      await setStats(user.uid, {
+        gems: currentGems - FREEZE_COST,
+        streak_freeze_count: currentFreezes + 1,
+      });
+      return true;
+    } catch (error) {
+      console.error("Streak Freeze Failed:", error);
+      return false;
     }
   };
 
@@ -249,7 +287,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, reloadProfile, logout, gainXP }}
+      value={{ user, profile, loading, reloadProfile, logout, gainXP, earnGems, useStreakFreeze }}
     >
       {children}
     </AuthContext.Provider>

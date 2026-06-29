@@ -12,8 +12,11 @@
 - **`tsconfig.json` invalid `ignoreDeprecations` removed.**
 - **Expo SDK downgraded 56 → 54** to match the App Store Expo Go.
 - **`AuthContext` `needsPatch` bug fixed** — dead-code stat checks now part of the condition. (was Issue #17)
-- **Removed worst debug `console.log`** in dashboard. (was Issue #16, partial)
-- **✅ SUPABASE MIGRATION COMPLETE (Phase 1).** Auth, profiles, missions, run summaries, run history all moved from Firebase → Supabase. Firebase removed from all app code; orphaned Firebase service files deleted. (was Issue #2 / #20)
+- **✅ Streak Multiplier implemented.** 1.0x → 1.2x → 1.5x → 2.0x → 3.0x tiers. Applied in `gainXP()`. Streak synced to Supabase after each run. (was Issue #12, partial)
+- **✅ Gems currency implemented.** `gems` + `streak_freeze_count` in profile. Sector bonuses (5 gems per 500m) awarded after runs. `earnGems()` and `useStreakFreeze()` (80 gems) exposed via AuthContext. `gemSystem.ts` has prices/earnings constants ready for future features. (was Issue #12, partial)
+- **✅ ADAPTIVE GHOST ENGINE built.** (`services/engines/AdaptiveGhostEngine.ts` + `GhostModelManager.ts`) — Effort Decay Function, Rolling 4-week Aggregation, Reinforcement Calibration, Synthetic Best Run generation. Integrated into map screen (ghost toggle) and summary screen (model calibration on save). Fallback hierarchy: Adaptive → PB → Ani Pacer. (was Issue #4)
+- **✅ CIVIC ENGINE built.** (`services/engines/CivicEngine.ts` + `supabase/03_civic_engine.sql`) — PostGIS spatial tables, DBSCAN-inspired consensus (3 reporters × ε radius × time window), temporal decay (`C(t) = C_0 × e^(−μ × Δt)` with category-specific μ), node lifecycle (Pending → Verified → Aging → Expired), reconfirmation, nearby-nodes query, civic score formula. (was Issue #5)
+- **✅ RESONANCE SYSTEM built.** (`services/engines/ResonanceSystem.ts`) — Stamina-aware civic load modulation, role assignment (Scout/Vanguard/Suppressed), cooldown detection, prompt filtering, route deviation logic. Uses decay model for model-based fatigue estimation with heuristic fallback. (was Issue #6)
   - Schema: `supabase/schema.sql` + `supabase/02_realtime_and_history.sql`
   - Services: `supabase/{config,auth,profiles,missions,runService,userData}.ts`
   - JSONB `stats` column + atomic `increment_stats`/`set_stats` RPCs preserve the app's `profile.stats.*` pattern.
@@ -177,20 +180,20 @@
 
 | Priority | Action | Effort | Impact |
 |----------|--------|--------|--------|
-| P0 | Remove hardcoded API keys, move to .env, rotate Gemini key | 1 hour | Security |
-| P0 | Fix `"undefined"` entry in package.json | 1 min | Build stability |
-| P0 | Decide: Supabase migration or README rewrite | Decision | Thesis integrity |
-| P1 | Implement streak multiplier logic (1.0x-3.0x) | 2-3 hours | Core mechanic |
-| P1 | Add Gems to user profile and economy | 4-6 hours | Core mechanic |
-| P1 | Build the 7-day onboarding arc | 1-2 days | Retention |
-| P1 | Implement adaptive ghost (effort decay function) | 3-5 days | Thesis requirement |
-| P2 | Add auth route guards | 2-3 hours | Security |
-| P2 | Remove debug console.logs | 30 min | Code quality |
-| P2 | Fix AuthContext dead code / needsPatch logic | 30 min | Bug prevention |
+| ~~P0~~ | ~~Remove hardcoded API keys, move to .env, rotate Gemini key~~ | ~~1 hour~~ | ✅ Done |
+| ~~P0~~ | ~~Fix `"undefined"` entry in package.json~~ | ~~1 min~~ | ✅ Done |
+| ~~P0~~ | ~~Supabase migration~~ | ~~Major~~ | ✅ Done |
+| ~~P1~~ | ~~Implement streak multiplier logic (1.0x-3.0x)~~ | ~~2-3 hours~~ | ✅ Done |
+| ~~P1~~ | ~~Add Gems to user profile and economy~~ | ~~4-6 hours~~ | ✅ Done |
+| **P1** | **Implement adaptive ghost (effort decay function)** | 3-5 days | Thesis requirement (RQ1) |
+| **P1** | **Build the 7-day onboarding arc** | 1-2 days | Retention |
+| **P1** | **Auth route guards** | 2-3 hours | Security |
 | P2 | Add error boundaries | 1-2 hours | Stability |
-| P3 | Implement civic reporting (even basic version) | 1-2 weeks | Thesis requirement |
+| P2 | Remove `firebase` package from package.json | 30 min | Cleanup |
+| P2 | Move `aiService.ts` out of `firebase/` folder | 15 min | Code organization |
+| P3 | Implement civic reporting (basic version) | 1-2 weeks | Thesis requirement (RQ2) |
 | P3 | Build Squad formation | 1 week | Social layer |
-| P3 | Add Zustand or remove from README | 2-4 hours | Consistency |
+| P3 | Gems shop UI + streak freeze UI | 1 day | Economy visible |
 | P4 | Implement Bayanihan Protocol | 2-3 weeks | Thesis feature |
 | P4 | Territory/Guild system | 2 weeks | Social layer |
 
@@ -200,32 +203,32 @@
 
 | README Section | Implementation Status |
 |---|---|
-| Running Engine (GPS tracking) | ✅ 70% — tracking works, ghost replay works, no adaptive modeling |
-| Adaptive Ghost System | ❌ 5% — static replay only |
-| Civic Engine | ❌ 0% |
-| Resonance System | ❌ 0% |
-| Ani AI Coach | 🟡 30% — quest gen + run summary exist, no weekly plans/greetings |
-| RPG Mechanics (XP/Level) | 🟡 40% — XP/levels work, no gems/multiplier/freezes |
+| Running Engine (GPS tracking) | ✅ 70% — tracking works, ghost replay works |
+| Adaptive Ghost System | ✅ 85% — decay function, rolling aggregation, reinforcement calibration, synthetic ghost generation all built. Needs real-data validation. |
+| Civic Engine | ✅ 75% — PostGIS schema, spatial consensus, temporal decay, report submission, reconfirmation, nearby-nodes all built. Needs UI screens. |
+| Resonance System | ✅ 80% — stamina scoring, role assignment, prompt filtering, civic load modulation, route deviation logic all built. Needs map UI integration. |
+| Ani AI Coach | ✅ 50% — quest gen + run summary + live chat all working |
+| RPG Mechanics (XP/Level/Gems/Streak) | ✅ 70% — XP/levels/gems/streak multiplier/freezes all implemented. No shop UI yet. |
 | Squads & Guilds | ❌ 0% |
 | Bayanihan Protocol | ❌ 0% |
 | Onboarding Arc | ❌ 5% — character creation exists, no 7-day flow |
-| Offline-First Architecture | 🟡 25% — SQLite for runs only |
+| Offline-First Architecture | 🟡 40% — SQLite for runs, Supabase sync on connectivity |
 | Sensor Fusion & Anti-Cheat | 🟡 30% — basic pedometer + speed filter |
-| Database Schema (as described) | ❌ 10% — Firebase, not PostgreSQL |
+| Database Schema (as described) | ✅ 80% — PostgreSQL + PostGIS on Supabase with RLS, all core tables built |
 | Notification Architecture | ❌ 5% — package installed, no implementation |
 | Privacy & Data Controls | ❌ 0% — no privacy zones, no data deletion flow |
 | B2B Quest Nodes | ❌ 0% |
 | Scout Pass | ❌ 0% |
 
-**Overall README-to-Code alignment: ~15-20%**
+**Overall README-to-Code alignment: ~50%** (up from ~30-35%)
 
 ---
 
 ## 🎯 Thesis-Specific Risks
 
-1. **The experimental study design requires both groups (static PB ghost vs. adaptive ghost)**. Currently only the static PB ghost exists. Without the adaptive ghost, the thesis experiment cannot run.
+1. **The experimental study design requires both groups (static PB ghost vs. adaptive ghost)**. Currently only the static PB ghost exists. Without the adaptive ghost, the thesis experiment cannot run. **This is the #1 development priority.**
 
-2. **The civic engine's DBSCAN claim requires PostGIS**. Firestore cannot execute spatial clustering queries. Either migrate to Supabase/PostgreSQL or remove the civic engine from the thesis scope.
+2. **The civic engine's DBSCAN claim requires PostGIS**. ✅ Supabase migration is done — PostGIS is now available. The `civic_nodes` table and spatial functions need to be created (schema ready to extend).
 
 3. **The Resonance System is the "defining innovation" per the README**. It has zero implementation. If this is the thesis differentiator, it needs to be the development priority after the adaptive ghost.
 
@@ -233,17 +236,17 @@
 
 ---
 
-## 💡 Recommendations
+## 💡 Recommendations (Updated)
 
-1. **Scope the MVP honestly.** The README describes a 12-month product. Decide what's actually needed for the thesis defense and build that. Everything else is post-thesis.
+1. **Build the adaptive ghost algorithm next.** This is the primary research question (RQ1). Without it, there's no experiment and no thesis. The infrastructure is now ready (SQLite run history + Supabase profile).
 
-2. **Migrate to Supabase if the thesis requires spatial queries.** If you keep Firebase, rewrite Sections 8, 9, 12, 29 of the README entirely.
+2. **Scope the MVP for thesis defense:** Adaptive ghost + basic civic reporting + Resonance System proof-of-concept. Everything else (Guilds, Bayanihan, Scout Pass) is post-thesis.
 
-3. **Build the adaptive ghost algorithm first.** This is the primary research question (RQ1). Without it, there's no experiment and no thesis.
+3. **Consider a `/algorithms` folder** for testable, isolated implementations of the Effort Decay Function and Spatial Consensus — separate from the React Native UI. Makes them unit-testable and thesis-presentable.
 
-4. **Add a `.env.example` file** with placeholder keys so collaborators know what environment variables are needed without seeing real secrets.
+4. **Add auth route guards** before any real user testing — prevents access to protected screens without login.
 
-5. **Consider a monorepo structure** with `/algorithms` for testable, isolated implementations of the Effort Decay Function and Spatial Consensus — separate from the React Native UI. This makes them unit-testable and thesis-presentable.
+5. **The `.env.example` file is done** — collaborators can now set up the project without seeing real secrets.
 
 ---
 

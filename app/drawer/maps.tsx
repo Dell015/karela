@@ -11,9 +11,23 @@ import {
 import MapView, { Callout, Marker, Polyline } from "react-native-maps";
 
 // Hooks & Services
+import { useAuth } from "@/context/AuthContext";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
 import { useRouteBuilder } from "@/hooks/useRouteBuilder";
 import { getLatestGhostRun } from "@/services/database/sqlite/database";
+import {
+  CIVIC_CATEGORIES,
+  CivicNode,
+  getNearbyNodes,
+  reconfirmNode,
+  submitCivicReport,
+} from "@/services/engines/CivicEngine";
+import { getGhost } from "@/services/engines/GhostModelManager";
+import {
+  getResonanceState,
+  ResonanceState,
+  RunContext,
+} from "@/services/engines/ResonanceSystem";
 import { PermissionManager } from "@/services/PermissionsManager";
 import { calculateStreak } from "@/services/statsService";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
@@ -21,6 +35,7 @@ import { styles } from "@/styles/mapStyles";
 
 export default function MapScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const mapRef = useRef<MapView>(null);
   const [hasZoomed, setHasZoomed] = useState(false);
   const isProcessing = useRef(false);
@@ -33,6 +48,12 @@ export default function MapScreen() {
   // --- GHOST STATE ---
   const [isGhostEnabled, setIsGhostEnabled] = useState(false);
   const [activeGhostData, setActiveGhostData] = useState<any[]>([]);
+
+  // --- CIVIC STATE ---
+  const [nearbyNodes, setNearbyNodes] = useState<CivicNode[]>([]);
+  const [resonance, setResonance] = useState<ResonanceState | null>(null);
+  const [showReportSheet, setShowReportSheet] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // --- HOOKS ---
   const {
@@ -134,30 +155,50 @@ export default function MapScreen() {
   // --- FIXED GHOST LOGIC ---
   const toggleGhost = () => {
     if (!isGhostEnabled) {
-      const savedRow: any = getLatestGhostRun();
+      // Try adaptive ghost system first (falls back to PB → Ani Pacer)
+      const ghostResult = getGhost(1800); // Estimate 30 min run
 
-      if (savedRow && savedRow.path_data) {
-        try {
-          const rawPath = JSON.parse(savedRow.path_data);
+      if (ghostResult.type === "ani_pacer" || ghostResult.waypoints.length === 0) {
+        // No runs saved yet — try raw SQLite fallback for legacy compatibility
+        const savedRow: any = getLatestGhostRun();
 
-          // --- ADD DATA NORMALIZATION HERE ---
-          const parsedPath = rawPath.map((p: any) => ({
-            latitude: Number(p.latitude),
-            longitude: Number(p.longitude),
-            timestamp: Number(p.timestamp), // Ensure this is a numeric timestamp
-          }));
-
-          setActiveGhostData(parsedPath);
-          setIsGhostEnabled(true);
-        } catch (e) {
-          console.error("Ghost parse error", e);
-          Alert.alert("Error", "Could not load ghost path.");
+        if (savedRow && savedRow.path_data) {
+          try {
+            const rawPath = JSON.parse(savedRow.path_data);
+            const parsedPath = rawPath.map((p: any) => ({
+              latitude: Number(p.latitude),
+              longitude: Number(p.longitude),
+              timestamp: Number(p.timestamp),
+            }));
+            setActiveGhostData(parsedPath);
+            setIsGhostEnabled(true);
+          } catch (e) {
+            console.error("Ghost parse error", e);
+            Alert.alert("Error", "Could not load ghost path.");
+          }
+        } else {
+          Alert.alert(
+            "No Ghost Found",
+            "Save a run first to race against yourself!",
+          );
         }
       } else {
-        Alert.alert(
-          "No Ghost Found",
-          "Save a run first to race against yourself!",
-        );
+        // Use adaptive or PB ghost waypoints
+        const ghostData = ghostResult.waypoints.map((wp: any) => ({
+          latitude: wp.latitude,
+          longitude: wp.longitude,
+          timestamp: wp.elapsedMs ?? wp.timestamp ?? 0,
+        }));
+        setActiveGhostData(ghostData);
+        setIsGhostEnabled(true);
+
+        if (ghostResult.type === "adaptive") {
+          console.log(
+            `[Ghost] Adaptive mode: baseline=${ghostResult.metadata.baselinePace.toFixed(2)}m/s, ` +
+            `fatigue@${ghostResult.metadata.predictedFatigue.toFixed(0)}s, ` +
+            `confidence=${(ghostResult.metadata.confidence * 100).toFixed(0)}%`
+          );
+        }
       }
     } else {
       setIsGhostEnabled(false);
@@ -180,6 +221,85 @@ export default function MapScreen() {
     }
     return () => clearInterval(interval);
   }, [isRacing]);
+
+  // --- RESONANCE SYSTEM (Updates every 10 seconds during a run) ---
+  useEffect(() => {
+    if (!isRacing) {
+      setResonance(null);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const avgSpeed = elapsedTime > 0 ? physicalMeters / elapsedTime : 0;
+      const runContext: RunContext = {
+        elapsedTimeS: elapsedTime,
+        currentSpeedMps: (currentSpeed || 0) / 3.6, // km/h → m/s
+        averageSpeedMps: avgSpeed,
+        totalDistanceM: physicalMeters,
+        isGhostAhead: false, // TODO: compare ghost vs user position
+      };
+
+      const state = getResonanceState(runContext, null, nearbyNodes.length);
+      setResonance(state);
+    }, 10000); // Every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [isRacing, elapsedTime, physicalMeters, currentSpeed, nearbyNodes.length]);
+
+  // --- CIVIC NODES (Fetch nearby nodes periodically) ---
+  useEffect(() => {
+    if (!currentLocation) return;
+
+    const fetchNodes = async () => {
+      const nodes = await getNearbyNodes(
+        currentLocation.latitude,
+        currentLocation.longitude,
+        500 // 500m radius
+      );
+      setNearbyNodes(nodes);
+    };
+
+    fetchNodes();
+    const interval = setInterval(fetchNodes, 30000); // Refresh every 30s
+    return () => clearInterval(interval);
+  }, [currentLocation?.latitude, currentLocation?.longitude]);
+
+  // --- CIVIC REPORT HANDLER ---
+  const handleCivicReport = async (category: string) => {
+    if (!user || !currentLocation) return;
+
+    const result = await submitCivicReport(
+      user.uid,
+      currentLocation.latitude,
+      currentLocation.longitude,
+      category as any,
+      undefined, // photo (future)
+      compassHeading
+    );
+
+    setShowReportSheet(false);
+    setSelectedCategory(null);
+
+    if (result.success) {
+      Alert.alert(
+        result.consensus_reached ? "Node Verified!" : "Report Submitted",
+        result.consensus_reached
+          ? "Enough reports confirmed this issue. Civic Quest generated!"
+          : "Your report is pending. Others nearby can corroborate it.",
+      );
+    } else {
+      Alert.alert("Report Failed", result.message || "Could not submit report.");
+    }
+  };
+
+  // --- NODE RECONFIRMATION ---
+  const handleReconfirm = async (nodeId: string) => {
+    if (!user) return;
+    const success = await reconfirmNode(nodeId, user.uid);
+    if (success) {
+      Alert.alert("Confirmed!", "Node confidence reset. Thanks for verifying!");
+    }
+  };
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -443,6 +563,50 @@ export default function MapScreen() {
             </Marker>
           );
         })}
+
+        {/* CIVIC NODE MARKERS */}
+        {nearbyNodes.map((node) => (
+          <Marker
+            key={node.id}
+            coordinate={{ latitude: node.latitude, longitude: node.longitude }}
+            anchor={{ x: 0.5, y: 0.5 }}
+            zIndex={400}
+            onPress={() => {
+              if (node.status === "verified" || node.status === "aging") {
+                Alert.alert(
+                  `${node.category.replace("_", " ").toUpperCase()}`,
+                  `Status: ${node.status} | Confidence: ${(node.confidence * 100).toFixed(0)}%\nReporters: ${node.report_count}`,
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Still There", onPress: () => handleReconfirm(node.id) },
+                  ]
+                );
+              }
+            }}
+          >
+            <View style={{
+              width: 28,
+              height: 28,
+              borderRadius: 14,
+              backgroundColor: node.status === "verified" ? "#FF6B35" : node.status === "aging" ? "#FFB347" : "#888",
+              borderWidth: 2,
+              borderColor: "#fff",
+              justifyContent: "center",
+              alignItems: "center",
+            }}>
+              <Ionicons
+                name={
+                  node.category === "trash" ? "trash" :
+                  node.category === "flooding" ? "water" :
+                  node.category === "damaged_infrastructure" ? "construct" :
+                  node.category === "unsafe_area" ? "alert-circle" : "warning"
+                }
+                size={14}
+                color="#fff"
+              />
+            </View>
+          </Marker>
+        ))}
       </MapView>
 
       {/* 3D CHARACTER OVERLAY (Fix for iOS & Performance) */}
@@ -557,6 +721,122 @@ export default function MapScreen() {
             <Ionicons name="flag" size={24} color="#FFD700" />
           </TouchableOpacity>
         </>
+      )}
+
+      {/* RESONANCE HUD (Shows during run when role is active) */}
+      {isRacing && resonance && resonance.currentRole !== "suppressed" && (
+        <View style={{
+          position: "absolute",
+          top: 130,
+          left: 12,
+          backgroundColor: "rgba(0,0,0,0.85)",
+          paddingHorizontal: 10,
+          paddingVertical: 6,
+          borderRadius: 12,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 6,
+        }}>
+          <View style={{
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            backgroundColor: resonance.currentRole === "scout" ? "#7CF205" : "#FFB347",
+          }} />
+          <Text style={{ color: "#fff", fontSize: 10, fontWeight: "bold", letterSpacing: 1 }}>
+            {resonance.currentRole.toUpperCase()}
+          </Text>
+          <Text style={{ color: "#888", fontSize: 9 }}>
+            {Math.round(resonance.staminaScore * 100)}%
+          </Text>
+        </View>
+      )}
+
+      {/* CIVIC REPORT BUTTON (During run, when resonance allows) */}
+      {isRacing && resonance && resonance.currentRole !== "suppressed" && (
+        <TouchableOpacity
+          style={{
+            position: "absolute",
+            left: 12,
+            bottom: 180,
+            backgroundColor: "#FF6B35",
+            width: 50,
+            height: 50,
+            borderRadius: 25,
+            justifyContent: "center",
+            alignItems: "center",
+            elevation: 5,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.5,
+            shadowRadius: 3,
+          }}
+          onPress={() => setShowReportSheet(true)}
+        >
+          <Ionicons name="camera-outline" size={24} color="#fff" />
+        </TouchableOpacity>
+      )}
+
+      {/* CIVIC REPORT CATEGORY SHEET */}
+      {showReportSheet && (
+        <View style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: "#1A1A1A",
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          padding: 20,
+          paddingBottom: 40,
+        }}>
+          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold", marginBottom: 15 }}>
+            Report Issue
+          </Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+            {CIVIC_CATEGORIES.map((cat) => (
+              <TouchableOpacity
+                key={cat.id}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  backgroundColor: selectedCategory === cat.id ? "#FF6B35" : "#333",
+                  paddingHorizontal: 14,
+                  paddingVertical: 10,
+                  borderRadius: 20,
+                  gap: 6,
+                }}
+                onPress={() => setSelectedCategory(cat.id)}
+              >
+                <Ionicons name={cat.icon as any} size={16} color="#fff" />
+                <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>{cat.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}>
+            <TouchableOpacity
+              style={{ flex: 1, padding: 14, borderRadius: 12, backgroundColor: "#333", alignItems: "center" }}
+              onPress={() => { setShowReportSheet(false); setSelectedCategory(null); }}
+            >
+              <Text style={{ color: "#888", fontWeight: "bold" }}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                flex: 2,
+                padding: 14,
+                borderRadius: 12,
+                backgroundColor: selectedCategory ? "#FF6B35" : "#555",
+                alignItems: "center",
+              }}
+              disabled={!selectedCategory}
+              onPress={() => selectedCategory && handleCivicReport(selectedCategory)}
+            >
+              <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                Submit Report
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       )}
 
       {/* ACTION BUTTON */}

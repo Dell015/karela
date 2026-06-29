@@ -1,5 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import { saveGhostRun } from "@/services/database/sqlite/database";
+import { GEM_EARNINGS, getTotalSectors } from "@/services/gemSystem";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -27,7 +28,7 @@ const { width } = Dimensions.get("window");
 export default function SummaryScreen() {
   const router = useRouter();
   const { meters, seconds, kcal, xp, path } = useLocalSearchParams();
-  const { user, profile, gainXP } = useAuth();
+  const { user, profile, gainXP, earnGems } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
 
   const formatTime = (totalSeconds: number) => {
@@ -59,9 +60,21 @@ export default function SummaryScreen() {
           Number(seconds),
           JSON.parse(path as string),
         );
+
+        // Trigger adaptive ghost calibration (reinforcement feedback)
+        const parsedPath = JSON.parse(path as string);
+        onRunCompleted({
+          id: Date.now(),
+          date: Date.now(),
+          distance: Number(meters),
+          duration: Number(seconds),
+          avg_speed: Number(seconds) > 0 ? (Number(meters) / Number(seconds)) * 3.6 : 0,
+          path_data: path as string,
+        });
+
         Alert.alert(
           "Ghost Saved",
-          "You can now race against this run in the Map!",
+          "Your adaptive ghost is learning from this run!",
         );
       }
     } catch (error) {
@@ -118,6 +131,13 @@ export default function SummaryScreen() {
 
       // 6. Award the Run XP (multiplied by streak tier)
       if (xp) await gainXP(Number(xp));
+
+      // 7. Award Sector Bonus Gems (flat rate, not multiplied)
+      const totalSectors = getTotalSectors(Number(meters));
+      if (totalSectors > 0) {
+        const gemsEarned = totalSectors * GEM_EARNINGS.SECTOR_BONUS;
+        await earnGems(gemsEarned);
+      }
 
       router.replace("/drawer/dashboard");
     } catch (error) {
