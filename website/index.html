@@ -30,9 +30,10 @@
     <link rel="icon" type="image/png" href="assets/img/favicon.png" />
     <link rel="apple-touch-icon" href="assets/img/icon.png" />
 
-    <!-- Only the two weights used above the fold are preloaded. -->
-    <link rel="preload" href="assets/fonts/Excon-Black.otf" as="font" type="font/otf" crossorigin />
-    <link rel="preload" href="assets/fonts/Excon-Regular.otf" as="font" type="font/otf" crossorigin />
+    <!-- Only the two weights used above the fold are preloaded. Preloading
+         all six would compete with the hero render for bandwidth. -->
+    <link rel="preload" href="assets/fonts/Excon-Black.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/Excon-Regular.woff2" as="font" type="font/woff2" crossorigin />
 
     <link rel="stylesheet" href="css/tokens.css" />
     <link rel="stylesheet" href="css/base.css" />

@@ -5,10 +5,10 @@
 > item states what is missing, where it lives, why it was deferred, and exactly
 > what "done" looks like.
 >
-> **Status:** Phases 1–6 of the build are complete. The site is functional,
-> responsive, accessible, and deployable, with Netlify and Vercel configs
-> committed. What remains is real content (screenshots, copy, numbers) and one
-> backend decision.
+> **Status:** Phases 1–7 of the build are complete. The site is functional,
+> responsive, accessible, performance-optimised, and deployable, with Netlify
+> and Vercel configs committed. What remains is real content (screenshots,
+> copy, numbers) and one backend decision.
 >
 > **Last updated:** 2026-07-31
 
@@ -34,6 +34,7 @@ search string to find it.
 karela/
 ├── website/                 <- the showcase site (this document's subject)
 │   ├── index.html           <- single page, 11 sections, all content inline
+│   ├── 404.html             <- styled not-found page
 │   ├── css/
 │   │   ├── tokens.css       <- design system, ported from styles/designSystem.ts
 │   │   ├── base.css         <- fonts, reset, utilities, reveal animations
@@ -299,12 +300,17 @@ rather than assumed.
 | **Skip link did not move focus** | `#main` was not focusable, so the skip link scrolled without transferring focus. | Added `tabindex="-1"` to `<main>`. |
 | **Focus-trapped menu lacked dialog semantics** | The mobile menu traps focus but was a plain `<div>`, so assistive tech had no signal it was modal. | Added `role="dialog"` and `aria-modal="true"`. |
 | **Oversized images** | Logo was a 4388×4388 canvas at 657 KB rendered at 120×30; `icon.png` was 1024×1024 at 393 KB for a 180px slot. | Trimmed, resampled, and corrected aspect ratios. Image payload **1,077 KB → 89 KB**. |
+| **Fonts shipped as OTF** | Six OTF weights totalling 191 KB, with no WOFF2 anywhere. | All six converted; `@font-face` lists WOFF2 first with OTF fallback. **191 KB → 110 KB**. |
 
 Also added in the same pass: `prefers-contrast: more` support (brighter
 secondary text, solid borders, glow orbs removed), and `forced-colors: active`
 support — gradient-clipped text renders **invisible** in Windows High Contrast
 mode because its fill is transparent, so `--webkit-text-fill-color` is restored
 to `currentColor` there.
+
+**Measured payload after this pass** — approximately 202 KB on the critical
+path (HTML 70 KB, CSS 64 KB, JS 20 KB, two preloaded WOFF2 weights 36 KB, logo
+12 KB). No blocking third-party requests, because there are none.
 
 ---
 
@@ -338,26 +344,30 @@ theme colour `#0d0d0d`.
 
 ---
 
-### P2-12. Excon is served as OTF, not WOFF2
+### P2-12. ~~Excon is served as OTF, not WOFF2~~ — RESOLVED 2026-07-31
 
-Six OTF files at roughly 32 KB each. WOFF2 typically cuts that by 40–50% and is
-supported by every browser in use today.
+All six weights converted to WOFF2 via `ttf2woff2`. Each `@font-face` now lists
+WOFF2 first with the OTF kept as a fallback, so any browser that cannot handle
+WOFF2 still renders correctly — in practice every current browser takes the
+WOFF2.
 
-```bash
-npx ttf2woff2 < Excon-Regular.otf > Excon-Regular.woff2
-```
+**191.1 KB → 110.0 KB across all six weights, roughly 42% per file.**
 
-Then add WOFF2 first in each `@font-face` `src` list, keeping OTF as fallback.
-Also consider subsetting to Latin only.
+Only Black (900) and Regular (400) are preloaded, and those preloads now point
+at the WOFF2. Preloading all six would compete with the hero render for
+bandwidth.
 
-Only Black (900) and Regular (400) are preloaded — that is deliberate, since
-preloading all six would compete with the hero render.
+Still open, lower value: **subsetting to Latin only** would cut this further.
+The OTF fallbacks could also be deleted once you are satisfied nothing in your
+audience needs them, saving another 191 KB on disk (though not on the wire,
+since they are never fetched).
 
 ---
 
-### P2-13. No 404 page
+### P2-13. ~~No 404 page~~ — RESOLVED 2026-07-31
 
-Add `website/404.html`. Both Netlify and Vercel serve it automatically.
+`website/404.html` added, reusing the same token and component CSS. Netlify and
+Vercel both serve it automatically; GitHub Pages does too.
 
 ---
 

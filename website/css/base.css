@@ -3,45 +3,60 @@
    Font loading, reset, typography, utilities, motion primitives.
    ============================================================ */
 
-/* ---------- Excon font family ---------- */
+/* ---------- Excon font family ----------
+   WOFF2 first (roughly 42% smaller), OTF as fallback for any
+   browser that cannot handle it. Every current browser supports
+   WOFF2, so in practice only the first source is ever fetched. */
 @font-face {
   font-family: "Excon";
-  src: url("../assets/fonts/Excon-Thin.otf") format("opentype");
+  src:
+    url("../assets/fonts/Excon-Thin.woff2") format("woff2"),
+    url("../assets/fonts/Excon-Thin.otf") format("opentype");
   font-weight: 100;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "Excon";
-  src: url("../assets/fonts/Excon-Light.otf") format("opentype");
+  src:
+    url("../assets/fonts/Excon-Light.woff2") format("woff2"),
+    url("../assets/fonts/Excon-Light.otf") format("opentype");
   font-weight: 300;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "Excon";
-  src: url("../assets/fonts/Excon-Regular.otf") format("opentype");
+  src:
+    url("../assets/fonts/Excon-Regular.woff2") format("woff2"),
+    url("../assets/fonts/Excon-Regular.otf") format("opentype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "Excon";
-  src: url("../assets/fonts/Excon-Medium.otf") format("opentype");
+  src:
+    url("../assets/fonts/Excon-Medium.woff2") format("woff2"),
+    url("../assets/fonts/Excon-Medium.otf") format("opentype");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "Excon";
-  src: url("../assets/fonts/Excon-Bold.otf") format("opentype");
+  src:
+    url("../assets/fonts/Excon-Bold.woff2") format("woff2"),
+    url("../assets/fonts/Excon-Bold.otf") format("opentype");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "Excon";
-  src: url("../assets/fonts/Excon-Black.otf") format("opentype");
+  src:
+    url("../assets/fonts/Excon-Black.woff2") format("woff2"),
+    url("../assets/fonts/Excon-Black.otf") format("opentype");
   font-weight: 900;
   font-style: normal;
   font-display: swap;
