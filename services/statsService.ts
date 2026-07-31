@@ -1,4 +1,4 @@
-import { db } from "services/database/sqlite/database";
+import { db } from "@/services/database/sqlite/database";
 
 export interface AggregatedStats {
   id: string;
