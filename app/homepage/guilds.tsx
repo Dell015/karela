@@ -6,7 +6,6 @@ import { useNavigation } from "expo-router";
 import React, { useState } from "react";
 import {
   Alert,
-  Dimensions,
   LayoutAnimation,
   Platform,
   ScrollView,
@@ -27,8 +26,6 @@ if (
 ) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
-
-const { width } = Dimensions.get("window");
 
 const MOCK_GUILDS = [
   { id: "1", name: "Tuguegarao Striders", members: 124, level: 15, icon: "shield-sword", color: KARELA.color.brand },
@@ -102,7 +99,7 @@ export default function GuildsScreen() {
           <Text style={styles.sectionLabel}>YOUR ACTIVE SQUAD</Text>
           <TouchableOpacity activeOpacity={0.9} onPress={handleToggleDetails}>
             <LinearGradient
-              colors={showDetails ? (KARELA.gradients.brand as unknown as string[]) : [KARELA.color.surface, KARELA.color.bg]}
+              colors={showDetails ? KARELA.gradients.brand : ([KARELA.color.surface, KARELA.color.bg] as const)}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
               style={[styles.activeGuildCard, showDetails && styles.activeGuildCardExpanded]}
             >

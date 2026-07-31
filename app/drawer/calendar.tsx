@@ -46,7 +46,7 @@ const ProgressCircle = ({ progress, size, date, strokeWidth = 5, color = KARELA.
   const animatedProgress = useSharedValue(0);
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  useEffect(() => { animatedProgress.value = withTiming(progress, { duration: 1000 }); }, [progress]);
+  useEffect(() => { animatedProgress.value = withTiming(progress, { duration: 1000 }); }, [progress, animatedProgress]);
   const animatedProps = useAnimatedProps(() => ({ strokeDashoffset: circumference * (1 - animatedProgress.value) }));
 
   return (
@@ -103,7 +103,7 @@ export default function CalendarScreen() {
               <Text style={styles.headerTitle}>Calendar</Text>
               <View style={styles.statusRow}>
                 <View style={[styles.dot, { backgroundColor: KARELA.color.brand }]} />
-                <Text style={styles.statusText}>Connected: Sander's Airpods Pro 2</Text>
+                <Text style={styles.statusText}>Connected: Sander&apos;s Airpods Pro 2</Text>
               </View>
             </View>
             <TouchableOpacity style={styles.bellButton}>
@@ -113,7 +113,7 @@ export default function CalendarScreen() {
 
           <View style={styles.tabContainer}>
             <Animated.View style={[styles.animatedPill, animatedPillStyle]}>
-              <LinearGradient colors={KARELA.gradients.brand as unknown as string[]} style={StyleSheet.absoluteFill} />
+              <LinearGradient colors={KARELA.gradients.brand} style={StyleSheet.absoluteFill} />
             </Animated.View>
             {["Daily", "Weekly", "Monthly"].map((type, i) => (
               <TouchableOpacity key={type} style={styles.tabButton} onPress={() => handleToggle(type, i)} activeOpacity={1}>
@@ -203,9 +203,9 @@ export default function CalendarScreen() {
             <View style={styles.recContainer}>
               <View style={styles.coachHeader}>
                 <MaterialCommunityIcons name="account-tie-voice" size={20} color={KARELA.color.brand} />
-                <Text style={styles.recTitle}>Karela's Advice</Text>
+                <Text style={styles.recTitle}>Karela&apos;s Advice</Text>
               </View>
-              <Text style={styles.recText}>"{selectedQuest?.rec}"</Text>
+              <Text style={styles.recText}>&quot;{selectedQuest?.rec}&quot;</Text>
             </View>
             <TouchableOpacity style={styles.closeBtn} onPress={() => setModalVisible(false)}>
               <Text style={styles.closeBtnText}>Dismiss</Text>
@@ -236,7 +236,7 @@ const NewQuestCard = ({ title, distance, time, progress, onDetails }: any) => (
     <View style={styles.buttonRow}>
       <TouchableOpacity style={styles.detailsBtn} onPress={onDetails}><Text style={styles.detailsBtnText}>Details</Text></TouchableOpacity>
       <TouchableOpacity style={styles.fullTrackBtn}>
-        <LinearGradient colors={KARELA.gradients.brand as unknown as string[]} style={styles.gradientBtn}>
+        <LinearGradient colors={KARELA.gradients.brand} style={styles.gradientBtn}>
           <Text style={styles.trackBtnText}>Track Progress</Text>
         </LinearGradient>
       </TouchableOpacity>

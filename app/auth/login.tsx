@@ -98,7 +98,7 @@ export default function Login() {
               disabled={loading}
             >
               <LinearGradient
-                colors={KARELA.gradients.brand as unknown as string[]}
+                colors={KARELA.gradients.brand}
                 style={styles.gradientBtn}
               >
                 {loading ? <ActivityIndicator color={KARELA.color.textPrimary} /> : <Text style={styles.loginBtnText}>Log In</Text>}

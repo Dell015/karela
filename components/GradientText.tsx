@@ -15,7 +15,7 @@ export const GradientText = ({ text, style }: { text: string; style?: StyleProp<
         }
       >
         <LinearGradient 
-          colors={KARELA.gradients.brand as unknown as string[]}
+          colors={KARELA.gradients.brand}
           start={{ x: 0, y: 0 }} 
           end={{ x: 1, y: 0 }}
         >

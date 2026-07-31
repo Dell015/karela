@@ -6,7 +6,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useNavigation } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-    Dimensions,
     Image,
     Keyboard,
     KeyboardAvoidingView,
@@ -37,9 +36,7 @@ import { dashboard_ui } from "@/styles/dashboardStyle";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { theme } from "@/styles/theme";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
-import { useSharedValue } from "react-native-reanimated";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function Dashboard() {
   const { profile, loading } = useAuth();
@@ -54,14 +51,10 @@ export default function Dashboard() {
   const currentXP = Number(profile?.stats?.xp || 0);
   const currentLevel = Number(profile?.stats?.level || 1);
   const currentStreak = Number(profile?.stats?.streak || 0);
-  const totalXP = 1000;
-  const progressPercent =
-    totalXP > 0 ? Math.min((currentXP / totalXP) * 100, 100) : 0;
   const navigation = useNavigation<DrawerNavigationProp<any>>();
   const [currentAniAction, setCurrentAniAction] = useState(
     "Female_rig|female_IDLE",
   );
-  const aniExpandProgress = useSharedValue(0);
   const [activeMissions, setActiveMissions] = useState<any[]>([]);
 
   const isFocused = useIsFocused();
@@ -390,7 +383,7 @@ export default function Dashboard() {
               <TouchableOpacity onPress={() => router.push("/drawer/ai_coach")}>
                 <View style={dashboard_ui.chatCardContainer}>
                   <LinearGradient
-                    colors={KARELA.gradients.brand as unknown as string[]}
+                    colors={KARELA.gradients.brand}
                     style={dashboard_ui.chatSideBar}
                   />
                   <View style={dashboard_ui.chatContent}>

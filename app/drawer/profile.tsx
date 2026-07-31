@@ -88,7 +88,7 @@ export default function ProfilePage() {
 
         <View style={s.identityRow}>
           <View style={s.avatarRing}>
-            <LinearGradient colors={KARELA.gradients.brand as unknown as string[]} style={s.avatarGradient}>
+            <LinearGradient colors={KARELA.gradients.brand} style={s.avatarGradient}>
               <View style={s.avatarInner}>
                 <MaterialCommunityIcons name="account" size={40} color={KARELA.color.brand} />
               </View>
@@ -129,7 +129,7 @@ export default function ProfilePage() {
           <Text style={s.xpLabel}>{stats?.xp || 0} / 1,000 XP</Text>
         </View>
         <View style={s.xpBar}>
-          <LinearGradient colors={KARELA.gradients.brand as unknown as string[]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[s.xpFill, { width: `${Math.min(xpProgress, 100)}%` }]} />
+          <LinearGradient colors={KARELA.gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[s.xpFill, { width: `${Math.min(xpProgress, 100)}%` }]} />
         </View>
 
         {/* STREAK + GEMS + DISTANCE */}
@@ -279,6 +279,45 @@ export default function ProfilePage() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* EDIT PROFILE MODAL */}
+      <Modal visible={showEditProfile} animationType="slide" transparent>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={s.modalOverlay}>
+          <View style={s.modalContent}>
+            <Text style={s.modalTitle}>Edit Profile</Text>
+
+            <Text style={s.inputLabel}>Display Name</Text>
+            <TextInput style={s.input} value={displayName} onChangeText={setDisplayName} placeholder="Display Name" placeholderTextColor={KARELA.color.textMuted} />
+
+            <Text style={s.inputLabel}>Username</Text>
+            <TextInput style={s.input} value={username} onChangeText={setUsername} placeholder="Username" placeholderTextColor={KARELA.color.textMuted} autoCapitalize="none" />
+
+            <Text style={s.inputLabel}>Age</Text>
+            <TextInput style={s.input} value={age} onChangeText={setAge} placeholder="Age" keyboardType="numeric" placeholderTextColor={KARELA.color.textMuted} />
+
+            <Text style={s.inputLabel}>Weight (kg)</Text>
+            <TextInput style={s.input} value={weight} onChangeText={setWeight} placeholder="Weight" keyboardType="numeric" placeholderTextColor={KARELA.color.textMuted} />
+
+            <Text style={s.inputLabel}>Height (cm)</Text>
+            <TextInput style={s.input} value={height} onChangeText={setHeight} placeholder="Height" keyboardType="numeric" placeholderTextColor={KARELA.color.textMuted} />
+
+            <Text style={s.inputLabel}>Target Weight (kg)</Text>
+            <TextInput style={s.input} value={targetWeight} onChangeText={setTargetWeight} placeholder="Target Weight" keyboardType="numeric" placeholderTextColor={KARELA.color.textMuted} />
+
+            <Text style={s.inputLabel}>Notes for Ani (Coach)</Text>
+            <TextInput style={[s.input, { height: 60 }]} value={aiNotes} onChangeText={setAiNotes} placeholder="e.g. I have bad knees, prefer morning runs" placeholderTextColor={KARELA.color.textMuted} multiline />
+
+            <View style={s.modalButtons}>
+              <TouchableOpacity style={s.modalCancelBtn} onPress={() => setShowEditProfile(false)}>
+                <Text style={s.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={s.modalSaveBtn} onPress={handleSaveProfile}>
+                <Text style={s.modalSaveText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </ScrollView>
   );
 }
@@ -361,4 +400,16 @@ const s = StyleSheet.create({
   utilityItem: { flexDirection: "row", alignItems: "center", gap: KARELA.space.lg, backgroundColor: "#111", paddingVertical: KARELA.space.lg, paddingHorizontal: KARELA.space.lg, borderRadius: KARELA.radius.md, marginBottom: KARELA.space.sm },
   utilityLabel: { color: KARELA.color.textPrimary, fontSize: KARELA.size.body, fontFamily: KARELA.font.medium },
   utilityDesc: { color: KARELA.color.textFaint, fontSize: 11, fontFamily: KARELA.font.regular, marginTop: 2 },
+
+  // Edit Profile Modal
+  modalOverlay: { flex: 1, justifyContent: "center", backgroundColor: "rgba(0,0,0,0.8)", paddingHorizontal: 20 },
+  modalContent: { backgroundColor: KARELA.color.surface, borderRadius: KARELA.radius.lg, padding: KARELA.space.xl },
+  modalTitle: { color: KARELA.color.textPrimary, fontSize: 20, fontFamily: KARELA.font.black, marginBottom: KARELA.space.lg, textAlign: "center" },
+  inputLabel: { color: KARELA.color.textMuted, fontSize: KARELA.size.caption, fontFamily: KARELA.font.medium, marginTop: KARELA.space.sm, marginBottom: 4 },
+  input: { backgroundColor: KARELA.color.bg, borderRadius: KARELA.radius.sm, paddingHorizontal: KARELA.space.lg, paddingVertical: KARELA.space.sm, color: KARELA.color.textPrimary, fontSize: KARELA.size.body, fontFamily: KARELA.font.regular, borderWidth: 1, borderColor: KARELA.color.lineSoft },
+  modalButtons: { flexDirection: "row", gap: KARELA.space.lg, marginTop: KARELA.space.xl },
+  modalCancelBtn: { flex: 1, paddingVertical: KARELA.space.md, borderRadius: KARELA.radius.sm, alignItems: "center", borderWidth: 1, borderColor: KARELA.color.lineSoft },
+  modalCancelText: { color: KARELA.color.textMuted, fontSize: KARELA.size.body, fontFamily: KARELA.font.medium },
+  modalSaveBtn: { flex: 1, paddingVertical: KARELA.space.md, borderRadius: KARELA.radius.sm, alignItems: "center", backgroundColor: KARELA.color.brand },
+  modalSaveText: { color: KARELA.color.bg, fontSize: KARELA.size.body, fontFamily: KARELA.font.black },
 });

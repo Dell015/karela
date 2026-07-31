@@ -64,7 +64,6 @@ export default function SummaryScreen() {
           JSON.parse(path as string),
         );
 
-        const parsedPath = JSON.parse(path as string);
         onRunCompleted({
           id: Date.now(),
           date: Date.now(),
@@ -79,7 +78,7 @@ export default function SummaryScreen() {
           "Your adaptive ghost is learning from this run!",
         );
       }
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "Could not save Ghost data locally.");
     }
   };
@@ -163,7 +162,7 @@ export default function SummaryScreen() {
           {/* Main XP Display */}
           <View style={styles.xpCircleContainer}>
             <LinearGradient
-              colors={KARELA.gradients.brand as unknown as string[]}
+              colors={KARELA.gradients.brand}
               style={styles.xpCircle}
             >
               <Text style={styles.xpAmount}>+{xp}</Text>
@@ -222,7 +221,7 @@ export default function SummaryScreen() {
             disabled={isSaving}
           >
             <LinearGradient
-              colors={KARELA.gradients.brand as unknown as string[]}
+              colors={KARELA.gradients.brand}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.gradientButton}
