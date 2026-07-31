@@ -11,6 +11,7 @@
     />
     <meta name="theme-color" content="#0d0d0d" />
     <meta name="color-scheme" content="dark" />
+    <link rel="canonical" href="https://karela.app/" />
 
     <!-- Open Graph / social preview -->
     <meta property="og:type" content="website" />
@@ -20,32 +21,24 @@
       property="og:description"
       content="Turn your everyday movement into health progress and civic impact. Adaptive AI coaching, RPG progression, and crowdsourced disaster response — built for the Philippines."
     />
-    <!-- TODO(assets): replace with a real 1200x630 OG image -->
+    <!-- TODO(assets): replace with real 1200x630 artwork. See BACKLOG.md P1-5. -->
     <meta property="og:image" content="assets/img/og-placeholder.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
 
     <link rel="icon" type="image/png" href="assets/img/favicon.png" />
     <link rel="apple-touch-icon" href="assets/img/icon.png" />
 
-    <!-- Preload the two display weights used above the fold -->
-    <link
-      rel="preload"
-      href="assets/fonts/Excon-Black.otf"
-      as="font"
-      type="font/otf"
-      crossorigin
-    />
-    <link
-      rel="preload"
-      href="assets/fonts/Excon-Regular.otf"
-      as="font"
-      type="font/otf"
-      crossorigin
-    />
+    <!-- Only the two weights used above the fold are preloaded. -->
+    <link rel="preload" href="assets/fonts/Excon-Black.otf" as="font" type="font/otf" crossorigin />
+    <link rel="preload" href="assets/fonts/Excon-Regular.otf" as="font" type="font/otf" crossorigin />
 
     <link rel="stylesheet" href="css/tokens.css" />
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/sections.css" />
+    <!-- DELETE once all real assets land. See BACKLOG.md P0-2. -->
     <link rel="stylesheet" href="css/placeholders.css" />
   </head>
 
@@ -99,98 +92,606 @@
     <!-- ==================================================
          MOBILE MENU
          ================================================== -->
-    <div
-      class="mobile-menu"
-      id="mobile-menu"
-      data-menu
-      inert
-      aria-label="Mobile navigation"
-    >
+    <div class="mobile-menu" id="mobile-menu" data-menu inert aria-label="Mobile navigation">
       <nav class="mobile-menu__links">
-        <a class="mobile-menu__link" href="#problem">
-          <span class="mobile-menu__num">01</span> Problem
-        </a>
-        <a class="mobile-menu__link" href="#system">
-          <span class="mobile-menu__num">02</span> How It Works
-        </a>
-        <a class="mobile-menu__link" href="#ghost">
-          <span class="mobile-menu__num">03</span> Ghost System
-        </a>
-        <a class="mobile-menu__link" href="#ani">
-          <span class="mobile-menu__num">04</span> Ani
-        </a>
-        <a class="mobile-menu__link" href="#civic">
-          <span class="mobile-menu__num">05</span> Civic Engine
-        </a>
-        <a class="mobile-menu__link" href="#bayanihan">
-          <span class="mobile-menu__num">06</span> Bayanihan
-        </a>
-        <a class="mobile-menu__link" href="#team">
-          <span class="mobile-menu__num">07</span> Team
-        </a>
+        <a class="mobile-menu__link" href="#problem"><span class="mobile-menu__num">01</span> Problem</a>
+        <a class="mobile-menu__link" href="#system"><span class="mobile-menu__num">02</span> How It Works</a>
+        <a class="mobile-menu__link" href="#ghost"><span class="mobile-menu__num">03</span> Ghost System</a>
+        <a class="mobile-menu__link" href="#ani"><span class="mobile-menu__num">04</span> Ani</a>
+        <a class="mobile-menu__link" href="#civic"><span class="mobile-menu__num">05</span> Civic Engine</a>
+        <a class="mobile-menu__link" href="#bayanihan"><span class="mobile-menu__num">06</span> Bayanihan</a>
+        <a class="mobile-menu__link" href="#progression"><span class="mobile-menu__num">07</span> Progression</a>
+        <a class="mobile-menu__link" href="#team"><span class="mobile-menu__num">08</span> Team</a>
       </nav>
 
       <div class="mobile-menu__footer">
-        <a class="btn btn--primary btn--lg btn--block" href="#waitlist">
-          Join the Waitlist
-        </a>
+        <a class="btn btn--primary btn--lg btn--block" href="#waitlist">Join the Waitlist</a>
       </div>
     </div>
 
     <main id="main">
       <!-- ================================================
-           1. HERO  — built in phase 2
+           1. HERO
            ================================================ -->
-      <section class="section theme-brand" id="hero">
+      <section class="section hero theme-brand" id="hero" aria-labelledby="hero-title">
         <div class="glow-orb glow-orb--brand glow-orb--tr" aria-hidden="true"></div>
         <div class="glow-orb glow-orb--deep glow-orb--l" aria-hidden="true"></div>
 
         <div class="container">
-          <span class="badge reveal">
-            <span class="badge__dot badge__dot--pulse" aria-hidden="true"></span>
-            In active development · Pilot: Tuguegarao City
-          </span>
+          <div class="hero__grid">
+            <div class="hero__copy">
+              <span class="badge reveal">
+                <span class="badge__dot badge__dot--pulse" aria-hidden="true"></span>
+                In active development · Pilot: Tuguegarao City
+              </span>
 
-          <h1 class="reveal reveal--d1" style="font-size: var(--fs-hero)">
-            A Better You,<br />
-            <span class="gradient-text">One Quest at a Time.</span>
-          </h1>
+              <h1 class="hero__title reveal reveal--d1" id="hero-title">
+                A Better You,<br />
+                <span class="gradient-text">One Quest at a Time.</span>
+              </h1>
 
-          <p class="lead reveal reveal--d2" style="margin-top: var(--space-xl)">
-            An adaptive fitness platform where personal endurance modeling powers
-            real-world civic intelligence.
-          </p>
+              <p class="hero__sub reveal reveal--d2">
+                An adaptive fitness platform where personal endurance modeling
+                powers real-world civic intelligence. Karela turns the movement
+                you already do into health progress — and into data your city
+                can act on.
+              </p>
 
-          <div
-            class="reveal reveal--d3"
-            style="
-              display: flex;
-              gap: var(--space-md);
-              margin-top: var(--space-2xl);
-              flex-wrap: wrap;
-            "
-          >
-            <a class="btn btn--primary btn--lg" href="#waitlist">
-              Join the Waitlist
-            </a>
-            <a class="btn btn--ghost btn--lg" href="#system">See How It Works</a>
+              <div class="hero__actions reveal reveal--d3">
+                <a class="btn btn--primary btn--lg" href="#waitlist">Join the Waitlist</a>
+                <a class="btn btn--ghost btn--lg" href="#system">See How It Works</a>
+              </div>
+
+              <!-- Store badges: intentionally disabled pre-launch.
+                   See BACKLOG.md P1-8. Text-and-icon stand-ins are used
+                   rather than recreated official badges, since Apple and
+                   Google brand guidelines prohibit recreations. -->
+              <div class="hero__stores reveal reveal--d4">
+                <span class="store-badge" data-store-badge="ios" aria-disabled="true">
+                  <svg class="store-badge__icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                  </svg>
+                  <span class="store-badge__text">
+                    <span class="store-badge__label">Coming soon</span>
+                    <span class="store-badge__name">App Store</span>
+                  </span>
+                </span>
+
+                <span class="store-badge" data-store-badge="android" aria-disabled="true">
+                  <svg class="store-badge__icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3.6 1.8 13.9 12 3.6 22.2c-.4-.2-.6-.6-.6-1.1V2.9c0-.5.2-.9.6-1.1zm11.5 11.3 2.8 2.8-9.6 5.5 6.8-8.3zm0-2.2L8.3 2.6l9.6 5.5-2.8 3zm3.9 4.2-2.6-2.6L19 9.9l2.4 1.4c.8.5.8 1.9 0 2.4L19 15.1z"/>
+                  </svg>
+                  <span class="store-badge__text">
+                    <span class="store-badge__label">Coming soon</span>
+                    <span class="store-badge__name">Google Play</span>
+                  </span>
+                </span>
+              </div>
+
+              <!-- Stats: DESIGN TARGETS, not measurements.
+                   See BACKLOG.md P0-3. The note below must stay unless
+                   these are replaced with real pilot data. -->
+              <dl class="hero__stats reveal reveal--d5" data-stats>
+                <div class="stat">
+                  <dd class="stat__value">3.0&times;</dd>
+                  <dt class="stat__label">Max streak multiplier</dt>
+                </div>
+                <div class="stat">
+                  <dd class="stat__value">1,000</dd>
+                  <dt class="stat__label">XP per level, flat</dt>
+                </div>
+                <div class="stat">
+                  <dd class="stat__value">3</dd>
+                  <dt class="stat__label">Reports to verify a node</dt>
+                </div>
+                <div class="stat">
+                  <dd class="stat__value">100%</dd>
+                  <dt class="stat__label">Offline-capable tracking</dt>
+                </div>
+              </dl>
+              <p class="hero__stats-note reveal reveal--d5">
+                System design targets from the specification — not measured
+                pilot results. Karela is pre-launch.
+              </p>
+            </div>
+
+            <div class="hero__visual reveal reveal--d3">
+              <div class="device device--glow">
+                <span class="device__notch" aria-hidden="true"></span>
+                <div class="device__screen">
+                  <!-- PLACEHOLDER: swap for a real capture. See ASSETS.md. -->
+                  <div class="ph ph--phone" role="img" aria-label="Placeholder for the Karela active run screen showing ghost pacing">
+                    <span class="ph__flag">Placeholder</span>
+                    <svg class="ph__icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <rect x="5" y="2" width="14" height="20" rx="3" />
+                      <path d="M10 5.5h4" />
+                    </svg>
+                    <span class="ph__label">Active Run — Ghost pacing view</span>
+                    <span class="ph__meta">1080 × 2340 · PNG</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <span class="hero__cue" aria-hidden="true">
+          <span class="hero__cue-line"></span>
+          Scroll
+        </span>
+      </section>
+
+      <!-- ================================================
+           2. THE PROBLEM  (aboutkarela.md §2)
+           ================================================ -->
+      <section class="section theme-brand" id="problem" aria-labelledby="problem-title">
+        <div class="glow-orb glow-orb--civic glow-orb--bl" aria-hidden="true"></div>
+
+        <div class="container">
+          <div class="section__head reveal">
+            <span class="eyebrow">The Problem</span>
+            <h2 class="section__title" id="problem-title">
+              The Philippines has a health and civic challenge
+              <span class="gradient-text">no existing app was built to solve.</span>
+            </h2>
+            <p class="lead">
+              Not because the problem is hidden — because the apps solving it
+              were designed for someone else, somewhere else.
+            </p>
           </div>
 
-          <!-- Device frame with placeholder until real captures exist -->
-          <div
-            class="device device--glow reveal reveal--d4"
-            style="margin-top: var(--space-4xl)"
-          >
-            <span class="device__notch" aria-hidden="true"></span>
-            <div class="device__screen">
-              <div class="ph ph--phone" role="img" aria-label="Placeholder for Karela active run screen">
-                <span class="ph__flag">Placeholder</span>
-                <svg class="ph__icon" viewBox="0 0 24 24" aria-hidden="true">
-                  <rect x="5" y="2" width="14" height="20" rx="3" />
-                  <path d="M10 5.5h4" />
+          <div class="problem__grid">
+            <article class="problem-card problem-card--health reveal">
+              <span class="problem-card__tag">On the health side</span>
+              <h3 class="problem-card__title">Movement without meaning</h3>
+              <p class="problem-card__body">
+                Lifestyle-related disease — diabetes, hypertension,
+                cardiovascular illness — is rising sharply, driven by sedentary
+                behaviour. Yet people already walk significant distances daily:
+                to tricycle stops, across campuses, between markets. No system
+                acknowledges any of it, so none of it feels like progress.
+              </p>
+            </article>
+
+            <article class="problem-card problem-card--civic reveal reveal--d1">
+              <span class="problem-card__tag">On the civic side</span>
+              <h3 class="problem-card__title">Bayanihan with no digital form</h3>
+              <p class="problem-card__body">
+                The Philippines is among the most disaster-affected countries on
+                Earth. The same communities that walk past flooded drainage and
+                damaged roads daily are the ones most harmed when those issues go
+                unreported. Volunteer effort is uncoordinated, unverified, and
+                invisible to the local governments that need data to respond.
+              </p>
+            </article>
+
+            <article class="problem-card problem-card--motivation reveal reveal--d2">
+              <span class="problem-card__tag">On the motivational side</span>
+              <h3 class="problem-card__title">Built for the wrong user</h3>
+              <p class="problem-card__body">
+                Strava is built for competitive athletes. Nike Run Club is a
+                product of a shoe brand. Pacer is passive. None understand the
+                commuter, the student org volunteer, or the disaster preparation
+                worker. None are designed for low-end Android, prepaid data, and
+                inconsistent 4G. None generate verifiable civic data.
+              </p>
+            </article>
+          </div>
+
+          <blockquote class="problem__quote reveal">
+            <p>
+              The primary barrier to physical activity for most Filipinos is not
+              laziness. It is
+              <span class="gradient-text">meaninglessness.</span>
+            </p>
+          </blockquote>
+        </div>
+      </section>
+
+      <!-- ================================================
+           3. TWO TRACKS + RESONANCE  (§1, §14)
+           ================================================ -->
+      <section class="section theme-aurora" id="system" aria-labelledby="system-title">
+        <div class="glow-orb glow-orb--teal glow-orb--tr" aria-hidden="true"></div>
+
+        <div class="container">
+          <div class="section__head section__head--center reveal">
+            <span class="eyebrow">How It Works</span>
+            <h2 class="section__title" id="system-title">
+              Two engines, fused by
+              <span class="gradient-text">one physical state.</span>
+            </h2>
+            <p class="lead" style="margin-inline: auto">
+              Karela runs two parallel tracks that are deeply interconnected.
+              The layer joining them is what makes it more than the sum of its
+              parts.
+            </p>
+          </div>
+
+          <div class="tracks">
+            <article class="track track--fitness reveal">
+              <svg class="track__icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M13 3a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
+                <path d="M8 21l2-6 3-2 1 4 3 2" />
+                <path d="M10 9 8 12H5" />
+                <path d="m13 7 3 3 3-1" />
+              </svg>
+              <p class="track__label">Track 01</p>
+              <h3 class="track__title">Fitness Intelligence</h3>
+              <p class="track__body">
+                An adaptive ghost pacing system that models and predicts
+                individual fatigue in order to improve exercise adherence — not
+                to celebrate peak performance.
+              </p>
+              <ul class="track__list">
+                <li>Per-user effort decay curve learned from run history</li>
+                <li>Rolling 4-week composite baseline, anomaly-resistant</li>
+                <li>GPS Kalman filtering and spatial interpolation</li>
+                <li>Sensor fusion anti-cheat: GPS plus accelerometer</li>
+              </ul>
+            </article>
+
+            <div class="resonance reveal reveal--d1">
+              <span class="resonance__arrows" aria-hidden="true">&#8594; &#8592;</span>
+              <div class="resonance__core">
+                <span>Resonance<br />System</span>
+              </div>
+              <span class="resonance__arrows" aria-hidden="true">&#8594; &#8592;</span>
+              <p class="resonance__label">
+                Uses your current physical state to modulate civic load
+              </p>
+            </div>
+
+            <article class="track track--civic reveal reveal--d2">
+              <svg class="track__icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 21s-7-5.2-7-10a7 7 0 0 1 14 0c0 4.8-7 10-7 10z" />
+                <circle cx="12" cy="11" r="2.5" />
+              </svg>
+              <p class="track__label">Track 02</p>
+              <h3 class="track__title">Civic Intelligence</h3>
+              <p class="track__body">
+                A crowdsourced spatial verification network that collects,
+                validates, and decays urban maintenance reports — turning
+                runners into a distributed sensor array.
+              </p>
+              <ul class="track__list">
+                <li>DBSCAN-inspired spatial consensus via PostGIS</li>
+                <li>Confidence scores that decay until reconfirmed</li>
+                <li>Exportable, verified data for local government units</li>
+                <li>Report capture designed to never break running flow</li>
+              </ul>
+            </article>
+          </div>
+
+          <table class="resonance-table reveal">
+            <caption>
+              Resonance fusion logic — civic load adapts to stamina
+            </caption>
+            <tbody>
+              <tr>
+                <th scope="row">High stamina, early run</th>
+                <td>May route the ghost near civic verification zones</td>
+              </tr>
+              <tr>
+                <th scope="row">Mid-run, stable pace</th>
+                <td>Passive reconfirmation prompts — a single "Still there?" tap</td>
+              </tr>
+              <tr>
+                <th scope="row">High fatigue detected</th>
+                <td>Civic interaction requests suppressed entirely</td>
+              </tr>
+              <tr>
+                <th scope="row">Cooldown phase</th>
+                <td>Nearby Vanguard task suggestions surface</td>
+              </tr>
+              <tr>
+                <th scope="row">Post-run recovery walk</th>
+                <td>Full Vanguard mode enabled</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="callout reveal" style="max-width: 78ch">
+            <svg class="callout__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 8v.01M12 11v5" />
+            </svg>
+            <div>
+              <p class="callout__title">Why this matters</p>
+              <p class="callout__body">
+                The system never asks a runner at their physical limit to stop
+                and photograph a drain. It reserves that request for the moment
+                the user is already slowing down and has the bandwidth to spare.
+                Civic contribution becomes adaptive rather than forced.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================
+           4. GHOST SYSTEM  (§10, §10.2, §17)
+           ================================================ -->
+      <section class="section theme-brand" id="ghost" aria-labelledby="ghost-title">
+        <div class="glow-orb glow-orb--brand glow-orb--l" aria-hidden="true"></div>
+
+        <div class="container">
+          <div class="section__head reveal">
+            <span class="eyebrow">The Ghost System</span>
+            <h2 class="section__title" id="ghost-title">
+              You race the version of yourself you
+              <span class="gradient-text">can actually beat.</span>
+            </h2>
+            <p class="lead">
+              Every other app builds its ghost from your personal best. But a
+              peak run represents exceptional conditions, not sustainable
+              effort — so you end up racing a version of yourself you can rarely
+              match. That is a discouragement engine.
+            </p>
+          </div>
+
+          <div class="ghost__grid">
+            <div class="ghost__chart reveal">
+              <svg viewBox="0 0 400 220" role="img" aria-labelledby="ghost-chart-title ghost-chart-desc">
+                <title id="ghost-chart-title">Pace over time: adaptive ghost versus static personal best</title>
+                <desc id="ghost-chart-desc">
+                  A chart comparing three lines. The static personal best ghost
+                  is flat and high, unreachable for most of the run. The
+                  adaptive ghost declines gently, tracking sustainable effort.
+                  The user's actual pace declines sharply after the fatigue
+                  onset point, falling below the static ghost but staying near
+                  the adaptive one.
+                </desc>
+
+                <!-- grid -->
+                <g stroke="rgba(255,255,255,0.06)" stroke-width="1">
+                  <line x1="45" y1="40" x2="375" y2="40" />
+                  <line x1="45" y1="80" x2="375" y2="80" />
+                  <line x1="45" y1="120" x2="375" y2="120" />
+                  <line x1="45" y1="160" x2="375" y2="160" />
+                </g>
+
+                <!-- axes -->
+                <g stroke="rgba(255,255,255,0.18)" stroke-width="1">
+                  <line x1="45" y1="20" x2="45" y2="180" />
+                  <line x1="45" y1="180" x2="378" y2="180" />
+                </g>
+
+                <!-- fatigue onset marker -->
+                <line x1="210" y1="20" x2="210" y2="180"
+                      stroke="rgba(255,77,109,0.35)" stroke-width="1" stroke-dasharray="3 3" />
+                <text x="214" y="32" fill="#FF4D6D" font-size="8" font-family="sans-serif">
+                  t_fatigue
+                </text>
+
+                <!-- static PB ghost: flat, unreachable -->
+                <path class="ghost-path" d="M 45 48 L 375 48"
+                      fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" />
+
+                <!-- adaptive ghost: gentle, sustainable -->
+                <path class="ghost-path ghost-path--delay"
+                      d="M 45 72 C 140 78 240 92 375 108"
+                      fill="none" stroke="#7CF205" stroke-width="2.5" stroke-linecap="round" />
+
+                <!-- actual user pace: decays after onset -->
+                <path class="ghost-path ghost-path--delay"
+                      d="M 45 62 C 120 66 175 78 210 96 C 258 122 320 138 375 146"
+                      fill="none" stroke="#FF4D6D" stroke-width="2" stroke-linecap="round" />
+
+                <!-- axis labels -->
+                <text x="45" y="196" fill="#555" font-size="8" font-family="sans-serif">Start</text>
+                <text x="345" y="196" fill="#555" font-size="8" font-family="sans-serif">Time →</text>
+                <text x="12" y="30" fill="#555" font-size="8" font-family="sans-serif">Pace</text>
+              </svg>
+
+              <div class="ghost__legend">
+                <span class="ghost__legend-item">
+                  <span class="ghost__legend-swatch ghost__legend-swatch--static" aria-hidden="true"></span>
+                  Static PB ghost (what other apps use)
+                </span>
+                <span class="ghost__legend-item">
+                  <span class="ghost__legend-swatch ghost__legend-swatch--adaptive" aria-hidden="true"></span>
+                  Karela adaptive ghost
+                </span>
+                <span class="ghost__legend-item">
+                  <span class="ghost__legend-swatch ghost__legend-swatch--actual" aria-hidden="true"></span>
+                  Your actual pace
+                </span>
+              </div>
+
+              <div class="formula">
+                <code>P(t) = P_baseline × e^(−λ × max(0, t − t_fatigue))</code>
+                <span class="formula__caption">
+                  The per-user effort decay function. <b>λ</b> is your individual
+                  decay rate and <b>t_fatigue</b> your fatigue onset — both
+                  learned from your own run history, not assumed from a
+                  population average.
+                </span>
+              </div>
+            </div>
+
+            <div class="reveal reveal--d1">
+              <div class="keypoints">
+                <div class="keypoint">
+                  <span class="keypoint__num">1</span>
+                  <div>
+                    <h3 class="keypoint__title">Spatial interpolation</h3>
+                    <p class="keypoint__body">
+                      Urban GPS is unreliable — signal bounces off buildings,
+                      drops in tunnels, jumps indoors. Karela smooths positional
+                      data across waypoints and fills continuity gaps so the
+                      ghost never teleports and per-segment distance stays
+                      accurate.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="keypoint">
+                  <span class="keypoint__num">2</span>
+                  <div>
+                    <h3 class="keypoint__title">Effort decay modelling</h3>
+                    <p class="keypoint__body">
+                      Rather than treating fatigue as a universal constant,
+                      Karela learns where <em>your</em> pace drops, how fast it
+                      deteriorates, and whether the trigger is terrain, time, or
+                      effort. Slow down 15 minutes into flat road runs? That is
+                      read as a pacing inefficiency, not a fitness ceiling — and
+                      the ghost paces you slower early to extend your strong
+                      window.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="keypoint">
+                  <span class="keypoint__num">3</span>
+                  <div>
+                    <h3 class="keypoint__title">Reinforcement-style calibration</h3>
+                    <p class="keypoint__body">
+                      After every session the ghost re-evaluates: did you beat
+                      your checkpoints, did decay start earlier or later than
+                      predicted, are you accumulating fatigue or gaining
+                      fitness? It nudges forward when you consistently beat it,
+                      and pulls back when you consistently miss.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <blockquote class="problem__quote reveal" style="margin-top: var(--space-3xl)">
+                <p>
+                  The ghost's goal is to stay slightly ahead of your historical
+                  <span class="gradient-text">failure point</span> — not your
+                  peak performance.
+                </p>
+              </blockquote>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================
+           5. MEET ANI  (§16)
+           ================================================ -->
+      <section class="section theme-aurora" id="ani" aria-labelledby="ani-title">
+        <div class="glow-orb glow-orb--teal glow-orb--bl" aria-hidden="true"></div>
+
+        <div class="container">
+          <div class="section__head reveal">
+            <span class="eyebrow">Meet Ani</span>
+            <h2 class="section__title" id="ani-title">
+              A coach who knows
+              <span class="gradient-text">your body, your city, your week.</span>
+            </h2>
+            <p class="lead">
+              Every fitness app has coaching. What they share is that it is
+              generic — the same 5&nbsp;km suggestion for a 55&nbsp;kg student
+              and a 90&nbsp;kg office worker, the same rest-day advice whether
+              you slept four hours or eight, the same notification whether it is
+              typhoon season in Cagayan Valley or not.
+            </p>
+          </div>
+
+          <div class="ani__grid">
+            <div class="ani__chat reveal">
+              <div class="ani__chat-head">
+                <!-- coach.png exists in the app repo and is reused here. -->
+                <img class="ani__avatar" src="assets/img/coach.png" alt="Ani, the Karela AI coach" width="40" height="40" loading="lazy" />
+                <div>
+                  <p class="ani__name">Ani</p>
+                  <p class="ani__status">
+                    <span aria-hidden="true">●</span> Reading your context
+                  </p>
+                </div>
+              </div>
+
+              <p class="bubble bubble--ani">
+                Good morning, Rina! It's 7:30 AM in Tuguegarao — light winds,
+                26°C. Perfect for your morning route. Your
+                <strong>11-day streak</strong> is one of your best. Let's make it
+                12.
+              </p>
+
+              <p class="bubble bubble--user">Feeling a bit sore today</p>
+
+              <p class="bubble bubble--ani">
+                Noted. Your resting step rate suggests you might be carrying
+                fatigue, so I've swapped today's quest for a light
+                <strong>800&nbsp;m</strong> — consistency matters more than
+                distance right now. Your streak still counts.
+              </p>
+
+              <p class="bubble bubble--ani">
+                There's also a drainage node two streets from your usual route
+                that needs reconfirming. One tap as you pass, no stopping. Only
+                if you're up for it.
+              </p>
+
+              <span class="bubble bubble--typing" aria-hidden="true">
+                <span></span><span></span><span></span>
+              </span>
+
+              <p class="ph__meta" style="text-align: center; margin-top: var(--space-sm)">
+                Illustrative conversation, written from the §16 specification
+              </p>
+            </div>
+
+            <div class="reveal reveal--d1">
+              <div class="keypoints" style="margin-top: 0">
+                <div class="keypoint">
+                  <span class="keypoint__num">1</span>
+                  <div>
+                    <h3 class="keypoint__title">Quests calibrated to you</h3>
+                    <p class="keypoint__body">
+                      A sedentary user is never handed a 5&nbsp;km run on day
+                      one — Ani starts at 500&nbsp;m and scales from completion
+                      history. Targets sit at roughly 110% of your comfortable
+                      current output, never a generic fixed standard.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="keypoint">
+                  <span class="keypoint__num">2</span>
+                  <div>
+                    <h3 class="keypoint__title">Body-aware coaching</h3>
+                    <p class="keypoint__body">
+                      Ani reads height, weight, age, fitness baseline, rolling
+                      7-day step average, streak status, completion rate, local
+                      weather, and your city. Every message is built from that
+                      context.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="keypoint">
+                  <span class="keypoint__num">3</span>
+                  <div>
+                    <h3 class="keypoint__title">A plan every Sunday</h3>
+                    <p class="keypoint__body">
+                      Seven days of distance targets, one rest day, one
+                      challenge day, one civic quest — adjusted mid-week if your
+                      completion rate drops or a Bayanihan event activates.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="callout">
+                <svg class="callout__icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 3 3 7v6c0 5 4 8 9 8s9-3 9-8V7l-9-4z" />
+                  <path d="M12 9v4M12 16v.01" />
                 </svg>
-                <span class="ph__label">Active Run — Ghost pacing view</span>
-                <span class="ph__meta">1080 × 2340 · PNG</span>
+                <div>
+                  <p class="callout__title">Ani is honest about her limits</p>
+                  <p class="callout__body">
+                    Ani is a language model with general wellness knowledge —
+                    not a licensed nutritionist, physiotherapist, or doctor. She
+                    does not prescribe caloric deficits, diagnose injury, or
+                    override a stated medical condition. Mention an injury
+                    during setup and she defaults to low-impact quests while
+                    recommending you consult a health professional.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -198,109 +699,700 @@
       </section>
 
       <!-- ================================================
-           2. THE PROBLEM  — phase 3
+           6. CIVIC ENGINE  (§12, §12.2, §12.3)
            ================================================ -->
-      <section class="section theme-brand" id="problem" aria-labelledby="problem-h">
+      <section class="section theme-civic" id="civic" aria-labelledby="civic-title">
+        <div class="glow-orb glow-orb--civic glow-orb--tr" aria-hidden="true"></div>
+
         <div class="container">
-          <span class="eyebrow">The Problem</span>
-          <h2 id="problem-h" class="reveal">Section built in phase 3.</h2>
+          <div class="section__head reveal">
+            <span class="eyebrow">The Civic Engine</span>
+            <h2 class="section__title" id="civic-title">
+              You are a sensor node,
+              <span class="gradient-text">not a janitor.</span>
+            </h2>
+            <p class="lead">
+              Early designs asked runners to stop and clean or report during
+              runs. That was identified as a fatal UX flaw — nobody wants to
+              break flow state for maintenance work. So the model inverted: the
+              collective movement of runners across a city becomes a human
+              sensor array, and the heavy verification happens server-side.
+            </p>
+          </div>
+
+          <div class="civic__grid">
+            <div class="reveal">
+              <div class="consensus" data-consensus>
+                <svg viewBox="0 0 400 300" role="img" aria-labelledby="consensus-title consensus-desc">
+                  <title id="consensus-title">Spatial consensus verification</title>
+                  <desc id="consensus-desc">
+                    Three independent reports drop at nearby coordinates. A
+                    radius threshold appears around them, and because three
+                    reports fall inside it within the time window, they merge
+                    into a single verified civic node.
+                  </desc>
+
+                  <!-- epsilon radius -->
+                  <circle class="epsilon" cx="196" cy="133" r="62"
+                          fill="rgba(255,107,53,0.07)"
+                          stroke="rgba(255,107,53,0.45)"
+                          stroke-width="1.5" stroke-dasharray="4 4" />
+
+                  <!-- report pins -->
+                  <g class="pin pin--1">
+                    <circle cx="178" cy="115" r="7" fill="#FFD60A" />
+                    <circle cx="178" cy="115" r="13" fill="none" stroke="rgba(255,214,10,0.4)" />
+                  </g>
+                  <g class="pin pin--2">
+                    <circle cx="220" cy="152" r="7" fill="#FFD60A" />
+                    <circle cx="220" cy="152" r="13" fill="none" stroke="rgba(255,214,10,0.4)" />
+                  </g>
+                  <g class="pin pin--3">
+                    <circle cx="192" cy="140" r="7" fill="#FFD60A" />
+                    <circle cx="192" cy="140" r="13" fill="none" stroke="rgba(255,214,10,0.4)" />
+                  </g>
+
+                  <!-- verified cluster -->
+                  <g class="verified">
+                    <circle cx="196" cy="133" r="17" fill="#7CF205" opacity="0.18" />
+                    <circle cx="196" cy="133" r="10" fill="#7CF205" />
+                    <path d="m191 133 3.5 3.5 6-6.5" fill="none" stroke="#04210A" stroke-width="2.2" stroke-linecap="round" />
+                  </g>
+
+                  <text x="264" y="82" fill="#FF6B35" font-size="9" font-family="sans-serif">
+                    ε = 15–30 m
+                  </text>
+                </svg>
+
+                <p class="consensus__caption" data-consensus-caption>
+                  Three independent reports within the radius and time window
+                  promote a pending node to a verified civic quest.
+                </p>
+              </div>
+
+              <div class="lifecycle reveal reveal--d1">
+                <span class="lifecycle__step lifecycle__step--pending">Pending</span>
+                <span class="lifecycle__arrow" aria-hidden="true">→</span>
+                <span class="lifecycle__step lifecycle__step--verified">Verified</span>
+                <span class="lifecycle__arrow" aria-hidden="true">→</span>
+                <span class="lifecycle__step lifecycle__step--aging">Aging</span>
+                <span class="lifecycle__arrow" aria-hidden="true">→</span>
+                <span class="lifecycle__step lifecycle__step--expired">Expired</span>
+                <span class="lifecycle__arrow" aria-hidden="true">↺</span>
+                <span class="lifecycle__step">Reconfirmed resets decay</span>
+              </div>
+            </div>
+
+            <div class="reveal reveal--d1">
+              <div class="keypoints" style="margin-top: 0">
+                <div class="keypoint">
+                  <span class="keypoint__num">1</span>
+                  <div>
+                    <h3 class="keypoint__title">Reporting stays frictionless</h3>
+                    <p class="keypoint__body">
+                      A quick photo and a single tap to categorise — trash,
+                      flooding, drain blockage, damaged infrastructure, unsafe
+                      area. GPS, timestamp, and device orientation attach
+                      automatically. Nothing else is asked of you.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="keypoint">
+                  <span class="keypoint__num">2</span>
+                  <div>
+                    <h3 class="keypoint__title">Consensus kills fake reports</h3>
+                    <p class="keypoint__body">
+                      If civic reports earn XP, people will game them. So
+                      verification is a DBSCAN-inspired clustering pass run
+                      server-side through PostGIS: three independent reports of
+                      the same category, inside a 15–30&nbsp;m radius, within a
+                      time window. One user cannot self-verify, duplicates count
+                      once, and isolated false positives never reach threshold.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="keypoint">
+                  <span class="keypoint__num">3</span>
+                  <div>
+                    <h3 class="keypoint__title">Confidence decays over time</h3>
+                    <p class="keypoint__body">
+                      A flooded drain gets fixed. Trash gets cleared. So every
+                      verified node carries a confidence score that decays,
+                      tuned per category — structural damage decays slower than
+                      litter. A runner passing by taps "Still there" and the
+                      score resets. Stale data cannot pollute the map, and LGUs
+                      can trust what they receive is current.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="formula">
+                <code>C(t) = C₀ × e^(−μ × (t − t_verified))</code>
+                <span class="formula__caption">
+                  Temporal decay of node confidence. <b>μ</b> is tuned per issue
+                  category. Reconfirmation resets <b>C(t)</b> to
+                  <b>C₀</b>&nbsp;=&nbsp;1.0.
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       <!-- ================================================
-           3. TWO TRACKS / HOW IT WORKS  — phase 3
+           7. BAYANIHAN PROTOCOL  (§21)
            ================================================ -->
-      <section class="section theme-aurora" id="system" aria-labelledby="system-h">
+      <section class="section theme-civic" id="bayanihan" aria-labelledby="bayanihan-title">
+        <div class="glow-orb glow-orb--magenta glow-orb--l" aria-hidden="true"></div>
+
         <div class="container">
-          <span class="eyebrow">How It Works</span>
-          <h2 id="system-h" class="reveal">Section built in phase 3.</h2>
+          <div class="section__head reveal">
+            <span class="eyebrow">The Bayanihan Protocol</span>
+            <h2 class="section__title" id="bayanihan-title">
+              When the storm comes, the app
+              <span class="gradient-text">stops asking you to run.</span>
+            </h2>
+            <p class="bayanihan__intro lead">
+              This is the feature that turns Karela from a personal health tool
+              into civic infrastructure — a verified volunteer coordination
+              system producing exportable data for local governments during and
+              after disaster events. And its most important rule is a hard
+              limit on itself.
+            </p>
+          </div>
+
+          <h3 class="card__title reveal" style="margin-bottom: var(--space-xl)">
+            The Safety Hard-Lock — Ani as ethical gatekeeper
+          </h3>
+
+          <div class="tiers">
+            <div class="tier tier--0 reveal">
+              <span class="tier__badge">Tier 0 · Normal</span>
+              <span class="tier__trigger">No advisory, no admin flag</span>
+              <span class="tier__behavior">All features active.</span>
+            </div>
+            <div class="tier tier--1 reveal">
+              <span class="tier__badge">Tier 1 · Watch</span>
+              <span class="tier__trigger">Wind &gt; 40 km/h or rain &gt; 10 mm/hr</span>
+              <span class="tier__behavior">
+                Outdoor missions flagged with caution. Ani suggests indoor
+                alternatives.
+              </span>
+            </div>
+            <div class="tier tier--2 reveal">
+              <span class="tier__badge">Tier 2 · Warning</span>
+              <span class="tier__trigger">PAGASA Signal 2–3 or admin pre-disaster</span>
+              <span class="tier__behavior">
+                Outdoor missions suspended. Only indoor Preparation Quests
+                active. Ghost paused. Emergency banner shown.
+              </span>
+            </div>
+            <div class="tier tier--3 reveal">
+              <span class="tier__badge">Tier 3 · Hard Lock</span>
+              <span class="tier__trigger">PAGASA Signal 4–5 or admin emergency lock</span>
+              <span class="tier__behavior">
+                <strong>All movement rewards disabled.</strong> GPS tracking
+                suspended. Only Safety Check-in and Request Assistance remain
+                visible. Gems are awarded for staying safe.
+              </span>
+            </div>
+            <div class="tier tier--4 reveal">
+              <span class="tier__badge">Tier 4 · Recovery</span>
+              <span class="tier__trigger">Admin marks zone yellow or green</span>
+              <span class="tier__behavior">
+                Recovery Quests unlock in cleared zones only. Proof of Impact
+                required for every civic mission.
+              </span>
+            </div>
+          </div>
+
+          <div class="callout reveal" style="margin-top: var(--space-2xl); max-width: 82ch">
+            <svg class="callout__icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3 3 7v6c0 5 4 8 9 8s9-3 9-8V7l-9-4z" />
+            </svg>
+            <div>
+              <p class="callout__title">Karela must never be the reason someone gets hurt</p>
+              <p class="callout__body">
+                The Safety Tier system is non-negotiable and overrides every
+                other function in the app. At Tier 3 there is no way to earn
+                movement rewards at all — the incentive to go outside is removed
+                entirely, by design.
+              </p>
+            </div>
+          </div>
+
+          <h3 class="card__title reveal" style="margin-top: var(--space-4xl); margin-bottom: var(--space-sm)">
+            Proof of Impact — multi-factor verification
+          </h3>
+          <p class="lead reveal">
+            Civic XP is only worth something if it cannot be faked. Five
+            independent checks stand between a submission and a reward.
+          </p>
+
+          <div class="poi">
+            <div class="poi__item reveal">
+              <p class="poi__num">01</p>
+              <h4 class="poi__title">In-app camera only</h4>
+              <p class="poi__body">Gallery uploads are blocked, so old photos cannot be submitted.</p>
+            </div>
+            <div class="poi__item reveal reveal--d1">
+              <p class="poi__num">02</p>
+              <h4 class="poi__title">Before &amp; after capture</h4>
+              <p class="poi__body">Dual-capture split-screen is enforced for cleanup and fortification quests.</p>
+            </div>
+            <div class="poi__item reveal reveal--d2">
+              <p class="poi__num">03</p>
+              <h4 class="poi__title">Metadata fingerprint</h4>
+              <p class="poi__body">GPS, altitude, device ID, and a server-generated timestamp — never the device clock.</p>
+            </div>
+            <div class="poi__item reveal reveal--d3">
+              <p class="poi__num">04</p>
+              <h4 class="poi__title">Vanguard blind audit</h4>
+              <p class="poi__body">Three independent Vanguards from outside your Guild must all approve.</p>
+            </div>
+            <div class="poi__item reveal reveal--d4">
+              <p class="poi__num">05</p>
+              <h4 class="poi__title">Rotating QR at major missions</h4>
+              <p class="poi__body">A Node Master QR rotating every 15 minutes, scanned on arrival and departure.</p>
+            </div>
+          </div>
+
+          <p class="compare__note reveal">
+            Note on PAGASA: no public REST API currently exists. Tier 0–1
+            escalates automatically from weather data; Tier 2–4 requires a Karela
+            admin or verified LGU coordinator to escalate manually using official
+            PAGASA bulletins. A webhook partnership is a later roadmap milestone.
+          </p>
         </div>
       </section>
 
       <!-- ================================================
-           4. GHOST SYSTEM  — phase 3
+           8. PROGRESSION  (§17)
            ================================================ -->
-      <section class="section theme-brand" id="ghost" aria-labelledby="ghost-h">
+      <section class="section theme-energy" id="progression" aria-labelledby="progression-title">
+        <div class="glow-orb glow-orb--orange glow-orb--tr" aria-hidden="true"></div>
+
         <div class="container">
-          <span class="eyebrow">The Ghost System</span>
-          <h2 id="ghost-h" class="reveal">Section built in phase 3.</h2>
+          <div class="section__head reveal">
+            <span class="eyebrow">Progression</span>
+            <h2 class="section__title" id="progression-title">
+              Consistency pays more than
+              <span class="gradient-text">intensity.</span>
+            </h2>
+            <p class="lead">
+              Every level costs a flat 1,000 XP, so progression never suffers
+              power creep. What changes is your multiplier — and it rewards
+              showing up, not going hard.
+            </p>
+          </div>
+
+          <div class="progression__grid">
+            <div class="reveal">
+              <!-- Interactive: drag to see the multiplier change. -->
+              <div class="streak" data-streak>
+                <div class="streak__readout">
+                  <p class="streak__day">
+                    Streak day <b data-streak-day>1</b>
+                  </p>
+                  <p class="streak__mult" data-streak-mult aria-live="polite">1.0×</p>
+                </div>
+
+                <label class="sr-only" for="streak-range">
+                  Streak day — drag to see how the XP multiplier changes
+                </label>
+                <input
+                  class="streak__slider"
+                  id="streak-range"
+                  data-streak-range
+                  type="range"
+                  min="1"
+                  max="45"
+                  value="1"
+                  step="1"
+                />
+
+                <div class="streak__ticks" aria-hidden="true">
+                  <span>Day 1</span><span>15</span><span>30</span><span>45</span>
+                </div>
+
+                <p class="streak__tier-label">
+                  Current tier: <b data-streak-tier>Day 1–3 · baseline</b>
+                </p>
+              </div>
+
+              <p class="compare__note">
+                Breaking a streak resets the multiplier to 1.0× immediately. The
+                3.0× cap is deliberate — no one can exceed triple base XP, which
+                keeps the game about moving rather than about maximising
+                multipliers.
+              </p>
+            </div>
+
+            <div class="reveal reveal--d1">
+              <h3 class="card__title">A dual currency, split by purpose</h3>
+              <p class="card__body">
+                XP measures progress and can never be spent. Gems are earned in
+                flat amounts and are the only spendable currency — which keeps
+                progression honest and prevents a pay-to-win dynamic.
+              </p>
+
+              <div class="currency">
+                <div class="currency__col currency__col--xp">
+                  <p class="currency__name">XP</p>
+                  <dl>
+                    <div class="currency__row">
+                      <dt>Primary source</dt>
+                      <dd>Distance (1 XP / 10 m) plus mission bonus</dd>
+                    </div>
+                    <div class="currency__row">
+                      <dt>Multiplied by</dt>
+                      <dd>Streak multiplier, 1.0×–3.0×</dd>
+                    </div>
+                    <div class="currency__row">
+                      <dt>Spendable</dt>
+                      <dd>Never</dd>
+                    </div>
+                    <div class="currency__row">
+                      <dt>Used for</dt>
+                      <dd>Leveling, Vanguard eligibility</dd>
+                    </div>
+                  </dl>
+                </div>
+
+                <div class="currency__col currency__col--gems">
+                  <p class="currency__name">Gems</p>
+                  <dl>
+                    <div class="currency__row">
+                      <dt>Primary source</dt>
+                      <dd>Sector bonuses (5), partner scans (20), Vanguard reviews (10)</dd>
+                    </div>
+                    <div class="currency__row">
+                      <dt>Multiplied by</dt>
+                      <dd>Nothing — flat rate</dd>
+                    </div>
+                    <div class="currency__row">
+                      <dt>Spendable</dt>
+                      <dd>Yes</dd>
+                    </div>
+                    <div class="currency__row">
+                      <dt>Used for</dt>
+                      <dd>Streak Freezes, Squad Shields, cosmetics</dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+
+              <p class="compare__note">
+                Every 500 m of a run is a Sector. Beat the ghost in a sector and
+                you earn 5 Gems. Gems above 500 at season end convert to
+                non-spendable Legacy Tokens, hard-capping accumulated advantage.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
       <!-- ================================================
-           5. MEET ANI  — phase 3
+           9. WHY NOT STRAVA  (§4)
            ================================================ -->
-      <section class="section theme-aurora" id="ani" aria-labelledby="ani-h">
+      <section class="section theme-brand" id="compare" aria-labelledby="compare-title">
         <div class="container">
-          <span class="eyebrow">Meet Ani</span>
-          <h2 id="ani-h" class="reveal">Section built in phase 3.</h2>
+          <div class="section__head reveal">
+            <span class="eyebrow">Why Not Just Use Strava?</span>
+            <h2 class="section__title" id="compare-title">
+              Because it was built for
+              <span class="gradient-text">a different person.</span>
+            </h2>
+            <p class="lead">
+              Strava, Nike Run Club, and Pacer are excellent apps for the users
+              they were designed for. That is the honest answer — and it is also
+              the point.
+            </p>
+          </div>
+
+          <div class="compare reveal">
+            <div class="compare__scroll">
+              <table>
+                <caption class="sr-only">
+                  Feature comparison between mainstream fitness apps and Karela
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Question</th>
+                    <th scope="col">Strava · Nike Run Club · Pacer</th>
+                    <th scope="col">Karela</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">Who is the target user?</th>
+                    <td>Competitive runners, cyclists, athletes</td>
+                    <td>Everyday commuters, students, civic volunteers</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">What movement counts?</th>
+                    <td>Intentional athletic sessions</td>
+                    <td>All movement — commutes, walks, errands</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Does it work offline?</th>
+                    <td>Limited — most features need data</td>
+                    <td>Full offline operation with seamless sync</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Optimised for low-end Android?</th>
+                    <td>No — assumes modern hardware and constant data</td>
+                    <td>Yes — SQLite-first, low RAM footprint, batch sync</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Does it know your body?</th>
+                    <td>Basic profile only</td>
+                    <td>Ani adapts to height, weight, history, and habits</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Personalised quests?</th>
+                    <td>No — static challenges, global leaderboards</td>
+                    <td>Yes — generated for you and your city</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Rewards consistency over performance?</th>
+                    <td>No — rewards fastest times, longest distances</td>
+                    <td>Yes — the streak multiplier rewards daily habit</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Generates civic data?</th>
+                    <td>No</td>
+                    <td>Yes — verified, exportable reports for LGUs</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <p class="compare__note reveal">
+            Karela is not for elite athletes. Most fitness apps celebrate the
+            person who ran a sub-four-minute kilometre. They ignore the student
+            who walked forty-five minutes across campus every day for a year.
+            Karela is built for that student.
+          </p>
         </div>
       </section>
 
       <!-- ================================================
-           6. CIVIC ENGINE  — phase 4
+           10. BUILT FOR THE PHILIPPINES  (§8, §23)
            ================================================ -->
-      <section class="section theme-civic" id="civic" aria-labelledby="civic-h">
+      <section class="section theme-aurora" id="philippines" aria-labelledby="ph-title">
+        <div class="glow-orb glow-orb--teal glow-orb--bl" aria-hidden="true"></div>
+
         <div class="container">
-          <span class="eyebrow">The Civic Engine</span>
-          <h2 id="civic-h" class="reveal">Section built in phase 4.</h2>
+          <div class="section__head section__head--center reveal">
+            <span class="eyebrow">Built for the Philippines</span>
+            <h2 class="section__title" id="ph-title">
+              Designed for prepaid data,
+              <span class="gradient-text">mid-range Android, and typhoon season.</span>
+            </h2>
+            <p class="lead" style="margin-inline: auto">
+              These are not afterthoughts bolted onto a Western app. They are
+              the constraints the architecture started from.
+            </p>
+          </div>
+
+          <div class="ph-grid">
+            <article class="ph-card reveal">
+              <svg class="ph-card__icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 12a9 9 0 1 1-9-9" />
+                <path d="M16 4h5V9" />
+              </svg>
+              <h3 class="ph-card__title">Local-first, cloud-sync</h3>
+              <p class="ph-card__body">
+                All sensor data and run tracking happens offline in SQLite, then
+                syncs to Supabase when connectivity returns. Every event carries
+                a UUID so sync is idempotent.
+              </p>
+            </article>
+
+            <article class="ph-card reveal reveal--d1">
+              <svg class="ph-card__icon" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="6" y="2" width="12" height="20" rx="2.5" />
+                <path d="M11 18h2" />
+              </svg>
+              <h3 class="ph-card__title">Runs on the phone you own</h3>
+              <p class="ph-card__body">
+                Low RAM footprint and batch syncing, tested against mid-range
+                Android rather than flagship hardware. Data cost is treated as a
+                real constraint, not an edge case.
+              </p>
+            </article>
+
+            <article class="ph-card reveal reveal--d2">
+              <svg class="ph-card__icon" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="4" y="10" width="16" height="11" rx="2.5" />
+                <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+              </svg>
+              <h3 class="ph-card__title">RA 10173 by design</h3>
+              <p class="ph-card__body">
+                Raw GPS is processed on-device and never uploaded as a full
+                trail. Accelerometer data is discarded after use. Up to five
+                100&nbsp;m Privacy Zones are never stored, not even locally.
+                Account deletion completes within 72 hours.
+              </p>
+            </article>
+
+            <article class="ph-card reveal reveal--d3">
+              <svg class="ph-card__icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 21s-7-5.2-7-10a7 7 0 0 1 14 0c0 4.8-7 10-7 10z" />
+                <circle cx="12" cy="11" r="2.5" />
+              </svg>
+              <h3 class="ph-card__title">Piloting in Tuguegarao</h3>
+              <p class="ph-card__body">
+                The beachhead is university students and young professionals in
+                Tuguegarao City, Cagayan Valley — dense, reachable through
+                campus channels, and socially motivated by community
+                recognition.
+              </p>
+            </article>
+
+            <article class="ph-card reveal reveal--d4">
+              <svg class="ph-card__icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3v18M5 8l7-5 7 5" />
+              </svg>
+              <h3 class="ph-card__title">Civic XP counts equally</h3>
+              <p class="ph-card__body">
+                A Debris Clearer after a typhoon earns recognition on the same
+                footing as a runner. Civic contribution is tracked separately and
+                valued equally — not treated as a side quest.
+              </p>
+            </article>
+
+            <article class="ph-card reveal reveal--d5">
+              <svg class="ph-card__icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="9" cy="8" r="3" />
+                <circle cx="17" cy="10" r="2.5" />
+                <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15.5 20c0-2.3 1.6-4.2 3.7-4.6" />
+              </svg>
+              <h3 class="ph-card__title">Bayanihan, made legible</h3>
+              <p class="ph-card__body">
+                The cultural value of communal mutual aid finally gets a digital
+                expression — verified, coordinated, and visible to the local
+                governments that need the data.
+              </p>
+            </article>
+          </div>
         </div>
       </section>
 
       <!-- ================================================
-           7. BAYANIHAN PROTOCOL  — phase 4
+           11a. WAITLIST
            ================================================ -->
-      <section class="section theme-civic" id="bayanihan" aria-labelledby="bayanihan-h">
+      <section class="section waitlist theme-brand" id="waitlist" aria-labelledby="waitlist-title">
+        <div class="glow-orb glow-orb--brand glow-orb--center" aria-hidden="true"></div>
+
         <div class="container">
-          <span class="eyebrow">The Bayanihan Protocol</span>
-          <h2 id="bayanihan-h" class="reveal">Section built in phase 4.</h2>
+          <div class="waitlist__inner">
+            <span class="eyebrow reveal" style="justify-content: center">Get Early Access</span>
+            <h2 class="waitlist__title reveal reveal--d1" id="waitlist-title">
+              Be there when
+              <span class="gradient-text">the first quest drops.</span>
+            </h2>
+            <p class="waitlist__sub reveal reveal--d2">
+              Karela is in active development, piloting in Tuguegarao City.
+              Join the waitlist and you'll be among the first invited to the
+              beta.
+            </p>
+
+            <!-- novalidate: we run our own validation so the messaging is
+                 consistent and announced to screen readers. -->
+            <form class="waitlist__form reveal reveal--d3" data-waitlist-form novalidate>
+              <div class="waitlist__field">
+                <label class="sr-only" for="waitlist-email">Email address</label>
+                <input
+                  class="waitlist__input"
+                  id="waitlist-email"
+                  data-waitlist-email
+                  type="email"
+                  name="email"
+                  placeholder="you@example.com"
+                  autocomplete="email"
+                  required
+                  aria-describedby="waitlist-msg"
+                />
+              </div>
+              <button class="btn btn--primary btn--lg" type="submit" data-waitlist-submit>
+                Join the Waitlist
+              </button>
+            </form>
+
+            <!-- Live region: validation and submission feedback. -->
+            <p
+              class="waitlist__msg"
+              id="waitlist-msg"
+              data-waitlist-msg
+              role="status"
+              aria-live="polite"
+            ></p>
+
+            <p class="waitlist__fine reveal reveal--d4">
+              One email when the beta opens. No newsletter, no sharing your
+              address with anyone.
+              <!-- TODO(legal): build privacy.html — see BACKLOG.md P1-7.
+                   Link is disabled until the page exists so it cannot 404. -->
+              <span aria-disabled="true" style="opacity: 0.6">Privacy policy coming soon.</span>
+            </p>
+          </div>
         </div>
       </section>
 
       <!-- ================================================
-           8. PROGRESSION  — phase 4
+           11b. TEAM  (§41)
            ================================================ -->
-      <section class="section theme-energy" id="progression" aria-labelledby="progression-h">
+      <section class="section section--tight theme-brand" id="team" aria-labelledby="team-title">
         <div class="container">
-          <span class="eyebrow">Progression</span>
-          <h2 id="progression-h" class="reveal">Section built in phase 4.</h2>
-        </div>
-      </section>
+          <div class="section__head section__head--center reveal">
+            <span class="eyebrow">The Team</span>
+            <h2 class="section__title" id="team-title">Who is building Karela</h2>
+            <p class="lead" style="margin-inline: auto">
+              A thesis project and portfolio build, made for the Philippine
+              startup ecosystem.
+            </p>
+          </div>
 
-      <!-- ================================================
-           9. WHY NOT STRAVA  — phase 5
-           ================================================ -->
-      <section class="section theme-brand" id="compare" aria-labelledby="compare-h">
-        <div class="container">
-          <span class="eyebrow">Why Not Just Use Strava?</span>
-          <h2 id="compare-h" class="reveal">Section built in phase 5.</h2>
-        </div>
-      </section>
-
-      <!-- ================================================
-           10. BUILT FOR THE PHILIPPINES  — phase 5
-           ================================================ -->
-      <section class="section theme-aurora" id="philippines" aria-labelledby="ph-h">
-        <div class="container">
-          <span class="eyebrow">Built for the Philippines</span>
-          <h2 id="ph-h" class="reveal">Section built in phase 5.</h2>
-        </div>
-      </section>
-
-      <!-- ================================================
-           11. WAITLIST + TEAM  — phase 5
-           ================================================ -->
-      <section class="section theme-brand" id="waitlist" aria-labelledby="waitlist-h">
-        <div class="container">
-          <span class="eyebrow">Get Early Access</span>
-          <h2 id="waitlist-h" class="reveal">Section built in phase 5.</h2>
-        </div>
-      </section>
-
-      <section class="section theme-brand" id="team" aria-labelledby="team-h">
-        <div class="container">
-          <span class="eyebrow">The Team</span>
-          <h2 id="team-h" class="reveal">Section built in phase 5.</h2>
+          <div class="team__grid">
+            <!-- PLACEHOLDER: initials shown until portraits exist.
+                 This is also a legitimate permanent design. See BACKLOG P1-9. -->
+            <div class="member reveal">
+              <div class="member__photo"><span class="member__initials" aria-hidden="true">RS</span></div>
+              <p class="member__name">Randel Serafica</p>
+              <p class="member__role">Lead Developer &amp; Architect</p>
+            </div>
+            <div class="member reveal reveal--d1">
+              <div class="member__photo"><span class="member__initials" aria-hidden="true">TR</span></div>
+              <p class="member__name">Trishia Rirao</p>
+              <p class="member__role">UI Designer &amp; Pitch Presenter</p>
+            </div>
+            <div class="member reveal reveal--d2">
+              <div class="member__photo"><span class="member__initials" aria-hidden="true">SS</span></div>
+              <p class="member__name">Steven Sanidad</p>
+              <p class="member__role">UX Designer &amp; Quality Assurance</p>
+            </div>
+            <div class="member reveal reveal--d3">
+              <div class="member__photo"><span class="member__initials" aria-hidden="true">QC</span></div>
+              <p class="member__name">Qarisha Collado</p>
+              <p class="member__role">UI/UX Designer &amp; Research</p>
+            </div>
+            <div class="member reveal reveal--d4">
+              <div class="member__photo"><span class="member__initials" aria-hidden="true">CB</span></div>
+              <p class="member__name">Cyduanne Biraquit</p>
+              <p class="member__role">Database &amp; 3D Modelling</p>
+            </div>
+            <div class="member reveal reveal--d5">
+              <div class="member__photo"><span class="member__initials" aria-hidden="true">SS</span></div>
+              <p class="member__name">Sander Sedano</p>
+              <p class="member__role">Team Mentor / Adviser</p>
+            </div>
+          </div>
         </div>
       </section>
     </main>
@@ -309,10 +1401,7 @@
          FOOTER
          ================================================== -->
     <footer class="footer">
-      <div
-        class="glow-orb glow-orb--deep glow-orb--bl"
-        aria-hidden="true"
-      ></div>
+      <div class="glow-orb glow-orb--deep glow-orb--bl" aria-hidden="true"></div>
 
       <div class="container footer__inner">
         <div class="footer__top">
@@ -353,15 +1442,12 @@
           <div>
             <h2 class="footer__col-title">Project</h2>
             <ul class="footer__list">
+              <li><a href="#compare">Why Not Strava</a></li>
               <li><a href="#team">The Team</a></li>
-              <li><a href="#waitlist">Join the Waitlist</a></li>
               <li>
-                <a
-                  href="https://github.com/Dell015/karela"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >GitHub</a
-                >
+                <a href="https://github.com/Dell015/karela" target="_blank" rel="noopener noreferrer">
+                  GitHub
+                </a>
               </li>
             </ul>
           </div>
@@ -379,6 +1465,7 @@
       </div>
     </footer>
 
+    <script src="js/config.js"></script>
     <script src="js/main.js" defer></script>
   </body>
 </html>
