@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     backgroundColor: KARELA.color.bg,
   },
   glowContainer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     overflow: "hidden",
     backgroundColor: KARELA.color.bgGlow,
   },
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
   },
   veil: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(13,13,13,0.25)",
   },
 });

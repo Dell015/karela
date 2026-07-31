@@ -6,10 +6,10 @@ export const theme = StyleSheet.create({
     backgroundColor: '#121212'
   },
   background: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   glowContainer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     overflow: 'hidden',
     backgroundColor: '#151515',
   },

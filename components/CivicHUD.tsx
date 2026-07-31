@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
 
   /* ---------- Bottom sheet ---------- */
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(0,0,0,0.65)",
   },
   sheet: {

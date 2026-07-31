@@ -278,7 +278,7 @@ export default function Dashboard() {
                     <MapView
                       ref={mapRef}
                       provider={Platform.OS === "android" ? "google" : "google"}
-                      style={StyleSheet.absoluteFillObject}
+                      style={StyleSheet.absoluteFill}
                       customMapStyle={ghostMapStyle}
                       showsUserLocation={true}
                       tintColor={KARELA.color.brand}
