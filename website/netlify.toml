@@ -1,0 +1,52 @@
+# Netlify configuration for the Karela showcase site.
+# Deploy by pointing Netlify at this directory (no build step).
+
+[build]
+  publish = "."
+  command = ""
+
+# ------------------------------------------------------------
+# Security headers
+# ------------------------------------------------------------
+# CSP WARNING: default-src is 'self'. When you connect a waitlist
+# endpoint or add analytics you MUST add those origins to
+# connect-src / script-src or the browser will silently block the
+# requests. This is the most likely cause of "the form worked
+# locally but not in production". See BACKLOG.md P0-1.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), camera=(), microphone=()"
+    Content-Security-Policy = "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+
+# ------------------------------------------------------------
+# Caching
+# ------------------------------------------------------------
+# Fonts and images are content-addressed by filename in practice
+# (they change name when they change), so they can be cached hard.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# CSS and JS are NOT fingerprinted yet, so they must revalidate.
+# If a build step adds hashed filenames later, move these to the
+# immutable policy above.
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# HTML must always revalidate so content edits go live immediately.
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

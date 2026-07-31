@@ -405,3 +405,50 @@ b {
     transform: none;
   }
 }
+
+/* ---------- Increased contrast ----------
+   Users who ask for more contrast get solid borders and brighter
+   secondary text. The glow orbs are decorative haze that actively
+   works against legibility, so they are removed. */
+@media (prefers-contrast: more) {
+  :root {
+    --text-secondary: #d4d4d4;
+    --text-muted: #b8b8b8;
+    --text-faint: #a5a5a5;
+    --line: rgba(255, 255, 255, 0.32);
+    --line-soft: rgba(255, 255, 255, 0.22);
+  }
+
+  .glow-orb {
+    display: none;
+  }
+}
+
+/* ---------- Forced colors (Windows High Contrast) ----------
+   Gradient-clipped text renders as invisible in forced-colors mode
+   because the fill is transparent. Restore a real colour, and make
+   sure focus rings and borders survive. */
+@media (forced-colors: active) {
+  .gradient-text,
+  .stat__value,
+  .streak__mult,
+  .member__initials {
+    -webkit-text-fill-color: currentColor;
+    color: LinkText;
+    background: none;
+  }
+
+  .glow-orb {
+    display: none;
+  }
+
+  .btn,
+  .card,
+  .badge {
+    border: 1px solid ButtonBorder;
+  }
+
+  :focus-visible {
+    outline: 2px solid Highlight;
+  }
+}

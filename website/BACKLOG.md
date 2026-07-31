@@ -6,8 +6,9 @@
 > what "done" looks like.
 >
 > **Status:** Phases 1–6 of the build are complete. The site is functional,
-> responsive, accessible, and deployable. What remains is real content
-> (screenshots, copy, numbers), one backend decision, and a performance pass.
+> responsive, accessible, and deployable, with Netlify and Vercel configs
+> committed. What remains is real content (screenshots, copy, numbers) and one
+> backend decision.
 >
 > **Last updated:** 2026-07-31
 
@@ -46,7 +47,9 @@ karela/
 │   │   ├── fonts/           <- Excon family, self-hosted (6 weights)
 │   │   └── img/             <- logos, favicon, OG placeholder
 │   ├── ASSETS.md            <- asset manifest + swap instructions
-│   └── BACKLOG.md           <- this file
+│   ├── BACKLOG.md           <- this file
+│   ├── netlify.toml         <- deploy + security headers + caching
+│   └── vercel.json          <- same, for Vercel
 └── aboutkarela.md           <- source of truth for ALL site copy (41 sections)
 ```
 
@@ -177,26 +180,28 @@ without replacing the numbers.
 
 ## P1 — Needed before public launch
 
-### P1-4. Nav logo is 657 KB
+### P1-4. ~~Nav logo is 657 KB~~ — RESOLVED 2026-07-31
 
-**Where:** `website/assets/img/karela_word-logo.png`
+The source `karela_word-logo.png` was a **4388 × 4388 square canvas** being
+rendered at 120 × 30 CSS pixels, almost entirely transparent padding. It was
+trimmed to its actual content bounds (4344 × 764, a true 5.69:1 ratio) and
+resampled to 360 × 63 with bicubic interpolation.
 
-Loads on every page view, in the nav, above the fold. It is a wordmark — it
-should be an SVG at roughly 4 KB, or a WebP at roughly 15 KB.
+**657 KB → 12 KB, a 98.1% reduction.**
 
-```bash
-# If vector source exists, export SVG and use it directly (best).
-# Otherwise:
-npx @squoosh/cli --webp '{"quality":85}' -d website/assets/img/ \
-  website/assets/img/karela_word-logo.png
-```
-Then update the two `<img>` references (nav and footer) in `index.html`.
+The markup `width`/`height` attributes were also wrong — they said 120 × 30
+(4:1), which did not match the real 5.69:1 ratio and would have caused the
+logo to render squashed or shifted once dimensions were respected. Now 171 × 30
+in the nav and 159 × 28 in the footer.
 
-Also: `icon.png` is 393 KB and only used as the Apple touch icon — resize to
-180×180.
+`icon.png` was also 1024 × 1024 at 393 KB while only serving as the
+`apple-touch-icon`; resized to 180 × 180, now 30 KB. Unused `fire.png` removed.
 
-**Never ship** `assets/images/karelala.png` (25 MB) or `karela_logo.png`
-(2.3 MB) to the web.
+**Total image payload: 1,077 KB → 89 KB.**
+
+Still worth doing if you have vector source: an SVG wordmark would be roughly
+4 KB and scale perfectly. Also still true — **never ship**
+`assets/images/karelala.png` (25 MB) or `karela_logo.png` (2.3 MB) to the web.
 
 ---
 
@@ -277,6 +282,29 @@ photos.
 `assets/images/sir-sander.jpg` already exists in the app repo for Sander
 Sedano. Needed: 400×400 square crops for Randel, Trishia, Steven, Qarisha, and
 Cyduanne, saved to `website/assets/img/team/`.
+
+---
+
+## Resolved during the phase 1–6 build
+
+Logged so nobody re-investigates a fixed problem. Each was found by audit
+rather than assumed.
+
+| Issue | Finding | Fix |
+|---|---|---|
+| **Contrast failure** | `--text-faint: #555555` measured **2.61:1** against `--bg`, far below the WCAG AA 4.5:1 minimum for body text — and it was applied to roughly ten small-text elements (captions, fine print, table footnotes, input placeholders). | Raised to `#7a7a7a` (**4.53:1**). Original preserved as `--text-faint-app` for reference. Three hardcoded `fill="#555"` SVG axis labels updated to match. |
+| **Invalid `dl` markup** | The hero stat list emitted `<dd>` before `<dt>`, which violates the HTML definition-list content model. | Reordered to `dt` then `dd`, with `flex-direction: column-reverse` keeping the number visually on top. A screen reader now reads "Max streak multiplier: 3.0×". |
+| **Meaningless ARIA** | `aria-disabled="true"` was set on non-interactive `<span>` elements (store badges, privacy note). ARIA states only apply to elements with interactive roles. | Replaced with a `.store-badge--soon` class; state is conveyed by the visible "Coming soon" text. |
+| **Keyboard-inaccessible scroll regions** | The comparison table and both formula blocks scroll horizontally on narrow viewports but could not be reached or scrolled by keyboard (WCAG 2.1.1). | Added `tabindex="0"`, `role="region"`, and descriptive `aria-label` to all three. |
+| **Skip link did not move focus** | `#main` was not focusable, so the skip link scrolled without transferring focus. | Added `tabindex="-1"` to `<main>`. |
+| **Focus-trapped menu lacked dialog semantics** | The mobile menu traps focus but was a plain `<div>`, so assistive tech had no signal it was modal. | Added `role="dialog"` and `aria-modal="true"`. |
+| **Oversized images** | Logo was a 4388×4388 canvas at 657 KB rendered at 120×30; `icon.png` was 1024×1024 at 393 KB for a 180px slot. | Trimmed, resampled, and corrected aspect ratios. Image payload **1,077 KB → 89 KB**. |
+
+Also added in the same pass: `prefers-contrast: more` support (brighter
+secondary text, solid borders, glow orbs removed), and `forced-colors: active`
+support — gradient-clipped text renders **invisible** in Windows High Contrast
+mode because its fill is transparent, so `--webkit-text-fill-color` is restored
+to `currentColor` there.
 
 ---
 

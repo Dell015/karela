@@ -94,9 +94,8 @@
   min-width: 148px;
 }
 
-.store-badge[aria-disabled="true"] {
+.store-badge--soon {
   opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .store-badge__icon {
@@ -133,6 +132,11 @@
   margin-top: var(--space-3xl);
   padding-top: var(--space-xl);
   border-top: 1px solid var(--line-soft);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column-reverse;
 }
 
 .stat__value {
