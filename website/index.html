@@ -39,6 +39,7 @@
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/components.css" />
     <link rel="stylesheet" href="css/sections.css" />
+    <link rel="stylesheet" href="css/animations.css" />
     <!-- DELETE once all real assets land. See BACKLOG.md P0-2. -->
     <link rel="stylesheet" href="css/placeholders.css" />
   </head>
@@ -136,9 +137,14 @@
                 In active development · Pilot: Tuguegarao City
               </span>
 
-              <h1 class="hero__title reveal reveal--d1" id="hero-title">
-                A Better You,<br />
-                <span class="gradient-text">One Quest at a Time.</span>
+              <!-- Mask reveal: each line slides up from behind a clipped
+                   edge, staggered. The spans are required by the effect —
+                   .reveal-mask clips, the inner span moves. -->
+              <h1 class="hero__title" id="hero-title">
+                <span class="reveal-mask reveal d1"><span>A Better You,</span></span>
+                <span class="reveal-mask reveal d2"
+                  ><span class="gradient-text">One Quest at a Time.</span></span
+                >
               </h1>
 
               <p class="hero__sub reveal reveal--d2">

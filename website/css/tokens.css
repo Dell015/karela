@@ -80,19 +80,24 @@
   --fw-black: 900;
 
   /* --- Fluid type scale ---
-     The app scale (display 32 / h1 24 / h2 18 / body 14) is tuned for
-     a ~390px phone viewport. Web needs a wider range, so each step is
-     expressed as clamp(mobile, fluid, desktop). */
-  --fs-hero: clamp(2.75rem, 8vw, 6rem);      /* 44px -> 96px */
-  --fs-display: clamp(2rem, 5vw, 3.5rem);    /* 32px -> 56px */
-  --fs-h1: clamp(1.75rem, 3.5vw, 2.5rem);    /* 28px -> 40px */
-  --fs-h2: clamp(1.25rem, 2.2vw, 1.75rem);   /* 20px -> 28px */
-  --fs-h3: clamp(1.075rem, 1.6vw, 1.25rem);  /* 17px -> 20px */
-  --fs-body-lg: clamp(1.0625rem, 1.5vw, 1.1875rem);
-  --fs-body: 1rem;
-  --fs-label: 0.875rem;
-  --fs-caption: 0.75rem;
-  --fs-micro: 0.6875rem;
+     The app scale (display 32 / h1 24 / h2 18 / body 14) is tuned for a
+     ~390px phone. Web needs a wider range, but restraint matters more
+     than impact: oversized display type wraps badly, pushes content
+     below the fold, and reads as a template rather than a product.
+
+     Each step is clamp(min, fluid, max). The vw coefficients are kept
+     low so growth between 640px and 1280px is gradual rather than
+     lurching. Body text never drops below 16px. */
+  --fs-hero: clamp(2.25rem, 1.35rem + 3.6vw, 3.75rem);      /* 36 -> 60px */
+  --fs-display: clamp(1.75rem, 1.2rem + 2.2vw, 2.625rem);   /* 28 -> 42px */
+  --fs-h1: clamp(1.5rem, 1.15rem + 1.5vw, 2rem);            /* 24 -> 32px */
+  --fs-h2: clamp(1.1875rem, 1rem + 0.8vw, 1.4375rem);       /* 19 -> 23px */
+  --fs-h3: clamp(1.0625rem, 1rem + 0.35vw, 1.1875rem);      /* 17 -> 19px */
+  --fs-body-lg: clamp(1rem, 0.96rem + 0.22vw, 1.0625rem);   /* 16 -> 17px */
+  --fs-body: 1rem;                                          /* 16px, floor */
+  --fs-label: 0.875rem;                                     /* 14px */
+  --fs-caption: 0.8125rem;                                  /* 13px */
+  --fs-micro: 0.75rem;                                      /* 12px */
 
   --lh-tight: 1.05;
   --lh-snug: 1.2;
@@ -133,10 +138,20 @@
   --shadow-lift: 0 18px 48px rgba(0, 0, 0, 0.55);
 
   /* --- Layout --- */
-  --container-max: 1200px;
-  --container-narrow: 780px;
-  --container-pad: clamp(1.25rem, 5vw, 3rem);
-  --nav-height: 68px;
+  --container-max: 1180px;
+  --container-narrow: 760px;
+  --container-pad: clamp(1.125rem, 4vw, 2.5rem);
+  --nav-height: 64px;
+
+  /* Fluid vertical rhythm for sections. Replaces fixed --space-6xl
+     (136px), which was too tall on laptops and forced excessive
+     scrolling on tablets. */
+  --section-pad: clamp(3.25rem, 7vw, 6rem);
+  --section-pad-tight: clamp(2.5rem, 5vw, 4.25rem);
+  /* Gap between a section heading block and its content. */
+  --head-gap: clamp(2rem, 4vw, 3.25rem);
+  /* Gap between the two halves of a split (two-column) section. */
+  --split-gap: clamp(2.25rem, 5vw, 4.5rem);
 
   /* --- Motion --- */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);

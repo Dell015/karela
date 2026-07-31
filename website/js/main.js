@@ -54,12 +54,20 @@
     const progress = document.querySelector("[data-scroll-progress]");
     const THRESHOLD = 24;
 
+    /* Where animation-timeline: scroll() is supported, animations.css
+       drives the progress bar entirely on the compositor. Skip the JS
+       path so we are not writing a transform every frame for nothing. */
+    const cssScrollDriven =
+      window.CSS &&
+      CSS.supports &&
+      CSS.supports("animation-timeline: scroll()");
+
     function onScroll() {
       const y = window.scrollY || root.scrollTop;
 
       if (nav) nav.classList.toggle("is-scrolled", y > THRESHOLD);
 
-      if (progress) {
+      if (progress && !cssScrollDriven) {
         const max = root.scrollHeight - window.innerHeight;
         const ratio = max > 0 ? Math.min(y / max, 1) : 0;
         progress.style.transform = "scaleX(" + ratio + ")";
@@ -165,10 +173,10 @@
      3. SCROLL REVEALS
      ======================================================== */
   (function initReveals() {
-    const els = document.querySelectorAll(".reveal");
+    const els = document.querySelectorAll(".reveal, .reveal-mask");
 
     if (prefersReducedMotion || !("IntersectionObserver" in window)) {
-      els.forEach((el) => el.classList.add("is-visible"));
+      els.forEach((el) => el.classList.add("is-visible", "is-settled"));
       return;
     }
 
@@ -176,14 +184,147 @@
       (entries) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
-          entry.target.classList.add("is-visible");
-          observer.unobserve(entry.target); // reveal once
+          const el = entry.target;
+          el.classList.add("is-visible");
+          observer.unobserve(el); // reveal once
+
+          /* Release the compositor layer after the transition ends,
+             so long pages do not hold dozens of promoted layers. */
+          el.addEventListener(
+            "transitionend",
+            () => el.classList.add("is-settled"),
+            { once: true }
+          );
         });
       },
-      { rootMargin: "0px 0px -12% 0px", threshold: 0.1 }
+      { rootMargin: "0px 0px -10% 0px", threshold: 0.08 }
     );
 
     els.forEach((el) => observer.observe(el));
+  })();
+
+  /* ========================================================
+     3b. CURSOR SPOTLIGHT
+     Writes --mx / --my so CSS can position a radial highlight.
+     Pointer-move only, rAF-coalesced, and skipped entirely on
+     touch devices and under reduced motion.
+     ======================================================== */
+  (function initSpotlight() {
+    if (prefersReducedMotion) return;
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+
+    const cards = document.querySelectorAll(
+      ".card, .problem-card, .ph-card, .poi__item, .track"
+    );
+    if (!cards.length) return;
+
+    let frame = null;
+
+    cards.forEach((card) => {
+      card.addEventListener(
+        "pointermove",
+        (e) => {
+          if (frame) return;
+          frame = window.requestAnimationFrame(() => {
+            frame = null;
+            const r = card.getBoundingClientRect();
+            const x = ((e.clientX - r.left) / r.width) * 100;
+            const y = ((e.clientY - r.top) / r.height) * 100;
+            card.style.setProperty("--mx", x.toFixed(1) + "%");
+            card.style.setProperty("--my", y.toFixed(1) + "%");
+          });
+        },
+        { passive: true }
+      );
+    });
+  })();
+
+  /* ========================================================
+     3c. STAT COUNT-UP
+     Rolls the hero stat numbers to their final value once the
+     strip scrolls into view. The DOM already contains the final
+     text, so if this never runs the numbers are still correct.
+     ======================================================== */
+  (function initCountUp() {
+    const strip = document.querySelector("[data-stats]");
+    if (!strip) return;
+    if (prefersReducedMotion || !("IntersectionObserver" in window)) return;
+
+    const values = Array.from(strip.querySelectorAll(".stat__value"));
+    if (!values.length) return;
+
+    const duration =
+      (CONFIG.MOTION && CONFIG.MOTION.counterDuration) || 1400;
+
+    /* Split "1,000" or "3.0x" into a numeric part plus whatever
+       prefix/suffix surrounds it, so formatting survives. */
+    function parse(text) {
+      const m = text.match(/^([^\d-]*)([\d.,]+)(.*)$/);
+      if (!m) return null;
+      const raw = m[2].replace(/,/g, "");
+      const num = parseFloat(raw);
+      if (isNaN(num)) return null;
+      return {
+        prefix: m[1],
+        suffix: m[3],
+        target: num,
+        decimals: (raw.split(".")[1] || "").length,
+        grouped: m[2].indexOf(",") !== -1,
+      };
+    }
+
+    const items = values
+      .map((el) => {
+        const info = parse(el.textContent.trim());
+        return info ? { el: el, info: info, final: el.textContent } : null;
+      })
+      .filter(Boolean);
+
+    if (!items.length) return;
+
+    function format(info, v) {
+      let s = v.toFixed(info.decimals);
+      if (info.grouped) s = Number(s).toLocaleString("en-US");
+      return info.prefix + s + info.suffix;
+    }
+
+    // easeOutExpo — fast start, long settle. Reads as "counting up".
+    const ease = (t) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t));
+
+    function run() {
+      const start = performance.now();
+
+      function tick(now) {
+        const p = Math.min((now - start) / duration, 1);
+        const e = ease(p);
+
+        items.forEach((it) => {
+          it.el.textContent = format(it.info, it.info.target * e);
+        });
+
+        if (p < 1) {
+          window.requestAnimationFrame(tick);
+        } else {
+          // Restore the exact original strings.
+          items.forEach((it) => (it.el.textContent = it.final));
+        }
+      }
+
+      window.requestAnimationFrame(tick);
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          observer.unobserve(entry.target);
+          run();
+        });
+      },
+      { threshold: 0.4 }
+    );
+
+    observer.observe(strip);
   })();
 
   /* ========================================================

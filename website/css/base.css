@@ -226,12 +226,12 @@ b {
 
 .section {
   position: relative;
-  padding-block: var(--space-6xl);
+  padding-block: var(--section-pad);
   overflow: clip;
 }
 
 .section--tight {
-  padding-block: var(--space-5xl);
+  padding-block: var(--section-pad-tight);
 }
 
 /* ---------- Text utilities ---------- */

@@ -16,7 +16,7 @@
    ============================================================ */
 .section__head {
   max-width: 68ch;
-  margin-bottom: var(--space-4xl);
+  margin-bottom: var(--head-gap);
 }
 
 .section__head--center {
@@ -47,7 +47,7 @@
 .hero__grid {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-  gap: var(--space-5xl);
+  gap: var(--split-gap);
   align-items: center;
   width: 100%;
 }
@@ -56,6 +56,17 @@
   font-size: var(--fs-hero);
   line-height: var(--lh-tight);
   margin-block: var(--space-xl) var(--space-xl);
+  /* No measure cap here on purpose. The two lines are explicit
+     .reveal-mask spans, and a ch-based cap would force one of them
+     to wrap — which breaks the per-line mask, since the effect
+     assumes one line per span. The grid column already constrains
+     the width. */
+  text-wrap: balance;
+}
+
+/* Mask-reveal spans must be block-level to clip per line. */
+.hero__title .reveal-mask {
+  display: block;
 }
 
 .hero__sub {
@@ -488,7 +499,7 @@
 .ghost__grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
-  gap: var(--space-5xl);
+  gap: var(--split-gap);
   align-items: center;
 }
 
@@ -641,7 +652,7 @@
 .ani__grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: var(--space-5xl);
+  gap: var(--split-gap);
   align-items: center;
 }
 
@@ -793,7 +804,7 @@
 .civic__grid {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: var(--space-5xl);
+  gap: var(--split-gap);
   align-items: center;
 }
 
@@ -974,7 +985,7 @@
    ============================================================ */
 .bayanihan__intro {
   max-width: 66ch;
-  margin-bottom: var(--space-4xl);
+  margin-bottom: var(--head-gap);
 }
 
 /* ---------- Safety tier ladder ---------- */
@@ -1096,7 +1107,7 @@
 .progression__grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: var(--space-5xl);
+  gap: var(--split-gap);
   align-items: start;
 }
 
@@ -1621,6 +1632,201 @@
 
   .lifecycle {
     padding: var(--space-lg);
+  }
+}
+
+/* ============================================================
+   ADDITIONAL BREAKPOINT COVERAGE
+   ------------------------------------------------------------
+   The blocks above handle 1024 / 760 / 420. These fill the gaps
+   so nothing lurches between those widths, and add handling for
+   very large screens, very small screens, and landscape phones.
+   ============================================================ */
+
+/* ---------- Very large screens ----------
+   Stop the layout from stretching into unreadably long lines.
+   The container is already capped, but measure needs capping too. */
+@media (min-width: 1440px) {
+  .lead {
+    max-width: 58ch;
+  }
+
+  .section__head {
+    max-width: 62ch;
+  }
+}
+
+/* ---------- Laptop ----------
+   Tighten the split gap before the columns actually stack, so the
+   two halves stay comfortable at 1100-1280px. */
+@media (max-width: 1280px) {
+  .hero__grid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  }
+
+  .device {
+    max-width: 268px;
+  }
+
+  .tier {
+    grid-template-columns: 84px minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: var(--space-lg);
+  }
+}
+
+/* ---------- Small tablet / large phone ----------
+   Between the 1024 stack and the 760 single-column point the
+   three-up grids are too cramped at three but fine at two. */
+@media (max-width: 900px) {
+  .poi {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ph-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .team__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .hero__title {
+    /* Hero can afford to be a step smaller once stacked, since it
+       no longer has to hold a column against the device mockup. */
+    font-size: clamp(2.125rem, 5.6vw, 3rem);
+  }
+}
+
+/* ---------- Phone ---------- */
+@media (max-width: 600px) {
+  .poi,
+  .ph-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .team__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2xl) var(--space-lg);
+  }
+
+  .hero__actions .btn,
+  .waitlist__form .btn {
+    width: 100%;
+  }
+
+  .hero__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .device {
+    max-width: 240px;
+  }
+
+  /* Legend items stack rather than wrapping awkwardly mid-label. */
+  .ghost__legend {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .lifecycle {
+    gap: var(--space-xs);
+  }
+
+  .lifecycle__step {
+    font-size: 0.6875rem;
+    padding: 2px var(--space-sm);
+  }
+
+  /* Chat bubbles get more of the width back on narrow screens. */
+  .bubble {
+    max-width: 94%;
+  }
+
+  .section__head,
+  .lead {
+    max-width: none;
+  }
+}
+
+/* ---------- Small phone (320-380px) ----------
+   iPhone SE and low-end Android at 320 CSS px. Reduce padding
+   before reducing type, since type is already at its floor. */
+@media (max-width: 380px) {
+  .card,
+  .problem-card,
+  .track,
+  .ph-card,
+  .streak,
+  .ani__chat,
+  .ghost__chart {
+    padding: var(--space-xl);
+  }
+
+  .tier {
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  .team__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .member__photo {
+    width: 76px;
+    height: 76px;
+  }
+
+  .waitlist__input {
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  .formula code {
+    font-size: var(--fs-micro);
+  }
+}
+
+/* ---------- Landscape phone ----------
+   Short viewports: a 100svh hero leaves no room for content, and
+   the scroll cue collides with the CTA. */
+@media (max-height: 560px) and (orientation: landscape) {
+  .hero {
+    min-height: 0;
+    padding-top: calc(var(--nav-height) + var(--space-2xl));
+    padding-bottom: var(--space-3xl);
+  }
+
+  .hero__cue {
+    display: none;
+  }
+
+  .mobile-menu {
+    justify-content: flex-start;
+    overflow-y: auto;
+  }
+
+  .mobile-menu__link {
+    font-size: 1.25rem;
+    padding-block: var(--space-sm);
+  }
+}
+
+/* ---------- Coarse pointer ----------
+   Touch devices have no hover, so spotlight and lift effects never
+   trigger — but :hover can stick after a tap on some browsers.
+   Disable the transform-based ones to avoid elements staying lifted. */
+@media (hover: none) {
+  .ph-card:hover,
+  .poi__item:hover,
+  .track:hover,
+  .problem-card:hover,
+  .card:hover {
+    transform: none;
+  }
+
+  .hero__visual:hover .device,
+  .member:hover .member__photo,
+  .nav__brand:hover {
+    transform: none;
   }
 }
 
