@@ -53,9 +53,20 @@ export const useLocationEngine = (savedGhostData: any[]) => {
   const VELOCITY_CAP = 35;           // km/h — flags vehicle travel
   const GPS_HEADING_MIN_SPEED = 2;   // m/s — use GPS course above this speed
 
+  // Keep refs in sync with the latest props. This must run on every change,
+  // but must NOT reset run state — hence it is separate from the effect below.
   useEffect(() => {
     isRacingRef.current = isRacing;
+  }, [isRacing]);
+
+  useEffect(() => {
     isMovingRef.current = isPhysicallyMoving;
+  }, [isPhysicallyMoving]);
+
+  // Reset run state ONLY when the race itself starts/stops.
+  // Depending on isPhysicallyMoving here would wipe `path` and restart the
+  // ghost clock on every mid-run pause detected by useMotionShield.
+  useEffect(() => {
     if (isRacing) {
       raceStartTimeRef.current = Date.now();
       setTotalDistance(0);
@@ -67,7 +78,7 @@ export const useLocationEngine = (savedGhostData: any[]) => {
       raceStartTimeRef.current = null;
       setGhostPosition(null);
     }
-  }, [isRacing, isPhysicallyMoving]);
+  }, [isRacing]);
 
   // --- GHOST ENGINE (FIXED SYNC) ---
   useEffect(() => {
@@ -90,12 +101,15 @@ export const useLocationEngine = (savedGhostData: any[]) => {
   // --- LOCATION TRACKING ---
   useEffect(() => {
     let subscription: Location.LocationSubscription | null = null;
+    // If the component unmounts before watchPositionAsync resolves, the cleanup
+    // below would see `subscription === null` and the watcher would leak forever.
+    let cancelled = false;
 
     const initLocation = async () => {
       const isAllowed = await PermissionManager.requestLocation();
-      if (!isAllowed) return;
+      if (!isAllowed || cancelled) return;
 
-      subscription = await Location.watchPositionAsync(
+      const sub = await Location.watchPositionAsync(
         {
           // Always use high accuracy — the display gate handles low-quality fixes
           accuracy: Location.Accuracy.BestForNavigation,
@@ -176,10 +190,21 @@ export const useLocationEngine = (savedGhostData: any[]) => {
           setPath((current) => [...current, { ...filteredPoint, isVehicle }]);
         },
       );
+
+      // Unmounted while awaiting — discard immediately instead of leaking.
+      if (cancelled) {
+        sub.remove();
+        return;
+      }
+      subscription = sub;
     };
 
     initLocation();
-    return () => subscription?.remove();
+    return () => {
+      cancelled = true;
+      subscription?.remove();
+      subscription = null;
+    };
   }, []);
 
   // --- COMPASS (Magnetometer fallback for low-speed / stationary) ---

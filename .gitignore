@@ -53,3 +53,9 @@ website/node_modules/
 website/dist/
 website/.vercel/
 website/.netlify/
+
+# Local agent/tooling state
+.kiro/
+
+# Local bundle verification output
+.expo-verify/

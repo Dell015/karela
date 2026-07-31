@@ -32,6 +32,11 @@ export const RunHistory = ({ userId, streak, gems }: RunHistoryProps) => {
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
+    // Guards against setState after unmount and against an older userId's
+    // response landing after a newer one.
+    let cancelled = false;
+    setLoading(true);
+
     const fetchRuns = async () => {
       const { data, error } = await supabase
         .from("run_history")
@@ -40,6 +45,8 @@ export const RunHistory = ({ userId, streak, gems }: RunHistoryProps) => {
         .order("completed_at", { ascending: false })
         .limit(20);
 
+      if (cancelled) return;
+
       if (!error && data) {
         setRuns(data);
       }
@@ -47,6 +54,10 @@ export const RunHistory = ({ userId, streak, gems }: RunHistoryProps) => {
     };
 
     fetchRuns();
+
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
   const formatTime = (totalSeconds: number) => {

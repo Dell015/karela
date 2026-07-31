@@ -137,14 +137,21 @@ export const submitCivicReport = async (
     return { success: false, error: error.message };
   }
 
-  // Sync to quest engine — increment civic mission progress
-  try {
-    await QuestEngine.syncCivicProgress(userId);
-  } catch (e) {
-    console.warn("Civic quest sync failed (non-fatal):", e);
+  const result = data as SubmitReportResult;
+
+  // Sync to quest engine ONLY if the report was actually accepted.
+  // submit_civic_report returns { error: 'duplicate_report' } with no `success`
+  // field and inserts nothing, yet PostgREST reports no transport error — so an
+  // unconditional sync would credit civic progress for a rejected report.
+  if (result?.success) {
+    try {
+      await QuestEngine.syncCivicProgress(userId);
+    } catch (e) {
+      console.warn("Civic quest sync failed (non-fatal):", e);
+    }
   }
 
-  return data as SubmitReportResult;
+  return result;
 };
 
 /**

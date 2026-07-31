@@ -1,13 +1,16 @@
 import { KARELA } from "@/styles/designSystem";
 import { signOutUser } from "@/services/database/supabase/auth";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+// As of SDK 56 expo-router is no longer compatible with @react-navigation/drawer
+// and hard-fails the bundle if it is imported. expo-router/drawer re-exports the
+// same components from its vendored copy of react-navigation.
 import {
+    Drawer,
     DrawerContentScrollView,
     DrawerItem,
     DrawerItemList,
-} from "@react-navigation/drawer";
-import { useRouter } from "expo-router";
-import { Drawer } from "expo-router/drawer";
+} from "expo-router/drawer";
 import React from "react";
 import { Alert, StyleSheet, View } from "react-native";
 
@@ -24,7 +27,7 @@ function CustomDrawerContent(props: any) {
           try {
             await signOutUser();
             router.replace("/auth/login");
-          } catch (error) {
+          } catch {
             Alert.alert("Error", "Failed to log out.");
           }
         },

@@ -156,8 +156,13 @@ export const computeRollingBaseline = (
   const now = Date.now();
   const windowMs = windowDays * 24 * 60 * 60 * 1000;
 
-  // Filter to runs within the rolling window
-  const recentRuns = runs.filter((r) => now - r.date < windowMs);
+  // Filter to runs within the rolling window.
+  // Runs with no duration or no distance carry no pace information — including
+  // them injects a pace of 0 into the bucket and drags P_baseline toward zero
+  // (at worst to exactly 0, which makes ghost synthesis return no waypoints).
+  const recentRuns = runs.filter(
+    (r) => now - r.date < windowMs && r.duration > 0 && r.distance > 0
+  );
   if (recentRuns.length === 0) return 0;
 
   // Group by week (0 = this week, 1 = last week, etc.)
@@ -166,7 +171,7 @@ export const computeRollingBaseline = (
   for (const run of recentRuns) {
     const daysAgo = (now - run.date) / (24 * 60 * 60 * 1000);
     const weekIndex = Math.floor(daysAgo / 7);
-    const paceMs = run.duration > 0 ? run.distance / run.duration : 0; // m/s
+    const paceMs = run.distance / run.duration; // m/s
 
     if (!weekBuckets.has(weekIndex)) weekBuckets.set(weekIndex, []);
     weekBuckets.get(weekIndex)!.push(paceMs);
@@ -340,7 +345,6 @@ export const generateSyntheticGhost = (
   for (let t = 0; t <= totalDurationS; t += 5) {
     // Ghost pace: slightly ahead of the user's predicted pace
     const pace = predictPace(model, t) * (1 + GHOST_AHEAD_FACTOR);
-    ghostDist += pace * 5; // distance covered in this 5-sec interval
 
     // Clamp to reference route length
     const clampedDist = Math.min(ghostDist, totalRefDist);
@@ -355,6 +359,10 @@ export const generateSyntheticGhost = (
     });
 
     if (clampedDist >= totalRefDist) break; // Ghost finished the route
+
+    // Advance AFTER stamping this waypoint. Accumulating first would place the
+    // t=0 point one full 5s interval down the route, offsetting every waypoint.
+    ghostDist += pace * 5; // distance covered in the next 5-sec interval
   }
 
   return ghostPoints;

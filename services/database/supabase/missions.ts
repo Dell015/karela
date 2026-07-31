@@ -108,7 +108,10 @@ export const subscribeToMissions = (
     try {
       onChange(await getMissions(uid, filters));
     } catch (e) {
+      // Must still notify, otherwise screens that clear their loading flag
+      // inside onChange (e.g. quests.tsx) hang on a spinner forever.
       console.error("Mission refetch failed:", e);
+      onChange([]);
     }
   };
 

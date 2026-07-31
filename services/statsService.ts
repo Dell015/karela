@@ -88,8 +88,10 @@ export const calculateStreak = (): number => {
 
   const today = stripTime(Date.now());
 
-  // Get unique calendar days from the DB
-  const runDays = Array.from(new Set(rows.map((r) => stripTime(r.date))));
+  // Get unique calendar days from the DB, sorted descending (most recent first)
+  const runDays = Array.from(new Set(rows.map((r) => stripTime(r.date)))).sort(
+    (a, b) => b - a,
+  );
 
   // Check if the most recent run was today or yesterday
   // If the last run is older than 1 day ago, the streak is dead.

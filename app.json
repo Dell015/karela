@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "karela",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.worshestershire.karela",
@@ -20,7 +19,8 @@
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Karela tracks your race against the ghost even when the screen is locked.",
         "NSLocationAlwaysUsageDescription": "Karela requires background location to sync your progress with the ghost runner.",
         "NSLocationWhenInUseUsageDescription": "Karela uses your location to show your progress on the map.",
-        "NSCameraUsageDescription": "Karela uses your camera to capture photo proof for civic reports during your runs."
+        "NSCameraUsageDescription": "Karela uses your camera to capture photo proof for civic reports during your runs.",
+        "NSMotionUsageDescription": "Karela uses motion sensors to detect your running cadence and verify physical activity."
       }
     },
     "android": {
@@ -38,18 +38,9 @@
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_LOCATION",
         "POST_NOTIFICATIONS",
-        "CAMERA"
-      ],
-      "foregroundService": {
-        "types": [
-          "location"
-        ],
-        "notification": {
-          "title": "Ghost Race Active",
-          "body": "Karela is tracking your run in the background.",
-          "color": "#7CF205"
-        }
-      }
+        "CAMERA",
+        "ACTIVITY_RECOGNITION"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -70,7 +61,31 @@
       "expo-notifications",
       "@react-native-community/datetimepicker",
       "expo-asset",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Karela tracks your race against the ghost even when the screen is locked.",
+          "locationAlwaysPermission": "Karela requires background location to sync your progress with the ghost runner.",
+          "locationWhenInUsePermission": "Karela uses your location to show your progress on the map.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "Karela uses motion sensors to detect your running cadence and verify physical activity."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Karela uses your camera to capture photo proof for civic reports.",
+          "photosPermission": "Karela needs photo access to attach images to civic reports."
+        }
+      ],
+      "expo-task-manager"
     ],
     "experiments": {
       "typedRoutes": true,

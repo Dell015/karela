@@ -45,7 +45,6 @@ export default function MapScreen() {
   const isProcessing = useRef(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [physicalMeters, setPhysicalMeters] = useState(0);
-  const [is3DMode, setIs3DMode] = useState(false);
   const lastInteractionTime = useRef<number>(0);
   const SNAP_BACK_DELAY = 15000; // 15 seconds in milliseconds
 
@@ -69,16 +68,6 @@ export default function MapScreen() {
     setIsRacing,
     setPath,
   } = useLocationEngine(activeGhostData);
-
-  const handleRegionChangeComplete = async () => {
-    const camera = await mapRef.current?.getCamera();
-    // Usually, a pitch > 10-20 degrees is considered "3D"
-    if (camera && camera.pitch > 10) {
-      setIs3DMode(true);
-    } else {
-      setIs3DMode(false);
-    }
-  };
 
   const {
     checkpoints,
@@ -122,6 +111,7 @@ export default function MapScreen() {
     if (isRacing && currentLocation) {
       updateRemainingPath(currentLocation);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentLocation, isRacing]);
 
   // --- RACE CONTROLS ---
@@ -265,6 +255,7 @@ export default function MapScreen() {
     fetchNodes();
     const interval = setInterval(fetchNodes, 30000); // Refresh every 30s
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentLocation?.latitude, currentLocation?.longitude]);
 
   // --- CIVIC REPORT HANDLER ---
@@ -612,31 +603,6 @@ export default function MapScreen() {
         ))}
       </MapView>
 
-      {/* 3D CHARACTER OVERLAY (Fix for iOS & Performance) */}
-      {currentLocation && (
-        <Marker
-          coordinate={currentLocation}
-          anchor={{ x: 0.5, y: 0.5 }}
-          flat
-          zIndex={999}
-        >
-          <View
-            style={{
-              width: 20,
-              height: 20,
-              borderRadius: 10,
-              backgroundColor: "#7CF205",
-              borderWidth: 3,
-              borderColor: "white",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.8,
-              shadowRadius: 2,
-              elevation: 5,
-            }}
-          />
-        </Marker>
-      )}
       {/* HUD */}
       {isRacing && (
         <View style={styles.hudOverlay}>

@@ -39,7 +39,11 @@ export const NotificationService = {
           color: "#7CF205",
           priority: Notifications.AndroidNotificationPriority.LOW,
         },
-        trigger: null, // null means "Show immediately"
+        // On Android the channel is selected via the trigger, not the content.
+        // With `null` this posted to the DEFAULT channel, so the LOW-importance
+        // 'race-tracker' channel created in setup() was never used and every
+        // per-second update could buzz/heads-up instead of staying silent.
+        trigger: { channelId: 'race-tracker' },
         identifier: 'race-progress', 
       });
     } catch (error) {

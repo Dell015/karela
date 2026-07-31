@@ -35,6 +35,7 @@ export default function ActiveRunScreen() {
       withSequence(withTiming(1.2, { duration: 400 }), withTiming(1, { duration: 400 })),
       -1, true
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const formatTime = (s: number) => {
@@ -63,7 +64,7 @@ export default function ActiveRunScreen() {
 
       <SafeAreaView style={styles.uiLayer}>
         <View style={styles.miniHeader}>
-          <Text style={styles.hardwareText}>Steven's Galaxy Buds Pro (1%)</Text>
+          <Text style={styles.hardwareText}>Steven&apos;s Galaxy Buds Pro (1%)</Text>
           <View style={styles.liveDot} />
         </View>
 
@@ -90,7 +91,7 @@ export default function ActiveRunScreen() {
         <View style={styles.footer}>
           <View style={styles.coachBubble}>
             <MaterialCommunityIcons name="account-tie-voice" size={24} color={KARELA.color.brand} />
-            <Text style={styles.coachText}>"Karela here. You're maintaining a great pace on this route, Steven! Focus on your breathing."</Text>
+            <Text style={styles.coachText}>&quot;Karela here. You&apos;re maintaining a great pace on this route, Steven! Focus on your breathing.&quot;</Text>
           </View>
           <View style={styles.controls}>
             <TouchableOpacity style={styles.pauseBtn} onPress={() => setIsActive(!isActive)}>

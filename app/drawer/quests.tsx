@@ -1,4 +1,4 @@
-import { useAuth, UserProfile } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { ScreenHeader } from "@/components/ui";
 import { Screen } from "@/components/ui/Screen";
 import { QuestEngine } from "@/services/engines/QuestEngine";
@@ -21,7 +21,7 @@ import {
 } from "react-native";
 
 export default function QuestsScreen() {
-  const { user, profile, gainXP } = useAuth();
+  const { user, profile, syncProgression } = useAuth();
   const router = useRouter();
 
   // --- FILTERS ---
@@ -98,6 +98,7 @@ export default function QuestsScreen() {
     if (profile?.uid) {
       checkAndGenerateQuests();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.uid]);
 
   // --- CLAIM LOGIC ---
@@ -115,12 +116,18 @@ export default function QuestsScreen() {
         Number(profile?.stats?.streak || 0)
       );
 
-      await gainXP(0); // Trigger level check / profile reload
+      await syncProgression(); // Reconcile level from server state (no re-award)
+
+      // claimQuest returns 0/0 when objectives are not actually met.
+      if (xpAwarded === 0 && gemsAwarded === 0) {
+        Alert.alert("NOT READY", "Mission objectives not yet met.");
+        return;
+      }
 
       let message = `Mission Complete. +${xpAwarded} XP secured.`;
       if (gemsAwarded > 0) message += ` +${gemsAwarded} Gems.`;
       Alert.alert("COMMAND CENTER", message);
-    } catch (err) {
+    } catch {
       Alert.alert("ERROR", "Sync failed.");
     }
   };
@@ -190,7 +197,8 @@ export default function QuestsScreen() {
           </View>
         ) : (
           missions.map((item) => {
-            const progress = (item.currentValue || 0) / item.targetValue;
+            const target = Number(item.targetValue) || 0;
+            const progress = target > 0 ? (item.currentValue || 0) / target : 0;
             const isComplete = progress >= 1;
 
             return (

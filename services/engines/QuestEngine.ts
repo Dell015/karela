@@ -321,7 +321,9 @@ export const QuestEngine = {
     }
 
     const now = new Date();
-    const todayKey = now.toISOString().split("T")[0];
+    // Local day key — toISOString() would use UTC, which in UTC+8 rolls the
+    // "day" over at 08:00 local time and disagrees with weekKey/monthKey below.
+    const todayKey = getDayKey(now);
     const weekKey = getWeekKey(now);
     const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     const level = Number(stats.level || 1);
@@ -351,11 +353,12 @@ export const QuestEngine = {
       try {
         await QuestEngine.generateDailyQuests(userId, level, streak, decayModel, runHistory, stats);
         result.generated.push("daily_quests");
+        // Only advance the marker on success — otherwise a transient failure
+        // would leave the user with no daily quests until tomorrow.
+        await setStats(userId, { last_daily_reset: todayKey });
       } catch (err: any) {
         result.errors.push(`Daily: ${err.message}`);
       }
-      // Update reset key
-      await setStats(userId, { last_daily_reset: todayKey });
     } else {
       result.skipped.push("Daily already generated");
     }
@@ -365,10 +368,10 @@ export const QuestEngine = {
       try {
         await QuestEngine.generateWeeklyQuests(userId, level, streak, decayModel);
         result.generated.push("weekly_quests");
+        await setStats(userId, { last_weekly_reset: weekKey });
       } catch (err: any) {
         result.errors.push(`Weekly: ${err.message}`);
       }
-      await setStats(userId, { last_weekly_reset: weekKey });
     } else {
       result.skipped.push("Weekly already generated");
     }
@@ -378,10 +381,10 @@ export const QuestEngine = {
       try {
         await QuestEngine.generateMonthlyQuests(userId, level, streak, decayModel);
         result.generated.push("monthly_quests");
+        await setStats(userId, { last_monthly_reset: monthKey });
       } catch (err: any) {
         result.errors.push(`Monthly: ${err.message}`);
       }
-      await setStats(userId, { last_monthly_reset: monthKey });
     } else {
       result.skipped.push("Monthly already generated");
     }
@@ -412,7 +415,7 @@ export const QuestEngine = {
     runHistory?: any[],
     stats?: any
   ): Promise<void> => {
-    const todayKey = new Date().toISOString().split("T")[0];
+    const todayKey = getDayKey(new Date());
 
     // 1. AI-generated quest (personalized by Gemini)
     try {
@@ -462,7 +465,7 @@ export const QuestEngine = {
     streak: number,
     decayModel?: DecayModel | null
   ): Promise<void> => {
-    const todayKey = new Date().toISOString().split("T")[0];
+    const todayKey = getDayKey(new Date());
 
     // 1. Weekly distance challenge
     const weeklyDistance = generateSystemDistanceQuest(level, "weekly", decayModel);
@@ -517,7 +520,7 @@ export const QuestEngine = {
     streak: number,
     decayModel?: DecayModel | null
   ): Promise<void> => {
-    const todayKey = new Date().toISOString().split("T")[0];
+    const todayKey = getDayKey(new Date());
 
     const monthlyQuest = generateSystemDistanceQuest(level, "monthly", decayModel);
 
@@ -566,6 +569,24 @@ export const QuestEngine = {
     mission: { xpReward: number; type?: string; frequency?: string },
     streak: number
   ): Promise<{ xpAwarded: number; gemsAwarded: number }> => {
+    // Validate the mission is actually complete before claiming.
+    // getMissions filters on status="active", so a mission that is missing here
+    // was already claimed/expired — refuse rather than fail open and re-award.
+    const activeMissions = await getMissions(userId, { status: "active" });
+    const targetMission = activeMissions.find((m) => m.id === missionId);
+
+    if (!targetMission) {
+      return { xpAwarded: 0, gemsAwarded: 0 };
+    }
+
+    const currentValue = Number(targetMission.current_value || 0);
+    const targetValue = Number(targetMission.target_value || 0);
+
+    // A non-positive target can never be legitimately "complete".
+    if (targetValue <= 0 || currentValue < targetValue) {
+      return { xpAwarded: 0, gemsAwarded: 0 };
+    }
+
     // Mark as claimed
     await updateMission(missionId, { status: "claimed" });
 
@@ -695,22 +716,51 @@ export const QuestEngine = {
 // ============================================================
 
 /**
- * Returns ISO week key like "2026-W26"
+ * Returns a local-timezone day key like "2026-07-31".
+ * Deliberately NOT toISOString(), which is UTC and would roll the day over at
+ * 08:00 local time in the Philippines (UTC+8).
+ */
+function getDayKey(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/**
+ * Returns ISO week key like "2026-W26".
+ * Uses the ISO week-YEAR (not the calendar year) so the last days of December
+ * that belong to week 1 of the next year don't collide with the current year's
+ * week 1 — a collision would skip a week of quest generation.
  */
 function getWeekKey(date: Date): string {
-  const weekNum = getISOWeekNumber(date);
-  const year = date.getFullYear();
-  return `${year}-W${String(weekNum).padStart(2, "0")}`;
+  const { year, week } = getISOWeekParts(date);
+  return `${year}-W${String(week).padStart(2, "0")}`;
 }
 
 /**
  * Returns ISO week number (1-53).
  */
 function getISOWeekNumber(date: Date): number {
-  const d = new Date(date.getTime());
-  d.setDate(d.getDate() + 4 - (d.getDay() || 7));
-  const yearStart = new Date(d.getFullYear(), 0, 1);
-  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return getISOWeekParts(date).week;
+}
+
+/**
+ * Canonical ISO-8601 week/week-year computation.
+ * Normalizes to UTC midnight first: keeping the input's time-of-day makes the
+ * day delta fractional, which Math.ceil then rounds up into the next week.
+ */
+function getISOWeekParts(date: Date): { year: number; week: number } {
+  const d = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  );
+  // Shift to the Thursday of this ISO week; its year is the ISO week-year.
+  const dayNum = d.getUTCDay() || 7; // Mon=1 .. Sun=7
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const isoYear = d.getUTCFullYear();
+  const yearStart = Date.UTC(isoYear, 0, 1);
+  const week = Math.ceil(((d.getTime() - yearStart) / 86400000 + 1) / 7);
+  return { year: isoYear, week };
 }
 
 /**

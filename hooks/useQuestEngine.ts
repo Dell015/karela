@@ -52,12 +52,14 @@ export const useQuestEngine = (
     frequency,
   } = options;
 
-  const { user, profile, gainXP } = useAuth();
+  const { user, profile, syncProgression } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastResult, setLastResult] = useState<GenerationResult | null>(null);
   const [activeMissions, setActiveMissions] = useState<MissionRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const genAttempted = useRef(false);
+  // Stores the uid generation was attempted for. A plain boolean would never
+  // reset, so a different user signing in would never get quests generated.
+  const genAttempted = useRef<string | null>(null);
 
   // --- Auto-generation ---
   const regenerate = useCallback(async (): Promise<GenerationResult | null> => {
@@ -82,10 +84,11 @@ export const useQuestEngine = (
   }, [profile?.uid, profile?.stats, isGenerating]);
 
   useEffect(() => {
-    if (autoGenerate && profile?.uid && !genAttempted.current) {
-      genAttempted.current = true;
+    if (autoGenerate && profile?.uid && genAttempted.current !== profile.uid) {
+      genAttempted.current = profile.uid;
       regenerate();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoGenerate, profile?.uid]);
 
   // --- Real-time subscription ---
@@ -131,9 +134,9 @@ export const useQuestEngine = (
         { xpReward, type, frequency: freq },
         streak
       );
-      await gainXP(0); // Trigger level normalization
+      await syncProgression(); // Reconcile level from server state (no re-award)
     },
-    [user?.uid, profile?.stats?.streak, gainXP]
+    [user?.uid, profile?.stats?.streak, syncProgression]
   );
 
   // --- Sync run ---

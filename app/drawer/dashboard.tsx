@@ -1,9 +1,8 @@
 import { QuestCard } from "@/components/QuestCard";
 import { KARELA } from "@/styles/designSystem";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useIsFocused } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import { router, useNavigation } from "expo-router";
+import { router, useIsFocused, useNavigation } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
     Image,
@@ -35,7 +34,7 @@ import {
 import { dashboard_ui } from "@/styles/dashboardStyle";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { theme } from "@/styles/theme";
-import { DrawerNavigationProp } from "@react-navigation/drawer";
+import type { DrawerNavigationProp } from "expo-router/drawer";
 
 
 export default function Dashboard() {

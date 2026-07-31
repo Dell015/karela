@@ -117,15 +117,6 @@ export default function AiCoach() {
 
     try {
       const stats = userProfile?.stats;
-      const profileInfo = stats
-        ? `Athlete Stats: 
-          - Age: ${stats.age}
-          - Current Weight: ${stats.weight}kg
-          - Height: ${stats.height}cm
-          - Target Weight: ${stats.target_weight}kg
-          - Level: ${stats.level}
-          - Coach's Briefing: "${stats.ai_notes || "No injuries reported"}"`
-        : "Athlete Stats: New user, no physical data yet.";
 
       const memoryPrompt =
         recentMemories.length > 0
@@ -206,7 +197,7 @@ export default function AiCoach() {
                 👋 Hello, {user?.displayName?.split(" ")[0] || "Stryder"}
               </Text>
               <Text style={styles.greetingSubtitle}>
-                Let's audit{"\n"}your effort.
+                Let&apos;s audit{"\n"}your effort.
               </Text>
               <View style={styles.chipsContainer}>
                 {QUICK_ACTIONS.map((action) => (

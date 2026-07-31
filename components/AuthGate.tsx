@@ -31,7 +31,7 @@ export const AuthGate = ({ children }: { children: React.ReactNode }) => {
       // Logged in but on auth/index pages → redirect to dashboard
       router.replace("/drawer/dashboard");
     }
-  }, [user, loading, segments, pathname]);
+  }, [user, loading, segments, pathname, router]);
 
   // Loading state — show branded splash
   if (loading) {

@@ -1,11 +1,9 @@
 import { CivicNode } from "@/services/engines/CivicEngine";
 import { KARELA } from "@/styles/designSystem";
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
-  Dimensions,
   Modal,
   Pressable,
   StyleSheet,
@@ -13,8 +11,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
 
 interface NodeDetailModalProps {
   visible: boolean;

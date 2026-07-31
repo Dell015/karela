@@ -53,22 +53,11 @@ export const saveGhostRun = async (
       ],
     );
 
-    // Supabase Sync
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      const km = distance / 1000;
-      await incrementStats(user.id, {
-        total_distance_km: parseFloat(km.toFixed(2)),
-        total_calories_burned: Math.floor(km * 60),
-        total_missions_completed: 1,
-        xp: 150,
-      });
-      await setStats(user.id, {
-        last_active_date: new Date(date).toISOString(),
-      });
-    }
+    // NOTE: Cloud stat sync deliberately lives in summary.tsx
+    // (handleFinalizeMission), which is the single owner of profile stat
+    // updates. Syncing here too double-counted distance/calories whenever the
+    // user tapped both "Record as Ghost" and "Return to Base", and additionally
+    // granted a flat +150 XP and a mission completion that were never earned.
     return { success: true, avgSpeed, distance, duration };
   } catch (err) {
     console.error("Save failed:", err);

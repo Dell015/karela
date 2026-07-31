@@ -12,11 +12,18 @@ export const PermissionManager = {
         }
 
         try {
-            // Background is what keeps the "Ghost" running when the screen is OFF
+            // Background is what keeps the "Ghost" running when the screen is OFF.
+            // It is an ENHANCEMENT, not a requirement: foreground GPS is enough to
+            // track a run. Returning false here made callers treat the whole
+            // request as denied, so the START button silently did nothing.
             const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
-            return backgroundStatus === 'granted';
+            if (backgroundStatus !== 'granted') {
+                console.warn("Background location denied — ghost tracking limited to foreground.");
+            }
+            return true;
         } catch (e) {
-            return true; 
+            console.warn("Background location permission request failed:", e);
+            return true; // Foreground is granted; tracking can still proceed.
         }
     },
 

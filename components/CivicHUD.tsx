@@ -17,6 +17,7 @@ import {
     View,
 } from "react-native";
 import Animated, {
+    cancelAnimation,
     useAnimatedStyle,
     useSharedValue,
     withRepeat,
@@ -101,6 +102,9 @@ export const CivicHUD = ({
       -1,
       true
     );
+    // An infinite withRepeat keeps running on the UI thread unless cancelled.
+    return () => cancelAnimation(pulse);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fabAnimStyle = useAnimatedStyle(() => ({
@@ -140,9 +144,20 @@ export const CivicHUD = ({
 
     // 3. Upload + submit
     setSubmitting(true);
-    await onSubmitReport(category, result.assets[0].uri);
-    setSubmitting(false);
-    setSheetOpen(false);
+    try {
+      await onSubmitReport(category, result.assets[0].uri);
+      setSheetOpen(false);
+    } catch (e) {
+      // Without this, a network failure leaves submitting=true forever and the
+      // sheet becomes un-dismissable (backdrop/close are gated on !submitting).
+      console.error("Civic report submit failed:", e);
+      Alert.alert(
+        "Report Failed",
+        "Could not submit your report. Check your connection and try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

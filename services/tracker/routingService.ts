@@ -149,24 +149,39 @@ export const getMultiPointRoute = async (
       };
     }
 
-    // PH FALLBACK: Direct lines if OSRM fails (offline, no coverage)
-    let totalDirectDist = 0;
-    for (let i = 0; i < points.length - 1; i++) {
-      totalDirectDist += calculateDirectDistance(points[i], points[i + 1]);
-    }
-
-    return {
-      coordinates: points.map((p) => ({
-        ...p,
-        id: p.id || Math.random().toString(36).substring(7),
-      })),
-      distanceMeters: totalDirectDist,
-      rewards: calculateQuestRewards(totalDirectDist),
-    };
+    // PH FALLBACK: Direct lines if OSRM returns no usable route
+    return buildDirectLineRoute(points);
   } catch (error) {
+    // Thrown fetch/JSON errors (offline, DNS failure, malformed body) must also
+    // fall back to direct lines — returning null here left the user with no
+    // route at all, making the "PH FALLBACK" above unreachable in practice.
     console.error("OSRM Routing Error:", error);
-    return null;
+    return buildDirectLineRoute(points);
   }
+};
+
+/**
+ * Straight-line route between the given points.
+ * Offline/no-coverage fallback used when OSRM is unavailable.
+ */
+const buildDirectLineRoute = (
+  points: { latitude: number; longitude: number; id?: string }[]
+): QuestData | null => {
+  if (!points || points.length < 2) return null;
+
+  let totalDirectDist = 0;
+  for (let i = 0; i < points.length - 1; i++) {
+    totalDirectDist += calculateDirectDistance(points[i], points[i + 1]);
+  }
+
+  return {
+    coordinates: points.map((p) => ({
+      ...p,
+      id: p.id || Math.random().toString(36).substring(7),
+    })),
+    distanceMeters: totalDirectDist,
+    rewards: calculateQuestRewards(totalDirectDist),
+  };
 };
 
 /**

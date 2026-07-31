@@ -2,9 +2,11 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../services/database/supabase/config";
 import {
     getProfile,
+    incrementStats,
     setStats,
     subscribeToProfile,
 } from "../services/database/supabase/profiles";
+import { applyStreakMultiplier } from "../services/streakMultiplier";
 
 // 1. STYLED INTERFACE (unchanged — keeps the rest of the app compatible)
 export interface UserProfile {
@@ -59,6 +61,7 @@ interface AuthContextType {
   reloadProfile: () => Promise<void>;
   logout: () => Promise<void>;
   gainXP: (amount: number) => Promise<void>;
+  syncProgression: () => Promise<void>;
   earnGems: (amount: number) => Promise<void>;
   useStreakFreeze: () => Promise<boolean>;
 }
@@ -70,6 +73,7 @@ const AuthContext = createContext<AuthContextType>({
   reloadProfile: async () => {},
   logout: async () => {},
   gainXP: async () => {},
+  syncProgression: async () => {},
   earnGems: async () => {},
   useStreakFreeze: async () => false,
 });
@@ -116,16 +120,17 @@ const mapRowToProfile = (row: any): UserProfile => ({
 // and persist the correction. Returns true if a correction was applied.
 const normalizeXP = async (uid: string, stats: any): Promise<boolean> => {
   const XP_THRESHOLD = 1000;
-  let xp = Number(stats?.xp || 0);
-  let level = Number(stats?.level || 1);
+  const xp = Number(stats?.xp || 0);
   if (xp < XP_THRESHOLD) return false;
 
-  while (xp >= XP_THRESHOLD) {
-    xp -= XP_THRESHOLD;
-    level += 1;
-  }
+  const levelUps = Math.floor(xp / XP_THRESHOLD);
   try {
-    await setStats(uid, { xp, level });
+    // Atomic deltas rather than an absolute write: a concurrent XP award
+    // (e.g. QuestEngine.claimQuest) would otherwise be silently overwritten.
+    await incrementStats(uid, {
+      xp: -levelUps * XP_THRESHOLD,
+      level: levelUps,
+    });
   } catch (e) {
     console.warn("XP normalization failed (non-fatal):", e);
   }
@@ -139,34 +144,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const gainXP = async (amount: number) => {
     if (!user || !profile) return;
-    
+
     // Apply streak multiplier to the raw XP amount
     const streak = Number(profile.stats?.streak || 0);
     const boostedAmount = amount > 0 ? applyStreakMultiplier(amount, streak) : 0;
-    
-    const currentXP = Number(profile.stats?.xp || 0);
-    const currentLevel = Number(profile.stats?.level || 1);
-    const XP_THRESHOLD = 1000;
-
-    let newXP = currentXP + boostedAmount;
-    let newLevel = currentLevel;
-    while (newXP >= XP_THRESHOLD) {
-      newXP -= XP_THRESHOLD;
-      newLevel += 1;
-    }
 
     try {
-      await setStats(user.uid, { xp: newXP, level: newLevel });
+      // Atomic add so a stale client value can never overwrite server state.
+      if (boostedAmount > 0) {
+        await incrementStats(user.uid, { xp: boostedAmount });
+      }
+      // Re-read from the server, then carry XP into levels.
+      const fresh = await getProfile(user.uid);
+      await normalizeXP(user.uid, fresh?.stats);
+      await reloadProfile();
     } catch (error) {
       console.error("XP Update Failed:", error);
     }
   };
 
+  /**
+   * Reconciles level/XP after a reward was granted server-side
+   * (e.g. QuestEngine.claimQuest) without re-awarding anything.
+   */
+  const syncProgression = async () => {
+    if (!user) return;
+    try {
+      const fresh = await getProfile(user.uid);
+      await normalizeXP(user.uid, fresh?.stats);
+      await reloadProfile();
+    } catch (error) {
+      console.error("Progression Sync Failed:", error);
+    }
+  };
+
   const earnGems = async (amount: number) => {
     if (!user || !profile || amount <= 0) return;
-    const currentGems = Number(profile.stats?.gems || 0);
     try {
-      await setStats(user.uid, { gems: currentGems + amount });
+      await incrementStats(user.uid, { gems: amount });
+      await reloadProfile();
     } catch (error) {
       console.error("Gem Update Failed:", error);
     }
@@ -180,11 +196,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (currentGems < FREEZE_COST) return false;
 
     try {
-      const currentFreezes = Number(profile.stats?.streak_freeze_count || 0);
-      await setStats(user.uid, {
-        gems: currentGems - FREEZE_COST,
-        streak_freeze_count: currentFreezes + 1,
+      await incrementStats(user.uid, {
+        gems: -FREEZE_COST,
+        streak_freeze_count: 1,
       });
+      await reloadProfile();
       return true;
     } catch (error) {
       console.error("Streak Freeze Failed:", error);
@@ -236,8 +252,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     let unsubscribeProfile: (() => void) | null = null;
+    // getSession() and onAuthStateChange(INITIAL_SESSION) both fire, so two
+    // handleSession calls can interleave across their awaits. Without a token,
+    // both see unsubscribeProfile === null and each creates a channel — and
+    // subscribeToProfile uses a random channel name, so Supabase does not
+    // dedupe them and the first one leaks.
+    let disposed = false;
+    let sessionSeq = 0;
 
     const handleSession = async (session: any) => {
+      const seq = ++sessionSeq;
+
       if (session?.user) {
         const su = session.user;
         const appUser: AppUser = {
@@ -249,6 +274,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(appUser);
 
         await loadProfile(su.id);
+
+        // Superseded by a newer session event, or unmounted — do not subscribe.
+        if (disposed || seq !== sessionSeq) return;
 
         // Realtime profile subscription (replaces Firestore onSnapshot)
         if (unsubscribeProfile) unsubscribeProfile();
@@ -266,7 +294,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
         setProfile(null);
       }
-      setLoading(false);
+      if (!disposed) setLoading(false);
     };
 
     // Initial session check
@@ -280,14 +308,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     return () => {
+      disposed = true;
       subscription.unsubscribe();
-      if (unsubscribeProfile) unsubscribeProfile();
+      if (unsubscribeProfile) {
+        unsubscribeProfile();
+        unsubscribeProfile = null;
+      }
     };
   }, []);
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, reloadProfile, logout, gainXP, earnGems, useStreakFreeze }}
+      value={{ user, profile, loading, reloadProfile, logout, gainXP, syncProgression, earnGems, useStreakFreeze }}
     >
       {children}
     </AuthContext.Provider>

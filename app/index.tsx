@@ -54,6 +54,7 @@ const CustomSplashScreen = ({ onFinish }: { onFinish: () => void }) => {
         Animated.timing(progress, { toValue: 1, duration: 2500, useNativeDriver: false, easing: Easing.out(Easing.ease) }).start(() => {
             Animated.timing(opacity, { toValue: 0, duration: 500, useNativeDriver: true }).start(() => onFinish());
         });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const widthInterp = progress.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
@@ -71,15 +72,16 @@ const CustomSplashScreen = ({ onFinish }: { onFinish: () => void }) => {
 };
 
 export const seedTestData = () => {
-  const titles = ["Past Run", "Ghost Victory", "Morning Sprint"];
-  
   for (let i = 1; i <= 30; i++) {
     const fakeDate = new Date();
     fakeDate.setDate(fakeDate.getDate() - i);
     
     db.runSync(
       'INSERT INTO ghost_runs (date, distance, duration) VALUES (?, ?, ?)',
-      [fakeDate.toISOString(), Math.floor(Math.random() * 5000) + 1000, 1200]
+      // Epoch ms, matching saveGhostRun. An ISO string would be stored as TEXT
+      // in this INTEGER column, and TEXT always sorts above INTEGER in SQLite,
+      // so every seeded row would match every `WHERE date >= ?` range.
+      [fakeDate.getTime(), Math.floor(Math.random() * 5000) + 1000, 1200]
     );
   }
   console.log("30 Days of testing data injected!");
@@ -112,6 +114,7 @@ export default function Index() {
             friction: 8,
             tension: 40
         }).start();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentIndex]);
 
     const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {

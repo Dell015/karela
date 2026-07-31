@@ -3,7 +3,7 @@ import {
   getMultiPointRoute, 
   snapToRoad 
 } from "@/services/tracker/routingService";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import MapView from "react-native-maps";
 
 // --- PH GPS DRIFT OPTIMIZATION ---
@@ -26,6 +26,16 @@ export const useRouteBuilder = (mapRef: React.RefObject<MapView | null>) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isOverTrash, setIsOverTrash] = useState(false);
   const [totalDistance, setTotalDistance] = useState<number>(0);
+
+  // Live mirror of `checkpoints`, so async handlers can read the current value
+  // instead of the one captured when they started.
+  const checkpointsRef = useRef<Checkpoint[]>(checkpoints);
+  useEffect(() => {
+    checkpointsRef.current = checkpoints;
+  }, [checkpoints]);
+
+  // Monotonic token so a slow routing response cannot overwrite a newer one.
+  const routeReqRef = useRef(0);
 
   /**
    * Real-time path & checkpoint logic
@@ -77,9 +87,13 @@ export const useRouteBuilder = (mapRef: React.RefObject<MapView | null>) => {
       }
 
       // Off-track stretching: If user moves far away from the road, 
-      // stretch the gold line to their current position
+      // stretch the gold line to their current position.
+      // When closestIndex === 0 the nearest point IS the anchor prepended on a
+      // previous off-track tick, so drop it instead of stacking a new one —
+      // otherwise stale anchors accumulate and the head never advances.
       if (minDistance > OFF_TRACK_THRESHOLD) {
-        return [userLoc, ...currentPath.slice(closestIndex)];
+        const tail = closestIndex === 0 ? currentPath.slice(1) : currentPath.slice(closestIndex);
+        return [userLoc, ...tail];
       }
 
       // "Eat" the path: Remove the parts of the line the user has already passed
@@ -91,14 +105,18 @@ export const useRouteBuilder = (mapRef: React.RefObject<MapView | null>) => {
    * Re-calculates the route via the Routing Service
    */
   const refreshRoute = async (userLoc: MapCoordinate | null, points: Checkpoint[]) => {
+    const reqId = ++routeReqRef.current;
+
     if (userLoc && points.length > 0) {
       const activePoints = points.filter(p => !p.isReached);
       if (activePoints.length === 0) {
-        setQuestPath([]);
+        if (reqId === routeReqRef.current) setQuestPath([]);
         return;
       }
 
       const data = await getMultiPointRoute([userLoc, ...activePoints]);
+      // A newer request superseded this one — discard the stale response.
+      if (reqId !== routeReqRef.current) return;
       if (data) {
         setQuestPath(data.coordinates);
         setQuestRewards(data.rewards);
@@ -131,7 +149,13 @@ export const useRouteBuilder = (mapRef: React.RefObject<MapView | null>) => {
   const moveCheckpoint = async (index: number, newCoords: any, userLoc: any) => {
     // Snap to road ensures the flag isn't placed inside a building
     const snapped = await snapToRoad(newCoords.latitude, newCoords.longitude);
-    const updated = [...checkpoints];
+    // Read AFTER the await: using the `checkpoints` captured at call time would
+    // revert any concurrent change, including isReached pops from
+    // updateRemainingPath while the snap request was in flight.
+    const current = checkpointsRef.current;
+    if (index < 0 || index >= current.length) return;
+
+    const updated = [...current];
     updated[index] = { ...updated[index], ...snapped };
     setCheckpoints(updated);
     refreshRoute(userLoc, updated);

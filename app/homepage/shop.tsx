@@ -1,8 +1,8 @@
 import { KARELA } from "@/styles/designSystem";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "expo-router";
+import type { DrawerNavigationProp } from "expo-router/drawer";
 import React, { useState } from "react";
 import {
     Dimensions,

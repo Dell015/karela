@@ -1,5 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import { db, initDatabase } from "@/services/database/sqlite/database";
+import { incrementStats, setStats } from "@/services/database/supabase/profiles";
 import { Alert } from "react-native";
 
 export const useSettings = () => {

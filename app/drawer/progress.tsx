@@ -7,10 +7,9 @@ import {
 import { RunHistory } from "@/components/RunHistory";
 import { ProgressScreenUI } from "@/styles/progressScreenStyle";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { DrawerNavigationProp } from "@react-navigation/drawer";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useFocusEffect, useNavigation, useRouter } from "expo-router";
+import type { DrawerNavigationProp } from "expo-router/drawer";
 import React, { useCallback, useState } from "react";
 import {
   Dimensions,
@@ -43,7 +42,7 @@ export default function ProgressScreen() {
       // Pulls fresh calculations from SQLite
       setStatsArray(getDynamicStats());
       setRealChartData(getChartData());
-    }, [profile]),
+    }, []),
   );
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {

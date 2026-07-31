@@ -55,14 +55,22 @@ export default function SummaryScreen() {
     }
   };
 
-  const handleSaveGhost = () => {
+  const handleSaveGhost = async () => {
     try {
       if (path) {
-        saveGhostRun(
+        // saveGhostRun is async and resolves to null on failure — without the
+        // await, the catch below could never see an error and the success alert
+        // fired even when the write failed.
+        const saved = await saveGhostRun(
           Number(meters),
           Number(seconds),
           JSON.parse(path as string),
         );
+
+        if (!saved) {
+          Alert.alert("Error", "Could not save Ghost data locally.");
+          return;
+        }
 
         onRunCompleted({
           id: Date.now(),
@@ -94,6 +102,10 @@ export default function SummaryScreen() {
 
     try {
       const distanceInKm = Number(meters) / 1000;
+      // Guard against a zero-duration run producing Infinity/NaN, which would
+      // be written to the profile and to mission progress.
+      const avgSpeedKmh =
+        Number(seconds) > 0 ? (Number(meters) / Number(seconds)) * 3.6 : 0;
 
       await incrementStats(user.uid, {
         total_distance_km: Number(distanceInKm.toFixed(2)),
@@ -105,14 +117,14 @@ export default function SummaryScreen() {
       const runData = {
         distance: Number(meters),
         duration: Number(seconds),
-        avgSpeed: (Number(meters) / Number(seconds)) * 3.6,
+        avgSpeed: avgSpeedKmh,
         sectors: [],
-        pace: (Number(meters) / Number(seconds)) * 3.6,
+        pace: avgSpeedKmh,
       };
       await generateAndSaveRunSummary(user.uid, runData);
 
       // Sync run distance to all active missions via QuestEngine
-      await QuestEngine.syncRunProgress(user.uid, distanceInKm, (Number(meters) / Number(seconds)) * 3.6);
+      await QuestEngine.syncRunProgress(user.uid, distanceInKm, avgSpeedKmh);
 
       const currentStreak = calculateStreak();
       const longestStreak = Math.max(
