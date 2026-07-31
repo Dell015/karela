@@ -1,5 +1,17 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+/**
+ * Single source of truth for the Gemini model.
+ *
+ * Keep this in one place: the model name was previously duplicated across
+ * aiService.ts and ai_coach.tsx, and all three copies silently kept calling
+ * "gemini-2.0-flash" after Google shut it down on 2026-06-01, so every AI
+ * feature fell through to its fallback response without any visible error.
+ *
+ * Check https://ai.google.dev/gemini-api/docs/models before changing.
+ */
+export const GEMINI_MODEL = "gemini-2.5-flash";
+
 const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 if (!API_KEY) {
   console.warn("⚠️ EXPO_PUBLIC_GEMINI_API_KEY is not set. Ani coaching will use fallback responses.");
@@ -9,7 +21,7 @@ const genAI = new GoogleGenerativeAI(API_KEY || "");
 export const summarizeRunForAI = async (runData: any) => {
   try {
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash", 
+      model: GEMINI_MODEL,
       generationConfig: {
         maxOutputTokens: 150,
         temperature: 0.7,
@@ -30,7 +42,7 @@ export const summarizeRunForAI = async (runData: any) => {
 export const generateAniQuest = async (userProfile: any, runHistory: any[] = []) => {
   try {
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
+      model: GEMINI_MODEL,
       generationConfig: { 
         responseMimeType: "application/json",
         maxOutputTokens: 150  // Reduced — quest JSON is small

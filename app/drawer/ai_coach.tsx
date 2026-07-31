@@ -18,6 +18,7 @@ import {
 
 // 1. SERVICES & AUTH
 import { useAuth } from "@/context/AuthContext";
+import { GEMINI_MODEL } from "@/services/ai/aiService";
 import { getProfile } from "@/services/database/supabase/profiles";
 import { getRecentRunMemories } from "@/services/database/supabase/runService";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -124,8 +125,10 @@ export default function AiCoach() {
           : "No recent runs.";
 
       const model = genAI.getGenerativeModel({
-        model: "gemini-2.0-flash",
-        generationConfig: { maxOutputTokens: 200 },
+        model: GEMINI_MODEL,
+        // 200 truncated coaching replies mid-sentence. 600 still keeps the
+        // per-message cost low while allowing a complete answer.
+        generationConfig: { maxOutputTokens: 600 },
       });
 
       // OPTIMIZED: Compact system context — saves ~50% tokens per message
