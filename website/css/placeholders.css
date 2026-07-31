@@ -1,0 +1,201 @@
+/* ============================================================
+   KARELA WEB — ASSET PLACEHOLDERS
+   ------------------------------------------------------------
+   Temporary, on-brand stand-ins for assets that do not exist
+   yet (app screenshots, screen recording, team photos).
+
+   Each placeholder is self-documenting: it renders the asset
+   name and target dimensions so anyone can see exactly what to
+   drop in. Swap procedure is documented in website/ASSETS.md.
+
+   THIS ENTIRE FILE IS DELETABLE once all real assets land.
+   Search the codebase for "ph-" to find every slot.
+   ============================================================ */
+
+/* ---------- Base placeholder surface ---------- */
+.ph {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background-color: var(--surface-alt);
+  /* Diagonal hatch marks it unmistakably as unfinished. */
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.022) 0px,
+    rgba(255, 255, 255, 0.022) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+  border: 1px dashed rgba(124, 242, 5, 0.28);
+  text-align: center;
+  padding: var(--space-xl);
+  color: var(--text-muted);
+  isolation: isolate;
+}
+
+/* Soft brand wash so placeholders still read as "Karela". */
+.ph::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(
+    circle at 50% 0%,
+    rgba(124, 242, 5, 0.07) 0%,
+    transparent 65%
+  );
+  pointer-events: none;
+}
+
+/* ---------- Placeholder content ---------- */
+.ph__icon {
+  width: 30px;
+  height: 30px;
+  stroke: var(--brand);
+  stroke-width: 1.5;
+  fill: none;
+  opacity: 0.85;
+}
+
+.ph__label {
+  font-family: var(--font-display);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-bold);
+  color: var(--text-secondary);
+  letter-spacing: var(--ls-normal);
+  line-height: var(--lh-snug);
+  max-width: 26ch;
+}
+
+.ph__meta {
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* "PLACEHOLDER" corner flag. */
+.ph__flag {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-pill);
+  background: rgba(124, 242, 5, 0.12);
+  border: 1px solid rgba(124, 242, 5, 0.3);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--brand);
+  line-height: 1.6;
+}
+
+/* ---------- Aspect-ratio variants ---------- */
+
+/* Phone screenshot — 9:19.5, matches a modern Android capture. */
+.ph--phone {
+  aspect-ratio: 9 / 19.5;
+  width: 100%;
+  border-radius: var(--radius-xl);
+}
+
+/* Landscape media / screen recording — 16:9. */
+.ph--video {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+}
+
+/* Square — team portraits, avatars, icons. */
+.ph--square {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+}
+
+/* Wide banner — maps, diagrams. */
+.ph--wide {
+  aspect-ratio: 21 / 9;
+  width: 100%;
+}
+
+/* Circular — team member headshots. */
+.ph--circle {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  border-radius: 50%;
+}
+
+/* ---------- Phone device frame ----------
+   Wraps a screenshot (real or placeholder) in a bezel so the
+   hero and feature sections look intentional pre-assets. */
+.device {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  padding: 10px;
+  border-radius: 42px;
+  background: linear-gradient(160deg, #2a2a2a 0%, #141414 100%);
+  border: 1px solid var(--line);
+  box-shadow:
+    var(--shadow-lift),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+}
+
+.device__screen {
+  position: relative;
+  overflow: hidden;
+  border-radius: 32px;
+  background: var(--bg);
+}
+
+.device__screen img,
+.device__screen video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Notch / camera cutout. */
+.device__notch {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 58px;
+  height: 5px;
+  border-radius: var(--radius-pill);
+  background: rgba(0, 0, 0, 0.72);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Glow cast behind the device. */
+.device--glow::after {
+  content: "";
+  position: absolute;
+  inset: -14%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(124, 242, 5, 0.2) 0%,
+    transparent 68%
+  );
+  filter: blur(46px);
+  pointer-events: none;
+}
+
+/* ---------- Placeholder inside a device frame ----------
+   The bezel already supplies the outer radius, so drop the
+   dashed border and let the hatch fill the screen. */
+.device__screen .ph {
+  border: none;
+  border-radius: 0;
+  aspect-ratio: 9 / 19.5;
+}

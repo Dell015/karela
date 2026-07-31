@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Karela — A Better You, One Quest at a Time</title>
+    <meta
+      name="description"
+      content="Karela is a hybrid fitness and civic intelligence platform. Adaptive running algorithms meet crowdsourced urban sensing — turning everyday movement into health progress and real civic impact. Built for the Philippines."
+    />
+    <meta name="theme-color" content="#0d0d0d" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- Open Graph / social preview -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Karela" />
+    <meta property="og:title" content="Karela — A Better You, One Quest at a Time" />
+    <meta
+      property="og:description"
+      content="Turn your everyday movement into health progress and civic impact. Adaptive AI coaching, RPG progression, and crowdsourced disaster response — built for the Philippines."
+    />
+    <!-- TODO(assets): replace with a real 1200x630 OG image -->
+    <meta property="og:image" content="assets/img/og-placeholder.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" type="image/png" href="assets/img/favicon.png" />
+    <link rel="apple-touch-icon" href="assets/img/icon.png" />
+
+    <!-- Preload the two display weights used above the fold -->
+    <link
+      rel="preload"
+      href="assets/fonts/Excon-Black.otf"
+      as="font"
+      type="font/otf"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="assets/fonts/Excon-Regular.otf"
+      as="font"
+      type="font/otf"
+      crossorigin
+    />
+
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/placeholders.css" />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- ==================================================
+         NAVIGATION
+         ================================================== -->
+    <header class="nav" data-nav>
+      <div class="scroll-progress" data-scroll-progress aria-hidden="true"></div>
+
+      <div class="nav__inner">
+        <a class="nav__brand" href="#hero" aria-label="Karela — home">
+          <img
+            class="nav__logo"
+            src="assets/img/karela_word-logo.png"
+            alt="Karela"
+            width="120"
+            height="30"
+          />
+        </a>
+
+        <nav class="nav__links" aria-label="Main navigation">
+          <a class="nav__link" href="#problem">Problem</a>
+          <a class="nav__link" href="#system">How It Works</a>
+          <a class="nav__link" href="#ani">Ani</a>
+          <a class="nav__link" href="#civic">Civic</a>
+          <a class="nav__link" href="#bayanihan">Bayanihan</a>
+        </nav>
+
+        <div class="nav__actions">
+          <a class="btn btn--primary" href="#waitlist">Join the Waitlist</a>
+
+          <button
+            class="nav__toggle"
+            data-menu-toggle
+            type="button"
+            aria-expanded="false"
+            aria-controls="mobile-menu"
+            aria-label="Open navigation menu"
+          >
+            <span class="nav__toggle-bars" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ==================================================
+         MOBILE MENU
+         ================================================== -->
+    <div
+      class="mobile-menu"
+      id="mobile-menu"
+      data-menu
+      inert
+      aria-label="Mobile navigation"
+    >
+      <nav class="mobile-menu__links">
+        <a class="mobile-menu__link" href="#problem">
+          <span class="mobile-menu__num">01</span> Problem
+        </a>
+        <a class="mobile-menu__link" href="#system">
+          <span class="mobile-menu__num">02</span> How It Works
+        </a>
+        <a class="mobile-menu__link" href="#ghost">
+          <span class="mobile-menu__num">03</span> Ghost System
+        </a>
+        <a class="mobile-menu__link" href="#ani">
+          <span class="mobile-menu__num">04</span> Ani
+        </a>
+        <a class="mobile-menu__link" href="#civic">
+          <span class="mobile-menu__num">05</span> Civic Engine
+        </a>
+        <a class="mobile-menu__link" href="#bayanihan">
+          <span class="mobile-menu__num">06</span> Bayanihan
+        </a>
+        <a class="mobile-menu__link" href="#team">
+          <span class="mobile-menu__num">07</span> Team
+        </a>
+      </nav>
+
+      <div class="mobile-menu__footer">
+        <a class="btn btn--primary btn--lg btn--block" href="#waitlist">
+          Join the Waitlist
+        </a>
+      </div>
+    </div>
+
+    <main id="main">
+      <!-- ================================================
+           1. HERO  — built in phase 2
+           ================================================ -->
+      <section class="section theme-brand" id="hero">
+        <div class="glow-orb glow-orb--brand glow-orb--tr" aria-hidden="true"></div>
+        <div class="glow-orb glow-orb--deep glow-orb--l" aria-hidden="true"></div>
+
+        <div class="container">
+          <span class="badge reveal">
+            <span class="badge__dot badge__dot--pulse" aria-hidden="true"></span>
+            In active development · Pilot: Tuguegarao City
+          </span>
+
+          <h1 class="reveal reveal--d1" style="font-size: var(--fs-hero)">
+            A Better You,<br />
+            <span class="gradient-text">One Quest at a Time.</span>
+          </h1>
+
+          <p class="lead reveal reveal--d2" style="margin-top: var(--space-xl)">
+            An adaptive fitness platform where personal endurance modeling powers
+            real-world civic intelligence.
+          </p>
+
+          <div
+            class="reveal reveal--d3"
+            style="
+              display: flex;
+              gap: var(--space-md);
+              margin-top: var(--space-2xl);
+              flex-wrap: wrap;
+            "
+          >
+            <a class="btn btn--primary btn--lg" href="#waitlist">
+              Join the Waitlist
+            </a>
+            <a class="btn btn--ghost btn--lg" href="#system">See How It Works</a>
+          </div>
+
+          <!-- Device frame with placeholder until real captures exist -->
+          <div
+            class="device device--glow reveal reveal--d4"
+            style="margin-top: var(--space-4xl)"
+          >
+            <span class="device__notch" aria-hidden="true"></span>
+            <div class="device__screen">
+              <div class="ph ph--phone" role="img" aria-label="Placeholder for Karela active run screen">
+                <span class="ph__flag">Placeholder</span>
+                <svg class="ph__icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="5" y="2" width="14" height="20" rx="3" />
+                  <path d="M10 5.5h4" />
+                </svg>
+                <span class="ph__label">Active Run — Ghost pacing view</span>
+                <span class="ph__meta">1080 × 2340 · PNG</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================
+           2. THE PROBLEM  — phase 3
+           ================================================ -->
+      <section class="section theme-brand" id="problem" aria-labelledby="problem-h">
+        <div class="container">
+          <span class="eyebrow">The Problem</span>
+          <h2 id="problem-h" class="reveal">Section built in phase 3.</h2>
+        </div>
+      </section>
+
+      <!-- ================================================
+           3. TWO TRACKS / HOW IT WORKS  — phase 3
+           ================================================ -->
+      <section class="section theme-aurora" id="system" aria-labelledby="system-h">
+        <div class="container">
+          <span class="eyebrow">How It Works</span>
+          <h2 id="system-h" class="reveal">Section built in phase 3.</h2>
+        </div>
+      </section>
+
+      <!-- ================================================
+           4. GHOST SYSTEM  — phase 3
+           ================================================ -->
+      <section class="section theme-brand" id="ghost" aria-labelledby="ghost-h">
+        <div class="container">
+          <span class="eyebrow">The Ghost System</span>
+          <h2 id="ghost-h" class="reveal">Section built in phase 3.</h2>
+        </div>
+      </section>
+
+      <!-- ================================================
+           5. MEET ANI  — phase 3
+           ================================================ -->
+      <section class="section theme-aurora" id="ani" aria-labelledby="ani-h">
+        <div class="container">
+          <span class="eyebrow">Meet Ani</span>
+          <h2 id="ani-h" class="reveal">Section built in phase 3.</h2>
+        </div>
+      </section>
+
+      <!-- ================================================
+           6. CIVIC ENGINE  — phase 4
+           ================================================ -->
+      <section class="section theme-civic" id="civic" aria-labelledby="civic-h">
+        <div class="container">
+          <span class="eyebrow">The Civic Engine</span>
+          <h2 id="civic-h" class="reveal">Section built in phase 4.</h2>
+        </div>
+      </section>
+
+      <!-- ================================================
+           7. BAYANIHAN PROTOCOL  — phase 4
+           ================================================ -->
+      <section class="section theme-civic" id="bayanihan" aria-labelledby="bayanihan-h">
+        <div class="container">
+          <span class="eyebrow">The Bayanihan Protocol</span>
+          <h2 id="bayanihan-h" class="reveal">Section built in phase 4.</h2>
+        </div>
+      </section>
+
+      <!-- ================================================
+           8. PROGRESSION  — phase 4
+           ================================================ -->
+      <section class="section theme-energy" id="progression" aria-labelledby="progression-h">
+        <div class="container">
+          <span class="eyebrow">Progression</span>
+          <h2 id="progression-h" class="reveal">Section built in phase 4.</h2>
+        </div>
+      </section>
+
+      <!-- ================================================
+           9. WHY NOT STRAVA  — phase 5
+           ================================================ -->
+      <section class="section theme-brand" id="compare" aria-labelledby="compare-h">
+        <div class="container">
+          <span class="eyebrow">Why Not Just Use Strava?</span>
+          <h2 id="compare-h" class="reveal">Section built in phase 5.</h2>
+        </div>
+      </section>
+
+      <!-- ================================================
+           10. BUILT FOR THE PHILIPPINES  — phase 5
+           ================================================ -->
+      <section class="section theme-aurora" id="philippines" aria-labelledby="ph-h">
+        <div class="container">
+          <span class="eyebrow">Built for the Philippines</span>
+          <h2 id="ph-h" class="reveal">Section built in phase 5.</h2>
+        </div>
+      </section>
+
+      <!-- ================================================
+           11. WAITLIST + TEAM  — phase 5
+           ================================================ -->
+      <section class="section theme-brand" id="waitlist" aria-labelledby="waitlist-h">
+        <div class="container">
+          <span class="eyebrow">Get Early Access</span>
+          <h2 id="waitlist-h" class="reveal">Section built in phase 5.</h2>
+        </div>
+      </section>
+
+      <section class="section theme-brand" id="team" aria-labelledby="team-h">
+        <div class="container">
+          <span class="eyebrow">The Team</span>
+          <h2 id="team-h" class="reveal">Section built in phase 5.</h2>
+        </div>
+      </section>
+    </main>
+
+    <!-- ==================================================
+         FOOTER
+         ================================================== -->
+    <footer class="footer">
+      <div
+        class="glow-orb glow-orb--deep glow-orb--bl"
+        aria-hidden="true"
+      ></div>
+
+      <div class="container footer__inner">
+        <div class="footer__top">
+          <div>
+            <img
+              class="footer__logo"
+              src="assets/img/karela_word-logo.png"
+              alt="Karela"
+              width="112"
+              height="28"
+              loading="lazy"
+            />
+            <p class="footer__tagline">
+              A hybrid fitness and civic intelligence platform. Turning everyday
+              movement into health progress and real community impact.
+            </p>
+          </div>
+
+          <div>
+            <h2 class="footer__col-title">Platform</h2>
+            <ul class="footer__list">
+              <li><a href="#system">How It Works</a></li>
+              <li><a href="#ghost">Ghost System</a></li>
+              <li><a href="#ani">Ani, Your AI Coach</a></li>
+              <li><a href="#progression">Progression</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 class="footer__col-title">Civic</h2>
+            <ul class="footer__list">
+              <li><a href="#civic">Civic Engine</a></li>
+              <li><a href="#bayanihan">Bayanihan Protocol</a></li>
+              <li><a href="#philippines">Built for the PH</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 class="footer__col-title">Project</h2>
+            <ul class="footer__list">
+              <li><a href="#team">The Team</a></li>
+              <li><a href="#waitlist">Join the Waitlist</a></li>
+              <li>
+                <a
+                  href="https://github.com/Dell015/karela"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >GitHub</a
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer__bottom">
+          <p class="footer__copy">
+            All Rights Reserved &copy; <span data-year>2026</span> Randel Serafica
+          </p>
+          <p class="footer__pilot">
+            <span aria-hidden="true">📍</span> Pilot City: Tuguegarao City,
+            Cagayan Valley, Philippines
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/main.js" defer></script>
+  </body>
+</html>

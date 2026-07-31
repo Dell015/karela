@@ -47,3 +47,9 @@ app-example
 .env
 .env.local
 .env.*.local
+
+# Showcase website (static site in /website)
+website/node_modules/
+website/dist/
+website/.vercel/
+website/.netlify/

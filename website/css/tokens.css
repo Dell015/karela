@@ -1,0 +1,186 @@
+/* ============================================================
+   KARELA WEB DESIGN TOKENS
+   ------------------------------------------------------------
+   Direct port of /styles/designSystem.ts (the app's single
+   source of truth). Do not introduce hex values anywhere else
+   in this stylesheet set — reference these tokens instead.
+
+   Aesthetic: deep dark surfaces lit by vibrant, luminous glow —
+   electric limes, tropical corals, tech-oranges, neon teals.
+   ============================================================ */
+
+:root {
+  /* --- Signature brand gradient (lime -> teal) --- */
+  --brand: #7cf205;
+  --brand-deep: #209f77;
+  --gradient-brand: linear-gradient(135deg, #7cf205 0%, #209f77 100%);
+  --gradient-play: linear-gradient(135deg, #7cf205 0%, #5bb104 100%);
+
+  /* --- Core surfaces --- */
+  --bg: #0d0d0d;
+  --bg-glow: #101010;
+  --surface: #1a1a1a;
+  --surface-alt: #1f1f1f;
+  --surface-soft: #222222;
+
+  /* --- Lines --- */
+  --line: rgba(255, 255, 255, 0.1);
+  --line-soft: rgba(255, 255, 255, 0.06);
+
+  /* --- Text --- */
+  --text-primary: #ffffff;
+  --text-secondary: #a0a0a0;
+  --text-muted: #8a8a8a;
+  --text-faint: #555555;
+  /* dark ink used ON bright gradient surfaces for AA contrast */
+  --on-bright: #04210a;
+
+  /* --- Semantic --- */
+  --danger: #ff453a;
+  --gold: #ffd700;
+  --civic: #ff6b35;
+
+  /* --- Vibrant accent palette --- */
+  --electric-lime: #9eff00;
+  --neon-teal: #00f5d4;
+  --sky: #00bbf9;
+  --tech-orange: #ff9f1c;
+  --coral: #ff4d6d;
+  --magenta: #ff006e;
+  --sunset-gold: #ffd60a;
+  --flame: #fb5607;
+
+  /* --- Multi-stop gradient presets --- */
+  --gradient-aurora: linear-gradient(120deg, #00f5d4 0%, #7cf205 50%, #00bbf9 100%);
+  --gradient-energy: linear-gradient(120deg, #ffd60a 0%, #ff9f1c 50%, #fb5607 100%);
+  --gradient-civic: linear-gradient(120deg, #ff9f1c 0%, #ff4d6d 50%, #ff006e 100%);
+  --gradient-pulse: linear-gradient(120deg, #9eff00 0%, #00f5d4 100%);
+  --gradient-deep: linear-gradient(180deg, #209f77 0%, #0d0d0d 100%);
+
+  /* --- Typography --- */
+  --font-display: "Excon", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-body: "Excon", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  --fw-thin: 100;
+  --fw-light: 300;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-bold: 700;
+  --fw-black: 900;
+
+  /* --- Fluid type scale ---
+     The app scale (display 32 / h1 24 / h2 18 / body 14) is tuned for
+     a ~390px phone viewport. Web needs a wider range, so each step is
+     expressed as clamp(mobile, fluid, desktop). */
+  --fs-hero: clamp(2.75rem, 8vw, 6rem);      /* 44px -> 96px */
+  --fs-display: clamp(2rem, 5vw, 3.5rem);    /* 32px -> 56px */
+  --fs-h1: clamp(1.75rem, 3.5vw, 2.5rem);    /* 28px -> 40px */
+  --fs-h2: clamp(1.25rem, 2.2vw, 1.75rem);   /* 20px -> 28px */
+  --fs-h3: clamp(1.075rem, 1.6vw, 1.25rem);  /* 17px -> 20px */
+  --fs-body-lg: clamp(1.0625rem, 1.5vw, 1.1875rem);
+  --fs-body: 1rem;
+  --fs-label: 0.875rem;
+  --fs-caption: 0.75rem;
+  --fs-micro: 0.6875rem;
+
+  --lh-tight: 1.05;
+  --lh-snug: 1.2;
+  --lh-normal: 1.5;
+  --lh-relaxed: 1.7;
+
+  --ls-tight: -0.02em;
+  --ls-normal: 0;
+  --ls-wide: 0.08em;
+  --ls-wider: 0.16em;
+
+  /* --- 4-point spacing scale (matches app) --- */
+  --space-xs: 0.25rem;   /* 4 */
+  --space-sm: 0.5rem;    /* 8 */
+  --space-md: 0.75rem;   /* 12 */
+  --space-lg: 1rem;      /* 16 */
+  --space-xl: 1.25rem;   /* 20 */
+  --space-2xl: 1.75rem;  /* 28 */
+  --space-3xl: 2.5rem;   /* 40 */
+  /* web-only larger steps for section rhythm */
+  --space-4xl: 4rem;     /* 64 */
+  --space-5xl: 6rem;     /* 96 */
+  --space-6xl: 8.5rem;   /* 136 */
+
+  /* --- Radius scale (matches app) --- */
+  --radius-sm: 12px;
+  --radius-md: 15px;
+  --radius-lg: 20px;
+  --radius-xl: 30px;
+  --radius-pill: 999px;
+
+  /* --- Shadows / glow --- */
+  --glow-brand: 0 6px 24px rgba(124, 242, 5, 0.35);
+  --glow-brand-lg: 0 10px 48px rgba(124, 242, 5, 0.45);
+  --glow-coral: 0 6px 28px rgba(255, 77, 109, 0.4);
+  --glow-civic: 0 6px 28px rgba(255, 107, 53, 0.4);
+  --shadow-soft: 0 8px 28px rgba(0, 0, 0, 0.4);
+  --shadow-lift: 0 18px 48px rgba(0, 0, 0, 0.55);
+
+  /* --- Layout --- */
+  --container-max: 1200px;
+  --container-narrow: 780px;
+  --container-pad: clamp(1.25rem, 5vw, 3rem);
+  --nav-height: 68px;
+
+  /* --- Motion --- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 160ms;
+  --dur-base: 280ms;
+  --dur-slow: 560ms;
+  --dur-reveal: 800ms;
+
+  /* --- Z-index ladder --- */
+  --z-glow: 0;
+  --z-content: 1;
+  --z-nav: 100;
+  --z-menu: 200;
+  --z-skip: 300;
+}
+
+/* ------------------------------------------------------------
+   Per-section palette theming.
+   Applying one of these classes to a <section> re-points the
+   accent tokens so an entire block shifts palette (brand lime ->
+   aurora -> civic orange) without rewriting component CSS.
+   ------------------------------------------------------------ */
+.theme-brand {
+  --accent: var(--brand);
+  --accent-2: var(--brand-deep);
+  --accent-gradient: var(--gradient-brand);
+  --accent-glow: var(--glow-brand);
+}
+
+.theme-aurora {
+  --accent: var(--neon-teal);
+  --accent-2: var(--sky);
+  --accent-gradient: var(--gradient-aurora);
+  --accent-glow: 0 6px 28px rgba(0, 245, 212, 0.38);
+}
+
+.theme-civic {
+  --accent: var(--civic);
+  --accent-2: var(--magenta);
+  --accent-gradient: var(--gradient-civic);
+  --accent-glow: var(--glow-civic);
+}
+
+.theme-energy {
+  --accent: var(--tech-orange);
+  --accent-2: var(--flame);
+  --accent-gradient: var(--gradient-energy);
+  --accent-glow: 0 6px 28px rgba(255, 159, 28, 0.38);
+}
+
+/* Default accent so components work outside a themed section. */
+:root {
+  --accent: var(--brand);
+  --accent-2: var(--brand-deep);
+  --accent-gradient: var(--gradient-brand);
+  --accent-glow: var(--glow-brand);
+}
