@@ -88,7 +88,7 @@ Most fitness apps are built for athletes. They celebrate the person who ran a su
 
 **Karela is built for that student.**
 
-It is simultaneously built for the neighbor who helped clear drainage before a typhoon, the volunteer who photographed a collapsed road so the barangay could respond faster, and the guild of 80 users whose collective 2,000 kilometers of weekly movement claims a city landmark and makes it theirs on the map.
+It is simultaneously built for the neighbor who organized a riverside cleanup before the trash could wash into the drainage system, the volunteer who flagged a growing dumpsite so nearby residents knew to avoid it and pitch in, and the guild of 80 users whose collective 2,000 kilometers of weekly movement claims a city landmark and makes it theirs on the map.
 
 At its core, Karela rests on a single conviction: **consistency beats intensity**. A user who walks 30 minutes every day for a year contributes more to their health and their community than one who runs a marathon once and disappears. The entire system — Ani's coaching, the streak multiplier, the Ghost System, the Bayanihan Protocol — is built to make that kind of sustained, ordinary, everyday movement feel like the heroic act it actually is.
 
@@ -102,7 +102,7 @@ The Philippines has a specific and urgent health and civic challenge that no exi
 
 **On the health side:** The country is experiencing a rapid rise in lifestyle-related disease — diabetes, hypertension, and cardiovascular illness — driven in large part by sedentary behavior. But the primary barrier to physical activity for most Filipinos is not laziness. It is *meaninglessness*. People walk significant distances every day — to tricy stops, across campuses, between markets — and feel nothing for it because no system acknowledges it. The psychological infrastructure of motivation is absent: no feedback, no progress, no reward, no community.
 
-**On the civic side:** The Philippines is among the most disaster-affected countries on Earth. The same communities that walk past flooded drainage channels and damaged roads every day are the ones most harmed when those issues go unreported. The Bayanihan spirit — the Filipino cultural value of communal unity and mutual aid — exists as a value but has no digital expression. Volunteer activity is uncoordinated, unverified, and invisible to local governments that need data to respond effectively.
+**On the civic side:** The Philippines is among the most disaster-affected countries on Earth, and everyday neglect compounds the risk — scattered trash and illegal dumping sites accumulate in the same drainage paths and public spaces that flood during typhoons. Most people who walk past these issues daily genuinely want to help, but have no way to flag them, no way to know if anyone else has already flagged them, and no way to coordinate a cleanup with neighbors. This isn't a problem of government inaction alone — it's a problem of missing infrastructure for *identifying and acting on* small, fixable civic issues before they compound into bigger ones. The Bayanihan spirit — the Filipino cultural value of communal unity and mutual aid — exists as a value but has no digital expression. Volunteer activity is uncoordinated, unverified, and invisible to both neighbors and local governments that need data to respond effectively.
 
 **On the motivational side:** Global fitness apps solve for the wrong user. Strava is built for competitive athletes. Nike Run Club is a product of a shoe brand. Pacer is passive. None of them understand the commuter, the student org volunteer, the disaster preparation worker. None of them are designed for low-end Android devices, prepaid data, and inconsistent 4G connectivity. None of them generate verifiable civic data.
 
@@ -122,7 +122,7 @@ Karela is not for elite athletes. It is for everyday people whose movement is al
 | 💪 "The Self-Improver" (Rina) | 18–30 y/o, aware that she should move more, tried apps and quit | Generic app goals feel irrelevant to her body, schedule, and city | Ani builds a plan specific to her height, weight, preferred time, and neighborhood. The goals feel like hers. |
 | 🏘️ "The Barangay Hero" (Tatay Romy) | 45–60 y/o, less tech-savvy, motivated by community | No platform that honors civic contribution the same way fitness apps honor athletic performance | Civic XP is tracked separately and valued equally. A Debris Clearer after a typhoon earns recognition, not just a runner. |
 
-**The beachhead market** — the initial target for Karela's launch — is **university students and young professionals in Tuguegarao City, Cagayan Valley** who are physically active in their daily commute and socially motivated by community recognition. This group is dense, reachable through campus channels, and has the highest likelihood of forming the Guilds and Squads that make the social layer come alive from day one.
+**The beachhead market** — the initial target for Karela's launch — is **occasional runners, walkers, and commuters in Tuguegarao City, Cagayan Valley** — the everyday people already active at SM City Tuguegarao, the city stadium/sports complex, and the Cagayan riverside, rather than a niche of dedicated athletes. This group is dense, reachable through the routes and public spaces they already use, and has the highest likelihood of forming the Guilds and Squads that make the social layer come alive from day one.
 
 ---
 
@@ -856,7 +856,7 @@ The cold start problem is Karela's most critical UX challenge: a new user has no
 | 1 | *First Step* — 500m walk | Prove the app works. Seeds the first Ghost. |
 | 2 | *Neighborhood Scout* — 1km, map 3 landmarks | Introduce the map layer. Unlock Squad invites. |
 | 3 | *The Daily Route* — repeat Day 1 route | Introduce Ghost concept. First Sector Bonus eligible. |
-| 4 | *Community Eye* — photo a local issue (pothole, drain) | Introduce Bayanihan mechanic gently. +50 Gems. |
+| 4 | *Community Eye* — photo a local issue (scattered trash, illegal dumping) | Introduce Bayanihan mechanic gently. +50 Gems. |
 | 5 | *Squad Up* — invite 1 person or join a Squad | Unlock social layer. 'Founding Member' badge if new Squad. |
 | 6 | *The Push* — beat Day 3 Ghost by any margin | Introduce competitive self-improvement. 1.2× preview. |
 | 7 | *Week Warrior* — complete any 1km+ mission | Earn first streak milestone. **1.5× multiplier unlocked.** |
@@ -938,7 +938,7 @@ Karela must never be the reason a user puts themselves in danger. The Safety Tie
 
 | Quest | Description | Proof Required |
 |---|---|---|
-| Clear the Drainage | Clean the gutter in front of your home or street | Before/After photo |
+| Clean the Block | Pick up scattered trash along your street or route | Before/After photo |
 | The Supply Run | Help an elderly neighbor buy 3 days of water/canned goods | Receipt photo + neighbor confirmation QR |
 | Home Fortify | Help 3 neighbors install window shutters | Group photo with visible shutters |
 | Evacuation Route Scout | Walk and photograph the official barangay evacuation route | GPS-tagged photo trail |
