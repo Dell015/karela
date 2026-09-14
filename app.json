@@ -85,7 +85,9 @@
           "photosPermission": "Karela needs photo access to attach images to civic reports."
         }
       ],
-      "expo-task-manager"
+      "expo-task-manager",
+      "expo-image",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true

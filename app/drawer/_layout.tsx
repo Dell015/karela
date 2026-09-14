@@ -142,10 +142,6 @@ export default function DrawerLayout() {
         name="profile"
         options={{ drawerItemStyle: { display: "none" } }}
       />
-      <Drawer.Screen
-        name="performanceGraph"
-        options={{ drawerItemStyle: { display: "none" } }}
-      />
     </Drawer>
   );
 }

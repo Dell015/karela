@@ -40,6 +40,7 @@ export default function RootLayout() {
             {/* Full Screen Modes */}
             <Stack.Screen name="summary" />
             <Stack.Screen name="homepage/active-run" />
+            <Stack.Screen name="performanceGraph" />
           </Stack>
         </AuthGate>
       </AuthProvider>

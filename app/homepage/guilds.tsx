@@ -2,7 +2,6 @@ import { KARELA } from "@/styles/designSystem";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "expo-router";
-import type { DrawerNavigationProp } from "expo-router/drawer";
 import React, { useState } from "react";
 import {
   Alert,
@@ -47,7 +46,7 @@ const SQUAD_MISSIONS = [
 ];
 
 export default function GuildsScreen() {
-  const navigation = useNavigation<DrawerNavigationProp<any>>();
+  const navigation = useNavigation('/drawer');
   const [showDetails, setShowDetails] = useState(false);
   const [expandedMission, setExpandedMission] = useState<string | null>(null);
 
@@ -90,7 +89,7 @@ export default function GuildsScreen() {
               <Text style={styles.headerTitle}>{showDetails ? "SQUAD INTEL" : "GUILDS"}</Text>
               <Text style={styles.headerSubtitle}>{showDetails ? myGuild.name : "Tuguegarao Sector"}</Text>
             </View>
-            <TouchableOpacity style={styles.menuButton} onPress={() => showDetails ? handleToggleDetails() : navigation.openDrawer()}>
+            <TouchableOpacity style={styles.menuButton} onPress={() => showDetails ? handleToggleDetails() : (navigation as any).openDrawer()}>
               <Ionicons name={showDetails ? "chevron-down" : "menu"} size={28} color={KARELA.color.brand} />
             </TouchableOpacity>
           </View>

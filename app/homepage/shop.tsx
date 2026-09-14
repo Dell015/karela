@@ -2,7 +2,6 @@ import { KARELA } from "@/styles/designSystem";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "expo-router";
-import type { DrawerNavigationProp } from "expo-router/drawer";
 import React, { useState } from "react";
 import {
     Dimensions,
@@ -29,7 +28,7 @@ const MOCK_ITEMS = [
 ];
 
 export default function ShopScreen() {
-  const navigation = useNavigation<DrawerNavigationProp<any>>();
+  const navigation = useNavigation('/drawer');
   const [activeTab, setActiveTab] = useState("GEAR");
   const [userBalance] = useState({ gems: 1250, xp: 4500 });
   const filteredItems = MOCK_ITEMS.filter((item) => item.type === activeTab);
@@ -39,7 +38,7 @@ export default function ShopScreen() {
       <StatusBar barStyle="light-content" />
       <View style={styles.mainWrapper}>
         <View style={styles.currencyHeader}>
-          <TouchableOpacity onPress={() => navigation.openDrawer()}>
+          <TouchableOpacity onPress={() => (navigation as any).openDrawer()}>
             <Ionicons name="menu" size={28} color={KARELA.color.brand} />
           </TouchableOpacity>
           <View style={styles.balanceContainer}>
