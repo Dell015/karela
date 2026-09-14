@@ -29,7 +29,9 @@ export const PlayerCard = ({
   gems,
   onPress,
 }: PlayerCardProps) => {
-  const progress = Math.min((xp / XP_PER_LEVEL) * 100, 100);
+  // Guard against negative XP leaking from a race condition in normalizeXP
+  const safeXP = Math.max(0, xp);
+  const progress = Math.min((safeXP / XP_PER_LEVEL) * 100, 100);
   const tier = getStreakTier(streak);
 
   return (
@@ -70,7 +72,7 @@ export const PlayerCard = ({
               />
             </View>
             <Text style={styles.xpText}>
-              {xp}/{XP_PER_LEVEL} XP
+              {safeXP}/{XP_PER_LEVEL} XP
             </Text>
           </View>
 

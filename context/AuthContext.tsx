@@ -118,13 +118,31 @@ const mapRowToProfile = (row: any): UserProfile => ({
 
 // If accumulated XP has crossed the 1000 threshold, roll it into levels
 // and persist the correction. Returns true if a correction was applied.
+//
+// MUTEX: A module-level Set tracks which UIDs are currently being normalized.
+// Concurrent calls (e.g. gainXP + realtime subscription firing at the same time)
+// would both see xp >= 1000, both compute the same negative delta, and both apply
+// it — driving XP deep into negative territory. The mutex makes the second call
+// a no-op while the first is in flight.
+const normalizingUIDs = new Set<string>();
+
 const normalizeXP = async (uid: string, stats: any): Promise<boolean> => {
   const XP_THRESHOLD = 1000;
   const xp = Number(stats?.xp || 0);
   if (xp < XP_THRESHOLD) return false;
 
-  const levelUps = Math.floor(xp / XP_THRESHOLD);
+  // Skip if normalization is already running for this user
+  if (normalizingUIDs.has(uid)) return false;
+  normalizingUIDs.add(uid);
+
   try {
+    // Re-read from DB right before writing so we always act on the latest value,
+    // not a potentially stale snapshot passed in via `stats`.
+    const fresh = await getProfile(uid);
+    const freshXP = Number(fresh?.stats?.xp || 0);
+    if (freshXP < XP_THRESHOLD) return false;
+
+    const levelUps = Math.floor(freshXP / XP_THRESHOLD);
     // Atomic deltas rather than an absolute write: a concurrent XP award
     // (e.g. QuestEngine.claimQuest) would otherwise be silently overwritten.
     await incrementStats(uid, {
@@ -133,6 +151,8 @@ const normalizeXP = async (uid: string, stats: any): Promise<boolean> => {
     });
   } catch (e) {
     console.warn("XP normalization failed (non-fatal):", e);
+  } finally {
+    normalizingUIDs.delete(uid);
   }
   return true;
 };
@@ -154,9 +174,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (boostedAmount > 0) {
         await incrementStats(user.uid, { xp: boostedAmount });
       }
-      // Re-read from the server, then carry XP into levels.
-      const fresh = await getProfile(user.uid);
-      await normalizeXP(user.uid, fresh?.stats);
+      // normalizeXP re-reads from DB internally and is mutex-protected
+      // against concurrent calls from the realtime subscription.
+      await normalizeXP(user.uid, { xp: boostedAmount });
       await reloadProfile();
     } catch (error) {
       console.error("XP Update Failed:", error);
@@ -170,8 +190,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const syncProgression = async () => {
     if (!user) return;
     try {
-      const fresh = await getProfile(user.uid);
-      await normalizeXP(user.uid, fresh?.stats);
+      // Pass xp=1000 so normalizeXP passes the threshold guard and re-reads
+      // the real value from DB internally. The mutex prevents any race.
+      await normalizeXP(user.uid, { xp: 1000 });
       await reloadProfile();
     } catch (error) {
       console.error("Progression Sync Failed:", error);
@@ -231,8 +252,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       setProfile(mapped);
 
-      // Auto-level if XP crossed the threshold (realtime will deliver the corrected row)
-      await normalizeXP(uid, mapped.stats);
+      // Missing stat fields patched above; normalization is handled by the
+      // realtime subscription callback to avoid double-firing on load.
     } catch (error) {
       console.error("Profile load failed:", error);
     }

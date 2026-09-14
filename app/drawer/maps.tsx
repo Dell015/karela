@@ -118,6 +118,10 @@ export default function MapScreen() {
   const handleStartRace = async () => {
     const locationAllowed = await PermissionManager.requestLocation();
     if (locationAllowed) {
+      // Request notification permission for the live lock-screen race widget.
+      // Non-blocking — race starts regardless of whether the user grants it.
+      PermissionManager.requestNotificationStats();
+
       setPhysicalMeters(0);
       setElapsedTime(0);
       setPath([]);

@@ -38,9 +38,14 @@ export const PermissionManager = {
         }
 
         if (finalStatus !== 'granted') {
-            // Optional: You could show an alert here, but usually, users are 
-            // okay if the widget doesn't show up, as long as the GPS works.
-            console.warn("Notification permissions not granted for the widget.");
+            Alert.alert(
+                "Notifications Optional",
+                "Enable notifications to see your live race stats on the lock screen while you run.",
+                [
+                    { text: "Skip", style: "cancel" },
+                    { text: "Open Settings", onPress: () => Linking.openSettings() },
+                ]
+            );
             return false;
         }
         return true;

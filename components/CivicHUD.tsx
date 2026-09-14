@@ -9,6 +9,7 @@ import {
     ActivityIndicator,
     Alert,
     Dimensions,
+    Linking,
     Modal,
     Pressable,
     StyleSheet,
@@ -120,12 +121,34 @@ export const CivicHUD = ({
   const isScout = role === "scout";
 
   const handlePick = async (category: CivicCategory) => {
-    // 1. Request camera permission
+    // 1. Check existing permission status first to decide whether to show
+    //    a "go to settings" alert instead of re-requesting (iOS blocks re-prompts
+    //    after the user has previously denied).
+    const { status: existing } = await ImagePicker.getCameraPermissionsAsync();
+
+    if (existing === 'denied') {
+      // Already denied — can't re-prompt, send to Settings
+      Alert.alert(
+        "Camera Required",
+        "Karela needs camera access to verify civic reports. Please enable it in your device settings.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Open Settings", onPress: () => Linking.openSettings() },
+        ]
+      );
+      return;
+    }
+
+    // 2. Request permission (first-time prompt or undetermined state)
     const perm = await ImagePicker.requestCameraPermissionsAsync();
     if (!perm.granted) {
       Alert.alert(
         "Camera Required",
         "Karela needs camera access to verify civic reports with a photo.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Open Settings", onPress: () => Linking.openSettings() },
+        ]
       );
       return;
     }
