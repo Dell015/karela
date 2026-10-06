@@ -1,0 +1,131 @@
+/* ============================================================
+   KARELA WEB v2: DESIGN TOKENS
+   ------------------------------------------------------------
+   Palette is ported from styles/designSystem.ts in the app.
+   Surfaces are nudged toward green-black so the page feels like
+   the same family as Ani's outfit instead of neutral grey.
+
+   Colors that need alpha are also stored as space-separated RGB
+   triplets (--lime-rgb) so rgb(var(--lime-rgb) / .4) works.
+   ============================================================ */
+
+@font-face {
+  font-family: "Excon";
+  src: url("../assets/fonts/Excon-Thin.woff2") format("woff2");
+  font-weight: 100;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Excon";
+  src: url("../assets/fonts/Excon-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Excon";
+  src: url("../assets/fonts/Excon-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Excon";
+  src: url("../assets/fonts/Excon-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Excon";
+  src: url("../assets/fonts/Excon-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Excon";
+  src: url("../assets/fonts/Excon-Black.woff2") format("woff2");
+  font-weight: 900;
+  font-display: swap;
+}
+/* Handwritten voice for Ani's margin notes. Used in a handful of places only. */
+@font-face {
+  font-family: "Gochi Hand";
+  src: url("../assets/fonts/GochiHand.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+:root {
+  /* --- Brand --- */
+  --lime: #7cf205;
+  --lime-rgb: 124 242 5;
+  --teal: #209f77;
+  --teal-rgb: 32 159 119;
+  --aqua: #00f5d4;
+  --aqua-rgb: 0 245 212;
+  --sky: #00bbf9;
+  --sky-rgb: 0 187 249;
+  --orange: #ff9f1c;
+  --orange-rgb: 255 159 28;
+  --flame: #fb5607;
+  --coral: #ff4d6d;
+  --coral-rgb: 255 77 109;
+  --magenta: #ff006e;
+  --magenta-rgb: 255 0 110;
+  --gold: #ffd60a;
+  --on-lime: #04210a;
+
+  /* --- Surfaces (green-black) --- */
+  --bg: #0b0f0c;
+  --surface: #111813;
+  --surface-2: #17211a;
+  --surface-3: #1e2b22;
+  --line: rgb(214 255 190 / 0.13);
+  --line-strong: rgb(214 255 190 / 0.28);
+
+  /* --- Text --- */
+  --ink: #f3f5ee;
+  --ink-2: #b9c2b3; /* body copy on dark */
+  --ink-3: #939e8f; /* captions, 6.9:1 on --bg */
+  --paper: #f1f3ea; /* the one light surface (waitlist) */
+  --paper-ink: #0e1a11;
+  --paper-ink-2: #3c4a3f;
+
+  /* --- Type --- */
+  --font: "Excon", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-note: "Gochi Hand", "Segoe Print", "Comic Sans MS", cursive;
+
+  --fs-hero: clamp(2.1rem, 11vw, 5.2rem);
+  --fs-statement: clamp(1.7rem, 1rem + 4.2vw, 3.6rem);
+  --fs-h2: clamp(1.9rem, 1.15rem + 3.2vw, 3.5rem);
+  --fs-h3: clamp(1.25rem, 1.1rem + 0.7vw, 1.6rem);
+  --fs-lead: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+  --fs-body: 1.0625rem;
+  --fs-small: 0.9375rem;
+  --fs-caption: 0.8125rem;
+
+  /* --- Space --- */
+  --gutter: clamp(1.125rem, 5vw, 3rem);
+  --section: clamp(4.5rem, 10vw, 9rem);
+  --wrap: 1180px;
+  --nav-h: 64px;
+
+  /* --- Radius: deliberately not one value for everything --- */
+  --r-xs: 8px;
+  --r-sm: 14px;
+  --r-md: 22px;
+  --r-lg: 34px;
+  --r-pill: 999px;
+
+  /* --- Motion --- */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* --- Live palette: written by js/main.js as the page scrolls.
+         These defaults are what shows if the script never runs. --- */
+  --c1: 124 242 5;
+  --c2: 32 159 119;
+  --c3: 0 245 212;
+
+  /* --- Scroll-driven values (also written by JS) --- */
+  --p: 0; /* page progress 0-1 */
+  --g: 0.02; /* ghost progress */
+  --hy: 0; /* hero scroll offset in px */
+}
