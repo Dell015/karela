@@ -805,6 +805,15 @@ ghost_routes table (SQLite)
 
 **Seasonal cap:** Gems above 500 at season-end convert to non-spendable Legacy Tokens. This hard-caps the max advantage any user can accumulate, preventing a pay-to-win dynamic from emerging through the Scout Pass.
 
+### Your Character (Player Avatar)
+
+Every user has their own character, separate from Ani. It is the user's presence in the game.
+
+- **Style:** a low-poly 3D model in the same style as Ani, so the two read as one world.
+- **Character creation:** the user assembles their character from interchangeable parts (body, hair, outfit, colours). Parts are planned to be produced with AI 3D-modelling tools and assembled in the app, the most cost-effective approach for a small team. *Part list and tooling: to be decided.*
+- **On the map:** during a run, the user's character replaces the plain location dot, so the run feels like *their* character moving through Tuguegarao.
+- **Cosmetics:** characters can wear cosmetics earned from game rewards and events, bought in-game, or unlocked through the seasonal pass (Scout Pass). Cosmetics are visual only and give no gameplay advantage. *Shop and pricing: separate discussion.*
+
 ---
 
 ## 18. Sensor Fusion & Anti-Cheat
@@ -871,7 +880,19 @@ On Day 7, Ani delivers a personalized shareable summary card — organic marketi
 
 Small accountability groups. The primary social unit of Karela.
 
-**Formation:** Any Level 2+ user can create a Squad. Discovery is via geographic proximity (majority of members within 5km) or mutual friend suggestion.
+**Formation:** A user who has reached a minimum level and shown enough participation (runs and civic activity) can create a Squad. *Exact thresholds: to be decided* (an earlier draft used Level 2+). Discovery is via geographic proximity (majority of members within 5km) or mutual friend suggestion. Proximity must respect the privacy design: raw GPS never leaves the phone, so discovery uses a coarse area (for example a chosen barangay) or invite codes, not members' live locations.
+
+**Roles and membership (proposed, to confirm):** Squads work like a typical game party.
+
+| Role | Can do |
+|---|---|
+| Leader | Everything below, plus edit squad settings, promote or demote co-leaders, hand over leadership, disband the squad |
+| Co-leader | Invite, accept or decline join requests, remove members (not the leader or other co-leaders) |
+| Member | Invite (if the squad allows it), leave at any time |
+
+**Guard rails against abuse** (specific numbers to be decided): cooldowns on renaming and on re-joining a squad just left, a limit on pending invites, and limits on how often leadership can change hands. Every rule is enforced on the server, never only in the app.
+
+**Squad experience:** squads earn Squad XP from their members' activity. Enough Squad XP lets a squad found a Guild (below).
 
 **The Collective Shield — Karela's signature Bayanihan mechanic:**
 
@@ -889,6 +910,8 @@ This mechanic is the most direct digital expression of Bayanihan in the platform
 ### Guilds (50+ Members) — The Regional Force
 
 Large regional organizations competing for landmark territory.
+
+**Formation:** a squad with enough Squad experience can found a Guild. *Threshold: to be decided.* Guilds bring several squads together for a larger party and larger activities: community clean-up drives, fun runs and similar events. Guild roles follow the same pattern as squads (leader, co-leaders, members), with the same server-enforced guard rails.
 
 **Territory Quest Specification:**
 
