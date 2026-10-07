@@ -89,7 +89,7 @@ export default function DrawerLayout() {
       <Drawer.Screen
         name="maps"
         options={{
-          drawerLabel: "Ghost Race",
+          drawerLabel: "Run",
           drawerIcon: ({ color }) => (
             <Ionicons name="map-outline" size={22} color={color} />
           ),
@@ -105,9 +105,27 @@ export default function DrawerLayout() {
         }}
       />
       <Drawer.Screen
+        name="guilds"
+        options={{
+          drawerLabel: "Guilds",
+          drawerIcon: ({ color }) => (
+            <Ionicons name="shield-half-outline" size={22} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="shop"
+        options={{
+          drawerLabel: "Shop",
+          drawerIcon: ({ color }) => (
+            <Ionicons name="bag-handle-outline" size={22} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
         name="ai_coach"
         options={{
-          drawerLabel: "AI Coach",
+          drawerLabel: "Ani",
           drawerIcon: ({ color }) => (
             <Ionicons
               name="chatbubble-ellipses-outline"

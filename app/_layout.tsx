@@ -5,8 +5,17 @@ import { initGhostModelTable } from "@/services/engines/GhostModelManager";
 import { Stack } from "expo-router";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useReducedMotion } from "react-native-reanimated";
 
 export default function RootLayout() {
+  // One rule for screen changes: fade between sections of the app, slide in
+  // from the right when drilling into details (matches their Back button),
+  // slide up for the run summary (a result card). None with Reduce Motion.
+  const reduceMotion = useReducedMotion();
+  const anim = (a: "fade" | "slide_from_right" | "slide_from_bottom") => ({
+    animation: reduceMotion ? ("none" as const) : a,
+  });
+
   // Initialize local SQLite tables once at app startup
   useEffect(() => {
     try {
@@ -25,6 +34,8 @@ export default function RootLayout() {
             screenOptions={{
               headerShown: false,
               gestureEnabled: false,
+              ...anim("fade"),
+              animationDuration: 250,
             }}
           >
             {/* Onboarding / Landing */}
@@ -38,8 +49,10 @@ export default function RootLayout() {
             <Stack.Screen name="drawer" />
 
             {/* Full Screen Modes */}
-            <Stack.Screen name="summary" />
-            <Stack.Screen name="performanceGraph" />
+            <Stack.Screen name="summary" options={anim("slide_from_bottom")} />
+            <Stack.Screen name="performanceGraph" options={anim("slide_from_right")} />
+            <Stack.Screen name="homepage/CustomizeAni" options={anim("slide_from_right")} />
+            <Stack.Screen name="dashboard/character_creation" options={anim("slide_from_right")} />
           </Stack>
         </AuthGate>
       </AuthProvider>

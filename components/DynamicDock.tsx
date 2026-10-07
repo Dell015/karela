@@ -1,57 +1,78 @@
 import { KARELA } from "@/styles/designSystem";
 import { Ionicons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
 import { usePathname, useRouter } from "expo-router";
 import React from "react";
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useReducedMotion } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const TAB_ITEMS = [
-  { route: "/drawer/dashboard", icon: "home", label: "Home" },
-  { route: "/drawer/quests", icon: "trophy", label: "Quests" },
-  { route: "/drawer/maps", icon: "map", label: "Run" },
-  { route: "/homepage/guilds", icon: "shield-half", label: "Guilds" },
-  { route: "/homepage/shop", icon: "cart", label: "Shop" },
-] as const;
+/**
+ * The bottom dock. Shown on Home, Quests, Guilds and Shop (all drawer
+ * screens, so switching between them behaves the same way everywhere).
+ * Run is the raised lime button in the middle: it opens the full-screen
+ * run map, which has no dock of its own.
+ *
+ * Uses router.navigate (switch to the screen) instead of push (stack a new
+ * copy), so Back does not walk through every tab you tapped.
+ */
+type IconName = keyof typeof Ionicons.glyphMap;
+
+const TABS: { route: string; icon: IconName; iconActive: IconName; label: string; primary?: boolean }[] = [
+  { route: "/drawer/dashboard", icon: "home-outline", iconActive: "home", label: "Home" },
+  { route: "/drawer/quests", icon: "trophy-outline", iconActive: "trophy", label: "Quests" },
+  { route: "/drawer/maps", icon: "play", iconActive: "play", label: "Run", primary: true },
+  { route: "/drawer/guilds", icon: "shield-half-outline", iconActive: "shield-half", label: "Guilds" },
+  { route: "/drawer/shop", icon: "bag-handle-outline", iconActive: "bag-handle", label: "Shop" },
+];
+
+/** Space a screen should leave at the bottom so content clears the dock. */
+export const DOCK_SPACE = 120;
 
 export const DynamicDock = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const insets = useSafeAreaInsets();
+  const reduceMotion = useReducedMotion();
 
-  const isActive = (route: string) => pathname.includes(route.split("/").pop() || "");
+  const isActive = (route: string) => pathname === route || pathname.endsWith(route.replace("/drawer", ""));
 
   return (
-    <View style={styles.container} pointerEvents="box-none">
-      <View style={styles.dockOuter}>
-        <BlurView intensity={50} tint="dark" style={styles.blur}>
-          <View style={styles.dockInner}>
-            {TAB_ITEMS.map((tab, idx) => {
-              const active = isActive(tab.route);
-              return (
-                <TouchableOpacity
-                  key={idx}
-                  style={styles.tab}
-                  onPress={() => router.push(tab.route as any)}
-                  activeOpacity={0.7}
-                >
+    <View
+      style={[styles.container, { paddingBottom: Math.max(insets.bottom, KARELA.space.md) }]}
+      pointerEvents="box-none"
+    >
+      <View style={styles.dock} accessibilityRole="tablist">
+        {TABS.map((tab) => {
+          const active = isActive(tab.route);
+          return (
+            <Pressable
+              key={tab.route}
+              onPress={() => !active && router.navigate(tab.route as any)}
+              accessibilityRole="tab"
+              accessibilityLabel={tab.label}
+              accessibilityState={{ selected: active }}
+              style={({ pressed }) => [
+                styles.tab,
+                pressed && (reduceMotion ? { opacity: 0.7 } : { transform: [{ scale: 0.94 }] }),
+              ]}
+            >
+              {tab.primary ? (
+                <View style={styles.runButton}>
+                  <Ionicons name={tab.icon} size={24} color={KARELA.color.onBright} />
+                </View>
+              ) : (
+                <View style={[styles.iconWell, active && styles.iconWellActive]}>
                   <Ionicons
-                    name={tab.icon as any}
+                    name={active ? tab.iconActive : tab.icon}
                     size={22}
                     color={active ? KARELA.color.brand : KARELA.color.textMuted}
                   />
-                  <Text
-                    style={[
-                      styles.tabLabel,
-                      active && styles.tabLabelActive,
-                    ]}
-                  >
-                    {tab.label}
-                  </Text>
-                  {active && <View style={styles.indicator} />}
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </BlurView>
+                </View>
+              )}
+              <Text style={[styles.label, (active || tab.primary) && styles.labelActive]}>{tab.label}</Text>
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );
@@ -63,58 +84,53 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    alignItems: "center",
-    paddingBottom: Platform.OS === "ios" ? 28 : 16,
+    paddingHorizontal: KARELA.space.lg,
     zIndex: 1000,
   },
-  dockOuter: {
-    width: "88%",
-    borderRadius: KARELA.radius.xl,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(124,242,5,0.12)",
-    // Glow shadow
-    shadowColor: KARELA.color.brand,
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 20,
-  },
-  blur: {
-    borderRadius: KARELA.radius.xl,
-    overflow: "hidden",
-  },
-  dockInner: {
+  dock: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
-    height: 64,
-    paddingHorizontal: KARELA.space.sm,
-    backgroundColor: "rgba(18,18,18,0.75)",
+    alignItems: "flex-end",
+    paddingHorizontal: KARELA.space.xs,
+    paddingTop: KARELA.space.sm,
+    paddingBottom: KARELA.space.sm,
+    borderRadius: KARELA.radius.lg,
+    backgroundColor: "rgba(17,24,19,0.96)", // surface at 96%: solid enough, no blur pass
+    borderWidth: 1,
+    borderColor: KARELA.color.line,
+    // It floats over content, so a soft neutral shadow (not a coloured glow).
+    ...KARELA.glow.soft,
   },
   tab: {
+    flex: 1,
     alignItems: "center",
+    justifyContent: "flex-end",
+    minHeight: 56,
+  },
+  iconWell: {
+    width: 44,
+    height: 32,
+    borderRadius: KARELA.radius.pill,
     justifyContent: "center",
-    width: 56,
-    height: 56,
-    position: "relative",
+    alignItems: "center",
   },
-  tabLabel: {
-    color: KARELA.color.textMuted,
-    fontSize: 9,
-    fontFamily: KARELA.font.medium,
-    marginTop: 3,
-    letterSpacing: 0.3,
-  },
-  tabLabelActive: {
-    color: KARELA.color.brand,
-  },
-  indicator: {
-    position: "absolute",
-    top: 4,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+  iconWellActive: { backgroundColor: "rgba(124,242,5,0.14)" }, // lime 14%
+  runButton: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    marginTop: -22, // raised above the dock
     backgroundColor: KARELA.color.brand,
+    borderWidth: 3,
+    borderColor: KARELA.color.bg,
+    justifyContent: "center",
+    alignItems: "center",
+    ...KARELA.glow.brand,
   },
+  label: {
+    color: KARELA.color.textMuted,
+    fontSize: KARELA.size.caption,
+    fontFamily: KARELA.font.medium,
+    marginTop: 2,
+  },
+  labelActive: { color: KARELA.color.textPrimary, fontFamily: KARELA.font.bold },
 });

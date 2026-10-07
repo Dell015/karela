@@ -1,6 +1,14 @@
 import { GlowVariant, KARELA } from "@/styles/designSystem";
-import React, { useMemo } from "react";
+import { useIsFocused, useNavigation } from "expo-router";
+import React, { useEffect, useMemo } from "react";
 import { StyleSheet, useWindowDimensions, View, ViewStyle } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import Svg, { Circle, Defs, RadialGradient, Stop } from "react-native-svg";
 
 interface ScreenProps {
@@ -38,6 +46,30 @@ export const Screen = ({
   style,
 }: ScreenProps) => {
   const { width: W, height: H } = useWindowDimensions();
+
+  // Screen-change transition. Drawer screens switch instantly (the drawer
+  // navigator has no scene animation), so the content fades and rises 6px
+  // over the still background, like the site's sections over one fixed
+  // background. Stack screens already slide natively, so they skip this.
+  const navigation = useNavigation();
+  const isFocused = useIsFocused();
+  const reduceMotion = useReducedMotion();
+  let inDrawer = false;
+  try {
+    inDrawer = navigation.getState()?.type === "drawer";
+  } catch {
+    inDrawer = false;
+  }
+  const enter = useSharedValue(1);
+  useEffect(() => {
+    if (!inDrawer || reduceMotion || !isFocused) return;
+    enter.value = 0;
+    enter.value = withTiming(1, { duration: 220, easing: Easing.out(Easing.cubic) });
+  }, [isFocused, inDrawer, reduceMotion, enter]);
+  const enterStyle = useAnimatedStyle(() => ({
+    opacity: enter.value,
+    transform: [{ translateY: (1 - enter.value) * 6 }],
+  }));
   const [c1, c2, c3] = KARELA.glowSets[variant];
 
   // Stable per mount, so the glow never flickers on re-render.
@@ -78,12 +110,13 @@ export const Screen = ({
           ))}
         </Svg>
       )}
-      {children}
+      <Animated.View style={[styles.content, enterStyle]}>{children}</Animated.View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  content: { flex: 1 },
   base: {
     flex: 1,
     backgroundColor: KARELA.color.bg,
