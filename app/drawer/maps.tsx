@@ -425,7 +425,9 @@ export default function MapScreen() {
           <Polyline
             coordinates={activeGhostData}
             strokeColor="rgba(255, 215, 0, 0.4)"
-            strokeColors={["rgba(255, 215, 0, 0.4)"]} // Override native blue
+            // Apple Maps requires one colour PER POINT in strokeColors; a single-item
+            // array on a longer line crashes the native map on iPhone.
+            strokeColors={activeGhostData.map(() => "rgba(255, 215, 0, 0.4)")}
             strokeWidth={4}
             lineCap="round"
             lineJoin="round"
@@ -463,11 +465,14 @@ export default function MapScreen() {
         )}
 
         {/* QUEST ROUTE (Gold Line) - FIXED TO PREVENT BLUE */}
-        {questPath.length > 1 && (
+        {/* Needs a GPS fix: the line starts at the user. */}
+        {questPath.length > 1 && currentLocation && (
           <Polyline
             coordinates={[currentLocation, ...questPath.slice(1)]}
             strokeColor={KARELA.color.gold}
-            strokeColors={[KARELA.color.gold]} // Force plural to override native blue
+            // One colour per point (questPath.length points: user + the rest).
+            // A single-item array crashed Apple Maps when a flag was added.
+            strokeColors={questPath.map(() => KARELA.color.gold)}
             strokeWidth={6}
             lineCap="round"
             lineJoin="round"
@@ -553,12 +558,12 @@ export default function MapScreen() {
                 tooltip
                 onPress={() => {
                   Alert.alert(
-                    "Manage Checkpoint",
+                    "Manage checkpoint",
                     "What would you like to do?",
                     [
                       { text: "Cancel", style: "cancel" },
                       {
-                        text: "Delete Flag",
+                        text: "Delete flag",
                         onPress: () => deleteCheckpoint(index, currentLocation),
                         style: "destructive",
                       },
@@ -567,7 +572,7 @@ export default function MapScreen() {
                 }}
               >
                 <View style={styles.calloutBubble}>
-                  <Text style={styles.calloutText}>Tap to Delete</Text>
+                  <Text style={styles.calloutText}>Tap to delete</Text>
                   <Ionicons name="trash-outline" size={20} color="white" />
                 </View>
               </Callout>
