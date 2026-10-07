@@ -98,7 +98,6 @@ export const Button = ({
           {children ?? (
             <Text
               style={[styles.label, size === "sm" && styles.labelSm, { color: ink }]}
-              numberOfLines={1}
             >
               {label}
             </Text>
@@ -215,7 +214,7 @@ export const Chip = ({ label, selected, icon, style, ...rest }: ChipProps) => {
       {...rest}
     >
       {icon && <Ionicons name={icon} size={14} color={selected ? ink : KARELA.color.brand} />}
-      <Text style={[styles.chipText, { color: ink }]} numberOfLines={1}>
+      <Text style={[styles.chipText, { color: ink }]}>
         {label}
       </Text>
     </Pressable>
@@ -223,7 +222,10 @@ export const Chip = ({ label, selected, icon, style, ...rest }: ChipProps) => {
 };
 
 const styles = StyleSheet.create({
-  hug: { alignSelf: "flex-start" },
+  // Never truncate a label: no numberOfLines (iOS can measure the width
+  // with a fallback font before Excon loads, then cut "Calendar" to "Calen…"),
+  // and buttons that size to their text never shrink below it in a row.
+  hug: { alignSelf: "flex-start", flexShrink: 0 },
   block: { alignSelf: "stretch" },
   off: { opacity: 0.5 },
   box: {
