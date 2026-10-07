@@ -1,20 +1,28 @@
 import { useAnimations, useGLTF } from "@react-three/drei/native";
-import { Canvas } from "@react-three/fiber/native";
-import React, { useEffect, useRef } from "react";
+import { Canvas, useGraph } from "@react-three/fiber/native";
+import React, { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 
 type GLTFResult = {
-  nodes: any;
-  materials: any;
+  scene: THREE.Group;
   animations: THREE.AnimationClip[];
 };
 
 function CharacterModel({ currentAction }: { currentAction: string }) {
   const group = useRef<THREE.Group>(null);
 
-  const { nodes, animations, materials } = useGLTF(
+  const { scene, animations } = useGLTF(
     require("@/assets/test_3dmodel/female_final.glb"),
   ) as unknown as GLTFResult;
+
+  // useGLTF caches one parsed scene for the whole app. A three.js object can
+  // only live in one scene, so two <AniView>s sharing it (dashboard + the
+  // Customize screen) would steal Ani from each other: going back left the
+  // dashboard empty. Each view gets its own copy. SkeletonUtils.clone keeps
+  // the skinned mesh bound to its own bones, which a plain .clone() breaks.
+  const model = useMemo(() => cloneSkinned(scene), [scene]);
+  const { nodes, materials } = useGraph(model) as unknown as { nodes: any; materials: any };
 
   const { actions } = useAnimations(animations, group);
 
@@ -48,10 +56,20 @@ function CharacterModel({ currentAction }: { currentAction: string }) {
   );
 }
 
-export default function AniView({ action = "Female_rig|female_IDLE" }) {
+interface AniViewProps {
+  action?: string;
+  /**
+   * false pauses rendering (e.g. the screen is hidden behind another one).
+   * Saves battery on low-end phones; the model stays loaded.
+   */
+  active?: boolean;
+}
+
+export default function AniView({ action = "Female_rig|female_IDLE", active = true }: AniViewProps) {
   return (
     <Canvas
       camera={{ position: [0, 1, 4.5], fov: 40 }}
+      frameloop={active ? "always" : "never"}
       // Note: dpr removed as it is not a valid prop on @react-three/fiber/native
       style={{ backgroundColor: "transparent" }}
     >

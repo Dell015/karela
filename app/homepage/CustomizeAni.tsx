@@ -1,103 +1,158 @@
 import { Button, Chip, IconButton } from "@/components/ui/Button";
+import { Screen } from "@/components/ui/Screen";
+import AniView from "@/components/AniModel";
 import { KARELA } from "@/styles/designSystem";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
-import {
-    Dimensions,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from "react-native";
+import { ScrollView, StatusBar, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AniView from "@/components/AniModel";
+import Svg, { Defs, Ellipse, RadialGradient, Stop } from "react-native-svg";
 
-const { width } = Dimensions.get("window");
+type IconName = keyof typeof Ionicons.glyphMap;
+
+// Ani's real animation clips (assets/test_3dmodel/female_final.glb).
+const MOVES: { id: string; label: string; icon: IconName }[] = [
+  { id: "IDLE", label: "Idle", icon: "pause" },
+  { id: "WALK", label: "Walk", icon: "walk" },
+  { id: "RUN", label: "Run", icon: "fitness" },
+];
+
+// Not built yet (aboutkarela.md: cosmetics come later). Shown as locked,
+// never as fake items.
+const LOOKS: { label: string; icon: IconName }[] = [
+  { label: "Outfit", icon: "shirt-outline" },
+  { label: "Hair", icon: "cut-outline" },
+  { label: "Gear", icon: "headset-outline" },
+  { label: "Colours", icon: "color-palette-outline" },
+];
 
 export default function CustomizeScreen() {
-  const [selectedCategory, setSelectedCategory] = useState("OUTFIT");
-  const [currentAction, setCurrentAction] = useState("Female_rig|female_IDLE");
-  const categories = ["OUTFIT", "HAIR", "GEAR", "COLOR"];
+  const [move, setMove] = useState("IDLE");
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <Screen variant="aurora">
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" />
 
-      {/* --- TOP NAVIGATION BAR --- */}
-      <View style={styles.header}>
-        <IconButton icon="chevron-back" label="Back" onPress={() => router.back()} />
-        <Text style={styles.headerTitle}>Customize Ani</Text>
-        <MaterialCommunityIcons name="shield-sync" size={24} color={KARELA.color.brand} />
-      </View>
-
-      {/* --- 3D PREVIEW AREA --- */}
-      <View style={styles.previewContainer}>
-        <LinearGradient colors={["transparent", "rgba(124, 242, 5, 0.1)", "transparent"]} style={styles.scannerLine} />
-        <AniView action={currentAction} />
-        <View style={styles.actionPills}>
-          {["IDLE", "WALK", "RUN"].map((act) => (
-            <Chip key={act} label={act.charAt(0) + act.slice(1).toLowerCase()} selected={currentAction.includes(act)} onPress={() => setCurrentAction(`Female_rig|female_${act}`)} />
-          ))}
+        <View style={styles.header}>
+          <IconButton icon="chevron-back" label="Back" onPress={() => router.back()} />
+          <Text style={styles.title}>Customize Ani</Text>
+          <View style={{ width: KARELA.tap }} />
         </View>
-      </View>
 
-      {/* --- CATEGORY SELECTOR TABS --- */}
-      <View style={styles.categoryBar}>
-        {categories.map((cat) => (
-          <Chip key={cat} label={cat.charAt(0) + cat.slice(1).toLowerCase()} selected={selectedCategory === cat} onPress={() => setSelectedCategory(cat)} />
-        ))}
-      </View>
+        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+          {/* Stage: Ani on a soft lime platform */}
+          <View style={styles.stage}>
+            <Svg style={styles.platform} width="100%" height={70} viewBox="0 0 300 70" preserveAspectRatio="none">
+              <Defs>
+                <RadialGradient id="ani-platform" cx="50%" cy="50%" r="50%">
+                  <Stop offset="0" stopColor={KARELA.color.brand} stopOpacity={0.35} />
+                  <Stop offset="0.6" stopColor={KARELA.color.brandDeep} stopOpacity={0.12} />
+                  <Stop offset="1" stopColor={KARELA.color.brandDeep} stopOpacity={0} />
+                </RadialGradient>
+              </Defs>
+              <Ellipse cx={150} cy={35} rx={150} ry={35} fill="url(#ani-platform)" />
+            </Svg>
+            <AniView action={`Female_rig|female_${move}`} />
+          </View>
 
-      {/* --- INVENTORY GRID --- */}
-      <ScrollView contentContainerStyle={styles.gridContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.grid}>
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((item) => (
-            <TouchableOpacity key={item} style={styles.inventorySlot}>
-              <MaterialCommunityIcons name={selectedCategory === "GEAR" ? "shield-check-outline" : "tshirt-crew"} size={32} color={item === 1 ? KARELA.color.brand : "rgba(124, 242, 5, 0.15)"} />
-              <View style={styles.slotLevel}><Text style={styles.slotLevelText}>T-0{item}</Text></View>
-              {item === 1 && (<View style={styles.equippedBadge}><View style={styles.equippedDot} /></View>)}
-            </TouchableOpacity>
-          ))}
+          <Text style={styles.sectionLabel}>Moves</Text>
+          <View style={styles.moves}>
+            {MOVES.map((m) => (
+              <Chip
+                key={m.id}
+                label={m.label}
+                icon={m.icon}
+                selected={move === m.id}
+                onPress={() => setMove(m.id)}
+              />
+            ))}
+          </View>
+
+          <Text style={styles.sectionLabel}>Her look</Text>
+          <Text style={styles.sectionSub}>
+            Outfits, hair, gear and colours are coming soon, earned from quests and events.
+          </Text>
+          <View style={styles.looks}>
+            {LOOKS.map((l) => (
+              <View
+                key={l.label}
+                style={styles.lookTile}
+                accessible
+                accessibilityLabel={`${l.label}, coming soon`}
+              >
+                <Ionicons name={l.icon} size={24} color={KARELA.color.textMuted} />
+                <Text style={styles.lookLabel}>{l.label}</Text>
+                <View style={styles.soonTag}>
+                  <Ionicons name="lock-closed" size={10} color={KARELA.color.textMuted} />
+                  <Text style={styles.soonText}>Coming soon</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
+
+        <View style={styles.footer}>
+          <Button label="Done" block onPress={() => router.back()} />
         </View>
-      </ScrollView>
-
-      {/* --- FOOTER SAVE ACTION --- */}
-      <View style={styles.footer}>
-        <Button label="Save" block onPress={() => router.back()} />
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: KARELA.color.bg },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: KARELA.space.xl, height: 60, borderBottomWidth: 1, borderBottomColor: KARELA.color.surface },
-  backBtn: { padding: 5, marginLeft: -10 },
-  headerTitle: { color: KARELA.color.brand, fontSize: KARELA.size.body, fontFamily: KARELA.font.black, letterSpacing: 4 },
-  previewContainer: { height: "35%", width: "100%", backgroundColor: KARELA.color.bg, position: "relative" },
-  scannerLine: { position: "absolute", width: "100%", height: 120, top: "20%", zIndex: 1 },
-  actionPills: { position: "absolute", right: KARELA.space.xl, top: KARELA.space.xl, gap: KARELA.space.sm, zIndex: 10 },
-  pill: { backgroundColor: KARELA.color.surface, paddingVertical: 6, paddingHorizontal: KARELA.space.md, borderRadius: KARELA.space.xs, borderWidth: 1, borderColor: KARELA.color.surfaceSoft },
-  pillActive: { borderColor: KARELA.color.brand, backgroundColor: "rgba(124, 242, 5, 0.1)" },
-  pillText: { color: KARELA.color.textFaint, fontSize: 9, fontFamily: KARELA.font.bold },
-  pillTextActive: { color: KARELA.color.brand },
-  categoryBar: { flexDirection: "row", backgroundColor: KARELA.color.surface },
-  catItem: { flex: 1, paddingVertical: 18, alignItems: "center" },
-  catItemActive: { borderBottomWidth: 2, borderBottomColor: KARELA.color.brand },
-  catText: { color: KARELA.color.textFaint, fontFamily: KARELA.font.black, fontSize: 11, letterSpacing: 1 },
-  catTextActive: { color: KARELA.color.brand },
-  gridContent: { padding: KARELA.space.xl, paddingBottom: KARELA.space.xxxl },
-  grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: KARELA.space.md },
-  inventorySlot: { width: (width - 64) / 3, aspectRatio: 1, backgroundColor: KARELA.color.bg, borderRadius: KARELA.space.sm, borderWidth: 1, borderColor: KARELA.color.surfaceSoft, justifyContent: "center", alignItems: "center", position: "relative" },
-  equippedBadge: { position: "absolute", top: 0, right: 0, padding: 6 },
-  equippedDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: KARELA.color.brand },
-  slotLevel: { position: "absolute", bottom: 6, left: 6 },
-  slotLevelText: { color: KARELA.color.textFaint, fontSize: 8, fontFamily: KARELA.font.bold },
-  footer: { padding: KARELA.space.xl, borderTopWidth: 1, borderTopColor: KARELA.color.surface },
-  saveBtn: { backgroundColor: KARELA.color.brand, padding: 18, borderRadius: KARELA.space.xs, alignItems: "center", ...KARELA.glow.brand },
-  saveBtnText: { color: KARELA.color.onBright, fontFamily: KARELA.font.black, letterSpacing: 2 },
+  container: { flex: 1, backgroundColor: "transparent" },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: KARELA.space.lg,
+    paddingVertical: KARELA.space.sm,
+  },
+  title: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h2, fontFamily: KARELA.font.bold },
+  scroll: { paddingHorizontal: KARELA.space.xl, paddingBottom: KARELA.space.xl },
+
+  stage: { height: 340, marginBottom: KARELA.space.lg },
+  platform: { position: "absolute", left: 0, right: 0, bottom: 18 },
+
+  sectionLabel: {
+    color: KARELA.color.textPrimary,
+    fontSize: KARELA.size.h2,
+    fontFamily: KARELA.font.bold,
+    marginBottom: KARELA.space.sm,
+  },
+  sectionSub: {
+    color: KARELA.color.textSecondary,
+    fontSize: KARELA.size.label,
+    fontFamily: KARELA.font.regular,
+    lineHeight: 18,
+    marginBottom: KARELA.space.md,
+  },
+  moves: { flexDirection: "row", gap: KARELA.space.sm, marginBottom: KARELA.space.xxl },
+
+  looks: { flexDirection: "row", flexWrap: "wrap", gap: KARELA.space.md },
+  lookTile: {
+    width: "47%",
+    flexGrow: 1,
+    paddingVertical: KARELA.space.lg,
+    alignItems: "center",
+    gap: KARELA.space.xs,
+    borderRadius: KARELA.radius.md,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: KARELA.color.line,
+    backgroundColor: "rgba(17,24,19,0.6)", // surface at 60%
+  },
+  lookLabel: { color: KARELA.color.textPrimary, fontSize: KARELA.size.body, fontFamily: KARELA.font.medium },
+  soonTag: { flexDirection: "row", alignItems: "center", gap: 4 },
+  soonText: { color: KARELA.color.textMuted, fontSize: KARELA.size.caption, fontFamily: KARELA.font.medium },
+
+  footer: {
+    paddingHorizontal: KARELA.space.xl,
+    paddingTop: KARELA.space.md,
+    paddingBottom: KARELA.space.lg,
+    borderTopWidth: 1,
+    borderTopColor: KARELA.color.lineSoft,
+  },
 });

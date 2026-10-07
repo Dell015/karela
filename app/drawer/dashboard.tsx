@@ -387,7 +387,7 @@ export default function Dashboard() {
                       setCurrentAniAction("Female_rig|female_WAVE")
                     }
                   >
-                    <AniView action={currentAniAction} />
+                    <AniView action={currentAniAction} active={isFocused} />
                   </TouchableOpacity>
                   {/* CUSTOMIZE BUTTON */}
                   <Button
