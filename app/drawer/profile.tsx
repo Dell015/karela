@@ -1,5 +1,7 @@
 import { Button, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
+import { Avatar } from "@/components/ui/Avatar";
+import { Field, Sheet, sheet } from "@/components/ui/Sheet";
 import { useAuth } from "@/context/AuthContext";
 import { formatDuration, formatKm } from "@/services/calendarData";
 import { updateUserProfileData } from "@/services/database/supabase/userData";
@@ -13,21 +15,24 @@ import {
 } from "@/services/profileData";
 import { getEffectiveStreak } from "@/services/streakService";
 import { getStreakTier } from "@/services/streakMultiplier";
+import {
+  changeProfilePhoto,
+  openPhoneSettings,
+  PermissionBlockedError,
+  removeProfilePhoto,
+} from "@/services/profilePhoto";
 import { KARELA } from "@/styles/designSystem";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 
@@ -51,7 +56,7 @@ const runDate = (iso: string) => {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { profile, logout } = useAuth();
+  const { profile, logout, reloadProfile } = useAuth();
   const uid = profile?.uid;
   const createdAt = profile?.createdAt;
 
@@ -76,6 +81,31 @@ export default function ProfilePage() {
       });
     }, [uid, createdAt]),
   );
+
+  // --- Profile photo ---
+  const [showPhoto, setShowPhoto] = useState(false);
+  const [photoBusy, setPhotoBusy] = useState(false);
+
+  const runPhotoAction = async (action: () => Promise<unknown>) => {
+    if (!uid) return;
+    setShowPhoto(false);
+    setPhotoBusy(true);
+    try {
+      await action();
+      await reloadProfile();
+    } catch (e: any) {
+      if (e instanceof PermissionBlockedError) {
+        Alert.alert("Access needed", e.message, [
+          { text: "Not now", style: "cancel" },
+          { text: "Open settings", onPress: openPhoneSettings },
+        ]);
+      } else {
+        Alert.alert("Photo not changed", e?.message ?? "Something went wrong. Try again.");
+      }
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
 
   // --- Edit sheet ---
   const [showEdit, setShowEdit] = useState(false);
@@ -177,12 +207,22 @@ export default function ProfilePage() {
         </View>
 
         <View style={s.identity}>
-          {/* No profile photos yet: the first letter of the name, like Home. */}
-          <LinearGradient colors={KARELA.gradients.brand} style={s.avatarRing}>
-            <View style={s.avatarInner}>
-              <Text style={s.avatarText}>{name.trim().charAt(0).toUpperCase()}</Text>
+          <Pressable
+            onPress={() => setShowPhoto(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Change profile photo"
+            disabled={photoBusy}
+            style={({ pressed }) => pressed && { opacity: 0.8 }}
+          >
+            <Avatar uri={profile?.profilePicture} name={name} size={76} ring />
+            <View style={s.photoBadge}>
+              {photoBusy ? (
+                <ActivityIndicator size="small" color={KARELA.color.onBright} />
+              ) : (
+                <Ionicons name="camera" size={14} color={KARELA.color.onBright} />
+              )}
             </View>
-          </LinearGradient>
+          </Pressable>
           <View style={{ flex: 1 }}>
             <Text style={s.name} numberOfLines={1}>{name}</Text>
             <Text style={s.handle} numberOfLines={1}>@{profile?.username || "strider"}</Text>
@@ -311,42 +351,64 @@ export default function ProfilePage() {
         </View>
       </ScrollView>
 
+      {/* PHOTO SHEET */}
+      <Sheet visible={showPhoto} title="Profile photo" onClose={() => setShowPhoto(false)}>
+        <View style={s.photoOptions}>
+          <Button
+            label="Take a photo"
+            icon="camera-outline"
+            variant="secondary"
+            block
+            onPress={() => runPhotoAction(() => changeProfilePhoto(uid!, "camera"))}
+          />
+          <Button
+            label="Choose from your photos"
+            icon="images-outline"
+            variant="secondary"
+            block
+            onPress={() => runPhotoAction(() => changeProfilePhoto(uid!, "library"))}
+          />
+          {profile?.profilePicture ? (
+            <Button
+              label="Remove photo"
+              icon="trash-outline"
+              variant="link"
+              onPress={() => runPhotoAction(() => removeProfilePhoto(uid!))}
+              style={{ alignSelf: "center" }}
+            />
+          ) : null}
+        </View>
+        <Text style={sheet.note}>
+          Your photo is cropped to a square and kept small to save data. Location details are removed before upload.
+        </Text>
+      </Sheet>
+
       {/* EDIT SHEET */}
-      <Modal visible={showEdit} animationType="slide" transparent onRequestClose={() => setShowEdit(false)}>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={s.sheetBackdrop}>
-          <View style={s.sheet}>
-            <View style={s.rowBetween}>
-              <Text style={s.sheetTitle}>Edit profile</Text>
-              <IconButton icon="close" label="Close" tone="plain" onPress={() => setShowEdit(false)} />
-            </View>
-            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-              <Field label="Display name" value={displayName} onChangeText={setDisplayName} maxLength={40} />
-              <Field label="Username" value={username} onChangeText={(t) => setUsername(t.replace(/\s/g, ""))} autoCapitalize="none" autoCorrect={false} maxLength={20} />
-              <View style={s.fieldRow}>
-                <Field label="Age" value={age} onChangeText={setAge} keyboardType="number-pad" wrapStyle={{ flex: 1 }} />
-                <Field label="Weight (kg)" value={weight} onChangeText={setWeight} keyboardType="decimal-pad" wrapStyle={{ flex: 1 }} />
-                <Field label="Height (cm)" value={height} onChangeText={setHeight} keyboardType="decimal-pad" wrapStyle={{ flex: 1 }} />
-              </View>
-              <Text style={s.fieldNote}>Used to estimate calories. Only you can see these.</Text>
-              <Field
-                label="Notes for Ani"
-                value={aiNotes}
-                onChangeText={setAiNotes}
-                multiline
-                maxLength={NOTES_MAX}
-                placeholder="For example: bad left knee, I prefer morning runs"
-                inputStyle={{ minHeight: 84, textAlignVertical: "top" }}
-              />
-              <Text style={s.fieldNote}>{aiNotes.length}/{NOTES_MAX}</Text>
-              {formError && <Text style={s.formError} accessibilityLiveRegion="polite">{formError}</Text>}
-              <View style={s.sheetButtons}>
-                <Button label="Cancel" variant="secondary" onPress={() => setShowEdit(false)} style={{ flex: 1 }} />
-                <Button label="Save" onPress={handleSave} loading={saving} style={{ flex: 1 }} />
-              </View>
-            </ScrollView>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+      <Sheet visible={showEdit} title="Edit profile" onClose={() => setShowEdit(false)}>
+        <Field label="Display name" value={displayName} onChangeText={setDisplayName} maxLength={40} />
+        <Field label="Username" value={username} onChangeText={(t) => setUsername(t.replace(/\s/g, ""))} autoCapitalize="none" autoCorrect={false} maxLength={20} />
+        <View style={s.fieldRow}>
+          <Field label="Age" value={age} onChangeText={setAge} keyboardType="number-pad" wrapStyle={{ flex: 1 }} />
+          <Field label="Weight (kg)" value={weight} onChangeText={setWeight} keyboardType="decimal-pad" wrapStyle={{ flex: 1 }} />
+          <Field label="Height (cm)" value={height} onChangeText={setHeight} keyboardType="decimal-pad" wrapStyle={{ flex: 1 }} />
+        </View>
+        <Text style={sheet.note}>Used to estimate calories and to fit Ani&apos;s quests to you. Other people can&apos;t see these.</Text>
+        <Field
+          label="Notes for Ani"
+          value={aiNotes}
+          onChangeText={setAiNotes}
+          multiline
+          maxLength={NOTES_MAX}
+          placeholder="For example: bad left knee, I prefer morning runs"
+          inputStyle={{ minHeight: 84, textAlignVertical: "top" }}
+        />
+        <Text style={sheet.note}>{aiNotes.length}/{NOTES_MAX}</Text>
+        {formError && <Text style={sheet.error} accessibilityLiveRegion="polite">{formError}</Text>}
+        <View style={sheet.buttons}>
+          <Button label="Cancel" variant="secondary" onPress={() => setShowEdit(false)} style={{ flex: 1 }} />
+          <Button label="Save" onPress={handleSave} loading={saving} style={{ flex: 1 }} />
+        </View>
+      </Sheet>
     </Screen>
   );
 }
@@ -384,18 +446,6 @@ const Row = ({ icon, label, onPress, danger, last }: { icon: string; label: stri
   </Pressable>
 );
 
-const Field = ({
-  label,
-  wrapStyle,
-  inputStyle,
-  ...input
-}: React.ComponentProps<typeof TextInput> & { label: string; inputStyle?: object; wrapStyle?: object }) => (
-  <View style={[s.field, wrapStyle]}>
-    <Text style={s.fieldLabel}>{label}</Text>
-    <TextInput {...input} style={[s.input, inputStyle]} placeholderTextColor={KARELA.color.textFaint} accessibilityLabel={label} />
-  </View>
-);
-
 // --- Styles ---
 const s = StyleSheet.create({
   content: { paddingTop: 56, paddingHorizontal: KARELA.space.xl, paddingBottom: 60 },
@@ -403,9 +453,20 @@ const s = StyleSheet.create({
   rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
 
   identity: { flexDirection: "row", alignItems: "center", gap: KARELA.space.lg },
-  avatarRing: { width: 76, height: 76, borderRadius: 38, padding: 3 },
-  avatarInner: { flex: 1, borderRadius: 35, backgroundColor: KARELA.color.bg, justifyContent: "center", alignItems: "center" },
-  avatarText: { color: KARELA.color.brand, fontSize: 30, fontFamily: KARELA.font.black },
+  photoBadge: {
+    position: "absolute",
+    right: -2,
+    bottom: -2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: KARELA.color.brand,
+    borderWidth: 2,
+    borderColor: KARELA.color.bg,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  photoOptions: { gap: KARELA.space.md, marginTop: KARELA.space.lg },
   name: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h1, fontFamily: KARELA.font.black },
   handle: { color: KARELA.color.textSecondary, fontSize: 14, fontFamily: KARELA.font.regular, marginTop: 2 },
   since: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.regular, marginTop: KARELA.space.xs },
@@ -459,14 +520,5 @@ const s = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: KARELA.space.md, minHeight: KARELA.tap + 4, paddingHorizontal: KARELA.space.lg, borderBottomWidth: 1, borderBottomColor: KARELA.color.lineSoft },
   rowLabel: { flex: 1, color: KARELA.color.textPrimary, fontSize: KARELA.size.body, fontFamily: KARELA.font.medium },
 
-  sheetBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.7)" },
-  sheet: { backgroundColor: KARELA.color.surface, borderTopLeftRadius: KARELA.radius.xl, borderTopRightRadius: KARELA.radius.xl, padding: KARELA.space.xl, paddingBottom: KARELA.space.xxxl, maxHeight: "90%" },
-  sheetTitle: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h2, fontFamily: KARELA.font.black },
-  field: { marginTop: KARELA.space.md },
   fieldRow: { flexDirection: "row", gap: KARELA.space.sm },
-  fieldLabel: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.medium, marginBottom: 6 },
-  fieldNote: { color: KARELA.color.textMuted, fontSize: KARELA.size.caption, fontFamily: KARELA.font.regular, marginTop: 6 },
-  input: { backgroundColor: KARELA.color.bg, borderRadius: KARELA.radius.sm, paddingHorizontal: KARELA.space.md, minHeight: KARELA.tap, color: KARELA.color.textPrimary, fontSize: KARELA.size.body, fontFamily: KARELA.font.regular, borderWidth: 1, borderColor: KARELA.color.line },
-  formError: { color: KARELA.color.danger, fontSize: 13, fontFamily: KARELA.font.medium, marginTop: KARELA.space.md },
-  sheetButtons: { flexDirection: "row", gap: KARELA.space.md, marginTop: KARELA.space.xl },
 });

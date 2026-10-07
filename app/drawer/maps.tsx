@@ -35,7 +35,9 @@ import {
   ResonanceState,
   RunContext,
 } from "@/services/engines/ResonanceSystem";
+import { useLocalSettings } from "@/services/localSettings";
 import { PermissionManager } from "@/services/PermissionsManager";
+import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { styles } from "@/styles/mapStyles";
 
@@ -118,6 +120,18 @@ export default function MapScreen() {
     }
   }, [path, isRacing]);
 
+  // --- KEEP SCREEN ON (Settings > Keep screen on during runs) ---
+  const localSettings = useLocalSettings();
+  const keepScreenOn = !!localSettings?.keepScreenOn;
+  useEffect(() => {
+    if (!isRacing || !keepScreenOn) return;
+    const tag = "karela-run";
+    activateKeepAwakeAsync(tag).catch(() => {});
+    return () => {
+      deactivateKeepAwake(tag).catch(() => {});
+    };
+  }, [isRacing, keepScreenOn]);
+
   // --- SYNC ENGINE ---
   useEffect(() => {
     if (isRacing && currentLocation) {
@@ -130,10 +144,6 @@ export default function MapScreen() {
   const handleStartRace = async () => {
     const locationAllowed = await PermissionManager.requestLocation();
     if (locationAllowed) {
-      // Request notification permission for the live lock-screen race widget.
-      // Non-blocking — race starts regardless of whether the user grants it.
-      PermissionManager.requestNotificationStats();
-
       setPhysicalMeters(0);
       setElapsedTime(0);
       setPath([]);

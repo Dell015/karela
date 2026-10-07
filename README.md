@@ -74,6 +74,10 @@ Scan the QR code with Expo Go (Android) or the Camera app (iOS) to open on your 
    supabase/02_realtime_and_history.sql
    supabase/03_civic_engine.sql
    supabase/04_civic_fixes_and_storage.sql
+   supabase/05_lock_down_civic.sql
+   supabase/06_schedule_decay.sql
+   supabase/07_close_stats_hole.sql
+   supabase/08_account_deletion.sql
    ```
 3. Enable the **PostGIS** extension in your Supabase dashboard (Database → Extensions)
 4. Enable **Realtime** on the `profiles`, `missions`, and `civic_nodes` tables
@@ -160,7 +164,7 @@ karela/
 ├── styles/                     # Shared stylesheets
 ├── supabase/                   # Database migrations
 │   ├── schema.sql              # Core schema (run first)
-│   └── 02_ ... 07_*.sql        # Migrations, run in number order
+│   └── 02_ ... 08_*.sql        # Migrations, run in number order
 ├── assets/
 │   ├── fonts/                  # Excon font family
 │   ├── images/                 # App icons, onboarding slides, UI images
@@ -336,7 +340,7 @@ See **[docs/QA_REPORT.md](./docs/QA_REPORT.md)** for the full QA report with pri
 - [ ] Fix XP formula to match spec (`1 XP / 10m` distance-based)
 - [ ] Implement stride-calibrated steps and weight-based calories
 - [ ] Add notification architecture (currently only race widget exists)
-- [ ] Implement Privacy Zones & account deletion (RA 10173 compliance)
+- [x] Privacy Zones and in-app account deletion (RA 10173); deletion needs `supabase/08_account_deletion.sql`
 - [ ] Build out Guild/Squad systems (currently mock data)
 - [ ] Connect Calendar screen to real data (currently hardcoded)
 - [ ] Connect Shop screen to gem system (currently non-functional)

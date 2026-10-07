@@ -2,7 +2,7 @@ import { Chip, IconButton } from "@/components/ui/Button";
 import { KARELA } from "@/styles/designSystem";
 import { Screen } from "@/components/ui/Screen";
 import { Stack, useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
@@ -135,7 +135,7 @@ export default function AiCoach() {
         `${ANI_RULES} Athlete: ${userProfile?.displayName || "Strider"}, ${stats?.weight || 70}kg, level ${stats?.level || 1}. ${memoryPrompt} If off-topic, gently bring it back to running, walking or civic quests.\n\nUser: ${textToSend}`
       );
 
-      const response = await result.response;
+      const response = result.response;
       const aiText = response.text();
 
       const aiMsg: Message = {

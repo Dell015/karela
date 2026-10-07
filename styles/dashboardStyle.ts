@@ -4,14 +4,6 @@ import { KARELA } from "./designSystem";
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export const dashboard_ui = StyleSheet.create({
-  avatarInitial: {
-    backgroundColor: KARELA.color.surfaceAlt,
-    borderWidth: 1,
-    borderColor: KARELA.color.line,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarInitialText: { color: KARELA.color.brand, fontFamily: KARELA.font.black, fontSize: KARELA.size.h2 },
   characterLocked: { gap: KARELA.space.sm, borderStyle: "dashed", borderWidth: 1, borderColor: KARELA.color.line },
   characterLockedText: { color: KARELA.color.textMuted, fontFamily: KARELA.font.medium, fontSize: KARELA.size.label, textAlign: "center" },
   dashboard: {

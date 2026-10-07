@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { KARELA } from "@/styles/designSystem";
 import { saveGhostRun } from "@/services/database/sqlite/database";
 import { onRunCompleted } from "@/services/engines/GhostModelManager";
+import { stripPrivacyZones } from "@/services/privacyZones";
 import { GEM_EARNINGS, getTotalSectors } from "@/services/gemSystem";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -59,13 +60,24 @@ export default function SummaryScreen() {
   const handleSaveGhost = async () => {
     try {
       if (path) {
+        // Points inside the user's Privacy Zones are dropped before anything
+        // is written, even locally.
+        const safePath = await stripPrivacyZones(JSON.parse(path as string));
+        if (safePath.length < 2) {
+          Alert.alert(
+            "Ghost not saved",
+            "Most of this run was inside your Privacy Zones, so there's no route left to save. Your distance and XP still count.",
+          );
+          return;
+        }
+
         // saveGhostRun is async and resolves to null on failure — without the
         // await, the catch below could never see an error and the success alert
         // fired even when the write failed.
         const saved = await saveGhostRun(
           Number(meters),
           Number(seconds),
-          JSON.parse(path as string),
+          safePath,
         );
 
         if (!saved) {
@@ -79,7 +91,7 @@ export default function SummaryScreen() {
           distance: Number(meters),
           duration: Number(seconds),
           avg_speed: Number(seconds) > 0 ? (Number(meters) / Number(seconds)) * 3.6 : 0,
-          path_data: path as string,
+          path_data: JSON.stringify(safePath),
         });
 
         Alert.alert(

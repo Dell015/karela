@@ -53,6 +53,8 @@ export default function RootLayout() {
             <Stack.Screen name="performanceGraph" options={anim("slide_from_right")} />
             <Stack.Screen name="homepage/CustomizeAni" options={anim("slide_from_right")} />
             <Stack.Screen name="dashboard/character_creation" options={anim("slide_from_right")} />
+            <Stack.Screen name="settings/privacy-zones" options={anim("slide_from_right")} />
+            <Stack.Screen name="settings/your-data" options={anim("slide_from_right")} />
           </Stack>
         </AuthGate>
       </AuthProvider>

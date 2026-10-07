@@ -3,6 +3,7 @@ import { getNearbyNodes } from "@/services/engines/CivicEngine";
 import { dayKey } from "@/services/calendarData";
 import { getEffectiveStreak } from "@/services/streakService";
 import { Button, IconButton } from "@/components/ui/Button";
+import { Avatar } from "@/components/ui/Avatar";
 import { Screen } from "@/components/ui/Screen";
 import { QuestCard } from "@/components/QuestCard";
 import { KARELA } from "@/styles/designSystem";
@@ -265,12 +266,7 @@ export default function Dashboard() {
                     accessibilityRole="button"
                     accessibilityLabel="Your profile"
                   >
-                    {/* No profile photos yet: show the first letter of the name. */}
-                    <View style={[dashboard_ui.Image, dashboard_ui.avatarInitial]}>
-                      <Text style={dashboard_ui.avatarInitialText}>
-                        {(profile?.displayName || "S").trim().charAt(0).toUpperCase()}
-                      </Text>
-                    </View>
+                    <Avatar uri={profile?.profilePicture} name={profile?.displayName} size={50} />
                   </TouchableOpacity>
                   <View>
                     <Text style={dashboard_ui.welcomeText}>Welcome back</Text>

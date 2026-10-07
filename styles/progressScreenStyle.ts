@@ -28,7 +28,6 @@ export const ProgressScreenUI = StyleSheet.create({
     marginBottom: 10,
   },
   avatarGradient: { flex: 1, padding: KARELA.space.xs },
-  avatarImage: { flex: 1, borderRadius: 60, backgroundColor: KARELA.color.surface },
   rankText: {
     color: KARELA.color.textPrimary,
     fontSize: KARELA.size.h2,

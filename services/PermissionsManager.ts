@@ -1,6 +1,5 @@
 import * as Location from 'expo-location';
-import * as Notifications from 'expo-notifications'; // New import
-import { Alert, Linking, Platform } from 'react-native';
+import { Alert, Linking } from 'react-native';
 
 export const PermissionManager = {
     requestLocation: async () => {
@@ -25,30 +24,6 @@ export const PermissionManager = {
             console.warn("Background location permission request failed:", e);
             return true; // Foreground is granted; tracking can still proceed.
         }
-    },
-
-    // NEW: Request for the Lock Screen Widget (Notifications)
-    requestNotificationStats: async () => {
-        const { status: existingStatus } = await Notifications.getPermissionsAsync();
-        let finalStatus = existingStatus;
-
-        if (existingStatus !== 'granted') {
-            const { status } = await Notifications.requestPermissionsAsync();
-            finalStatus = status;
-        }
-
-        if (finalStatus !== 'granted') {
-            Alert.alert(
-                "Lock-screen stats",
-                "Enable notifications to see your live race stats on the lock screen while you run.",
-                [
-                    { text: "Skip", style: "cancel" },
-                    { text: "Open Settings", onPress: () => Linking.openSettings() },
-                ]
-            );
-            return false;
-        }
-        return true;
     },
 
     showDeniedAlert: () => {

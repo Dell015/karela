@@ -1,5 +1,6 @@
 import { getEffectiveStreak } from "@/services/streakService";
 import { Button, IconButton } from "@/components/ui/Button";
+import { Avatar } from "@/components/ui/Avatar";
 import { Screen } from "@/components/ui/Screen";
 import { KARELA } from "@/styles/designSystem";
 import { useAuth } from "@/context/AuthContext";
@@ -18,7 +19,6 @@ import React, { useCallback, useState } from "react";
 import {
   Dimensions,
   FlatList,
-  Image,
   NativeScrollEvent,
   NativeSyntheticEvent,
   ScrollView,
@@ -166,13 +166,7 @@ export default function ProgressScreen() {
             colors={KARELA.gradient}
             style={ProgressScreenUI.avatarGradient}
           >
-            <Image
-              source={{
-                uri:
-                  profile?.profilePicture || "https://via.placeholder.com/150",
-              }}
-              style={ProgressScreenUI.avatarImage}
-            />
+            <Avatar uri={profile?.profilePicture} name={profile?.displayName} size={112} />
           </LinearGradient>
         </View>
         <Text style={ProgressScreenUI.rankText}>

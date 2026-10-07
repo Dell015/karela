@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/Button";
 import { KARELA } from "@/styles/designSystem";
-import { db } from '@/services/database/sqlite/database';
 import { PermissionManager } from '@/services/PermissionsManager';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { useFonts } from "expo-font";
@@ -70,22 +69,6 @@ const CustomSplashScreen = ({ onFinish }: { onFinish: () => void }) => {
             </View>
         </Animated.View>
     );
-};
-
-export const seedTestData = () => {
-  for (let i = 1; i <= 30; i++) {
-    const fakeDate = new Date();
-    fakeDate.setDate(fakeDate.getDate() - i);
-    
-    db.runSync(
-      'INSERT INTO ghost_runs (date, distance, duration) VALUES (?, ?, ?)',
-      // Epoch ms, matching saveGhostRun. An ISO string would be stored as TEXT
-      // in this INTEGER column, and TEXT always sorts above INTEGER in SQLite,
-      // so every seeded row would match every `WHERE date >= ?` range.
-      [fakeDate.getTime(), Math.floor(Math.random() * 5000) + 1000, 1200]
-    );
-  }
-  console.log("30 Days of testing data injected!");
 };
 
 // --- 3. MAIN COMPONENT ---
