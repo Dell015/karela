@@ -9,6 +9,7 @@
  * that evening, not the next UTC day.
  */
 import { supabase } from "./database/supabase/config";
+import { logRequestError } from "./networkErrors";
 
 export interface RunRow {
   id: string;
@@ -107,7 +108,7 @@ export const getRunsSince = async (userId: string, since: Date): Promise<RunRow[
     .order("completed_at", { ascending: false })
     .limit(500);
   if (error) {
-    console.error("Calendar: could not load runs:", error);
+    logRequestError("Calendar: could not load runs:", error);
     return null;
   }
   return (data ?? []) as RunRow[];

@@ -15,6 +15,7 @@
  * Tiers and multipliers live in services/streakMultiplier.ts.
  */
 import { dayKey } from "./calendarData";
+import { logRequestError } from "./networkErrors";
 import { supabase } from "./database/supabase/config";
 
 const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -71,7 +72,7 @@ export const fetchStreakFromHistory = async (userId: string, now = new Date()): 
     .order("completed_at", { ascending: false })
     .limit(2000);
   if (error || !data) {
-    console.error("Streak: could not read run history:", error);
+    logRequestError("Streak: could not read run history:", error);
     return null;
   }
   const days = new Set(data.map((r: { completed_at: string }) => dayKey(new Date(r.completed_at))));

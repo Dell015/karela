@@ -23,6 +23,7 @@
  */
 
 import { decode } from "base64-arraybuffer";
+import { logRequestError } from "../networkErrors";
 import * as FileSystem from "expo-file-system/legacy";
 import { supabase } from "../database/supabase/config";
 import { QuestEngine } from "./QuestEngine";
@@ -207,7 +208,7 @@ export const getNearbyNodes = async (
   });
 
   if (error) {
-    console.error("Failed to fetch nearby nodes:", error);
+    logRequestError("Failed to fetch nearby nodes:", error);
     return [];
   }
 
