@@ -3,7 +3,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -51,7 +51,10 @@ export default function ActiveRunScreen() {
   return (
     <View style={styles.container}>
       <MapView
-        provider={PROVIDER_GOOGLE}
+        // Google + mapDarkStyle on Android; Apple Maps' own dark mode on iOS
+        // (Google Maps needs extra native setup on iOS and is blank in Expo Go).
+        provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
+        userInterfaceStyle="dark"
         style={styles.map}
         customMapStyle={mapDarkStyle}
         initialRegion={{ latitude: 17.6195, longitude: 121.7275, latitudeDelta: 0.005, longitudeDelta: 0.005 }}

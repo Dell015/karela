@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Text,
   TouchableOpacity,
   View,
@@ -399,7 +400,10 @@ export default function MapScreen() {
       <MapView
         ref={mapRef}
         style={styles.map}
-        provider="google"
+        // Google + ghostMapStyle on Android; Apple Maps' own dark mode on iOS
+        // (Google Maps needs extra native setup on iOS and is blank in Expo Go).
+        provider={Platform.OS === "android" ? "google" : undefined}
+        userInterfaceStyle="dark"
         //googleRenderer="LATEST"
         onRegionChangeComplete={(region, isGesture) => {
           // If isGesture is true, the user moved the map manually
