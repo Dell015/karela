@@ -39,6 +39,16 @@ import { PermissionManager } from "@/services/PermissionsManager";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { styles } from "@/styles/mapStyles";
 
+/**
+ * strokeColors only exists to stop Google Maps (Android) drawing lines in
+ * its default blue. On iPhone (Apple Maps) any strokeColors array switches
+ * the line to react-native-maps' custom gradient renderer instead of Apple's
+ * own; adding a flag (gold geodesic route) crashed there. iPhone uses plain
+ * strokeColor and Apple's built-in renderer.
+ */
+const androidStrokeColors = (points: number, color: string) =>
+  Platform.OS === "android" ? Array.from({ length: points }, () => color) : undefined;
+
 export default function MapScreen() {
   const router = useRouter();
   const { user, earnGems, gainXP } = useAuth();
@@ -201,9 +211,13 @@ export default function MapScreen() {
   };
 
   const handleSpawnFlag = async () => {
-    const camera = await mapRef.current?.getCamera();
-    if (camera?.center) {
-      addCheckpoint(camera.center, currentLocation);
+    try {
+      const camera = await mapRef.current?.getCamera();
+      if (camera?.center) {
+        addCheckpoint(camera.center, currentLocation);
+      }
+    } catch (e) {
+      console.warn("Could not add a checkpoint:", e);
     }
   };
 
@@ -425,9 +439,7 @@ export default function MapScreen() {
           <Polyline
             coordinates={activeGhostData}
             strokeColor="rgba(255, 215, 0, 0.4)"
-            // Apple Maps requires one colour PER POINT in strokeColors; a single-item
-            // array on a longer line crashes the native map on iPhone.
-            strokeColors={activeGhostData.map(() => "rgba(255, 215, 0, 0.4)")}
+            strokeColors={androidStrokeColors(activeGhostData.length, "rgba(255, 215, 0, 0.4)")}
             strokeWidth={4}
             lineCap="round"
             lineJoin="round"
@@ -470,9 +482,7 @@ export default function MapScreen() {
           <Polyline
             coordinates={[currentLocation, ...questPath.slice(1)]}
             strokeColor={KARELA.color.gold}
-            // One colour per point (questPath.length points: user + the rest).
-            // A single-item array crashed Apple Maps when a flag was added.
-            strokeColors={questPath.map(() => KARELA.color.gold)}
+            strokeColors={androidStrokeColors(questPath.length, KARELA.color.gold)}
             strokeWidth={6}
             lineCap="round"
             lineJoin="round"
@@ -496,7 +506,7 @@ export default function MapScreen() {
               coordinates={[prevPoint, point]}
               // FIX: We provide both singular and plural to override the native driver
               strokeColor={segmentColor}
-              strokeColors={[segmentColor, segmentColor]}
+              strokeColors={androidStrokeColors(2, segmentColor)}
               strokeWidth={8}
               lineCap="round"
               lineJoin="round"
