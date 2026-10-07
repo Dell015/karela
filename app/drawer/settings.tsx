@@ -2,6 +2,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { KARELA } from "@/styles/designSystem";
 import { Screen } from "@/components/ui/Screen";
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -29,7 +30,7 @@ export default function SettingsScreen() {
         >
           <Ionicons name="chevron-back" size={24} color={KARELA.color.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>System Settings</Text>
+        <Text style={styles.headerTitle}>Settings</Text>
         <View style={{ width: 44 }} /> 
       </View>
 
@@ -52,7 +53,7 @@ export default function SettingsScreen() {
 
         {/* Developer Tools */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>DEVELOPER TELEMETRY</Text>
+          <Text style={styles.sectionLabel}>Developer tools</Text>
           <View style={styles.groupCard}>
             <TouchableOpacity 
                 style={styles.itemRow} 
@@ -63,8 +64,8 @@ export default function SettingsScreen() {
                 <Ionicons name="flask" size={20} color={KARELA.color.brand} />
               </View>
               <View style={{ flex: 1, marginLeft: 15 }}>
-                <Text style={styles.itemLabel}>Seed 30-Day History</Text>
-                <Text style={styles.itemSublabel}>Populate graphs with mock mission data</Text>
+                <Text style={styles.itemLabel}>Add sample history</Text>
+                <Text style={styles.itemSublabel}>Fills the graphs with sample runs for testing</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={KARELA.color.surfaceSoft} />
             </TouchableOpacity>
@@ -73,7 +74,7 @@ export default function SettingsScreen() {
 
         {/* Account Management */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>CORE PROTOCOLS</Text>
+          <Text style={styles.sectionLabel}>Account and data</Text>
           <View style={styles.groupCard}>
             <TouchableOpacity 
                 style={styles.itemRow} 
@@ -84,8 +85,8 @@ export default function SettingsScreen() {
                 <Ionicons name="trash-outline" size={20} color={KARELA.color.danger} />
               </View>
               <View style={{ flex: 1, marginLeft: 15 }}>
-                <Text style={[styles.itemLabel, { color: KARELA.color.danger }]}>Clear Local Storage</Text>
-                <Text style={styles.itemSublabel}>Wipe ghost runs and local cache</Text>
+                <Text style={[styles.itemLabel, { color: KARELA.color.danger }]}>Reset progress</Text>
+                <Text style={styles.itemSublabel}>Deletes your run history and resets your level</Text>
               </View>
             </TouchableOpacity>
 
@@ -98,15 +99,15 @@ export default function SettingsScreen() {
                 <Ionicons name="log-out-outline" size={20} color={KARELA.color.textMuted} />
               </View>
               <View style={{ flex: 1, marginLeft: 15 }}>
-                <Text style={styles.itemLabel}>Terminate Session</Text>
-                <Text style={styles.itemSublabel}>Safely log out of the network</Text>
+                <Text style={styles.itemLabel}>Log out</Text>
+                <Text style={styles.itemSublabel}>You can log back in any time</Text>
               </View>
             </TouchableOpacity>
           </View>
         </View>
 
         <View style={styles.footer}>
-            <Text style={styles.versionText}>KARELA OS v1.0.4-BETA</Text>
+            <Text style={styles.versionText}>Karela {Constants.expoConfig?.version ?? ""} beta</Text>
             <Text style={styles.buildText}>BUILD ID: {Math.floor(Math.random() * 90000) + 10000}</Text>
         </View>
 

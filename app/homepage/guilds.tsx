@@ -68,11 +68,11 @@ export default function GuildsScreen() {
 
   const handleSubmitImpact = (title: string) => {
     Alert.alert(
-      "UPLINK INITIATED",
-      `Prepare to submit proof for ${title}. This will verify your current GPS location and squad proximity.`,
+      "Submit proof?",
+      `Submit proof for ${title}? Karela will check your current location.`,
       [
-        { text: "CANCEL", style: "cancel" },
-        { text: "SUBMIT", onPress: () => console.log("Impact Submitted") },
+        { text: "Cancel", style: "cancel" },
+        { text: "Submit proof", onPress: () => console.log("Impact Submitted") },
       ],
     );
   };
@@ -86,8 +86,8 @@ export default function GuildsScreen() {
           {/* Header */}
           <View style={styles.header}>
             <View>
-              <Text style={styles.headerTitle}>{showDetails ? "SQUAD INTEL" : "GUILDS"}</Text>
-              <Text style={styles.headerSubtitle}>{showDetails ? myGuild.name : "Tuguegarao Sector"}</Text>
+              <Text style={styles.headerTitle}>{showDetails ? "Your guild" : "Guilds"}</Text>
+              <Text style={styles.headerSubtitle}>{showDetails ? myGuild.name : "Tuguegarao City"}</Text>
             </View>
             <TouchableOpacity style={styles.menuButton} onPress={() => showDetails ? handleToggleDetails() : (navigation as any).openDrawer()}>
               <Ionicons name={showDetails ? "chevron-down" : "menu"} size={28} color={KARELA.color.brand} />
@@ -95,7 +95,7 @@ export default function GuildsScreen() {
           </View>
 
           {/* Active Guild Card */}
-          <Text style={styles.sectionLabel}>YOUR ACTIVE SQUAD</Text>
+          <Text style={styles.sectionLabel}>Your guild</Text>
           <TouchableOpacity activeOpacity={0.9} onPress={handleToggleDetails}>
             <LinearGradient
               colors={showDetails ? KARELA.gradients.brand : ([KARELA.color.surface, KARELA.color.bg] as const)}
@@ -123,7 +123,7 @@ export default function GuildsScreen() {
 
           {showDetails ? (
             <View style={styles.missionSection}>
-              <Text style={styles.sectionLabel}>SQUAD OPERATIONS</Text>
+              <Text style={styles.sectionLabel}>Guild quests</Text>
               {SQUAD_MISSIONS.map((mission) => {
                 const isExpanded = expandedMission === mission.id;
                 return (
@@ -144,7 +144,7 @@ export default function GuildsScreen() {
                         <Text style={styles.missionGoal}>{mission.goal} • {Math.round(mission.progress * 100)}%</Text>
                         <TouchableOpacity style={styles.submitButton} onPress={() => handleSubmitImpact(mission.title)}>
                           <MaterialCommunityIcons name="target" size={18} color={KARELA.color.onBright} />
-                          <Text style={styles.submitButtonText}>SUBMIT PROOF OF IMPACT</Text>
+                          <Text style={styles.submitButtonText}>Submit proof</Text>
                         </TouchableOpacity>
                       </View>
                     ) : (
@@ -153,11 +153,11 @@ export default function GuildsScreen() {
                   </TouchableOpacity>
                 );
               })}
-              <TouchableOpacity style={styles.rosterBtn}><Text style={styles.rosterBtnText}>VIEW FULL ROSTER</Text></TouchableOpacity>
+              <TouchableOpacity style={styles.rosterBtn}><Text style={styles.rosterBtnText}>See all members</Text></TouchableOpacity>
             </View>
           ) : (
             <>
-              <View style={styles.sectionHeader}><Text style={styles.sectionLabel}>DISCOVER SQUADS</Text><TouchableOpacity><Text style={styles.viewAllText}>FILTER</Text></TouchableOpacity></View>
+              <View style={styles.sectionHeader}><Text style={styles.sectionLabel}>Find a guild</Text><TouchableOpacity><Text style={styles.viewAllText}>Filter</Text></TouchableOpacity></View>
               {MOCK_GUILDS.map((guild) => (
                 <TouchableOpacity key={guild.id} style={styles.listCard}>
                   <View style={styles.listIconBox}><MaterialCommunityIcons name={guild.icon as any} size={24} color={guild.color} /></View>
@@ -165,7 +165,7 @@ export default function GuildsScreen() {
                   <Ionicons name="chevron-forward" size={20} color={KARELA.color.textFaint} />
                 </TouchableOpacity>
               ))}
-              <TouchableOpacity style={styles.createBtn}><Ionicons name="add-circle-outline" size={20} color={KARELA.color.textMuted} /><Text style={styles.createBtnText}>ESTABLISH NEW GUILD</Text></TouchableOpacity>
+              <TouchableOpacity style={styles.createBtn}><Ionicons name="add-circle-outline" size={20} color={KARELA.color.textMuted} /><Text style={styles.createBtnText}>Start a guild</Text></TouchableOpacity>
             </>
           )}
         </ScrollView>

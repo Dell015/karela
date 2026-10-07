@@ -172,12 +172,12 @@ export default function MapScreen() {
             setIsGhostEnabled(true);
           } catch (e) {
             console.error("Ghost parse error", e);
-            Alert.alert("Error", "Could not load ghost path.");
+            Alert.alert("Couldn't load your ghost", "Try again, or race without a ghost.");
           }
         } else {
           Alert.alert(
-            "No Ghost Found",
-            "Save a run first to race against yourself!",
+            "No ghost yet",
+            "Finish and save a run first. Then you can race against it.",
           );
         }
       } else {
@@ -285,20 +285,20 @@ export default function MapScreen() {
         await gainXP(200);
         await earnGems(20);
         Alert.alert(
-          "Node Verified! 🎉",
-          "Community confirmed this issue!\n+200 XP  •  +20 Gems",
+          "Report verified",
+          "Neighbours confirmed this issue.\n+200 XP, +20 Gems",
         );
       } else {
         // Report submitted — small reward
         await gainXP(50);
         await earnGems(5);
         Alert.alert(
-          "Report Submitted 📸",
-          "Pending verification. Others nearby can corroborate.\n+50 XP  •  +5 Gems",
+          "Report sent",
+          "It stays pending until 3 people nearby report it.\n+50 XP, +5 Gems",
         );
       }
     } else {
-      Alert.alert("Report Failed", result.message || "Could not submit report.");
+      Alert.alert("Report not sent", result.message || "Check your connection and try again.");
     }
   };
 
@@ -307,7 +307,7 @@ export default function MapScreen() {
     if (!user) return;
     const success = await reconfirmNode(nodeId, user.uid);
     if (success) {
-      Alert.alert("Confirmed!", "Node confidence reset. Thanks for verifying!");
+      Alert.alert("Thanks for checking", "You confirmed it's still there, so it stays on the map longer.");
     }
   };
 
@@ -724,7 +724,7 @@ export default function MapScreen() {
           ]}
           onPress={() => (isRacing ? handleStopRace() : handleStartRace())}
         >
-          <Text style={styles.buttonText}>{isRacing ? "STOP" : "START"}</Text>
+          <Text style={styles.buttonText}>{isRacing ? "Stop" : "Start"}</Text>
         </TouchableOpacity>
       </View>
     </View>

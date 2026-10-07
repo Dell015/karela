@@ -33,7 +33,7 @@ export const NotificationService = {
       // instead of creating a new one every second.
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: "👻 Ghost Race Active",
+          title: "Ghost race in progress",
           body: `Distance: ${distanceKm} km  |  Speed: ${speedKmH} km/h`,
           sticky: true, // Android specific
           color: "#7CF205",

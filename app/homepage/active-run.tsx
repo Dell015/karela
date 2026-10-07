@@ -102,7 +102,7 @@ export default function ActiveRunScreen() {
             </TouchableOpacity>
             <TouchableOpacity style={styles.stopBtn} onLongPress={() => router.back()}>
               <LinearGradient colors={[KARELA.color.danger, '#941B15']} style={styles.stopGradient}>
-                <Text style={styles.stopText}>HOLD TO FINISH</Text>
+                <Text style={styles.stopText}>Hold to finish</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>

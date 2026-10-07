@@ -98,9 +98,9 @@ export const setLocalMissions = (missions: any[]) => {
       statement.finalizeSync();
     }
 
-    console.log(`✅ SQLITE: Successfully saved ${missions.length} missions.`);
+    console.log(`SQLITE: Successfully saved ${missions.length} missions.`);
   } catch (err) {
-    console.error("❌ SQLITE: Failed to save missions:", err);
+    console.error("SQLITE: Failed to save missions:", err);
   }
 };
 

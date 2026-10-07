@@ -91,7 +91,7 @@ export default function AiCoach() {
   ];
 
   const clearChat = () => {
-    Alert.alert("Clear Audit", "Wipe conversation history?", [
+    Alert.alert("Clear chat?", "This clears your conversation with Ani.", [
       { text: "Cancel", style: "cancel" },
       { text: "Clear", style: "destructive", onPress: () => setMessages([]) },
     ]);
@@ -102,7 +102,7 @@ export default function AiCoach() {
     if (!textToSend.trim() || isTyping) return;
 
     if (!API_KEY) {
-      Alert.alert("System Error", "Kinetic link failed: API Key missing.");
+      Alert.alert("Ani isn't available", "Ani isn't set up in this version of the app yet.");
       return;
     }
 
@@ -155,7 +155,7 @@ export default function AiCoach() {
         ...prev,
         {
           id: "err",
-          text: "Kinetic link lost. Let's try that again.",
+          text: "Sorry, I couldn't reply just now. Check your connection and try again.",
           sender: "ai",
           timestamp: new Date(),
         },
@@ -177,7 +177,7 @@ export default function AiCoach() {
           >
             <Feather name="chevron-left" size={32} color={KARELA.color.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Kinetic Coach</Text>
+          <Text style={styles.headerTitle}>Ani</Text>
         </View>
         <TouchableOpacity onPress={clearChat} style={styles.refreshBtn}>
           <Feather name="refresh-cw" size={20} color={KARELA.color.brand} />
@@ -201,7 +201,7 @@ export default function AiCoach() {
                 Hello, {user?.displayName?.split(" ")[0] || "Strider"}
               </Text>
               <Text style={styles.greetingSubtitle}>
-                Let&apos;s audit{"\n"}your effort.
+                How&apos;s your{"\n"}body today?
               </Text>
               <View style={styles.chipsContainer}>
                 {QUICK_ACTIONS.map((action) => (
@@ -264,7 +264,7 @@ export default function AiCoach() {
         <View style={styles.inputWrapper}>
           <TextInput
             style={styles.input}
-            placeholder="Ask your coach..."
+            placeholder="Message Ani"
             placeholderTextColor={KARELA.color.textMuted}
             value={inputText}
             onChangeText={setInputText}

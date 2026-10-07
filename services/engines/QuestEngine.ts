@@ -197,10 +197,10 @@ const generateSystemDistanceQuest = (
   const xp = scaleXP(frequency, level);
 
   const titles: Record<QuestFrequency, string[]> = {
-    daily: ["Daily Patrol", "Baseline Run", "Sector Sweep", "Morning Recon"],
-    weekly: ["Weekly Expedition", "Long Haul", "Distance Push", "Endurance Test"],
-    monthly: ["Monthly Marathon", "The Gauntlet", "Iron Distance", "Month's Challenge"],
-    limited: ["Flash Mission", "Time Trial", "Quick Op"],
+    daily: ["Daily run", "Easy run", "Steady run", "Morning walk"],
+    weekly: ["Weekly distance", "Long run", "Go a little further", "Weekly goal"],
+    monthly: ["Monthly distance", "Monthly goal", "Monthly push", "Month's challenge"],
+    limited: ["Quick quest", "Time trial", "Short run"],
   };
 
   const titlePool = titles[frequency];
@@ -426,8 +426,8 @@ export const QuestEngine = {
 
       if (aiQuest) {
         await addMission(userId, {
-          title: `🤖 ${aiQuest.title}`,
-          description: aiQuest.description || "Ani has a special mission for you.",
+          title: aiQuest.title,
+          description: aiQuest.description || "A quest Ani picked for you.",
           target_value: (aiQuest.goalDistance || 2000) / 1000,  // Convert m → km
           xp_reward: aiQuest.rewardXP || scaleXP("daily", level),
           category: "solo",

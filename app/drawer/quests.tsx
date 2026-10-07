@@ -120,15 +120,15 @@ export default function QuestsScreen() {
 
       // claimQuest returns 0/0 when objectives are not actually met.
       if (xpAwarded === 0 && gemsAwarded === 0) {
-        Alert.alert("NOT READY", "Mission objectives not yet met.");
+        Alert.alert("Not done yet", "Finish the quest goal first, then claim your reward.");
         return;
       }
 
-      let message = `Mission Complete. +${xpAwarded} XP secured.`;
+      let message = `Quest complete. +${xpAwarded} XP.`;
       if (gemsAwarded > 0) message += ` +${gemsAwarded} Gems.`;
-      Alert.alert("COMMAND CENTER", message);
+      Alert.alert("Reward claimed", message);
     } catch {
-      Alert.alert("ERROR", "Sync failed.");
+      Alert.alert("Couldn't claim", "Your reward wasn't saved. Check your connection and try again.");
     }
   };
 
@@ -238,12 +238,12 @@ export default function QuestsScreen() {
                       end={{ x: 1, y: 0 }}
                       style={styles.claimBtn}
                     >
-                      <Text style={styles.btnText}>CLAIM REWARD</Text>
+                      <Text style={styles.btnText}>Claim reward</Text>
                     </LinearGradient>
                   </TouchableOpacity>
                 ) : (
                   <View style={styles.lockedBtn}>
-                    <Text style={styles.lockedText}>MISSION ACTIVE</Text>
+                    <Text style={styles.lockedText}>In progress</Text>
                   </View>
                 )}
               </View>

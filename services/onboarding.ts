@@ -98,7 +98,7 @@ export const ONBOARDING_ARC: OnboardingDay[] = [
     xp_reward: 300,
     gem_reward: 50,
     type: "distance",
-    milestone: "🔥 7-day streak achieved! 1.5× XP multiplier unlocked.",
+    milestone: "7-day streak. Your XP multiplier is now 1.5x.",
   },
 ];
 

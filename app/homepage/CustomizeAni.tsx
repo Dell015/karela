@@ -31,7 +31,7 @@ export default function CustomizeScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={28} color={KARELA.color.brand} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>LOADOUT_CORE</Text>
+        <Text style={styles.headerTitle}>Customize Ani</Text>
         <MaterialCommunityIcons name="shield-sync" size={24} color={KARELA.color.brand} />
       </View>
 
@@ -73,7 +73,7 @@ export default function CustomizeScreen() {
       {/* --- FOOTER SAVE ACTION --- */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.saveBtn} onPress={() => router.back()}>
-          <Text style={styles.saveBtnText}>INITIALIZE LOADOUT</Text>
+          <Text style={styles.saveBtnText}>Save</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

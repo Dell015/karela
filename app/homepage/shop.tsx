@@ -55,8 +55,8 @@ export default function ShopScreen() {
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           <View style={styles.introSection}>
-            <Text style={styles.title}>REQUISITION</Text>
-            <Text style={styles.subtitle}>Equip yourself for the next operation</Text>
+            <Text style={styles.title}>Shop</Text>
+            <Text style={styles.subtitle}>Spend Gems on boosts and outfits for Ani</Text>
           </View>
 
           <View style={styles.tabBar}>
@@ -79,7 +79,7 @@ export default function ShopScreen() {
                     <MaterialCommunityIcons name="diamond-stone" size={12} color={KARELA.vibrant.sky} />
                     <Text style={styles.priceText}>{item.price}</Text>
                   </View>
-                  <TouchableOpacity style={styles.buyBtn}><Text style={styles.buyBtnText}>BUY</Text></TouchableOpacity>
+                  <TouchableOpacity style={styles.buyBtn}><Text style={styles.buyBtnText}>Buy</Text></TouchableOpacity>
                 </LinearGradient>
               </TouchableOpacity>
             ))}

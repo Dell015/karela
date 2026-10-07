@@ -39,7 +39,7 @@ export const PermissionManager = {
 
         if (finalStatus !== 'granted') {
             Alert.alert(
-                "Notifications Optional",
+                "Lock-screen stats",
                 "Enable notifications to see your live race stats on the lock screen while you run.",
                 [
                     { text: "Skip", style: "cancel" },
@@ -53,8 +53,8 @@ export const PermissionManager = {
 
     showDeniedAlert: () => {
         Alert.alert(
-            "Location Required",
-            "Karela needs location access to track your runs. Please enable 'Allow all the time' in settings.",
+            "Location is off",
+            "Karela needs your location to track runs. Turn on location for Karela in Settings.",
             [
                 { text: "Cancel", style: "cancel" },
                 { text: "Open Settings", onPress: () => Linking.openSettings() }

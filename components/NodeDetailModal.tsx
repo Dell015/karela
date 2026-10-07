@@ -91,10 +91,10 @@ export const NodeDetailModal = ({
           </View>
           <Text style={styles.meterHint}>
             {confidence > 70
-              ? "Recently confirmed — high reliability"
+              ? "Recently confirmed by neighbours"
               : confidence > 40
-                ? "Aging — needs reconfirmation soon"
-                : "Low confidence — may be resolved"}
+                ? "Getting old. It needs a fresh check soon."
+                : "Not confirmed lately. It may be fixed."}
           </Text>
         </View>
 
@@ -114,7 +114,7 @@ export const NodeDetailModal = ({
               style={styles.reconfirmGradient}
             >
               <Ionicons name="checkmark-done" size={18} color={KARELA.color.onBright} />
-              <Text style={styles.reconfirmText}>Still There — Reconfirm</Text>
+              <Text style={styles.reconfirmText}>Still there</Text>
             </LinearGradient>
           </TouchableOpacity>
         )}

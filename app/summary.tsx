@@ -68,7 +68,7 @@ export default function SummaryScreen() {
         );
 
         if (!saved) {
-          Alert.alert("Error", "Could not save Ghost data locally.");
+          Alert.alert("Ghost not saved", "This run couldn't be saved as a ghost. Try again.");
           return;
         }
 
@@ -82,12 +82,12 @@ export default function SummaryScreen() {
         });
 
         Alert.alert(
-          "Ghost Saved",
-          "Your adaptive ghost is learning from this run!",
+          "Ghost saved",
+          "Your ghost will learn from this run.",
         );
       }
     } catch {
-      Alert.alert("Error", "Could not save Ghost data locally.");
+      Alert.alert("Ghost not saved", "This run couldn't be saved as a ghost. Try again.");
     }
   };
 
@@ -95,7 +95,7 @@ export default function SummaryScreen() {
     setIsSaving(true);
 
     if (!user || !profile) {
-      Alert.alert("Error", "Profile not loaded. Please wait.");
+      Alert.alert("One moment", "Your profile is still loading. Try again in a few seconds.");
       setIsSaving(false);
       return;
     }
@@ -149,8 +149,8 @@ export default function SummaryScreen() {
     } catch (error) {
       console.error("Finalize Error:", error);
       Alert.alert(
-        "Sync Failed",
-        "Could not synchronize stats to the Command Center.",
+        "Not synced yet",
+        "Your run couldn't be sent to your account. Check your connection and try again.",
       );
     } finally {
       setIsSaving(false);
@@ -166,8 +166,8 @@ export default function SummaryScreen() {
 
       <SafeAreaView style={{ flex: 1 }}>
         <View style={styles.header}>
-          <Text style={styles.missionText}>MISSION STATUS</Text>
-          <Text style={styles.completeText}>SUCCESSFUL</Text>
+          <Text style={styles.missionText}>Run complete</Text>
+          <Text style={styles.completeText}>Nice work</Text>
         </View>
 
         <View style={styles.content}>
@@ -224,7 +224,7 @@ export default function SummaryScreen() {
             activeOpacity={0.7}
           >
             <Ionicons name="copy-outline" size={20} color={KARELA.color.brand} />
-            <Text style={styles.ghostButtonText}>RECORD AS GHOST</Text>
+            <Text style={styles.ghostButtonText}>Save as ghost</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -241,7 +241,7 @@ export default function SummaryScreen() {
               {isSaving ? (
                 <ActivityIndicator color={KARELA.color.onBright} />
               ) : (
-                <Text style={styles.primaryButtonText}>RETURN TO BASE</Text>
+                <Text style={styles.primaryButtonText}>Save and finish</Text>
               )}
             </LinearGradient>
           </TouchableOpacity>

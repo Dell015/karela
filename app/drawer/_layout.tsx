@@ -18,17 +18,17 @@ function CustomDrawerContent(props: any) {
   const router = useRouter();
 
   const handleLogout = () => {
-    Alert.alert("Logout", "Are you sure you want to log out?", [
+    Alert.alert("Log out?", "You can log back in any time.", [
       { text: "Cancel", style: "cancel" },
       {
-        text: "Logout",
+        text: "Log out",
         style: "destructive",
         onPress: async () => {
           try {
             await signOutUser();
             router.replace("/auth/login");
           } catch {
-            Alert.alert("Error", "Failed to log out.");
+            Alert.alert("Couldn't log out", "Check your connection and try again.");
           }
         },
       },
@@ -42,7 +42,7 @@ function CustomDrawerContent(props: any) {
       </View>
       <View style={styles.logoutContainer}>
         <DrawerItem
-          label="Logout"
+          label="Log out"
           labelStyle={{ color: KARELA.color.danger, fontFamily: KARELA.font.bold }}
           icon={({ size }) => (
             <Ionicons name="log-out-outline" size={size} color={KARELA.color.danger} />

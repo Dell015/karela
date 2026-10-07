@@ -274,7 +274,7 @@ export default function Dashboard() {
               />
 
               {/* Map Preview Section */}
-              <Text style={dashboard_ui.sectionTitle}>Active Path-Maker</Text>
+              <Text style={dashboard_ui.sectionTitle}>Your map</Text>
               <View style={dashboard_ui.mapPreviewContainer}>
                 <View
                   style={{
@@ -312,7 +312,7 @@ export default function Dashboard() {
                       }}
                     >
                       <Text style={{ color: KARELA.color.brand, fontFamily: KARELA.font.medium }}>
-                        INITIALIZING SENSORS...
+                        Finding your location...
                       </Text>
                     </View>
                   )}
@@ -346,7 +346,7 @@ export default function Dashboard() {
                   onPress={() => router.push("/drawer/maps")}
                 >
                   <Text style={dashboard_ui.mapButtonText}>
-                    Click to see more
+                    Open map
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -375,7 +375,7 @@ export default function Dashboard() {
                       size={14}
                       color={KARELA.color.brand}
                     />
-                    <Text style={dashboard_ui.customizeBtnText}>CUSTOMIZE</Text>
+                    <Text style={dashboard_ui.customizeBtnText}>Customize</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -405,7 +405,7 @@ export default function Dashboard() {
                     </Text>
                     <View style={dashboard_ui.nestedInputContainer}>
                       <TextInput
-                        placeholder="Ask Ani anything..."
+                        placeholder="Message Ani"
                         placeholderTextColor={KARELA.color.textMuted}
                         style={dashboard_ui.nestedInput}
                         returnKeyType="send"
@@ -413,7 +413,7 @@ export default function Dashboard() {
                       <TouchableOpacity
                         onPress={() => router.push("/drawer/ai_coach")}
                       >
-                        <Text style={{ color: KARELA.color.textPrimary, fontSize: 18 }}>➔</Text>
+                        <Ionicons name="arrow-forward" size={20} color={KARELA.color.textPrimary} />
                       </TouchableOpacity>
                     </View>
                   </View>

@@ -30,8 +30,8 @@ export const useMotionShield = () => {
       if (!granted) {
         setPermissionDenied(true);
         Alert.alert(
-          "Motion Access Required",
-          "Karela uses your motion data to detect when you're physically running and prevent GPS cheating. Enable it in Settings → Privacy → Motion & Fitness.",
+          "Allow motion access",
+          "Karela uses motion data to tell running apart from riding in a vehicle, so your distance counts fairly. Turn it on in Settings > Privacy & Security > Motion & Fitness.",
           [
             { text: "Skip", style: "cancel" },
             { text: "Open Settings", onPress: () => Linking.openSettings() },

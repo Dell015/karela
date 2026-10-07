@@ -129,8 +129,8 @@ export const CivicHUD = ({
     if (existing === 'denied') {
       // Already denied — can't re-prompt, send to Settings
       Alert.alert(
-        "Camera Required",
-        "Karela needs camera access to verify civic reports. Please enable it in your device settings.",
+        "Camera access needed",
+        "A report needs a photo. Turn on the camera for Karela in Settings.",
         [
           { text: "Cancel", style: "cancel" },
           { text: "Open Settings", onPress: () => Linking.openSettings() },
@@ -143,8 +143,8 @@ export const CivicHUD = ({
     const perm = await ImagePicker.requestCameraPermissionsAsync();
     if (!perm.granted) {
       Alert.alert(
-        "Camera Required",
-        "Karela needs camera access to verify civic reports with a photo.",
+        "Camera access needed",
+        "A report needs a photo taken with your camera.",
         [
           { text: "Cancel", style: "cancel" },
           { text: "Open Settings", onPress: () => Linking.openSettings() },
@@ -175,8 +175,8 @@ export const CivicHUD = ({
       // sheet becomes un-dismissable (backdrop/close are gated on !submitting).
       console.error("Civic report submit failed:", e);
       Alert.alert(
-        "Report Failed",
-        "Could not submit your report. Check your connection and try again.",
+        "Report not sent",
+        "Check your connection and try again.",
       );
     } finally {
       setSubmitting(false);
@@ -272,11 +272,11 @@ export const CivicHUD = ({
 
           <View style={styles.sheetHeader}>
             <View style={styles.sheetHeaderText}>
-              <Text style={styles.sheetTitle}>Report an Issue</Text>
+              <Text style={styles.sheetTitle}>Report an issue</Text>
               <Text style={styles.sheetSub}>
                 {submitting
-                  ? "Uploading photo & verifying location…"
-                  : "Pick a category, then snap a photo. 3 reports verify a node."}
+                  ? "Uploading your photo and checking your location…"
+                  : "Pick a category, then take a photo. Reports from 3 neighbours verify an issue."}
               </Text>
             </View>
             <View style={styles.sheetHeaderIcon}>

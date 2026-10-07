@@ -65,12 +65,12 @@ export default function Signup() {
 
   const handleSignup = async () => {
     if (!email || !password || !weight || !height || !age) {
-      Alert.alert("Required Fields", "Please fill in your physical profile so we can generate your missions.");
+      Alert.alert("A few details missing", "Fill in your email, password, weight, height and age so Ani can set quests that fit you.");
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match.");
+      Alert.alert("Passwords don't match", "Type the same password in both fields.");
       return;
     }
 
@@ -111,8 +111,8 @@ export default function Signup() {
       await registerUser(email, password, userData);
 
       Alert.alert(
-        "Verify Your Email", 
-        `A verification link has been sent to ${email}. Please verify your email before logging in.`,
+        "Check your email", 
+        `We sent a link to ${email}. Open it to confirm your account, then log in.`,
         [{ text: "Go to Login", onPress: () => router.replace("/auth/login") }]
       );
 
@@ -125,7 +125,7 @@ export default function Signup() {
       if (m.includes("invalid email")) msg = "Invalid email format.";
       if (m.includes("password")) msg = "Password is too weak (min 6 chars).";
 
-      Alert.alert("Signup Error", msg);
+      Alert.alert("Couldn't create your account", msg);
     } finally {
       setLoading(false);
     }

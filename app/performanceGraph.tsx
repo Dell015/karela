@@ -118,7 +118,7 @@ export default function PerformanceGraph() {
                 style={{ opacity: 0.2 }}
               />
               <Text style={styles.emptyText}>
-                Insufficient data for mission telemetry
+                Not enough runs yet. Finish a few runs to see your graph.
               </Text>
             </View>
           )}

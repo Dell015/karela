@@ -59,12 +59,12 @@ export const useSettings = () => {
 
       await reloadProfile();
       Alert.alert(
-        "Demo Mode Active",
-        "Telemetry synchronized: 14 missions injected into history.",
+        "Sample history added",
+        "Added 14 sample runs to your history.",
       );
     } catch (error: any) {
       console.error("Seed Error:", error);
-      Alert.alert("Injection Failed", error.message);
+      Alert.alert("Couldn't add sample history", error.message);
     }
   };
 
@@ -73,12 +73,12 @@ export const useSettings = () => {
    */
   const handleResetData = () => {
     Alert.alert(
-      "Hard Reset",
-      "This will permanently delete local history and reset cloud levels. Proceed?",
+      "Reset progress?",
+      "This permanently deletes your run history on this phone and resets your level in your account. It can't be undone.",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Reset Everything",
+          text: "Reset progress",
           style: "destructive",
           onPress: async () => {
             try {
@@ -98,12 +98,12 @@ export const useSettings = () => {
 
               await reloadProfile();
               Alert.alert(
-                "Success",
-                "Telemetry and cloud profile have been cleared.",
+                "Progress reset",
+                "Your run history and level have been cleared.",
               );
             } catch (e) {
               console.error("Reset Error:", e);
-              Alert.alert("Error", "A system error occurred during reset.");
+              Alert.alert("Reset didn't finish", "Something went wrong. Check your connection and try again.");
             }
           },
         },

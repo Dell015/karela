@@ -17,12 +17,12 @@ import {
 const LOGO_IMAGE = require('@/assets/images/Onboarding/karela_logo.png');
 
 const SLIDES = [
-    { id: '1', title: 'Your journey starts \nwith one step.', description: 'The hardest part is showing up. Let us handle the rest.', image: LOGO_IMAGE },
-    { id: '2', title: 'Run Smarter,\nRun Stronger', description: 'Get personalized coaching plans adapted to your performance.', image: require('@/assets/images/Onboarding/slide2.png') },
-    { id: '3', title: 'Track Every Step', description: 'Real-time stats and GPS tracking to keep you on pace.', image: require('@/assets/images/Onboarding/slide3.png') },
-    { id: '4', title: 'Set Goals\nSee Progress', description: 'Visualize your improvements and smash your personal bests.', image: require('@/assets/images/Onboarding/slide4.png') },
-    { id: '5', title: 'Run With\nConfidence', description: 'Route planning and safety features for peace of mind.', image: require('@/assets/images/Onboarding/slide5.png') },
-    { id: '6', title: 'Ready To\nRun?', description: 'Enable location services to accurately track your runs.', image: require('@/assets/images/Onboarding/slide6.png') },
+    { id: '1', title: 'Your run starts\nwith one step.', description: 'The hardest part is showing up. Ani helps with the rest.', image: LOGO_IMAGE },
+    { id: '2', title: 'A coach who\nreads your day', description: 'Ani adjusts your quests to how your body and the weather are doing.', image: require('@/assets/images/Onboarding/slide2.png') },
+    { id: '3', title: 'Every step\ncounts', description: 'Tracking keeps working with no signal and syncs when you are back online.', image: require('@/assets/images/Onboarding/slide3.png') },
+    { id: '4', title: 'Race your\nghost', description: 'Your ghost is built from how you actually run, not from your personal best.', image: require('@/assets/images/Onboarding/slide4.png') },
+    { id: '5', title: 'Safety\ncomes first', description: 'Ani checks the weather and never pushes you to run in a storm.', image: require('@/assets/images/Onboarding/slide5.png') },
+    { id: '6', title: 'Ready to\nrun?', description: 'Allow location so Karela can track your runs.', image: require('@/assets/images/Onboarding/slide6.png') },
 ];
 
 // --- 2. HELPER COMPONENTS ---
@@ -210,7 +210,7 @@ export default function Index() {
                                     }]}>Next</Animated.Text>
                                     <Animated.Text style={[styles.primaryButtonText, {
                                         opacity: morphAnim.interpolate({ inputRange: [0.7, 1], outputRange: [0, 1] })
-                                    }]}>Allow Access</Animated.Text>
+                                    }]}>Allow location</Animated.Text>
                                 </View>
                             </TouchableOpacity>
                         </Animated.View>

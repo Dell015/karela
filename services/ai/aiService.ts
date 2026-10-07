@@ -15,7 +15,7 @@ export const GEMINI_MODEL = "gemini-2.5-flash";
 
 const API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 if (!API_KEY) {
-  console.warn("⚠️ EXPO_PUBLIC_GEMINI_API_KEY is not set. Ani coaching will use fallback responses.");
+  console.warn("EXPO_PUBLIC_GEMINI_API_KEY is not set. Ani coaching will use fallback responses.");
 }
 const genAI = new GoogleGenerativeAI(API_KEY || "");
 
@@ -36,7 +36,7 @@ export const summarizeRunForAI = async (runData: any) => {
     return response.text();
   } catch (error) {
     console.error("Gemini Agent Error:", error);
-    return "Stamina scan complete. Data synchronized to core.";
+    return "Run saved. Ani couldn't write a recap this time.";
   }
 };
 
@@ -67,8 +67,8 @@ export const generateAniQuest = async (userProfile: any, runHistory: any[] = [])
     console.error("Ani Quest Gen Error:", error);
     return {
       id: `fail_${Date.now()}`,
-      title: "Baseline Calibration",
-      description: "AI Link unstable. Complete a standard patrol.",
+      title: "Steady 2 km",
+      description: "A steady 2 km at your own pace.",
       goalDistance: 2000,
       goalSpeed: 6.5,
       rewardXP: 50

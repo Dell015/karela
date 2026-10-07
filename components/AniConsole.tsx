@@ -43,7 +43,7 @@ export const AniConsole = () => {
         <AniView action={currentAniAction} />
 
         <Animated.View style={[dashboard_ui.consoleOverlay, animatedControlsStyle]}>
-          <Text style={dashboard_ui.consoleTitle}>ANI COMMAND CONSOLE</Text>
+          <Text style={dashboard_ui.consoleTitle}>Ani&apos;s moves</Text>
           <View style={dashboard_ui.btnRow}>
             {['IDLE', 'WALK', 'RUN'].map((mode) => (
               <TouchableOpacity 
@@ -63,7 +63,7 @@ export const AniConsole = () => {
             ))}
           </View>
           <TouchableOpacity style={dashboard_ui.closeConsoleBtn} onPress={toggleConsole}>
-            <Text style={dashboard_ui.closeConsoleBtnText}>EXIT COMMAND</Text>
+            <Text style={dashboard_ui.closeConsoleBtnText}>Close</Text>
           </TouchableOpacity>
         </Animated.View>
       </Pressable>

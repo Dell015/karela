@@ -63,7 +63,7 @@ export default function ProgressScreen() {
               style={[ProgressScreenUI.dot, { backgroundColor: "#7CF205" }]}
             />
             <Text style={ProgressScreenUI.activeIndicatorText}>
-              TELEMETRY ACTIVE
+              Tracking on
             </Text>
           </View>
         </View>
@@ -258,7 +258,7 @@ export default function ProgressScreen() {
         <View style={ProgressScreenUI.row}>
           <Text style={ProgressScreenUI.sectionTitle}>Performance Preview</Text>
           <TouchableOpacity onPress={() => router.push("/performanceGraph")}>
-            <Text style={ProgressScreenUI.viewDetailsText}>VIEW DETAILS</Text>
+            <Text style={ProgressScreenUI.viewDetailsText}>View details</Text>
           </TouchableOpacity>
         </View>
         <View style={ProgressScreenUI.previewChartWrapper}>

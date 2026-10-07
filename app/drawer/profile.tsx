@@ -72,9 +72,9 @@ export default function ProfilePage() {
         "stats.target_weight": Number(targetWeight),
       });
       setShowEditProfile(false);
-      Alert.alert("Updated", "Profile saved. Ani is recalibrating your metrics.");
+      Alert.alert("Saved", "Your profile is updated. Ani will use it for your next quests.");
     } catch {
-      Alert.alert("Error", "Failed to update profile.");
+      Alert.alert("Couldn't save", "Your changes weren't saved. Check your connection and try again.");
     }
   };
 

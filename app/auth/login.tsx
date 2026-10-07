@@ -26,7 +26,7 @@ export default function Login() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields");
+      Alert.alert("Missing details", "Enter your email and password.");
       return;
     }
 
@@ -47,7 +47,7 @@ export default function Login() {
         errorMessage = "Incorrect email or password.";
       }
 
-      Alert.alert("Login Failed", errorMessage);
+      Alert.alert("Couldn't log in", errorMessage);
     } finally {
       setLoading(false);
     }
