@@ -210,7 +210,7 @@ export const styles = StyleSheet.create({
     textAlign: "center",
   },
   // --- Flag placement mode ---
-  placeOverlay: { ...StyleSheet.absoluteFillObject, zIndex: 150 },
+  placeOverlay: { ...StyleSheet.absoluteFill, zIndex: 150 }, // absoluteFillObject no longer exists in RN 0.86
   // The dot is the exact spot (screen centre); the flag stands on it.
   placeDot: {
     position: "absolute",
