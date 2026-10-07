@@ -34,6 +34,7 @@ import {
 import { dashboard_ui } from "@/styles/dashboardStyle";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { theme } from "@/styles/theme";
+import { getWeatherLine, getWeatherTier, WeatherTier } from "@/services/weatherSafety";
 import type { DrawerNavigationProp } from "expo-router/drawer";
 
 
@@ -72,11 +73,16 @@ export default function Dashboard() {
     desc: string;
     city: string;
     icon: string;
+    tier: WeatherTier | null; // null until real weather has loaded
+    status: "loading" | "ok" | "unavailable";
   }>({
     temp: "--",
     desc: "Loading...",
     city: "Unknown",
     icon: "01d",
+    tier: null,
+    // Without a key there is nothing to load, so say so instead of "Checking..." forever.
+    status: process.env.EXPO_PUBLIC_WEATHER_API_KEY ? "loading" : "unavailable",
   });
 
   // --- RECENTER LOGIC ---
@@ -126,10 +132,15 @@ export default function Dashboard() {
           desc: data.weather[0].description,
           city: data.name,
           icon: data.weather[0].icon,
+          tier: getWeatherTier(data),
+          status: "ok",
         });
+      } else {
+        setWeather((prev) => ({ ...prev, status: "unavailable" }));
       }
     } catch (error) {
       console.error("Weather Fetch failed:", error);
+      setWeather((prev) => ({ ...prev, status: "unavailable" }));
     }
   };
 
@@ -277,7 +288,10 @@ export default function Dashboard() {
                   {currentLocation?.latitude ? (
                     <MapView
                       ref={mapRef}
-                      provider={Platform.OS === "android" ? "google" : "google"}
+                      // Google + ghostMapStyle on Android; Apple Maps' own dark mode on iOS
+                      // (Google Maps needs extra native setup on iOS and is blank in Expo Go).
+                      provider={Platform.OS === "android" ? "google" : undefined}
+                      userInterfaceStyle="dark"
                       style={StyleSheet.absoluteFill}
                       customMapStyle={ghostMapStyle}
                       showsUserLocation={true}
@@ -387,11 +401,7 @@ export default function Dashboard() {
                   />
                   <View style={dashboard_ui.chatContent}>
                     <Text style={dashboard_ui.chatText}>
-                      My sensors see {weather.desc} in {weather.city}
-                      {/* Wrap weather.temp in Number() to fix the comparison error */}
-                      {weather.temp !== "--" && Number(weather.temp) > 30
-                        ? " — It's a bit hot out there, stay hydrated!"
-                        : " — Conditions are optimal for a run!"}
+                      {getWeatherLine(weather)}
                     </Text>
                     <View style={dashboard_ui.nestedInputContainer}>
                       <TextInput

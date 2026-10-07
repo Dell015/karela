@@ -19,6 +19,7 @@ import {
 // 1. SERVICES & AUTH
 import { useAuth } from "@/context/AuthContext";
 import { GEMINI_MODEL } from "@/services/ai/aiService";
+import { ANI_DISCLOSURE, ANI_RULES } from "@/services/ai/aniPersona";
 import { getProfile } from "@/services/database/supabase/profiles";
 import { getRecentRunMemories } from "@/services/database/supabase/runService";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -133,7 +134,7 @@ export default function AiCoach() {
 
       // OPTIMIZED: Compact system context — saves ~50% tokens per message
       const result = await model.generateContent(
-        `You are Ani, a supportive running coach. Athlete: ${userProfile?.displayName || "Strider"}, ${stats?.weight || 70}kg, level ${stats?.level || 1}. ${memoryPrompt} Be conversational, short, witty. If off-topic, redirect to running.\n\nUser: ${textToSend}`
+        `${ANI_RULES} Athlete: ${userProfile?.displayName || "Strider"}, ${stats?.weight || 70}kg, level ${stats?.level || 1}. ${memoryPrompt} If off-topic, gently bring it back to running, walking or civic quests.\n\nUser: ${textToSend}`
       );
 
       const response = await result.response;
@@ -197,7 +198,7 @@ export default function AiCoach() {
           {messages.length === 0 ? (
             <View style={styles.emptyStateContainer}>
               <Text style={styles.greetingTitle}>
-                👋 Hello, {user?.displayName?.split(" ")[0] || "Stryder"}
+                Hello, {user?.displayName?.split(" ")[0] || "Strider"}
               </Text>
               <Text style={styles.greetingSubtitle}>
                 Let&apos;s audit{"\n"}your effort.
@@ -219,6 +220,7 @@ export default function AiCoach() {
                   </TouchableOpacity>
                 ))}
               </View>
+              <Text style={styles.disclosure}>{ANI_DISCLOSURE}</Text>
             </View>
           ) : (
             <View style={styles.chatContainer}>
@@ -313,6 +315,13 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   chipsContainer: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  disclosure: {
+    color: KARELA.color.textSecondary,
+    fontSize: KARELA.size.label,
+    fontFamily: KARELA.font.regular,
+    lineHeight: 18,
+    marginTop: KARELA.space.xl,
+  },
   chip: {
     flexDirection: "row",
     alignItems: "center",

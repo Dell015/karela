@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { ANI_RULES } from "./aniPersona";
 
 /**
  * Single source of truth for the Gemini model.
@@ -28,7 +29,7 @@ export const summarizeRunForAI = async (runData: any) => {
       },
     });
 
-    const prompt = `Karela run summary: ${runData.distance}m, ${runData.avgSpeed?.toFixed(1)}km/h. Give a 2-sentence coaching summary. Note any pace decay.`;
+    const prompt = `${ANI_RULES} Run summary: ${runData.distance}m, ${runData.avgSpeed?.toFixed(1)}km/h. Give a 2-sentence coaching summary. Note any pace decay.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -53,7 +54,9 @@ export const generateAniQuest = async (userProfile: any, runHistory: any[] = [])
     const hasHistory = runHistory.length > 0;
 
     // OPTIMIZED: Minimal prompt — saves ~40% tokens vs the old version
-    const prompt = `Generate 1 running quest as JSON. Athlete: level ${stats.level}, ${stats.weight}kg, ${stats.age}y/o. Notes: "${stats.ai_notes || "none"}". ${hasHistory ? `Recent avg: ${Math.round(runHistory.reduce((a: any, r: any) => a + (r.distance || 2000), 0) / runHistory.length)}m.` : "New user."} Return: {"title":"string","description":"string (max 12 words)","goalDistance":number_meters,"goalSpeed":number_kmh,"rewardXP":number}`;
+    // ANI_RULES matters here too: ai_notes can mention injuries, which must
+    // lead to a light, low-impact quest, never a weight-loss target.
+    const prompt = `${ANI_RULES} Generate 1 running quest as JSON. Athlete: level ${stats.level}, ${stats.weight}kg, ${stats.age}y/o. Notes: "${stats.ai_notes || "none"}". ${hasHistory ? `Recent avg: ${Math.round(runHistory.reduce((a: any, r: any) => a + (r.distance || 2000), 0) / runHistory.length)}m.` : "New user."} Return: {"title":"string","description":"string (max 12 words)","goalDistance":number_meters,"goalSpeed":number_kmh,"rewardXP":number}`;
 
     const result = await model.generateContent(prompt);
     const text = result.response.text();
