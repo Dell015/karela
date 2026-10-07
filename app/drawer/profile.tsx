@@ -1,402 +1,472 @@
-import { getEffectiveStreak } from "@/services/streakService";
-import { Button, Chip, IconButton } from "@/components/ui/Button";
+import { Button, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { useAuth } from "@/context/AuthContext";
-import { KARELA } from "@/styles/designSystem";
+import { formatDuration, formatKm } from "@/services/calendarData";
 import { updateUserProfileData } from "@/services/database/supabase/userData";
+import {
+  CivicSummary,
+  RunRecords,
+  computeBadges,
+  formatPace,
+  getCivicSummary,
+  getRunRecords,
+} from "@/services/profileData";
+import { getEffectiveStreak } from "@/services/streakService";
 import { getStreakTier } from "@/services/streakMultiplier";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { KARELA } from "@/styles/designSystem";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useRef, useState } from "react";
 import {
   Alert,
-  Dimensions,
   KeyboardAvoidingView,
   Modal,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
 
-const { width } = Dimensions.get("window");
+const XP_PER_LEVEL = 1000; // COMPUTATIONS.md: every level needs 1000 XP
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+// Same ranges the server accepts at sign-up (supabase/07_close_stats_hole.sql).
+const USERNAME_RE = /^[A-Za-z0-9_.]{3,20}$/;
+const NOTES_MAX = 300;
+
+const memberSince = (iso?: string) => {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? null : `Member since ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+};
+
+const runDate = (iso: string) => {
+  const d = new Date(iso);
+  return `${MONTHS[d.getMonth()].slice(0, 3)} ${d.getDate()}`;
+};
 
 export default function ProfilePage() {
   const router = useRouter();
   const { profile, logout } = useAuth();
+  const uid = profile?.uid;
+  const createdAt = profile?.createdAt;
 
-  // Edit states
-  const [showEditProfile, setShowEditProfile] = useState(false);
-  const [displayName, setDisplayName] = useState(profile?.displayName || "");
-  const [username, setUsername] = useState(profile?.username || "");
-  const [aiNotes, setAiNotes] = useState(profile?.stats?.ai_notes || "");
-  const [age, setAge] = useState(profile?.stats?.age?.toString() || "20");
-  const [weight, setWeight] = useState(profile?.stats?.weight?.toString() || "70");
-  const [height, setHeight] = useState(profile?.stats?.height?.toString() || "170");
-  const [targetWeight, setTargetWeight] = useState(profile?.stats?.target_weight?.toString() || "70");
+  // --- Real records, loaded each time the screen is opened ---
+  const [records, setRecords] = useState<RunRecords | null>(null);
+  const [civic, setCivic] = useState<CivicSummary | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const requestId = useRef(0);
 
-  // Stats tab
-  const [activeTrack, setActiveTrack] = useState<"physical" | "civic">("physical");
+  useFocusEffect(
+    useCallback(() => {
+      if (!uid) return;
+      const id = ++requestId.current;
+      // Fall back to two years back if the account date is missing.
+      const since = createdAt ? new Date(createdAt) : new Date(Date.now() - 730 * 86400000);
+      since.setDate(since.getDate() - 1);
+      Promise.all([getRunRecords(uid, since), getCivicSummary(uid)]).then(([r, c]) => {
+        if (id !== requestId.current) return; // a newer load replaced this one
+        setRecords(r);
+        setCivic(c);
+        setLoadFailed(r === null);
+      });
+    }, [uid, createdAt]),
+  );
 
-  useEffect(() => {
-    if (profile) {
-      setDisplayName(profile.displayName || "");
-      setUsername(profile.username || "");
-      setAiNotes(profile.stats?.ai_notes || "");
-      setAge(profile.stats?.age?.toString() || "20");
-      setWeight(profile.stats?.weight?.toString() || "70");
-      setHeight(profile.stats?.height?.toString() || "170");
-      setTargetWeight(profile.stats?.target_weight?.toString() || "70");
-    }
+  // --- Edit sheet ---
+  const [showEdit, setShowEdit] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [displayName, setDisplayName] = useState("");
+  const [username, setUsername] = useState("");
+  const [aiNotes, setAiNotes] = useState("");
+  const [age, setAge] = useState("");
+  const [weight, setWeight] = useState("");
+  const [height, setHeight] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const fillForm = useCallback(() => {
+    setDisplayName(profile?.displayName || "");
+    setUsername(profile?.username || "");
+    setAiNotes(profile?.stats?.ai_notes || "");
+    setAge(profile?.stats?.age ? `${profile.stats.age}` : "");
+    setWeight(profile?.stats?.weight ? `${profile.stats.weight}` : "");
+    setHeight(profile?.stats?.height ? `${profile.stats.height}` : "");
+    setFormError(null);
   }, [profile]);
+
+  const openEdit = () => {
+    fillForm();
+    setShowEdit(true);
+  };
 
   const stats = profile?.stats;
   const streak = getEffectiveStreak(stats);
+  const bestStreak = Math.max(streak, Number(stats?.longest_streak || 0));
   const tier = getStreakTier(streak);
-  const xpProgress = ((stats?.xp || 0) / 1000) * 100;
-  const level = stats?.level || 1;
-  const gems = stats?.gems || 0;
-  const isVanguard = level >= 15;
+  const level = Number(stats?.level || 1);
+  const xp = Number(stats?.xp || 0);
+  const xpPct = Math.min(100, (xp / XP_PER_LEVEL) * 100);
+  const name = profile?.displayName || "Strider";
+  const since = memberSince(profile?.createdAt);
+  const badges = computeBadges(records, civic, bestStreak);
+  const earnedCount = badges.filter((b) => b.earned).length;
+  const totalM = records?.totalM ?? Number(stats?.total_distance_km || 0) * 1000;
 
-  const handleSaveProfile = async () => {
-    if (!profile?.uid) return;
+  const validate = (): string | null => {
+    if (!displayName.trim()) return "Add a display name.";
+    if (displayName.trim().length > 40) return "Keep the display name under 40 characters.";
+    if (!USERNAME_RE.test(username)) return "Usernames are 3 to 20 letters, numbers, _ or . with no spaces.";
+    const a = Number(age), w = Number(weight), h = Number(height);
+    if (!Number.isInteger(a) || a < 10 || a > 100) return "Age should be a whole number from 10 to 100.";
+    if (!(w >= 20 && w <= 300)) return "Weight should be between 20 and 300 kg.";
+    if (!(h >= 100 && h <= 250)) return "Height should be between 100 and 250 cm.";
+    if (aiNotes.length > NOTES_MAX) return `Notes for Ani can be up to ${NOTES_MAX} characters.`;
+    return null;
+  };
+
+  const handleSave = async () => {
+    if (!uid || saving) return;
+    const problem = validate();
+    if (problem) {
+      setFormError(problem);
+      return;
+    }
+    setSaving(true);
+    setFormError(null);
+    const w = Number(weight), h = Number(height);
     try {
-      await updateUserProfileData(profile.uid, {
-        displayName,
+      await updateUserProfileData(uid, {
+        displayName: displayName.trim(),
         username,
-        "stats.ai_notes": aiNotes,
+        "stats.ai_notes": aiNotes.trim(),
         "stats.age": Number(age),
-        "stats.weight": Number(weight),
-        "stats.height": Number(height),
-        "stats.target_weight": Number(targetWeight),
+        "stats.weight": w,
+        "stats.height": h,
+        "stats.bmi": Math.round((w / ((h / 100) * (h / 100))) * 100) / 100,
       });
-      setShowEditProfile(false);
-      Alert.alert("Saved", "Your profile is updated. Ani will use it for your next quests.");
-    } catch {
-      Alert.alert("Couldn't save", "Your changes weren't saved. Check your connection and try again.");
+      setShowEdit(false);
+    } catch (e: any) {
+      // 23505: unique_violation on profiles.username
+      setFormError(
+        e?.code === "23505"
+          ? "That username is taken. Try another one."
+          : "Your changes weren't saved. Check your connection and try again.",
+      );
+    } finally {
+      setSaving(false);
     }
   };
 
+  const confirmLogout = () =>
+    Alert.alert("Log out?", "Runs you finished are saved to your account. You can log back in any time.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Log out", style: "destructive", onPress: logout },
+    ]);
+
   return (
     <Screen variant="default">
-    <ScrollView style={s.container} contentContainerStyle={{ paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
-      {/* IDENTITY BANNER */}
-      <LinearGradient colors={[KARELA.color.surfaceAlt, "transparent"]} style={s.banner}>
-        <IconButton icon="chevron-back" label="Back" onPress={() => router.back()} style={s.backBtn} />
+      <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
+        {/* HEADER */}
+        <View style={s.topBar}>
+          <IconButton icon="chevron-back" label="Back" onPress={() => router.back()} />
+          <IconButton icon="settings-outline" label="Settings" onPress={() => router.push("/drawer/settings")} />
+        </View>
 
-        <View style={s.identityRow}>
-          <View style={s.avatarRing}>
-            <LinearGradient colors={KARELA.gradients.brand} style={s.avatarGradient}>
-              <View style={s.avatarInner}>
-                <MaterialCommunityIcons name="account" size={40} color={KARELA.color.brand} />
-              </View>
-            </LinearGradient>
-          </View>
-
-          <View style={s.identityText}>
-            <Text style={s.displayName}>{profile?.displayName || "Strider"}</Text>
-            <View style={s.roleRow}>
-              <View style={[s.roleBadge, { backgroundColor: isVanguard ? "rgba(255,179,71,0.15)" : "rgba(124,242,5,0.15)" }]}>
-                <Ionicons name={isVanguard ? "shield-checkmark" : "scan"} size={12} color={isVanguard ? KARELA.vibrant.techOrange : KARELA.color.brand} />
-                <Text style={[s.roleText, { color: isVanguard ? KARELA.vibrant.techOrange : KARELA.color.brand }]}>
-                  {isVanguard ? "VANGUARD" : "SCOUT"}
-                </Text>
-              </View>
-              {streak >= 14 && (
-                <View style={s.titleBadge}>
-                  <Text style={s.titleText}>Consistent Walker</Text>
-                </View>
-              )}
+        <View style={s.identity}>
+          {/* No profile photos yet: the first letter of the name, like Home. */}
+          <LinearGradient colors={KARELA.gradients.brand} style={s.avatarRing}>
+            <View style={s.avatarInner}>
+              <Text style={s.avatarText}>{name.trim().charAt(0).toUpperCase()}</Text>
             </View>
-            <Text style={s.usernameText}>@{profile?.username || "strider"}</Text>
-          </View>
-        </View>
-
-        <View style={s.bannerActions}>
-          <Button label="Edit" variant="secondary" size="sm" icon="create-outline" onPress={() => setShowEditProfile(true)} />
-        </View>
-      </LinearGradient>
-
-      {/* PROGRESSION CORE */}
-      <View style={s.section}>
-        <View style={s.levelRow}>
-          <Text style={s.levelLabel}>LVL {level}</Text>
-          <Text style={s.xpLabel}>{stats?.xp || 0} / 1,000 XP</Text>
-        </View>
-        <View style={s.xpBar}>
-          <LinearGradient colors={KARELA.gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[s.xpFill, { width: `${Math.min(xpProgress, 100)}%` }]} />
-        </View>
-
-        {/* STREAK + GEMS + DISTANCE */}
-        <View style={s.metricsRow}>
-          <View style={s.metricCard}>
-            <Ionicons name="flame" size={18} color={KARELA.color.gold} />
-            <Text style={s.metricValue}>{streak}d</Text>
-            <Text style={s.metricSub}>×{tier.multiplier} {tier.label}</Text>
-            {tier.nextTierAt && (
-              <Text style={s.metricHint}>{tier.nextTierAt - streak}d to next</Text>
-            )}
-          </View>
-          <View style={s.metricCard}>
-            <Ionicons name="diamond" size={18} color={KARELA.color.brand} />
-            <Text style={s.metricValue}>{gems}</Text>
-            <Text style={s.metricSub}>Gems</Text>
-          </View>
-          <View style={s.metricCard}>
-            <Ionicons name="footsteps" size={18} color={KARELA.color.civic} />
-            <Text style={s.metricValue}>{(stats?.total_distance_km || 0).toFixed(1)}</Text>
-            <Text style={s.metricSub}>Total km</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* DUAL TRACK STATS */}
-      <View style={s.section}>
-        <View style={s.trackTabs}>
-          <Chip label="Physical" icon="fitness-outline" selected={activeTrack === "physical"} onPress={() => setActiveTrack("physical")} style={s.trackChip} />
-          <Chip label="Civic" icon="people-outline" selected={activeTrack === "civic"} onPress={() => setActiveTrack("civic")} style={s.trackChip} />
-        </View>
-
-        {activeTrack === "physical" ? (
-          <View style={s.statsGrid}>
-            <StatTile icon="location" color={KARELA.color.brand} value={`${(stats?.total_distance_km || 0).toFixed(1)} km`} label="Total Distance" />
-            <StatTile icon="trophy" color={KARELA.color.gold} value={`${stats?.ghostWins || 0}`} label="Ghost Wins" />
-            <StatTile icon="flame" color={KARELA.vibrant.techOrange} value={`${stats?.total_calories_burned || 0}`} label="Calories Burned" />
-            <StatTile icon="speedometer" color={KARELA.vibrant.neonTeal} value={stats?.avg_pace_mins_km ? `${stats.avg_pace_mins_km.toFixed(1)}` : "--"} label="Avg Pace (min/km)" />
-          </View>
-        ) : (
-          <View style={s.statsGrid}>
-            <StatTile icon="megaphone" color={KARELA.color.civic} value={`${stats?.total_missions_completed || 0}`} label="Reports Filed" />
-            <StatTile icon="checkmark-circle" color={KARELA.color.brand} value={isVanguard ? "87%" : "N/A"} label="Accuracy Score" />
-            <StatTile icon="star" color={KARELA.color.gold} value="0" label="Civic XP" />
-            <StatTile icon="analytics" color={KARELA.color.brandDeep} value="0" label="C-Score" />
-          </View>
-        )}
-      </View>
-
-      {/* ANI COACH SNAPSHOT */}
-      <View style={s.section}>
-        <View style={s.aniHeader}>
-          <View style={s.aniAvatar}>
-            <MaterialCommunityIcons name="robot-happy" size={22} color={KARELA.color.brand} />
-          </View>
+          </LinearGradient>
           <View style={{ flex: 1 }}>
-            <Text style={s.aniName}>Ani</Text>
-            <Text style={s.aniSub}>Your AI Coach</Text>
+            <Text style={s.name} numberOfLines={1}>{name}</Text>
+            <Text style={s.handle} numberOfLines={1}>@{profile?.username || "strider"}</Text>
+            {since && <Text style={s.since}>{since}</Text>}
           </View>
-          <Button label="Chat" variant="link" size="sm" onPress={() => router.push("/drawer/ai_coach")} />
         </View>
-        <View style={s.aniMessage}>
-          <Text style={s.aniText}>
-            {stats?.ai_notes
-              ? `Coach's briefing: "${stats.ai_notes}". I'll factor that into your plan.`
-              : `At ${stats?.weight || 70}kg and your current level, you're building a solid foundation. Keep showing up daily — consistency beats intensity.`}
+        <Button label="Edit profile" variant="secondary" size="sm" icon="create-outline" onPress={openEdit} style={s.editBtn} />
+
+        {/* LEVEL */}
+        <View style={s.card}>
+          <View style={s.rowBetween}>
+            <Text style={s.levelText}>Level {level}</Text>
+            <Text style={s.muted}>{xp.toLocaleString()} / {XP_PER_LEVEL.toLocaleString()} XP</Text>
+          </View>
+          <View style={s.xpBar} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: XP_PER_LEVEL, now: xp }}>
+            <LinearGradient colors={KARELA.gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[s.xpFill, { width: `${xpPct}%` }]} />
+          </View>
+          <Text style={s.muted}>{(XP_PER_LEVEL - xp).toLocaleString()} XP to level {level + 1}</Text>
+        </View>
+
+        {/* STREAK */}
+        <View style={s.metricsRow}>
+          <Metric icon="flame" color={KARELA.color.civic} value={`${streak}`} unit={streak === 1 ? "day" : "days"} label="Streak" />
+          <Metric icon="trophy" color={KARELA.color.gold} value={`${bestStreak}`} unit={bestStreak === 1 ? "day" : "days"} label="Best streak" />
+          <Metric icon="flash" color={KARELA.color.brand} value={`${tier.multiplier}x`} label="XP bonus" />
+        </View>
+        {tier.nextTierAt ? (
+          <Text style={s.hint}>
+            {streak === 0
+              ? "Run today to start a streak."
+              : `${tier.nextTierAt - streak} more ${tier.nextTierAt - streak === 1 ? "day" : "days"} to the next bonus.`}
           </Text>
+        ) : (
+          <Text style={s.hint}>Top bonus reached. Keep it going.</Text>
+        )}
+
+        {/* RECORDS */}
+        <Text style={s.sectionTitle}>Your running</Text>
+        {loadFailed && <Text style={s.notice}>Couldn&apos;t load your runs. Showing what&apos;s saved on your profile.</Text>}
+        <View style={s.grid}>
+          <Tile label="Runs" value={records ? `${records.totalRuns}` : "-"} />
+          <Tile label="Distance" value={formatKm(totalM)} />
+          <Tile label="This week" value={records ? formatKm(records.thisWeekM) : "-"} />
+          <Tile label="Longest run" value={records?.longestM ? formatKm(records.longestM) : "-"} />
+          <Tile label="Fastest pace" value={records?.fastestPaceS ? formatPace(records.fastestPaceS) : "-"} sub="runs of 1 km or more" />
+          <Tile label="Time running" value={records ? formatDuration(records.totalS) : "-"} />
         </View>
-      </View>
 
-      {/* SQUAD HUB */}
-      <View style={s.section}>
-        <Text style={s.sectionTitle}>Squad</Text>
-        <View style={s.emptyCard}>
-          <Ionicons name="people-outline" size={32} color={KARELA.color.surfaceSoft} />
-          <Text style={s.emptyTitle}>No Squad Yet</Text>
-          <Text style={s.emptyDesc}>
-            Join or create a squad of 3-12 friends for accountability, streak protection, and shared rewards.
-          </Text>
-          {/* TODO: guild search is not built yet, so this does nothing. */}
-          <Button label="Find a guild" variant="secondary" size="sm" />
+        {/* RECENT RUNS */}
+        <View style={[s.rowBetween, s.sectionHead]}>
+          <Text style={[s.sectionTitle, s.inlineTitle]}>Recent runs</Text>
+          <Button label="Calendar" variant="link" size="sm" onPress={() => router.push("/drawer/calendar")} />
         </View>
-      </View>
-
-      {/* GUILD AFFILIATION */}
-      <View style={s.section}>
-        <Text style={s.sectionTitle}>Guild</Text>
-        <View style={s.emptyCard}>
-          <Ionicons name="shield-outline" size={32} color={KARELA.color.surfaceSoft} />
-          <Text style={s.emptyTitle}>No Guild Yet</Text>
-          <Text style={s.emptyDesc}>
-            Guilds compete for city landmark ownership. 50+ members required. Claim territory by running through it.
-          </Text>
-          {/* TODO: guild search is not built yet, so this does nothing. */}
-          <Button label="Browse guilds" variant="secondary" size="sm" />
-        </View>
-      </View>
-
-      {/* UTILITY & SECURITY */}
-      <View style={s.section}>
-        <Text style={s.sectionTitle}>Settings & Privacy</Text>
-        <View style={s.utilityGrid}>
-          <TouchableOpacity style={s.utilityItem}>
-            <Ionicons name="location-outline" size={18} color={KARELA.color.brand} />
-            <View style={{ flex: 1 }}>
-              <Text style={s.utilityLabel}>Privacy Zones</Text>
-              <Text style={s.utilityDesc}>Coming soon</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color={KARELA.color.textFaint} />
-          </TouchableOpacity>
-
-          {isVanguard && (
-            <TouchableOpacity style={s.utilityItem}>
-              <Ionicons name="checkmark-done" size={18} color={KARELA.vibrant.techOrange} />
-              <View style={{ flex: 1 }}>
-                <Text style={s.utilityLabel}>Vanguard Review Score</Text>
-                <Text style={s.utilityDesc}>Coming soon</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color={KARELA.color.textFaint} />
-            </TouchableOpacity>
+        <View style={s.list}>
+          {records && records.recent.length === 0 && (
+            <Text style={s.emptyText}>No runs yet. Your first one shows up here.</Text>
           )}
-
-          <TouchableOpacity style={s.utilityItem}>
-            <Ionicons name="notifications-outline" size={18} color={KARELA.color.textMuted} />
-            <View style={{ flex: 1 }}>
-              <Text style={s.utilityLabel}>Notifications</Text>
-              <Text style={s.utilityDesc}>Coming soon</Text>
+          {records?.recent.map((r) => (
+            <View key={r.id} style={s.listRow}>
+              <Text style={s.listDate}>{runDate(r.completed_at)}</Text>
+              <Text style={s.listMain}>{formatKm(Number(r.distance_meters) || 0)}</Text>
+              <Text style={s.muted}>{formatDuration(Number(r.duration_seconds) || 0)}</Text>
+              <Text style={[s.muted, s.listXp]}>+{r.xp_earned || 0} XP</Text>
             </View>
-            <Ionicons name="chevron-forward" size={16} color={KARELA.color.textFaint} />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={s.utilityItem} onPress={logout}>
-            <Ionicons name="log-out-outline" size={18} color={KARELA.color.danger} />
-            <View style={{ flex: 1 }}>
-              <Text style={[s.utilityLabel, { color: KARELA.color.danger }]}>Log out</Text>
-            </View>
-          </TouchableOpacity>
+          ))}
         </View>
-      </View>
 
-      {/* EDIT PROFILE MODAL */}
-      <Modal visible={showEditProfile} animationType="slide" transparent>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={s.modalOverlay}>
-          <View style={s.modalContent}>
-            <Text style={s.modalTitle}>Edit Profile</Text>
+        {/* CIVIC */}
+        <Text style={s.sectionTitle}>In your city</Text>
+        <View style={[s.card, s.civicCard]}>
+          <View style={s.civicStat}>
+            <Text style={[s.bigValue, { color: KARELA.color.civic }]}>{civic ? civic.filed : "-"}</Text>
+            <Text style={s.muted}>reports filed</Text>
+          </View>
+          <View style={s.divider} />
+          <View style={s.civicStat}>
+            <Text style={s.bigValue}>{civic ? civic.verified : "-"}</Text>
+            <Text style={s.muted}>confirmed by neighbours</Text>
+          </View>
+        </View>
 
-            <Text style={s.inputLabel}>Display Name</Text>
-            <TextInput style={s.input} value={displayName} onChangeText={setDisplayName} placeholder="Display Name" placeholderTextColor={KARELA.color.textMuted} />
+        {/* BADGES */}
+        <View style={[s.rowBetween, s.sectionHead]}>
+          <Text style={[s.sectionTitle, s.inlineTitle]}>Badges</Text>
+          <Text style={s.muted}>{earnedCount} of {badges.length}</Text>
+        </View>
+        <View style={s.badges}>
+          {badges.map((b) => {
+            const color = b.civic ? KARELA.color.civic : KARELA.color.brand;
+            return (
+              <View
+                key={b.id}
+                style={s.badge}
+                accessible
+                accessibilityLabel={b.earned ? `${b.label}, earned` : `${b.label}, locked. ${b.hint}`}
+              >
+                <View style={[s.badgeIcon, b.earned ? { borderColor: color, backgroundColor: KARELA.color.surfaceAlt } : s.badgeLocked]}>
+                  <Ionicons name={(b.earned ? b.icon : "lock-closed-outline") as any} size={20} color={b.earned ? color : KARELA.color.textFaint} />
+                </View>
+                <Text style={[s.badgeLabel, !b.earned && { color: KARELA.color.textMuted }]}>{b.label}</Text>
+                {!b.earned && <Text style={s.badgeHint}>{b.hint}</Text>}
+              </View>
+            );
+          })}
+        </View>
 
-            <Text style={s.inputLabel}>Username</Text>
-            <TextInput style={s.input} value={username} onChangeText={setUsername} placeholder="Username" placeholderTextColor={KARELA.color.textMuted} autoCapitalize="none" />
+        {/* ANI NOTES */}
+        <Text style={s.sectionTitle}>Notes for Ani</Text>
+        <View style={[s.card, s.aniCard]}>
+          <Text style={stats?.ai_notes ? s.body : s.muted}>
+            {stats?.ai_notes ||
+              "Tell Ani what she should know, like an old injury or when you like to run. She uses it for general wellness coaching only, never to diagnose."}
+          </Text>
+          <View style={s.aniActions}>
+            <Button label={stats?.ai_notes ? "Edit notes" : "Add notes"} variant="secondary" size="sm" onPress={openEdit} />
+            <Button label="Talk to Ani" variant="link" size="sm" onPress={() => router.push("/drawer/ai_coach")} />
+          </View>
+        </View>
 
-            <Text style={s.inputLabel}>Age</Text>
-            <TextInput style={s.input} value={age} onChangeText={setAge} placeholder="Age" keyboardType="numeric" placeholderTextColor={KARELA.color.textMuted} />
+        {/* SOCIAL + ACCOUNT */}
+        <Text style={s.sectionTitle}>More</Text>
+        <View style={s.list}>
+          <Row icon="people-outline" label="Squads and guilds" onPress={() => router.push("/drawer/guilds")} />
+          <Row icon="settings-outline" label="Settings" onPress={() => router.push("/drawer/settings")} />
+          <Row icon="log-out-outline" label="Log out" danger onPress={confirmLogout} last />
+        </View>
+      </ScrollView>
 
-            <Text style={s.inputLabel}>Weight (kg)</Text>
-            <TextInput style={s.input} value={weight} onChangeText={setWeight} placeholder="Weight" keyboardType="numeric" placeholderTextColor={KARELA.color.textMuted} />
-
-            <Text style={s.inputLabel}>Height (cm)</Text>
-            <TextInput style={s.input} value={height} onChangeText={setHeight} placeholder="Height" keyboardType="numeric" placeholderTextColor={KARELA.color.textMuted} />
-
-            <Text style={s.inputLabel}>Target Weight (kg)</Text>
-            <TextInput style={s.input} value={targetWeight} onChangeText={setTargetWeight} placeholder="Target Weight" keyboardType="numeric" placeholderTextColor={KARELA.color.textMuted} />
-
-            <Text style={s.inputLabel}>Notes for Ani (Coach)</Text>
-            <TextInput style={[s.input, { height: 60 }]} value={aiNotes} onChangeText={setAiNotes} placeholder="e.g. I have bad knees, prefer morning runs" placeholderTextColor={KARELA.color.textMuted} multiline />
-
-            <View style={s.modalButtons}>
-              <Button label="Cancel" variant="secondary" block onPress={() => setShowEditProfile(false)} style={{ flex: 1 }} />
-              <Button label="Save" block onPress={handleSaveProfile} style={{ flex: 1 }} />
+      {/* EDIT SHEET */}
+      <Modal visible={showEdit} animationType="slide" transparent onRequestClose={() => setShowEdit(false)}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={s.sheetBackdrop}>
+          <View style={s.sheet}>
+            <View style={s.rowBetween}>
+              <Text style={s.sheetTitle}>Edit profile</Text>
+              <IconButton icon="close" label="Close" tone="plain" onPress={() => setShowEdit(false)} />
             </View>
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+              <Field label="Display name" value={displayName} onChangeText={setDisplayName} maxLength={40} />
+              <Field label="Username" value={username} onChangeText={(t) => setUsername(t.replace(/\s/g, ""))} autoCapitalize="none" autoCorrect={false} maxLength={20} />
+              <View style={s.fieldRow}>
+                <Field label="Age" value={age} onChangeText={setAge} keyboardType="number-pad" wrapStyle={{ flex: 1 }} />
+                <Field label="Weight (kg)" value={weight} onChangeText={setWeight} keyboardType="decimal-pad" wrapStyle={{ flex: 1 }} />
+                <Field label="Height (cm)" value={height} onChangeText={setHeight} keyboardType="decimal-pad" wrapStyle={{ flex: 1 }} />
+              </View>
+              <Text style={s.fieldNote}>Used to estimate calories. Only you can see these.</Text>
+              <Field
+                label="Notes for Ani"
+                value={aiNotes}
+                onChangeText={setAiNotes}
+                multiline
+                maxLength={NOTES_MAX}
+                placeholder="For example: bad left knee, I prefer morning runs"
+                inputStyle={{ minHeight: 84, textAlignVertical: "top" }}
+              />
+              <Text style={s.fieldNote}>{aiNotes.length}/{NOTES_MAX}</Text>
+              {formError && <Text style={s.formError} accessibilityLiveRegion="polite">{formError}</Text>}
+              <View style={s.sheetButtons}>
+                <Button label="Cancel" variant="secondary" onPress={() => setShowEdit(false)} style={{ flex: 1 }} />
+                <Button label="Save" onPress={handleSave} loading={saving} style={{ flex: 1 }} />
+              </View>
+            </ScrollView>
           </View>
         </KeyboardAvoidingView>
       </Modal>
-    </ScrollView>
     </Screen>
   );
 }
 
-// --- REUSABLE STAT TILE ---
-const StatTile = ({ icon, color, value, label }: { icon: string; color: string; value: string; label: string }) => (
-  <View style={s.statTile}>
+// --- Small pieces ---
+
+const Metric = ({ icon, color, value, unit, label }: { icon: string; color: string; value: string; unit?: string; label: string }) => (
+  <View style={s.metric}>
     <Ionicons name={icon as any} size={18} color={color} />
-    <Text style={s.statTileValue}>{value}</Text>
-    <Text style={s.statTileLabel}>{label}</Text>
+    <Text style={s.metricValue}>
+      {value}
+      {unit ? <Text style={s.metricUnit}> {unit}</Text> : null}
+    </Text>
+    <Text style={s.muted}>{label}</Text>
   </View>
 );
 
-// --- STYLES ---
+const Tile = ({ label, value, sub }: { label: string; value: string; sub?: string }) => (
+  <View style={s.tile}>
+    <Text style={s.muted}>{label}</Text>
+    <Text style={s.tileValue}>{value}</Text>
+    {sub && <Text style={s.tileSub}>{sub}</Text>}
+  </View>
+);
+
+const Row = ({ icon, label, onPress, danger, last }: { icon: string; label: string; onPress: () => void; danger?: boolean; last?: boolean }) => (
+  <Pressable
+    onPress={onPress}
+    accessibilityRole="button"
+    style={({ pressed }) => [s.row, last && { borderBottomWidth: 0 }, pressed && { backgroundColor: KARELA.color.surfaceAlt }]}
+  >
+    <Ionicons name={icon as any} size={20} color={danger ? KARELA.color.danger : KARELA.color.textSecondary} />
+    <Text style={[s.rowLabel, danger && { color: KARELA.color.danger }]}>{label}</Text>
+    {!danger && <Ionicons name="chevron-forward" size={16} color={KARELA.color.textFaint} />}
+  </Pressable>
+);
+
+const Field = ({
+  label,
+  wrapStyle,
+  inputStyle,
+  ...input
+}: React.ComponentProps<typeof TextInput> & { label: string; inputStyle?: object; wrapStyle?: object }) => (
+  <View style={[s.field, wrapStyle]}>
+    <Text style={s.fieldLabel}>{label}</Text>
+    <TextInput {...input} style={[s.input, inputStyle]} placeholderTextColor={KARELA.color.textFaint} accessibilityLabel={label} />
+  </View>
+);
+
+// --- Styles ---
 const s = StyleSheet.create({
-  trackChip: { flex: 1, justifyContent: "center" },
-  container: { flex: 1, backgroundColor: "transparent" },
+  content: { paddingTop: 56, paddingHorizontal: KARELA.space.xl, paddingBottom: 60 },
+  topBar: { flexDirection: "row", justifyContent: "space-between", marginBottom: KARELA.space.lg },
+  rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
 
-  // Banner
-  banner: { paddingTop: 60, paddingHorizontal: KARELA.space.xl, paddingBottom: 24 },
-  backBtn: { position: "absolute", top: 58, left: KARELA.space.lg, zIndex: 10 },
-  identityRow: { flexDirection: "row", alignItems: "center", gap: KARELA.space.lg, marginTop: 10 },
-  avatarRing: { width: 72, height: 72, borderRadius: 36 },
-  avatarGradient: { width: 72, height: 72, borderRadius: 36, padding: 3 },
-  avatarInner: { flex: 1, borderRadius: 33, backgroundColor: KARELA.color.bg, justifyContent: "center", alignItems: "center" },
-  identityText: { flex: 1 },
-  displayName: { color: KARELA.color.textPrimary, fontSize: 22, fontFamily: KARELA.font.black },
-  roleRow: { flexDirection: "row", alignItems: "center", gap: KARELA.space.sm, marginTop: KARELA.space.xs },
-  roleBadge: { flexDirection: "row", alignItems: "center", gap: KARELA.space.xs, paddingHorizontal: KARELA.space.sm, paddingVertical: 3, borderRadius: 10 },
-  roleText: { fontSize: KARELA.size.caption, fontFamily: KARELA.font.black, letterSpacing: 1 },
-  titleBadge: { backgroundColor: KARELA.color.lineSoft, paddingHorizontal: KARELA.space.sm, paddingVertical: 3, borderRadius: 10 },
-  titleText: { color: KARELA.color.textMuted, fontSize: KARELA.size.caption, fontFamily: KARELA.font.medium },
-  usernameText: { color: KARELA.color.textFaint, fontSize: 13, fontFamily: KARELA.font.regular, marginTop: KARELA.space.xs },
-  bannerActions: { flexDirection: "row", gap: 10, marginTop: KARELA.space.lg },
-  bannerBtn: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(124,242,5,0.08)", paddingHorizontal: KARELA.space.lg, paddingVertical: KARELA.space.sm, borderRadius: KARELA.radius.sm, borderWidth: 1, borderColor: "rgba(124,242,5,0.2)" },
-  bannerBtnText: { color: KARELA.color.brand, fontSize: KARELA.size.label, fontFamily: KARELA.font.bold },
+  identity: { flexDirection: "row", alignItems: "center", gap: KARELA.space.lg },
+  avatarRing: { width: 76, height: 76, borderRadius: 38, padding: 3 },
+  avatarInner: { flex: 1, borderRadius: 35, backgroundColor: KARELA.color.bg, justifyContent: "center", alignItems: "center" },
+  avatarText: { color: KARELA.color.brand, fontSize: 30, fontFamily: KARELA.font.black },
+  name: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h1, fontFamily: KARELA.font.black },
+  handle: { color: KARELA.color.textSecondary, fontSize: 14, fontFamily: KARELA.font.regular, marginTop: 2 },
+  since: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.regular, marginTop: KARELA.space.xs },
+  editBtn: { marginTop: KARELA.space.lg, alignSelf: "flex-start" },
 
-  // Progression
-  section: { paddingHorizontal: KARELA.space.xl, marginTop: 24 },
-  levelRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: KARELA.space.sm },
-  levelLabel: { color: KARELA.color.brand, fontSize: KARELA.size.body, fontFamily: KARELA.font.black, letterSpacing: 1 },
-  xpLabel: { color: KARELA.color.textFaint, fontSize: KARELA.size.label, fontFamily: KARELA.font.medium },
-  xpBar: { height: 6, backgroundColor: KARELA.color.surface, borderRadius: 3, overflow: "hidden" },
-  xpFill: { height: "100%", borderRadius: 3 },
-  metricsRow: { flexDirection: "row", gap: 10, marginTop: KARELA.space.lg },
-  metricCard: { flex: 1, backgroundColor: KARELA.color.surface, borderRadius: KARELA.radius.lg, padding: KARELA.space.lg, alignItems: "center", gap: KARELA.space.xs, borderWidth: 1, borderColor: KARELA.color.surface },
-  metricValue: { color: KARELA.color.textPrimary, fontSize: KARELA.space.xl, fontFamily: KARELA.font.black },
-  metricSub: { color: KARELA.color.textFaint, fontSize: KARELA.size.caption, fontFamily: KARELA.font.medium, textAlign: "center" },
-  metricHint: { color: KARELA.color.textFaint, fontSize: 9, marginTop: 2 },
+  card: { backgroundColor: KARELA.color.surface, borderRadius: KARELA.radius.lg, padding: KARELA.space.lg, marginTop: KARELA.space.xl, gap: KARELA.space.sm, borderWidth: 1, borderColor: KARELA.color.lineSoft },
+  levelText: { color: KARELA.color.brand, fontSize: KARELA.size.h2, fontFamily: KARELA.font.black },
+  xpBar: { height: 8, backgroundColor: KARELA.color.surfaceSoft, borderRadius: 4, overflow: "hidden" },
+  xpFill: { height: "100%", borderRadius: 4 },
 
-  // Dual Track
-  trackTabs: { flexDirection: "row", backgroundColor: KARELA.color.surface, borderRadius: KARELA.radius.md, padding: KARELA.space.xs, marginBottom: KARELA.space.lg },
-  trackTab: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 10, borderRadius: KARELA.radius.sm },
-  trackTabActive: { backgroundColor: KARELA.color.surface, borderWidth: 1, borderColor: KARELA.color.surfaceSoft },
-  trackTabText: { color: KARELA.color.textFaint, fontSize: KARELA.size.label, fontFamily: KARELA.font.black },
-  trackTabTextActive: { color: KARELA.color.textPrimary },
-  statsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  statTile: { width: (width - 40 - 10) / 2, backgroundColor: KARELA.color.surface, borderRadius: KARELA.radius.md, padding: KARELA.space.lg, alignItems: "center", gap: 6, borderWidth: 1, borderColor: KARELA.color.surface },
-  statTileValue: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h2, fontFamily: KARELA.font.black },
-  statTileLabel: { color: KARELA.color.textFaint, fontSize: KARELA.size.caption, fontFamily: KARELA.font.medium, textAlign: "center" },
+  metricsRow: { flexDirection: "row", gap: KARELA.space.sm, marginTop: KARELA.space.md },
+  metric: { flex: 1, backgroundColor: KARELA.color.surface, borderRadius: KARELA.radius.md, paddingVertical: KARELA.space.md, alignItems: "center", gap: 2 },
+  metricValue: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h2, fontFamily: KARELA.font.black, marginTop: 2 },
+  metricUnit: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.medium },
+  hint: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.regular, marginTop: KARELA.space.sm, textAlign: "center" },
 
-  // Ani
-  aniHeader: { flexDirection: "row", alignItems: "center", gap: KARELA.space.md, marginBottom: KARELA.space.md },
-  aniAvatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(124,242,5,0.1)", justifyContent: "center", alignItems: "center" },
-  aniName: { color: KARELA.color.brand, fontSize: KARELA.size.body, fontFamily: KARELA.font.black },
-  aniSub: { color: KARELA.color.textFaint, fontSize: 11, fontFamily: KARELA.font.regular },
-  aniChatLink: { color: KARELA.color.brand, fontSize: KARELA.size.label, fontFamily: KARELA.font.bold },
-  aniMessage: { backgroundColor: KARELA.color.surface, borderRadius: KARELA.radius.lg, padding: KARELA.space.lg, borderLeftWidth: 3, borderLeftColor: KARELA.color.brand },
-  aniText: { color: KARELA.color.textSecondary, fontSize: 13, lineHeight: 20, fontFamily: KARELA.font.regular },
+  sectionTitle: { color: KARELA.color.textPrimary, fontSize: 16, fontFamily: KARELA.font.black, marginTop: KARELA.space.xxl, marginBottom: KARELA.space.md },
+  sectionHead: { marginTop: KARELA.space.xxl, marginBottom: KARELA.space.sm },
+  inlineTitle: { marginTop: 0, marginBottom: 0 },
+  notice: { color: KARELA.color.civic, fontSize: KARELA.size.label, fontFamily: KARELA.font.regular, marginBottom: KARELA.space.sm },
 
-  // Social empty states
-  sectionTitle: { color: KARELA.color.textPrimary, fontSize: 16, fontFamily: KARELA.font.black, marginBottom: KARELA.space.md },
-  emptyCard: { backgroundColor: KARELA.color.surface, borderRadius: KARELA.radius.lg, padding: KARELA.space.xxl, alignItems: "center", gap: 10, borderWidth: 1, borderColor: KARELA.color.surface },
-  emptyTitle: { color: KARELA.color.textPrimary, fontSize: 15, fontFamily: KARELA.font.black },
-  emptyDesc: { color: KARELA.color.textFaint, fontSize: KARELA.size.label, fontFamily: KARELA.font.regular, textAlign: "center", lineHeight: 18, maxWidth: 260 },
-  emptyBtn: { backgroundColor: "rgba(124,242,5,0.1)", paddingHorizontal: KARELA.space.xl, paddingVertical: 10, borderRadius: KARELA.radius.sm, marginTop: 6, borderWidth: 1, borderColor: "rgba(124,242,5,0.2)" },
-  emptyBtnText: { color: KARELA.color.brand, fontSize: KARELA.size.label, fontFamily: KARELA.font.bold },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: KARELA.space.sm },
+  tile: { flexBasis: "31%", flexGrow: 1, backgroundColor: KARELA.color.surface, borderRadius: KARELA.radius.sm, padding: KARELA.space.md, gap: 4 },
+  tileValue: { color: KARELA.color.textPrimary, fontSize: KARELA.size.body, fontFamily: KARELA.font.bold },
+  tileSub: { color: KARELA.color.textMuted, fontSize: 10, fontFamily: KARELA.font.regular },
 
-  // Utility
-  utilityGrid: { gap: 2 },
-  utilityItem: { flexDirection: "row", alignItems: "center", gap: KARELA.space.lg, backgroundColor: KARELA.color.surface, paddingVertical: KARELA.space.lg, paddingHorizontal: KARELA.space.lg, borderRadius: KARELA.radius.md, marginBottom: KARELA.space.sm },
-  utilityLabel: { color: KARELA.color.textPrimary, fontSize: KARELA.size.body, fontFamily: KARELA.font.medium },
-  utilityDesc: { color: KARELA.color.textFaint, fontSize: 11, fontFamily: KARELA.font.regular, marginTop: 2 },
+  list: { backgroundColor: KARELA.color.surface, borderRadius: KARELA.radius.md, overflow: "hidden" },
+  listRow: { flexDirection: "row", alignItems: "center", gap: KARELA.space.md, paddingHorizontal: KARELA.space.lg, paddingVertical: KARELA.space.md, borderBottomWidth: 1, borderBottomColor: KARELA.color.lineSoft },
+  listDate: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.medium, width: 52 },
+  listMain: { color: KARELA.color.textPrimary, fontSize: KARELA.size.body, fontFamily: KARELA.font.bold, flex: 1 },
+  listXp: { color: KARELA.color.brand },
+  emptyText: { color: KARELA.color.textMuted, fontSize: 13, fontFamily: KARELA.font.regular, padding: KARELA.space.lg },
 
-  // Edit Profile Modal
-  modalOverlay: { flex: 1, justifyContent: "center", backgroundColor: "rgba(0,0,0,0.8)", paddingHorizontal: 20 },
-  modalContent: { backgroundColor: KARELA.color.surface, borderRadius: KARELA.radius.lg, padding: KARELA.space.xl },
-  modalTitle: { color: KARELA.color.textPrimary, fontSize: 20, fontFamily: KARELA.font.black, marginBottom: KARELA.space.lg, textAlign: "center" },
-  inputLabel: { color: KARELA.color.textMuted, fontSize: KARELA.size.caption, fontFamily: KARELA.font.medium, marginTop: KARELA.space.sm, marginBottom: 4 },
-  input: { backgroundColor: KARELA.color.bg, borderRadius: KARELA.radius.sm, paddingHorizontal: KARELA.space.lg, paddingVertical: KARELA.space.sm, color: KARELA.color.textPrimary, fontSize: KARELA.size.body, fontFamily: KARELA.font.regular, borderWidth: 1, borderColor: KARELA.color.lineSoft },
-  modalButtons: { flexDirection: "row", gap: KARELA.space.lg, marginTop: KARELA.space.xl },
-  modalCancelBtn: { flex: 1, paddingVertical: KARELA.space.md, borderRadius: KARELA.radius.sm, alignItems: "center", borderWidth: 1, borderColor: KARELA.color.lineSoft },
-  modalCancelText: { color: KARELA.color.textMuted, fontSize: KARELA.size.body, fontFamily: KARELA.font.medium },
-  modalSaveBtn: { flex: 1, paddingVertical: KARELA.space.md, borderRadius: KARELA.radius.sm, alignItems: "center", backgroundColor: KARELA.color.brand },
-  modalSaveText: { color: KARELA.color.bg, fontSize: KARELA.size.body, fontFamily: KARELA.font.black },
+  civicCard: { flexDirection: "row", alignItems: "center", marginTop: 0 },
+  civicStat: { flex: 1, alignItems: "center", gap: 2 },
+  bigValue: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h1, fontFamily: KARELA.font.black },
+  divider: { width: 1, alignSelf: "stretch", backgroundColor: KARELA.color.line },
+
+  badges: { flexDirection: "row", flexWrap: "wrap", rowGap: KARELA.space.lg },
+  badge: { width: "25%", alignItems: "center", gap: 4, paddingHorizontal: 2 },
+  badgeIcon: { width: 48, height: 48, borderRadius: 24, borderWidth: 1.5, justifyContent: "center", alignItems: "center" },
+  badgeLocked: { borderColor: KARELA.color.line, borderStyle: "dashed" },
+  badgeLabel: { color: KARELA.color.textPrimary, fontSize: KARELA.size.caption, fontFamily: KARELA.font.medium, textAlign: "center" },
+  badgeHint: { color: KARELA.color.textMuted, fontSize: 10, fontFamily: KARELA.font.regular, textAlign: "center" },
+
+  aniCard: { marginTop: 0, borderLeftWidth: 3, borderLeftColor: KARELA.color.brand },
+  aniActions: { flexDirection: "row", alignItems: "center", gap: KARELA.space.md, marginTop: KARELA.space.xs },
+  body: { color: KARELA.color.textSecondary, fontSize: 14, lineHeight: 21, fontFamily: KARELA.font.regular },
+  muted: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.regular },
+
+  row: { flexDirection: "row", alignItems: "center", gap: KARELA.space.md, minHeight: KARELA.tap + 4, paddingHorizontal: KARELA.space.lg, borderBottomWidth: 1, borderBottomColor: KARELA.color.lineSoft },
+  rowLabel: { flex: 1, color: KARELA.color.textPrimary, fontSize: KARELA.size.body, fontFamily: KARELA.font.medium },
+
+  sheetBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.7)" },
+  sheet: { backgroundColor: KARELA.color.surface, borderTopLeftRadius: KARELA.radius.xl, borderTopRightRadius: KARELA.radius.xl, padding: KARELA.space.xl, paddingBottom: KARELA.space.xxxl, maxHeight: "90%" },
+  sheetTitle: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h2, fontFamily: KARELA.font.black },
+  field: { marginTop: KARELA.space.md },
+  fieldRow: { flexDirection: "row", gap: KARELA.space.sm },
+  fieldLabel: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.medium, marginBottom: 6 },
+  fieldNote: { color: KARELA.color.textMuted, fontSize: KARELA.size.caption, fontFamily: KARELA.font.regular, marginTop: 6 },
+  input: { backgroundColor: KARELA.color.bg, borderRadius: KARELA.radius.sm, paddingHorizontal: KARELA.space.md, minHeight: KARELA.tap, color: KARELA.color.textPrimary, fontSize: KARELA.size.body, fontFamily: KARELA.font.regular, borderWidth: 1, borderColor: KARELA.color.line },
+  formError: { color: KARELA.color.danger, fontSize: 13, fontFamily: KARELA.font.medium, marginTop: KARELA.space.md },
+  sheetButtons: { flexDirection: "row", gap: KARELA.space.md, marginTop: KARELA.space.xl },
 });
