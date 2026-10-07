@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
-import MapView, { Callout, Marker, Polyline } from "react-native-maps";
+import MapView, { Marker, Polyline } from "react-native-maps";
 
 // Hooks & Services
 import { CivicHUD } from "@/components/CivicHUD";
@@ -543,19 +543,46 @@ export default function MapScreen() {
           </Marker>
         )}
 
-        {/* FLAGS (Checkpoints) */}
+        {/* FLAGS (Checkpoints)
+            Kept as simple as the report pins below, which work on both
+            platforms. A Callout tooltip on these pins crashed the app on
+            iPhone (Apple Maps, new architecture) the moment a flag was added,
+            so management happens in a plain Alert instead. Dragging stays on
+            Android; on iPhone "Move here" moves the flag to the map centre. */}
         {checkpoints.map((point, index) => {
           if ((point as any).isReached) return null;
 
           return (
             <Marker
               key={point.id}
-              draggable={!isRacing}
-              coordinate={point}
-              onDragEnd={async (e) => {
-                const dropped = e.nativeEvent.coordinate;
-                moveCheckpoint(index, dropped, currentLocation);
+              draggable={Platform.OS === "android" && !isRacing}
+              coordinate={{ latitude: point.latitude, longitude: point.longitude }}
+              onDragEnd={(e) => {
+                moveCheckpoint(index, e.nativeEvent.coordinate, currentLocation);
               }}
+              onPress={() => {
+                if (isRacing) return;
+                Alert.alert(`Checkpoint ${index + 1}`, "Pan the map to a spot, then choose Move here.", [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "Move here",
+                    onPress: async () => {
+                      try {
+                        const camera = await mapRef.current?.getCamera();
+                        if (camera?.center) moveCheckpoint(index, camera.center, currentLocation);
+                      } catch (e) {
+                        console.warn("Could not move the checkpoint:", e);
+                      }
+                    },
+                  },
+                  {
+                    text: "Delete flag",
+                    style: "destructive",
+                    onPress: () => deleteCheckpoint(index, currentLocation),
+                  },
+                ]);
+              }}
+              accessibilityLabel={`Checkpoint ${index + 1}`}
             >
               <View style={{ alignItems: "center" }}>
                 <View style={styles.checkpointLabel}>
@@ -563,29 +590,6 @@ export default function MapScreen() {
                 </View>
                 <Ionicons name="flag" size={36} color={KARELA.color.gold} />
               </View>
-
-              <Callout
-                tooltip
-                onPress={() => {
-                  Alert.alert(
-                    "Manage checkpoint",
-                    "What would you like to do?",
-                    [
-                      { text: "Cancel", style: "cancel" },
-                      {
-                        text: "Delete flag",
-                        onPress: () => deleteCheckpoint(index, currentLocation),
-                        style: "destructive",
-                      },
-                    ],
-                  );
-                }}
-              >
-                <View style={styles.calloutBubble}>
-                  <Text style={styles.calloutText}>Tap to delete</Text>
-                  <Ionicons name="trash-outline" size={20} color="white" />
-                </View>
-              </Callout>
             </Marker>
           );
         })}
