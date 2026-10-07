@@ -1,3 +1,4 @@
+import { getEffectiveStreak } from "@/services/streakService";
 import { Button, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { KARELA } from "@/styles/designSystem";
@@ -273,7 +274,7 @@ export default function ProgressScreen() {
       {profile?.uid && (
         <RunHistory
           userId={profile.uid}
-          streak={profile.stats?.streak || 0}
+          streak={getEffectiveStreak(profile.stats)}
           gems={profile.stats?.gems || 0}
         />
       )}

@@ -1,3 +1,4 @@
+import { getEffectiveStreak } from "@/services/streakService";
 import { Button, Chip, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { useAuth } from "@/context/AuthContext";
@@ -54,7 +55,7 @@ export default function ProfilePage() {
   }, [profile]);
 
   const stats = profile?.stats;
-  const streak = stats?.streak || 0;
+  const streak = getEffectiveStreak(stats);
   const tier = getStreakTier(streak);
   const xpProgress = ((stats?.xp || 0) / 1000) * 100;
   const level = stats?.level || 1;

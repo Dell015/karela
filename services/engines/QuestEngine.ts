@@ -29,6 +29,7 @@ import {
   shouldAssignOnboardingQuest,
 } from "../onboarding";
 import { getStreakMultiplier } from "../streakMultiplier";
+import { getEffectiveStreak } from "../streakService";
 import { DecayModel } from "./AdaptiveGhostEngine";
 
 // ============================================================
@@ -327,7 +328,7 @@ export const QuestEngine = {
     const weekKey = getWeekKey(now);
     const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     const level = Number(stats.level || 1);
-    const streak = Number(stats.streak || 0);
+    const streak = getEffectiveStreak(stats);
 
     // --- Check onboarding first ---
     if (shouldAssignOnboardingQuest(stats)) {

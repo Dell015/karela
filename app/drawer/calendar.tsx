@@ -1,3 +1,4 @@
+import { getEffectiveStreak } from "@/services/streakService";
 import { Button, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { useAuth } from "@/context/AuthContext";
@@ -129,7 +130,7 @@ export default function CalendarScreen() {
   const [failed, setFailed] = useState(false);
 
   // Same streak the dashboard shows.
-  const streak = Number(profile?.stats?.streak || 0);
+  const streak = getEffectiveStreak(profile?.stats);
   const tier = getStreakTier(streak);
 
   // One query covers the shown month and the last 7 days. A request id

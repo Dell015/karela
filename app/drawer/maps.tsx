@@ -36,7 +36,6 @@ import {
   RunContext,
 } from "@/services/engines/ResonanceSystem";
 import { PermissionManager } from "@/services/PermissionsManager";
-import { calculateStreak } from "@/services/statsService";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
 import { styles } from "@/styles/mapStyles";
 
@@ -135,10 +134,6 @@ export default function MapScreen() {
   const handleStopRace = async () => {
     setIsRacing(false);
 
-    // 1. Calculate the potential new streak
-    // We call a service that checks if today's run + previous runs form a chain
-    const updatedStreak = calculateStreak();
-
     router.push({
       pathname: "/summary",
       params: {
@@ -147,7 +142,6 @@ export default function MapScreen() {
         kcal: (physicalMeters * 0.062).toFixed(1),
         xp: Math.floor(physicalMeters * 0.1),
         path: JSON.stringify(path),
-        newStreak: updatedStreak, // Pass it to the summary screen to show the user
       },
     });
   };

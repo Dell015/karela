@@ -1,3 +1,4 @@
+import { getEffectiveStreak } from "@/services/streakService";
 import { useAuth } from "@/context/AuthContext";
 import { Button, Chip, ScreenHeader } from "@/components/ui";
 import { Screen } from "@/components/ui/Screen";
@@ -112,7 +113,7 @@ export default function QuestsScreen() {
           type: mission.type,
           frequency: mission.frequency,
         },
-        Number(profile?.stats?.streak || 0)
+        getEffectiveStreak(profile?.stats)
       );
 
       await syncProgression(); // Reconcile level from server state (no re-award)

@@ -24,6 +24,7 @@ import {
     logRunHistory,
 } from "@/services/database/supabase/runService";
 import { calculateStreak } from "@/services/statsService";
+import { fetchStreakFromHistory } from "@/services/streakService";
 import { QuestEngine } from "@/services/engines/QuestEngine";
 
 const { width } = Dimensions.get("window");
@@ -126,7 +127,9 @@ export default function SummaryScreen() {
       // Sync run distance to all active missions via QuestEngine
       await QuestEngine.syncRunProgress(user.uid, distanceInKm, avgSpeedKmh);
 
-      const currentStreak = calculateStreak();
+      // Count from run_history (has every run, including this one). Falls
+      // back to the local count if the history cannot be read.
+      const currentStreak = (await fetchStreakFromHistory(user.uid)) ?? calculateStreak();
       const longestStreak = Math.max(
         currentStreak,
         Number(profile?.stats?.longest_streak || 0)

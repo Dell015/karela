@@ -1,3 +1,7 @@
+import { TodayCard } from "@/components/TodayCard";
+import { getNearbyNodes } from "@/services/engines/CivicEngine";
+import { dayKey } from "@/services/calendarData";
+import { getEffectiveStreak } from "@/services/streakService";
 import { Button, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { QuestCard } from "@/components/QuestCard";
@@ -15,7 +19,7 @@ import {
     StatusBar,
     StyleSheet,
     Text,
-    TextInput,
+    Pressable,
     TouchableOpacity,
     TouchableWithoutFeedback,
     View,
@@ -51,7 +55,9 @@ export default function Dashboard() {
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const currentXP = Number(profile?.stats?.xp || 0);
   const currentLevel = Number(profile?.stats?.level || 1);
-  const currentStreak = Number(profile?.stats?.streak || 0);
+  const currentStreak = getEffectiveStreak(profile?.stats);
+  const lastActive = profile?.stats?.last_active_date;
+  const ranToday = !!lastActive && dayKey(new Date(lastActive)) === dayKey(new Date());
   const navigation = useNavigation<DrawerNavigationProp<any>>();
   const [currentAniAction, setCurrentAniAction] = useState(
     "Female_rig|female_IDLE",
@@ -59,6 +65,22 @@ export default function Dashboard() {
   const [activeMissions, setActiveMissions] = useState<any[]>([]);
 
   const isFocused = useIsFocused();
+
+  // Nearby reports that need someone, for the Today card. Fetched once per
+  // visit to this screen, not on every GPS fix (prepaid data).
+  const [needsCheckCount, setNeedsCheckCount] = useState(0);
+  const nodesFetched = useRef(false);
+  useEffect(() => {
+    if (!isFocused) {
+      nodesFetched.current = false;
+      return;
+    }
+    if (nodesFetched.current || !currentLocation?.latitude) return;
+    nodesFetched.current = true;
+    getNearbyNodes(currentLocation.latitude, currentLocation.longitude, 500).then((nodes) =>
+      setNeedsCheckCount(nodes.filter((n) => n.status === "pending" || n.status === "aging").length),
+    );
+  }, [isFocused, currentLocation?.latitude, currentLocation?.longitude]);
 
   useEffect(() => {
     if (isFocused) {
@@ -274,6 +296,17 @@ export default function Dashboard() {
                 onPress={() => router.push("/drawer/progress")}
               />
 
+              <TodayCard
+                streak={currentStreak}
+                ranToday={ranToday}
+                weatherTier={weather.status === "ok" ? weather.tier : null}
+                city={weather.city}
+                needsCheckCount={needsCheckCount}
+                onStartRun={() => router.push("/drawer/maps")}
+                onOpenCalendar={() => router.push("/drawer/calendar")}
+                onOpenMap={() => router.push("/drawer/maps")}
+              />
+
               {/* Map Preview Section */}
               <Text style={dashboard_ui.sectionTitle}>Your map</Text>
               <View style={dashboard_ui.mapPreviewContainer}>
@@ -393,13 +426,14 @@ export default function Dashboard() {
                     <Text style={dashboard_ui.chatText}>
                       {getWeatherLine(weather)}
                     </Text>
-                    <View style={dashboard_ui.nestedInputContainer}>
-                      <TextInput
-                        placeholder="Message Ani"
-                        placeholderTextColor={KARELA.color.textMuted}
-                        style={dashboard_ui.nestedInput}
-                        returnKeyType="send"
-                      />
+                    {/* Looks like a field, opens the chat (typing here used to go nowhere). */}
+                    <Pressable
+                      style={dashboard_ui.nestedInputContainer}
+                      onPress={() => router.push("/drawer/ai_coach")}
+                      accessibilityRole="button"
+                      accessibilityLabel="Message Ani"
+                    >
+                      <Text style={[dashboard_ui.nestedInput, { color: KARELA.color.textMuted }]}>Message Ani</Text>
                       <IconButton
                         icon="arrow-forward"
                         label="Open chat with Ani"
@@ -407,7 +441,7 @@ export default function Dashboard() {
                         size={40}
                         onPress={() => router.push("/drawer/ai_coach")}
                       />
-                    </View>
+                    </Pressable>
                   </View>
                 </View>
               </TouchableOpacity>
@@ -450,12 +484,11 @@ export default function Dashboard() {
                       <Text
                         style={{
                           color: KARELA.color.brand,
-                          fontSize: KARELA.size.caption,
-                          fontFamily: KARELA.font.black,
-                          letterSpacing: 1,
+                          fontSize: KARELA.size.label,
+                          fontFamily: KARELA.font.bold,
                         }}
                       >
-                        DAILY SOLO OPS ACTIVE
+                        Today&apos;s quests
                       </Text>
                     </View>
 

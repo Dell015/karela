@@ -7,6 +7,7 @@ import {
     subscribeToProfile,
 } from "../services/database/supabase/profiles";
 import { applyStreakMultiplier } from "../services/streakMultiplier";
+import { getEffectiveStreak } from "../services/streakService";
 
 // 1. STYLED INTERFACE (unchanged — keeps the rest of the app compatible)
 export interface UserProfile {
@@ -165,8 +166,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const gainXP = async (amount: number) => {
     if (!user || !profile) return;
 
-    // Apply streak multiplier to the raw XP amount
-    const streak = Number(profile.stats?.streak || 0);
+    // Apply streak multiplier to the raw XP amount. Effective streak: a
+    // streak lost by missing a day must not keep boosting XP.
+    const streak = getEffectiveStreak(profile.stats);
     const boostedAmount = amount > 0 ? applyStreakMultiplier(amount, streak) : 0;
 
     try {

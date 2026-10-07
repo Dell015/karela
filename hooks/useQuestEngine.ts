@@ -1,3 +1,4 @@
+import { getEffectiveStreak } from "@/services/streakService";
 /**
  * useQuestEngine — React hook for interacting with the Quest Engine.
  *
@@ -123,20 +124,21 @@ export const useQuestEngine = (
       : 0;
 
   // --- Claim ---
+  // Effective streak: a streak lost by missing a day must not boost rewards.
+  const effectiveStreak = getEffectiveStreak(profile?.stats);
   const claimQuest = useCallback(
     async (missionId: string, xpReward: number, type?: string, freq?: string) => {
       if (!user?.uid) return;
 
-      const streak = Number(profile?.stats?.streak || 0);
       await QuestEngine.claimQuest(
         user.uid,
         missionId,
         { xpReward, type, frequency: freq },
-        streak
+        effectiveStreak
       );
       await syncProgression(); // Reconcile level from server state (no re-award)
     },
-    [user?.uid, profile?.stats?.streak, syncProgression]
+    [user?.uid, effectiveStreak, syncProgression]
   );
 
   // --- Sync run ---
