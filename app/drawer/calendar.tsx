@@ -1,13 +1,26 @@
-import { SampleNote } from "@/components/ui/SampleNote";
 import { Button, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
+import { useAuth } from "@/context/AuthContext";
+import {
+  buildMonthGrid,
+  dayKey,
+  DayTotals,
+  formatDuration,
+  formatKm,
+  getRunsSince,
+  groupRunsByDay,
+  lastNDays,
+  RunRow,
+  sumDays,
+} from "@/services/calendarData";
+import { getStreakTier } from "@/services/streakMultiplier";
 import { KARELA } from "@/styles/designSystem";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Stack, router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Modal,
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -17,301 +30,437 @@ import {
   useWindowDimensions,
 } from "react-native";
 import Animated, {
-  FadeIn,
-  FadeInUp,
   useAnimatedProps,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Circle, Line, Path } from "react-native-svg";
+import Svg, { Circle } from "react-native-svg";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const VIEWS = ["Daily", "Weekly", "Monthly"] as const;
+type View_ = (typeof VIEWS)[number];
+const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];
 
-const PaceChart = () => (
-  <View style={styles.chartWrapper}>
-    <Text style={styles.chartTitle}>Pace Consistency (min/km)</Text>
-    <Svg height="80" width="100%">
-      <Line x1="0" y1="20" x2="100%" y2="20" stroke={KARELA.color.line} strokeWidth="1" strokeDasharray="4 4" />
-      <Line x1="0" y1="50" x2="100%" y2="50" stroke={KARELA.color.line} strokeWidth="1" strokeDasharray="4 4" />
-      <Path d="M0 60 Q 30 20, 60 45 T 120 35 T 180 55 T 240 30 T 300 40" fill="none" stroke={KARELA.color.brand} strokeWidth="3" strokeLinecap="round" />
-    </Svg>
-    <View style={styles.chartLabels}>
-      {["1k", "2k", "3k", "4k", "5k"].map((l) => (
-        <Text key={l} style={styles.chartLabelText}>{l}</Text>
-      ))}
-    </View>
-  </View>
-);
-
-const ProgressCircle = ({ progress, size, date, strokeWidth = 5, color = KARELA.color.brand }: any) => {
-  const animatedProgress = useSharedValue(0);
-  const radius = (size - strokeWidth) / 2;
+/** A day ring: full when you ran that day, empty when you did not. */
+const DayRing = ({ filled, size, label, isToday }: { filled: boolean; size: number; label: number; isToday: boolean }) => {
+  const reduceMotion = useReducedMotion();
+  const stroke = 4;
+  const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
-  useEffect(() => { animatedProgress.value = withTiming(progress, { duration: 1000 }); }, [progress, animatedProgress]);
-  const animatedProps = useAnimatedProps(() => ({ strokeDashoffset: circumference * (1 - animatedProgress.value) }));
+  const p = useSharedValue(0);
+  useEffect(() => {
+    p.value = reduceMotion ? (filled ? 1 : 0) : withTiming(filled ? 1 : 0, { duration: 600 });
+  }, [filled, reduceMotion, p]);
+  const animatedProps = useAnimatedProps(() => ({ strokeDashoffset: circumference * (1 - p.value) }));
 
   return (
     <View style={{ width: size, height: size, justifyContent: "center", alignItems: "center" }}>
       <Svg width={size} height={size} style={{ transform: [{ rotate: "-90deg" }] }}>
-        <Circle cx={size / 2} cy={size / 2} r={radius} stroke={KARELA.color.surfaceSoft} strokeWidth={strokeWidth} fill="none" />
-        <AnimatedCircle cx={size / 2} cy={size / 2} r={radius} stroke={color} strokeWidth={strokeWidth} fill="none" strokeDasharray={circumference} animatedProps={animatedProps} strokeLinecap="round" />
+        <Circle cx={size / 2} cy={size / 2} r={radius} stroke={KARELA.color.surfaceSoft} strokeWidth={stroke} fill="none" />
+        <AnimatedCircle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={KARELA.color.brand}
+          strokeWidth={stroke}
+          fill="none"
+          strokeDasharray={circumference}
+          animatedProps={animatedProps}
+          strokeLinecap="round"
+        />
       </Svg>
-      {date && (
-        <View style={[StyleSheet.absoluteFill, { justifyContent: "center", alignItems: "center" }]}>
-          <Text style={{ color: KARELA.color.textPrimary, fontSize: KARELA.size.label, fontFamily: KARELA.font.bold }}>{date}</Text>
-        </View>
-      )}
+      <View style={[StyleSheet.absoluteFill, styles.center]}>
+        <Text style={[styles.ringLabel, isToday && { color: KARELA.color.brand }]}>{label}</Text>
+      </View>
+    </View>
+  );
+};
+
+/** Distance, time, XP in one row. */
+const Totals = ({ t }: { t: ReturnType<typeof sumDays> }) => (
+  <View style={styles.totalsRow}>
+    <View style={styles.totalItem}>
+      <Text style={styles.totalValue}>{formatKm(t.distanceM)}</Text>
+      <Text style={styles.totalLabel}>DISTANCE</Text>
+    </View>
+    <View style={styles.totalItem}>
+      <Text style={styles.totalValue}>{formatDuration(t.durationS)}</Text>
+      <Text style={styles.totalLabel}>TIME</Text>
+    </View>
+    <View style={styles.totalItem}>
+      <Text style={styles.totalValue}>{t.xp}</Text>
+      <Text style={styles.totalLabel}>XP</Text>
+    </View>
+  </View>
+);
+
+const RunItem = ({ run }: { run: RunRow }) => {
+  const d = new Date(run.completed_at);
+  return (
+    <View style={styles.runItem}>
+      <View style={styles.runIcon}>
+        <MaterialCommunityIcons name="run" size={18} color={KARELA.color.brand} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.runTitle}>{formatKm(Number(run.distance_meters) || 0)}</Text>
+        <Text style={styles.runSub}>
+          {d.toLocaleDateString("en-PH", { weekday: "short", month: "short", day: "numeric" })},{" "}
+          {d.toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" })} · {formatDuration(Number(run.duration_seconds) || 0)}
+        </Text>
+      </View>
+      <Text style={styles.runXp}>+{Number(run.xp_earned) || 0} XP</Text>
     </View>
   );
 };
 
 export default function CalendarScreen() {
   const { width } = useWindowDimensions();
-  const [viewType, setViewType] = useState("Weekly");
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedQuest, setSelectedQuest] = useState<any>(null);
+  const { profile } = useAuth();
+  const userId = profile?.uid;
 
-  const today = new Date().getDate();
-  const currentStreak = 5;
-  const transition = useSharedValue(1);
-  const GRID_SPACING = 12;
-  const DAY_SIZE = (width - 50 - GRID_SPACING * 6) / 7;
+  const [view, setView] = useState<View_>("Weekly");
+  const today = useMemo(() => new Date(), []);
+  const [month, setMonth] = useState({ y: today.getFullYear(), m: today.getMonth() });
+  const [selectedKey, setSelectedKey] = useState(dayKey(today));
+  const [runs, setRuns] = useState<RunRow[] | null>(null); // null = not loaded yet
+  const [failed, setFailed] = useState(false);
 
-  const handleToggle = (type: string, index: number) => {
-    setViewType(type);
-    transition.value = withTiming(index, { duration: 300 });
-  };
+  // Same streak the dashboard shows.
+  const streak = Number(profile?.stats?.streak || 0);
+  const tier = getStreakTier(streak);
 
-  const animatedPillStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: transition.value * ((width - 62) / 3) }],
+  // One query covers the shown month and the last 7 days. A request id
+  // drops replies that arrive after a newer request (fast month switching).
+  const requestId = useRef(0);
+  const load = useCallback(async () => {
+    if (!userId) return;
+    const id = ++requestId.current;
+    const monthStart = new Date(month.y, month.m, 1);
+    const weekStart = lastNDays(7, today)[0];
+    const since = monthStart < weekStart ? monthStart : weekStart;
+    const data = await getRunsSince(userId, since);
+    if (id !== requestId.current) return;
+    setFailed(data === null);
+    setRuns(data ?? []);
+  }, [userId, month.y, month.m, today]);
+
+  useEffect(() => {
+    const t = setTimeout(load, 0); // run after paint; also keeps setState out of the effect body
+    return () => clearTimeout(t);
+  }, [load]);
+
+  const byDay = useMemo(() => groupRunsByDay(runs ?? []), [runs]);
+  const week = useMemo(() => lastNDays(7, today), [today]);
+  const monthCells = useMemo(() => buildMonthGrid(month.y, month.m), [month.y, month.m]);
+  const isCurrentMonth = month.y === today.getFullYear() && month.m === today.getMonth();
+
+  // Sliding pill under the selected tab (motion that answers a tap).
+  const reduceMotion = useReducedMotion();
+  const slide = useSharedValue(VIEWS.indexOf(view));
+  const pillStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: slide.value * ((width - 62) / 3) }],
   }));
-
-  const openDetails = (title: string, dist: string, type: string) => {
-    const recommendations = type === "Daily"
-      ? "Focus on high-intensity intervals. Karela noticed you're on a streak—keep that momentum!"
-      : "Maintain a steady heart rate. Your consistency is paying off. Hydrate well.";
-    setSelectedQuest({ title, dist, rec: recommendations, type });
-    setModalVisible(true);
+  const pickView = (v: View_) => {
+    setView(v);
+    const i = VIEWS.indexOf(v);
+    slide.value = reduceMotion ? i : withTiming(i, { duration: 250 });
   };
+
+  const changeMonth = (delta: number) => {
+    const d = new Date(month.y, month.m + delta, 1);
+    setMonth({ y: d.getFullYear(), m: d.getMonth() });
+    setRuns(null);
+  };
+
+  // What the bottom list shows for each view.
+  let listTitle = "";
+  let listDays: (DayTotals | undefined)[] = [];
+  if (view === "Daily") {
+    listTitle = "Today";
+    listDays = [byDay.get(dayKey(today))];
+  } else if (view === "Weekly") {
+    listTitle = "Last 7 days";
+    listDays = week.map((d) => byDay.get(dayKey(d)));
+  } else {
+    // Parse as local noon so the day never shifts across time zones.
+    listTitle = selectedKey === dayKey(today)
+      ? "Today"
+      : new Date(`${selectedKey}T12:00:00`).toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric" });
+    listDays = [byDay.get(selectedKey)];
+  }
+  const listRuns = listDays.flatMap((d) => d?.runs ?? []);
+  const monthTotals = sumDays(
+    monthCells.filter((c): c is Date => !!c).map((c) => byDay.get(dayKey(c))),
+  );
+
+  const DAY_GAP = 6;
+  const cell = Math.floor((width - 50 - 2 * KARELA.space.xl - DAY_GAP * 6) / 7);
 
   return (
     <Screen variant="calm">
-    <SafeAreaView style={styles.container}>
-      <Stack.Screen options={{ headerShown: false }} />
-      <Animated.View entering={FadeInUp.duration(500)} style={{ flex: 1 }}>
+      <SafeAreaView style={styles.container}>
+        <Stack.Screen options={{ headerShown: false }} />
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
-            <IconButton
-              icon="chevron-back"
-              label="Back"
-              onPress={() => router.replace("/drawer/dashboard")}
-            />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.headerTitle}>Calendar</Text>
-            </View>
-            {/* TODO: no reminders screen yet, so this does nothing. */}
-            <IconButton icon="notifications-outline" label="Reminders" />
+            <IconButton icon="chevron-back" label="Back" onPress={() => router.replace("/drawer/dashboard")} />
+            <Text style={styles.headerTitle}>Calendar</Text>
           </View>
 
-          <SampleNote style={{ marginBottom: KARELA.space.lg }}>The streak and run details here are examples until the calendar reads your run history.</SampleNote>
+          {/* Streak: same value and tiers as the dashboard (services/streakMultiplier.ts) */}
+          <View style={styles.streakRow}>
+            <MaterialCommunityIcons name="fire" size={22} color={KARELA.color.civic} />
+            <Text style={styles.streakText}>
+              {streak} day streak
+              <Text style={styles.streakTier}>  ·  {tier.multiplier.toFixed(1)}x XP</Text>
+            </Text>
+          </View>
+          <Text style={styles.streakHint}>
+            {tier.nextTierAt
+              ? `${tier.nextTierAt - streak} more ${tier.nextTierAt - streak === 1 ? "day" : "days"} to the next multiplier.`
+              : "You are at the 3.0x cap."}
+          </Text>
 
           <View style={styles.tabContainer}>
-            <Animated.View style={[styles.animatedPill, animatedPillStyle]}>
+            <Animated.View style={[styles.animatedPill, pillStyle]}>
               <LinearGradient colors={KARELA.gradients.brand} style={StyleSheet.absoluteFill} />
             </Animated.View>
-            {["Daily", "Weekly", "Monthly"].map((type, i) => (
-              <TouchableOpacity key={type} style={styles.tabButton} onPress={() => handleToggle(type, i)} activeOpacity={1} accessibilityRole="button" accessibilityState={{ selected: viewType === type }}>
-                <Text style={[styles.tabText, { color: viewType === type ? KARELA.color.onBright : KARELA.color.textMuted }]}>{type}</Text>
+            {VIEWS.map((v) => (
+              <TouchableOpacity
+                key={v}
+                style={styles.tabButton}
+                onPress={() => pickView(v)}
+                activeOpacity={1}
+                accessibilityRole="button"
+                accessibilityState={{ selected: view === v }}
+              >
+                <Text style={[styles.tabText, { color: view === v ? KARELA.color.onBright : KARELA.color.textMuted }]}>{v}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          {viewType === "Monthly" ? (
-            <View style={styles.modernMonthContainer}>
-              <View style={styles.monthHeaderRow}>
-                <View>
-                  <Text style={styles.monthName}>February</Text>
-                  <Text style={styles.yearName}>2026</Text>
-                </View>
-                <View style={styles.streakBadge}>
-                  <MaterialCommunityIcons name="fire" size={16} color={KARELA.vibrant.techOrange} />
-                  <Text style={styles.streakText}>{currentStreak} Day Streak</Text>
-                </View>
-              </View>
-              <View style={styles.weekdayRow}>
-                {["M", "T", "W", "T", "F", "S", "S"].map((day, i) => (
-                  <Text key={i} style={styles.weekdayLabel}>{day}</Text>
-                ))}
-              </View>
-              <View style={styles.modernGrid}>
-                {Array.from({ length: 28 }).map((_, i) => {
-                  const dayNum = i + 1;
-                  const isToday = dayNum === today;
-                  const hasActivity = dayNum < today;
-                  return (
-                    <TouchableOpacity key={i} style={[styles.modernDayBox, { width: DAY_SIZE, height: DAY_SIZE }, isToday && styles.todayActiveBox, hasActivity && styles.activityDotBox]}>
-                      <Text style={[styles.modernDayText, isToday && styles.todayActiveText, !isToday && !hasActivity && { color: KARELA.color.textFaint }]}>{dayNum}</Text>
-                      {hasActivity && !isToday && <View style={styles.smallActivityIndicator} />}
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+          {runs === null ? (
+            <ActivityIndicator color={KARELA.color.brand} style={{ marginVertical: 40 }} />
+          ) : failed ? (
+            <View style={styles.card}>
+              <Text style={styles.emptyTitle}>Couldn&apos;t load your runs</Text>
+              <Text style={styles.emptySub}>Check your connection and try again.</Text>
+              <Button label="Try again" variant="secondary" size="sm" onPress={load} style={{ marginTop: KARELA.space.md }} />
             </View>
           ) : (
-            <View style={styles.summaryContainer}>
-              <View style={styles.summaryHeader}>
-                <Text style={styles.summaryTitle}>History Overview</Text>
-                <Button label="Dashboard" variant="link" size="sm" onPress={() => router.back()} />
-              </View>
-              <View style={styles.daysRow}>
-                {[9, 10, 11, 12, 13, 14, 15].map((d, i) => (
-                  <View key={d} style={styles.dayItem}>
-                    <ProgressCircle progress={d <= today ? 1 : 0} size={38} date={d} />
-                    <Text style={styles.dayLabel}>{["M", "T", "W", "T", "F", "S", "S"][i]}</Text>
+            <>
+              {view === "Daily" && (
+                <View style={styles.card}>
+                  <Text style={styles.cardTitle}>
+                    {today.toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric" })}
+                  </Text>
+                  <Totals t={sumDays(listDays)} />
+                </View>
+              )}
+
+              {view === "Weekly" && (
+                <View style={styles.card}>
+                  <Text style={styles.cardTitle}>Last 7 days</Text>
+                  <View style={styles.weekRow}>
+                    {week.map((d) => (
+                      <View key={dayKey(d)} style={styles.center}>
+                        <DayRing
+                          filled={!!byDay.get(dayKey(d))}
+                          size={38}
+                          label={d.getDate()}
+                          isToday={dayKey(d) === dayKey(today)}
+                        />
+                        <Text style={styles.dayLabel}>{WEEKDAYS[(d.getDay() + 6) % 7]}</Text>
+                      </View>
+                    ))}
                   </View>
-                ))}
-              </View>
-            </View>
+                  <Totals t={sumDays(listDays)} />
+                </View>
+              )}
+
+              {view === "Monthly" && (
+                <View style={styles.card}>
+                  <View style={styles.monthHeader}>
+                    <IconButton icon="chevron-back" label="Previous month" tone="plain" onPress={() => changeMonth(-1)} />
+                    <Text style={styles.monthName}>
+                      {new Date(month.y, month.m, 1).toLocaleDateString("en-PH", { month: "long", year: "numeric" })}
+                    </Text>
+                    <IconButton
+                      icon="chevron-forward"
+                      label="Next month"
+                      tone="plain"
+                      disabled={isCurrentMonth}
+                      style={isCurrentMonth ? { opacity: 0.3 } : undefined}
+                      onPress={() => changeMonth(1)}
+                    />
+                  </View>
+                  <View style={[styles.weekdayRow, { gap: DAY_GAP }]}>
+                    {WEEKDAYS.map((w, i) => (
+                      <Text key={i} style={[styles.weekdayLabel, { width: cell }]}>{w}</Text>
+                    ))}
+                  </View>
+                  <View style={[styles.grid, { gap: DAY_GAP }]}>
+                    {monthCells.map((c, i) => {
+                      if (!c) return <View key={`b${i}`} style={{ width: cell, height: cell }} />;
+                      const key = dayKey(c);
+                      const ran = !!byDay.get(key);
+                      const isToday = key === dayKey(today);
+                      const isSelected = key === selectedKey;
+                      const isFuture = c > today && !isToday;
+                      return (
+                        <Pressable
+                          key={key}
+                          disabled={isFuture}
+                          onPress={() => setSelectedKey(key)}
+                          accessibilityRole="button"
+                          accessibilityLabel={`${c.toDateString()}${ran ? ", you ran" : ""}`}
+                          accessibilityState={{ selected: isSelected, disabled: isFuture }}
+                          style={[
+                            styles.dayBox,
+                            { width: cell, height: cell },
+                            ran && styles.dayRan,
+                            isSelected && styles.daySelected,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.dayText,
+                              isToday && { color: KARELA.color.brand, fontFamily: KARELA.font.black },
+                              isFuture && { color: KARELA.color.textFaint },
+                            ]}
+                          >
+                            {c.getDate()}
+                          </Text>
+                          {ran && <View style={styles.ranDot} />}
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                  <Totals t={monthTotals} />
+                </View>
+              )}
+
+              <Text style={styles.sectionTitle}>{listTitle}</Text>
+              {listRuns.length === 0 ? (
+                <View style={styles.card}>
+                  <Text style={styles.emptyTitle}>No runs {view === "Weekly" ? "this week" : view === "Daily" ? "today" : "on this day"}</Text>
+                  <Text style={styles.emptySub}>Finished runs show up here.</Text>
+                  {view !== "Monthly" && (
+                    <Button
+                      label="Start a run"
+                      icon="play"
+                      size="sm"
+                      onPress={() => router.push("/drawer/maps")}
+                      style={{ marginTop: KARELA.space.md }}
+                    />
+                  )}
+                </View>
+              ) : (
+                <View style={styles.card}>
+                  {listRuns.map((r) => (
+                    <RunItem key={r.id} run={r} />
+                  ))}
+                </View>
+              )}
+            </>
           )}
-
-          <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>{viewType} Focus</Text></View>
-          <NewQuestCard
-            title={viewType === "Daily" ? "Morning 5km" : "15km Endurance"}
-            distance={viewType === "Daily" ? "3.2/5 km" : "11.5/15 km"}
-            time={viewType === "Daily" ? "24:12" : "1:12:04"}
-            progress={0.64}
-            onDetails={() => openDetails(viewType === "Daily" ? "Morning 5km" : "Running Milestone", "Analysis Ready", viewType)}
-          />
-          <View style={{ height: 100 }} />
+          <View style={{ height: 80 }} />
         </ScrollView>
-      </Animated.View>
-
-      <Modal visible={modalVisible} animationType="slide" transparent>
-        <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-          <Animated.View entering={FadeIn.duration(300)} style={styles.modalContent}>
-            <View style={styles.handle} />
-            <Text style={styles.modalTitle}>{selectedQuest?.title} Analysis</Text>
-            <View style={styles.detailsGrid}>
-              <View style={styles.detailBox}>
-                <MaterialCommunityIcons name="run-fast" size={24} color={KARELA.color.brand} />
-                <Text style={styles.detailValue}>3.2km</Text>
-                <Text style={styles.detailLabel}>Distance</Text>
-              </View>
-              <View style={styles.detailBox}>
-                <MaterialCommunityIcons name="fire" size={24} color={KARELA.color.danger} />
-                <Text style={styles.detailValue}>340 kcal</Text>
-                <Text style={styles.detailLabel}>Burned</Text>
-              </View>
-            </View>
-            <PaceChart />
-            <View style={styles.recContainer}>
-              <View style={styles.coachHeader}>
-                <MaterialCommunityIcons name="account-tie-voice" size={20} color={KARELA.color.brand} />
-                <Text style={styles.recTitle}>Ani&apos;s advice</Text>
-              </View>
-              <Text style={styles.recText}>&quot;{selectedQuest?.rec}&quot;</Text>
-            </View>
-            <Button label="Close" variant="secondary" block onPress={() => setModalVisible(false)} style={{ marginTop: KARELA.space.lg }} />
-          </Animated.View>
-        </Pressable>
-      </Modal>
-    </SafeAreaView>
+      </SafeAreaView>
     </Screen>
   );
 }
 
-const NewQuestCard = ({ title, distance, time, progress, onDetails }: any) => (
-  <View style={styles.newCard}>
-    <View style={styles.cardHeaderRow}>
-      <View>
-        <Text style={styles.newCardTitle}>{title}</Text>
-        <Text style={styles.newCardSub}>Goal: {distance}</Text>
-      </View>
-      <View style={styles.timeTag}>
-        <Ionicons name="time-outline" size={14} color={KARELA.color.brand} />
-        <Text style={styles.timeTagText}>{time}</Text>
-      </View>
-    </View>
-    <View style={styles.progressSection}>
-      <View style={styles.progressBarBg}><View style={[styles.progressBarFill, { width: `${progress * 100}%` }]} /></View>
-      <Text style={styles.percentText}>{Math.round(progress * 100)}%</Text>
-    </View>
-    <View style={styles.buttonRow}>
-      <Button label="Details" variant="secondary" size="sm" onPress={onDetails} style={{ flex: 1 }} block />
-      {/* TODO: nothing to track yet, so this does nothing. */}
-      <Button label="Track progress" size="sm" style={{ flex: 1 }} block />
-    </View>
-  </View>
-);
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "transparent" },
   scrollContent: { padding: 25 },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: KARELA.space.md, marginBottom: 25 },
-  headerTitle: { fontSize: KARELA.size.display, fontFamily: KARELA.font.bold, color: KARELA.color.textPrimary },
-  bellButton: { backgroundColor: KARELA.color.surface, padding: KARELA.space.md, borderRadius: 25 },
-  tabContainer: { flexDirection: "row", backgroundColor: KARELA.color.surface, borderRadius: 22, padding: 6, marginBottom: 35, position: "relative" },
-  animatedPill: { position: "absolute", top: 6, left: 6, bottom: 6, borderRadius: KARELA.radius.lg, overflow: "hidden", width: "31%" },
-  tabButton: { flex: 1, paddingVertical: KARELA.space.lg, alignItems: "center", justifyContent: "center", zIndex: 1 },
-  tabText: { fontSize: KARELA.size.h2, fontFamily: KARELA.font.bold },
-  summaryContainer: { backgroundColor: KARELA.color.surface, borderRadius: KARELA.radius.xl, padding: 22, marginBottom: 35 },
-  summaryHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: KARELA.space.xl },
-  summaryTitle: { color: KARELA.color.textPrimary, fontSize: 16, fontFamily: KARELA.font.medium },
-  viewAllText: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.regular },
-  daysRow: { flexDirection: "row", justifyContent: "space-between" },
-  dayItem: { alignItems: "center" },
+  center: { justifyContent: "center", alignItems: "center" },
+  header: { flexDirection: "row", alignItems: "center", gap: KARELA.space.md, marginBottom: KARELA.space.xl },
+  headerTitle: { flex: 1, fontSize: KARELA.size.display, fontFamily: KARELA.font.bold, color: KARELA.color.textPrimary },
+
+  streakRow: { flexDirection: "row", alignItems: "center", gap: KARELA.space.sm },
+  streakText: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h2, fontFamily: KARELA.font.bold },
+  streakTier: { color: KARELA.color.civic, fontFamily: KARELA.font.bold },
+  streakHint: {
+    color: KARELA.color.textMuted,
+    fontSize: KARELA.size.label,
+    fontFamily: KARELA.font.regular,
+    marginTop: KARELA.space.xs,
+    marginBottom: KARELA.space.xl,
+  },
+
+  tabContainer: {
+    flexDirection: "row",
+    backgroundColor: KARELA.color.surface,
+    borderRadius: KARELA.radius.lg,
+    padding: 6,
+    marginBottom: KARELA.space.xl,
+    borderWidth: 1,
+    borderColor: KARELA.color.lineSoft,
+  },
+  animatedPill: { position: "absolute", top: 6, left: 6, bottom: 6, borderRadius: KARELA.radius.pill, overflow: "hidden", width: "31%" },
+  tabButton: { flex: 1, minHeight: KARELA.tap, alignItems: "center", justifyContent: "center", zIndex: 1 },
+  tabText: { fontSize: KARELA.size.body, fontFamily: KARELA.font.bold },
+
+  card: {
+    backgroundColor: KARELA.color.surface,
+    borderRadius: KARELA.radius.lg,
+    padding: KARELA.space.xl,
+    marginBottom: KARELA.space.xl,
+    borderWidth: 1,
+    borderColor: KARELA.color.lineSoft,
+  },
+  cardTitle: { color: KARELA.color.textPrimary, fontSize: KARELA.size.body, fontFamily: KARELA.font.medium, marginBottom: KARELA.space.lg },
+
+  totalsRow: {
+    flexDirection: "row",
+    marginTop: KARELA.space.lg,
+    paddingTop: KARELA.space.lg,
+    borderTopWidth: 1,
+    borderTopColor: KARELA.color.lineSoft,
+  },
+  totalItem: { flex: 1, alignItems: "center" },
+  totalValue: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h2, fontFamily: KARELA.font.bold },
+  totalLabel: { color: KARELA.color.textMuted, fontSize: KARELA.size.caption, fontFamily: KARELA.font.bold, marginTop: 2 },
+
+  weekRow: { flexDirection: "row", justifyContent: "space-between" },
+  ringLabel: { color: KARELA.color.textPrimary, fontSize: KARELA.size.label, fontFamily: KARELA.font.bold },
   dayLabel: { color: KARELA.color.textMuted, fontSize: KARELA.size.caption, fontFamily: KARELA.font.regular, marginTop: KARELA.space.sm },
-  sectionHeader: { marginBottom: KARELA.space.xl },
-  sectionTitle: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h1, fontFamily: KARELA.font.bold },
-  newCard: { backgroundColor: KARELA.color.surface, borderRadius: KARELA.radius.xl, padding: KARELA.space.xl, marginBottom: KARELA.space.lg },
-  cardHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 15 },
-  newCardTitle: { color: KARELA.color.textPrimary, fontSize: KARELA.space.xl, fontFamily: KARELA.font.bold },
-  newCardSub: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.regular },
-  timeTag: { flexDirection: "row", alignItems: "center", backgroundColor: KARELA.color.surfaceSoft, paddingHorizontal: 10, paddingVertical: KARELA.space.xs, borderRadius: KARELA.radius.sm },
-  timeTagText: { color: KARELA.color.brand, fontSize: KARELA.size.label, fontFamily: KARELA.font.medium },
-  progressSection: { flexDirection: "row", alignItems: "center", marginBottom: KARELA.space.xl },
-  progressBarBg: { flex: 1, height: 6, backgroundColor: KARELA.color.surfaceSoft, borderRadius: 3 },
-  progressBarFill: { height: "100%", backgroundColor: KARELA.color.brand, borderRadius: 3 },
-  percentText: { color: KARELA.color.textPrimary, fontSize: KARELA.size.label, fontFamily: KARELA.font.bold, marginLeft: KARELA.space.md },
-  buttonRow: { flexDirection: "row", gap: 10 },
-  detailsBtn: { flex: 1, backgroundColor: KARELA.color.surfaceSoft, borderRadius: KARELA.radius.lg, justifyContent: "center", alignItems: "center" },
-  detailsBtnText: { color: KARELA.color.textMuted, fontFamily: KARELA.font.bold },
-  fullTrackBtn: { flex: 2.5 },
-  gradientBtn: { paddingVertical: KARELA.space.lg, borderRadius: KARELA.radius.lg, alignItems: "center" },
-  trackBtnText: { color: KARELA.color.textPrimary, fontSize: 16, fontFamily: KARELA.font.bold },
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.85)", justifyContent: "flex-end" },
-  modalContent: { backgroundColor: KARELA.color.surface, borderTopLeftRadius: KARELA.radius.xl, borderTopRightRadius: KARELA.radius.xl, padding: 25, minHeight: 520 },
-  handle: { width: 40, height: 5, backgroundColor: KARELA.color.surfaceSoft, borderRadius: 3, alignSelf: "center", marginBottom: KARELA.space.xl },
-  modalTitle: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h1, fontFamily: KARELA.font.bold, marginBottom: 25 },
-  detailsGrid: { flexDirection: "row", gap: 15, marginBottom: KARELA.space.xl },
-  detailBox: { flex: 1, backgroundColor: KARELA.color.surfaceSoft, padding: 15, borderRadius: KARELA.radius.lg, alignItems: "center" },
-  detailValue: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h2, fontFamily: KARELA.font.bold, marginTop: 5 },
-  detailLabel: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.regular },
-  chartWrapper: { backgroundColor: KARELA.color.surfaceSoft, padding: 15, borderRadius: KARELA.radius.lg, marginBottom: KARELA.space.xl },
-  chartTitle: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.medium, marginBottom: 10 },
-  chartLabels: { flexDirection: "row", justifyContent: "space-between", marginTop: 5 },
-  chartLabelText: { color: KARELA.color.textFaint, fontSize: KARELA.size.caption, fontFamily: KARELA.font.bold },
-  recContainer: { backgroundColor: "rgba(124, 242, 5, 0.05)", padding: KARELA.space.xl, borderRadius: KARELA.radius.lg, marginBottom: 25, borderWidth: 1, borderColor: "rgba(124, 242, 5, 0.1)" },
-  coachHeader: { flexDirection: "row", alignItems: "center", marginBottom: 10, gap: KARELA.space.sm },
-  recTitle: { color: KARELA.color.brand, fontFamily: KARELA.font.bold, fontSize: KARELA.size.body },
-  recText: { color: KARELA.color.textSecondary, fontFamily: KARELA.font.regular, lineHeight: 20, fontStyle: "italic" },
-  closeBtn: { backgroundColor: KARELA.color.surfaceSoft, paddingVertical: KARELA.space.lg, borderRadius: KARELA.radius.lg, alignItems: "center" },
-  closeBtnText: { color: KARELA.color.textPrimary, fontFamily: KARELA.font.bold, fontSize: 16 },
-  modernMonthContainer: { backgroundColor: KARELA.color.surface, borderRadius: KARELA.radius.xl + 2, padding: KARELA.space.xl, marginBottom: 35, borderWidth: 1, borderColor: KARELA.color.surfaceSoft },
-  monthHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 25 },
-  monthName: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h1, fontFamily: KARELA.font.bold },
-  yearName: { color: KARELA.color.textMuted, fontSize: KARELA.size.body, fontFamily: KARELA.font.regular },
-  streakBadge: { backgroundColor: "rgba(255, 149, 0, 0.1)", paddingHorizontal: KARELA.space.md, paddingVertical: 6, borderRadius: KARELA.radius.sm, flexDirection: "row", alignItems: "center", gap: 6 },
-  streakText: { color: KARELA.vibrant.techOrange, fontSize: KARELA.size.label, fontFamily: KARELA.font.bold },
-  weekdayRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 15 },
-  weekdayLabel: { flex: 1, textAlign: "center", color: KARELA.color.textFaint, fontSize: KARELA.size.label, fontFamily: KARELA.font.bold },
-  modernGrid: { flexDirection: "row", flexWrap: "wrap", gap: KARELA.space.md },
-  modernDayBox: { justifyContent: "center", alignItems: "center", borderRadius: KARELA.radius.md },
-  modernDayText: { color: KARELA.color.textPrimary, fontSize: 15, fontFamily: KARELA.font.medium },
-  todayActiveBox: { backgroundColor: KARELA.color.brand },
-  todayActiveText: { color: KARELA.color.onBright },
-  activityDotBox: { backgroundColor: KARELA.color.surfaceSoft },
-  smallActivityIndicator: { position: "absolute", bottom: 6, width: 4, height: 4, borderRadius: 2, backgroundColor: KARELA.color.brand },
+
+  monthHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: KARELA.space.md },
+  monthName: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h2, fontFamily: KARELA.font.bold },
+  weekdayRow: { flexDirection: "row", marginBottom: KARELA.space.sm },
+  weekdayLabel: { textAlign: "center", color: KARELA.color.textMuted, fontSize: KARELA.size.caption, fontFamily: KARELA.font.bold },
+  grid: { flexDirection: "row", flexWrap: "wrap" },
+  dayBox: { justifyContent: "center", alignItems: "center", borderRadius: KARELA.radius.md },
+  dayRan: { backgroundColor: KARELA.color.surfaceSoft },
+  daySelected: { borderWidth: 2, borderColor: KARELA.color.brand },
+  dayText: { color: KARELA.color.textPrimary, fontSize: 14, fontFamily: KARELA.font.medium },
+  ranDot: { position: "absolute", bottom: 5, width: 4, height: 4, borderRadius: 2, backgroundColor: KARELA.color.brand },
+
+  sectionTitle: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h1, fontFamily: KARELA.font.bold, marginBottom: KARELA.space.md },
+  runItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: KARELA.space.md,
+    paddingVertical: KARELA.space.md,
+    borderBottomWidth: 1,
+    borderBottomColor: KARELA.color.lineSoft,
+  },
+  runIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(124,242,5,0.12)", // lime 12%
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  runTitle: { color: KARELA.color.textPrimary, fontSize: KARELA.size.body, fontFamily: KARELA.font.bold },
+  runSub: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.regular, marginTop: 2 },
+  runXp: { color: KARELA.color.brand, fontSize: KARELA.size.label, fontFamily: KARELA.font.bold },
+
+  emptyTitle: { color: KARELA.color.textPrimary, fontSize: KARELA.size.body, fontFamily: KARELA.font.bold },
+  emptySub: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.regular, marginTop: KARELA.space.xs },
 });
