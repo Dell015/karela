@@ -209,6 +209,48 @@ export const styles = StyleSheet.create({
     marginTop: 5,
     textAlign: "center",
   },
+  // --- Flag placement mode ---
+  placeOverlay: { ...StyleSheet.absoluteFillObject, zIndex: 150 },
+  // The dot is the exact spot (screen centre); the flag stands on it.
+  placeDot: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    width: 14,
+    height: 14,
+    marginLeft: -7,
+    marginTop: -7,
+    borderRadius: 7,
+    backgroundColor: KARELA.color.gold,
+    borderWidth: 3,
+    borderColor: KARELA.color.bg,
+  },
+  placePin: {
+    position: "absolute",
+    bottom: "50%",
+    left: "50%",
+    marginLeft: -9, // the flag glyph's pole sits near its left edge
+    marginBottom: 2,
+  },
+  placeBar: {
+    width: "92%",
+    alignSelf: "center",
+    padding: KARELA.space.lg,
+    borderRadius: KARELA.radius.lg,
+    backgroundColor: "rgba(17,24,19,0.96)", // surface at 96%
+    borderWidth: 1,
+    borderColor: KARELA.color.line,
+    ...KARELA.glow.soft,
+  },
+  placeTitle: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h2, fontFamily: KARELA.font.bold },
+  placeHint: {
+    color: KARELA.color.textSecondary,
+    fontSize: KARELA.size.label,
+    fontFamily: KARELA.font.regular,
+    marginTop: 2,
+    marginBottom: KARELA.space.md,
+  },
+  placeActions: { flexDirection: "row", gap: KARELA.space.sm },
   // --- Start/Stop Button ---
   buttonContainer: {
     position: "absolute",

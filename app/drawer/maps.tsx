@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
-import MapView, { Marker, Polyline } from "react-native-maps";
+import MapView, { Marker, Polyline, Region } from "react-native-maps";
 
 // Hooks & Services
 import { CivicHUD } from "@/components/CivicHUD";
@@ -210,15 +210,32 @@ export default function MapScreen() {
     }
   };
 
-  const handleSpawnFlag = async () => {
-    try {
-      const camera = await mapRef.current?.getCamera();
-      if (camera?.center) {
-        addCheckpoint(camera.center, currentLocation);
-      }
-    } catch (e) {
-      console.warn("Could not add a checkpoint:", e);
+  // --- FLAG PLACEMENT MODE ---
+  // Tap the flag button (or "Move" on a flag): a marker sits fixed in the
+  // centre of the screen, the user drags the map under it, then confirms.
+  // The centre is tracked from onRegionChangeComplete, so we never ask the
+  // native map for its camera (that call was a crash suspect on iPhone).
+  const [placing, setPlacing] = useState<null | { mode: "add" } | { mode: "move"; index: number }>(null);
+  const mapCenter = useRef<{ latitude: number; longitude: number } | null>(null);
+
+  const handleSpawnFlag = () => setPlacing({ mode: "add" });
+
+  const handleRegionChange = (region: Region, details?: { isGesture?: boolean }) => {
+    mapCenter.current = { latitude: region.latitude, longitude: region.longitude };
+    // The user moved the map by hand: pause auto-follow for a while.
+    // Runs on a map event, never during render (the purity rule cannot tell).
+    // eslint-disable-next-line react-hooks/purity
+    if (details?.isGesture) lastInteractionTime.current = Date.now();
+  };
+
+  const confirmPlacement = () => {
+    const center = mapCenter.current ?? currentLocation;
+    if (center && placing) {
+      const point = { latitude: center.latitude, longitude: center.longitude };
+      if (placing.mode === "add") addCheckpoint(point, currentLocation);
+      else moveCheckpoint(placing.index, point, currentLocation);
     }
+    setPlacing(null);
   };
 
   // Timer Logic
@@ -417,12 +434,7 @@ export default function MapScreen() {
         provider={Platform.OS === "android" ? "google" : undefined}
         userInterfaceStyle="dark"
         //googleRenderer="LATEST"
-        onRegionChangeComplete={(region, isGesture) => {
-          // If isGesture is true, the user moved the map manually
-          if (isGesture?.isGesture) {
-            lastInteractionTime.current = Date.now();
-          }
-        }}
+        onRegionChangeComplete={handleRegionChange}
         customMapStyle={ghostMapStyle}
         showsUserLocation={false}
         showsMyLocationButton={false}
@@ -557,22 +569,26 @@ export default function MapScreen() {
               key={point.id}
               draggable={Platform.OS === "android" && !isRacing}
               coordinate={{ latitude: point.latitude, longitude: point.longitude }}
+              // Bottom of the pin = the spot (matches the placement indicator).
+              anchor={{ x: 0.5, y: 1 }}
+              centerOffset={{ x: 0, y: -29 }}
               onDragEnd={(e) => {
                 moveCheckpoint(index, e.nativeEvent.coordinate, currentLocation);
               }}
               onPress={() => {
                 if (isRacing) return;
-                Alert.alert(`Checkpoint ${index + 1}`, "Pan the map to a spot, then choose Move here.", [
+                Alert.alert(`Checkpoint ${index + 1}`, "Move it to a new spot or delete it.", [
                   { text: "Cancel", style: "cancel" },
                   {
-                    text: "Move here",
-                    onPress: async () => {
-                      try {
-                        const camera = await mapRef.current?.getCamera();
-                        if (camera?.center) moveCheckpoint(index, camera.center, currentLocation);
-                      } catch (e) {
-                        console.warn("Could not move the checkpoint:", e);
-                      }
+                    text: "Move",
+                    onPress: () => {
+                      // Centre the map on this flag, then let the user drag.
+                      mapRef.current?.animateCamera(
+                        { center: { latitude: point.latitude, longitude: point.longitude } },
+                        { duration: 300 },
+                      );
+                      mapCenter.current = { latitude: point.latitude, longitude: point.longitude };
+                      setPlacing({ mode: "move", index });
                     },
                   },
                   {
@@ -663,8 +679,8 @@ export default function MapScreen() {
         </View>
       )}
 
-      {/* TOOLS (Only visible when NOT racing) */}
-      {!isRacing && (
+      {/* TOOLS (Only visible when NOT racing, and not while placing a flag) */}
+      {!isRacing && !placing && (
         <>
           <IconButton
             icon="chevron-back"
@@ -700,6 +716,7 @@ export default function MapScreen() {
         </>      )}
 
       {/* CIVIC HUD — Resonance indicator + Report FAB + Report sheet */}
+      {!placing && (
       <CivicHUD
         isRacing={isRacing}
         resonance={resonance}
@@ -710,6 +727,7 @@ export default function MapScreen() {
         }
         onSubmitReport={handleCivicReport}
       />
+      )}
 
       {/* NODE DETAIL MODAL */}
       <NodeDetailModal
@@ -719,15 +737,45 @@ export default function MapScreen() {
         onReconfirm={handleReconfirm}
       />
 
-      {/* ACTION BUTTON */}
-      <View style={styles.buttonContainer}>
-        <Button
-          label={isRacing ? "Stop" : "Start"}
-          variant={isRacing ? "danger" : "primary"}
-          icon={isRacing ? "stop" : "play"}
-          onPress={() => (isRacing ? handleStopRace() : handleStartRace())}
-          style={[styles.actionButton, isRacing ? KARELA.glow.coral : KARELA.glow.brand]}
-        />
+      {/* PLACEMENT INDICATOR: the flag's pole tip marks the exact spot */}
+      {placing && (
+        <View style={styles.placeOverlay} pointerEvents="none">
+          <View style={styles.placePin}>
+            <Ionicons name="flag" size={40} color={KARELA.color.gold} />
+          </View>
+          <View style={styles.placeDot} />
+        </View>
+      )}
+
+      {/* ACTION BUTTON (box-none: drags on either side reach the map) */}
+      <View style={styles.buttonContainer} pointerEvents="box-none">
+        {placing ? (
+          <View style={styles.placeBar}>
+            <Text style={styles.placeTitle}>
+              {placing.mode === "add" ? "Place a checkpoint" : `Move checkpoint ${placing.index + 1}`}
+            </Text>
+            <Text style={styles.placeHint}>Drag the map to put the flag where you want it.</Text>
+            <View style={styles.placeActions}>
+              <Button label="Cancel" variant="secondary" size="sm" onPress={() => setPlacing(null)} style={{ flex: 1 }} block />
+              <Button
+                label={placing.mode === "add" ? "Place flag here" : "Move flag here"}
+                icon="flag"
+                size="sm"
+                onPress={confirmPlacement}
+                style={{ flex: 1.4 }}
+                block
+              />
+            </View>
+          </View>
+        ) : (
+          <Button
+            label={isRacing ? "Stop" : "Start"}
+            variant={isRacing ? "danger" : "primary"}
+            icon={isRacing ? "stop" : "play"}
+            onPress={() => (isRacing ? handleStopRace() : handleStartRace())}
+            style={[styles.actionButton, isRacing ? KARELA.glow.coral : KARELA.glow.brand]}
+          />
+        )}
       </View>
     </View>
   );
