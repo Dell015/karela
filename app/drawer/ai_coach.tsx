@@ -1,6 +1,6 @@
+import { Chip, IconButton } from "@/components/ui/Button";
 import { KARELA } from "@/styles/designSystem";
 import { Screen } from "@/components/ui/Screen";
-import { Feather, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -12,7 +12,6 @@ import {
     StyleSheet,
     Text,
     TextInput,
-    TouchableOpacity,
     View,
 } from "react-native";
 
@@ -83,11 +82,10 @@ export default function AiCoach() {
     {
       id: 1,
       text: recentMemories.length > 0 ? "Analyze my last run" : "How to start?",
-      icon: "stopwatch",
-      lib: FontAwesome5,
+      icon: "stopwatch-outline" as const,
     },
-    { id: 2, text: "My progress", icon: "trending-up", lib: Feather },
-    { id: 3, text: "Best shoes for me?", icon: "shopping-bag", lib: Feather },
+    { id: 2, text: "My progress", icon: "trending-up-outline" as const },
+    { id: 3, text: "Best shoes for me?", icon: "bag-outline" as const },
   ];
 
   const clearChat = () => {
@@ -171,17 +169,10 @@ export default function AiCoach() {
 
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backBtn}
-          >
-            <Feather name="chevron-left" size={32} color={KARELA.color.textPrimary} />
-          </TouchableOpacity>
+          <IconButton icon="chevron-back" label="Back" onPress={() => router.back()} />
           <Text style={styles.headerTitle}>Ani</Text>
         </View>
-        <TouchableOpacity onPress={clearChat} style={styles.refreshBtn}>
-          <Feather name="refresh-cw" size={20} color={KARELA.color.brand} />
-        </TouchableOpacity>
+        <IconButton icon="refresh" label="Clear chat" onPress={clearChat} />
       </View>
 
       <KeyboardAvoidingView
@@ -205,19 +196,12 @@ export default function AiCoach() {
               </Text>
               <View style={styles.chipsContainer}>
                 {QUICK_ACTIONS.map((action) => (
-                  <TouchableOpacity
+                  <Chip
                     key={action.id}
-                    style={styles.chip}
+                    label={action.text}
+                    icon={action.icon}
                     onPress={() => handleSend(action.text)}
-                  >
-                    <action.lib
-                      name={action.icon as any}
-                      size={16}
-                      color={KARELA.color.brand}
-                      style={{ marginRight: KARELA.space.sm }}
-                    />
-                    <Text style={styles.chipText}>{action.text}</Text>
-                  </TouchableOpacity>
+                  />
                 ))}
               </View>
               <Text style={styles.disclosure}>{ANI_DISCLOSURE}</Text>
@@ -270,13 +254,15 @@ export default function AiCoach() {
             onChangeText={setInputText}
             onSubmitEditing={() => handleSend()}
           />
-          <TouchableOpacity onPress={() => handleSend()} style={styles.sendBtn}>
-            <Ionicons
-              name="paper-plane"
-              size={20}
-              color={inputText ? KARELA.color.brand : KARELA.color.textFaint}
-            />
-          </TouchableOpacity>
+          <IconButton
+            icon="paper-plane"
+            label="Send"
+            tone={inputText.trim() ? "brand" : "plain"}
+            iconColor={inputText.trim() ? undefined : KARELA.color.textFaint}
+            size={44}
+            disabled={!inputText.trim()}
+            onPress={() => handleSend()}
+          />
         </View>
       </KeyboardAvoidingView>
     </Screen>

@@ -1,9 +1,10 @@
+import { Button, IconButton } from "@/components/ui/Button";
 import { KARELA } from "@/styles/designSystem";
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
 import MapView, { Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -97,14 +98,8 @@ export default function ActiveRunScreen() {
             <Text style={styles.coachText}>&quot;Karela here. You&apos;re maintaining a great pace on this route, Steven! Focus on your breathing.&quot;</Text>
           </View>
           <View style={styles.controls}>
-            <TouchableOpacity style={styles.pauseBtn} onPress={() => setIsActive(!isActive)}>
-              <Ionicons name={isActive ? "pause" : "play"} size={32} color={KARELA.color.textPrimary} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.stopBtn} onLongPress={() => router.back()}>
-              <LinearGradient colors={[KARELA.color.danger, KARELA.color.danger]} style={styles.stopGradient}>
-                <Text style={styles.stopText}>Hold to finish</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+            <IconButton icon={isActive ? "pause" : "play"} label={isActive ? "Pause" : "Resume"} size={56} onPress={() => setIsActive(!isActive)} />
+            <Button label="Hold to finish" variant="danger" icon="stop" block onLongPress={() => router.back()} style={{ flex: 1 }} />
           </View>
         </View>
       </SafeAreaView>

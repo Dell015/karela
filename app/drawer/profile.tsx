@@ -1,3 +1,4 @@
+import { Button, Chip, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { useAuth } from "@/context/AuthContext";
 import { KARELA } from "@/styles/designSystem";
@@ -84,9 +85,7 @@ export default function ProfilePage() {
     <ScrollView style={s.container} contentContainerStyle={{ paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
       {/* IDENTITY BANNER */}
       <LinearGradient colors={["#0d1a06", KARELA.color.bg]} style={s.banner}>
-        <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={26} color={KARELA.color.textPrimary} />
-        </TouchableOpacity>
+        <IconButton icon="chevron-back" label="Back" onPress={() => router.back()} style={s.backBtn} />
 
         <View style={s.identityRow}>
           <View style={s.avatarRing}>
@@ -117,10 +116,7 @@ export default function ProfilePage() {
         </View>
 
         <View style={s.bannerActions}>
-          <TouchableOpacity style={s.bannerBtn} onPress={() => setShowEditProfile(true)}>
-            <Ionicons name="create-outline" size={16} color={KARELA.color.brand} />
-            <Text style={s.bannerBtnText}>Edit</Text>
-          </TouchableOpacity>
+          <Button label="Edit" variant="secondary" size="sm" icon="create-outline" onPress={() => setShowEditProfile(true)} />
         </View>
       </LinearGradient>
 
@@ -160,14 +156,8 @@ export default function ProfilePage() {
       {/* DUAL TRACK STATS */}
       <View style={s.section}>
         <View style={s.trackTabs}>
-          <TouchableOpacity style={[s.trackTab, activeTrack === "physical" && s.trackTabActive]} onPress={() => setActiveTrack("physical")}>
-            <Ionicons name="fitness" size={14} color={activeTrack === "physical" ? KARELA.color.brand : KARELA.color.textFaint} />
-            <Text style={[s.trackTabText, activeTrack === "physical" && s.trackTabTextActive]}>Physical</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[s.trackTab, activeTrack === "civic" && s.trackTabActive]} onPress={() => setActiveTrack("civic")}>
-            <Ionicons name="people" size={14} color={activeTrack === "civic" ? KARELA.color.civic : KARELA.color.textFaint} />
-            <Text style={[s.trackTabText, activeTrack === "civic" && s.trackTabTextActive]}>Civic</Text>
-          </TouchableOpacity>
+          <Chip label="Physical" icon="fitness-outline" selected={activeTrack === "physical"} onPress={() => setActiveTrack("physical")} style={s.trackChip} />
+          <Chip label="Civic" icon="people-outline" selected={activeTrack === "civic"} onPress={() => setActiveTrack("civic")} style={s.trackChip} />
         </View>
 
         {activeTrack === "physical" ? (
@@ -197,9 +187,7 @@ export default function ProfilePage() {
             <Text style={s.aniName}>Ani</Text>
             <Text style={s.aniSub}>Your AI Coach</Text>
           </View>
-          <TouchableOpacity onPress={() => router.push("/drawer/ai_coach")}>
-            <Text style={s.aniChatLink}>Chat →</Text>
-          </TouchableOpacity>
+          <Button label="Chat" variant="link" size="sm" onPress={() => router.push("/drawer/ai_coach")} />
         </View>
         <View style={s.aniMessage}>
           <Text style={s.aniText}>
@@ -219,9 +207,8 @@ export default function ProfilePage() {
           <Text style={s.emptyDesc}>
             Join or create a squad of 3-12 friends for accountability, streak protection, and shared rewards.
           </Text>
-          <TouchableOpacity style={s.emptyBtn}>
-            <Text style={s.emptyBtnText}>Find a Squad</Text>
-          </TouchableOpacity>
+          {/* TODO: guild search is not built yet, so this does nothing. */}
+          <Button label="Find a guild" variant="secondary" size="sm" />
         </View>
       </View>
 
@@ -234,9 +221,8 @@ export default function ProfilePage() {
           <Text style={s.emptyDesc}>
             Guilds compete for city landmark ownership. 50+ members required. Claim territory by running through it.
           </Text>
-          <TouchableOpacity style={s.emptyBtn}>
-            <Text style={s.emptyBtnText}>Browse Guilds</Text>
-          </TouchableOpacity>
+          {/* TODO: guild search is not built yet, so this does nothing. */}
+          <Button label="Browse guilds" variant="secondary" size="sm" />
         </View>
       </View>
 
@@ -250,7 +236,7 @@ export default function ProfilePage() {
               <Text style={s.utilityLabel}>Privacy Zones</Text>
               <Text style={s.utilityDesc}>0 zones active • GPS masked near home/office</Text>
             </View>
-            <Ionicons name="chevron-forward" size={16} color={KARELA.color.surfaceSoft} />
+            <Ionicons name="chevron-forward" size={16} color={KARELA.color.textFaint} />
           </TouchableOpacity>
 
           {isVanguard && (
@@ -260,7 +246,7 @@ export default function ProfilePage() {
                 <Text style={s.utilityLabel}>Vanguard Review Score</Text>
                 <Text style={s.utilityDesc}>Active • Good standing</Text>
               </View>
-              <Ionicons name="chevron-forward" size={16} color={KARELA.color.surfaceSoft} />
+              <Ionicons name="chevron-forward" size={16} color={KARELA.color.textFaint} />
             </TouchableOpacity>
           )}
 
@@ -270,13 +256,13 @@ export default function ProfilePage() {
               <Text style={s.utilityLabel}>Notifications</Text>
               <Text style={s.utilityDesc}>Quiet hours: 10 PM – 7 AM</Text>
             </View>
-            <Ionicons name="chevron-forward" size={16} color={KARELA.color.surfaceSoft} />
+            <Ionicons name="chevron-forward" size={16} color={KARELA.color.textFaint} />
           </TouchableOpacity>
 
           <TouchableOpacity style={s.utilityItem} onPress={logout}>
             <Ionicons name="log-out-outline" size={18} color={KARELA.color.danger} />
             <View style={{ flex: 1 }}>
-              <Text style={[s.utilityLabel, { color: KARELA.color.danger }]}>Log Out</Text>
+              <Text style={[s.utilityLabel, { color: KARELA.color.danger }]}>Log out</Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -310,12 +296,8 @@ export default function ProfilePage() {
             <TextInput style={[s.input, { height: 60 }]} value={aiNotes} onChangeText={setAiNotes} placeholder="e.g. I have bad knees, prefer morning runs" placeholderTextColor={KARELA.color.textMuted} multiline />
 
             <View style={s.modalButtons}>
-              <TouchableOpacity style={s.modalCancelBtn} onPress={() => setShowEditProfile(false)}>
-                <Text style={s.modalCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={s.modalSaveBtn} onPress={handleSaveProfile}>
-                <Text style={s.modalSaveText}>Save</Text>
-              </TouchableOpacity>
+              <Button label="Cancel" variant="secondary" block onPress={() => setShowEditProfile(false)} style={{ flex: 1 }} />
+              <Button label="Save" block onPress={handleSaveProfile} style={{ flex: 1 }} />
             </View>
           </View>
         </KeyboardAvoidingView>
@@ -336,6 +318,7 @@ const StatTile = ({ icon, color, value, label }: { icon: string; color: string; 
 
 // --- STYLES ---
 const s = StyleSheet.create({
+  trackChip: { flex: 1, justifyContent: "center" },
   container: { flex: 1, backgroundColor: "transparent" },
 
   // Banner

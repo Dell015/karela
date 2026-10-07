@@ -1,3 +1,4 @@
+import { IconButton } from "@/components/ui/Button";
 import { useSettings } from "@/hooks/useSettings";
 import { KARELA } from "@/styles/designSystem";
 import { Screen } from "@/components/ui/Screen";
@@ -24,12 +25,7 @@ export default function SettingsScreen() {
       
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.replace("/drawer/dashboard")}
-        >
-          <Ionicons name="chevron-back" size={24} color={KARELA.color.textPrimary} />
-        </TouchableOpacity>
+        <IconButton icon="chevron-back" label="Back" onPress={() => router.replace("/drawer/dashboard")} />
         <Text style={styles.headerTitle}>Settings</Text>
         <View style={{ width: 44 }} /> 
       </View>
@@ -60,14 +56,14 @@ export default function SettingsScreen() {
                 onPress={injectFakeData}
                 activeOpacity={0.7}
             >
-              <View style={[styles.iconBox, { backgroundColor: "rgba(124, 242, 5, 0.1)" }]}>
+              <View style={[styles.iconBox, { backgroundColor: "rgba(124,242,5,0.1)" /* lime 10% */ }]}>
                 <Ionicons name="flask" size={20} color={KARELA.color.brand} />
               </View>
               <View style={{ flex: 1, marginLeft: 15 }}>
                 <Text style={styles.itemLabel}>Add sample history</Text>
                 <Text style={styles.itemSublabel}>Fills the graphs with sample runs for testing</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={KARELA.color.surfaceSoft} />
+              <Ionicons name="chevron-forward" size={18} color={KARELA.color.textFaint} />
             </TouchableOpacity>
           </View>
         </View>
@@ -81,7 +77,7 @@ export default function SettingsScreen() {
                 onPress={handleResetData}
                 activeOpacity={0.7}
             >
-              <View style={[styles.iconBox, { backgroundColor: "rgba(255, 69, 58, 0.1)" }]}>
+              <View style={[styles.iconBox, { backgroundColor: "rgba(255,77,109,0.12)" /* coral 12% */ }]}>
                 <Ionicons name="trash-outline" size={20} color={KARELA.color.danger} />
               </View>
               <View style={{ flex: 1, marginLeft: 15 }}>

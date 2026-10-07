@@ -1,3 +1,4 @@
+import { Button, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { KARELA } from "@/styles/designSystem";
 import { useAuth } from "@/context/AuthContext";
@@ -21,7 +22,6 @@ import {
   NativeSyntheticEvent,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { LineChart } from "react-native-wagmi-charts";
@@ -151,21 +151,11 @@ export default function ProgressScreen() {
 
       {/* Custom Header */}
       <View style={ProgressScreenUI.header}>
-        <TouchableOpacity
-          style={ProgressScreenUI.backButton}
-          onPress={() => router.replace("/drawer/dashboard")}
-        >
-          <Ionicons name="chevron-back" size={28} color={KARELA.color.textPrimary} />
-        </TouchableOpacity>
+        <IconButton icon="chevron-back" label="Back" onPress={() => router.replace("/drawer/dashboard")} />
         <Text style={{ color: KARELA.color.textPrimary, fontFamily: KARELA.font.bold, fontSize: 16 }}>
           @{profile?.username || "strider"}
         </Text>
-        <TouchableOpacity
-          style={ProgressScreenUI.menuButton}
-          onPress={() => navigation.openDrawer()}
-        >
-          <Ionicons name="menu" size={32} color={KARELA.color.brand} />
-        </TouchableOpacity>
+        <IconButton icon="menu" label="Open menu" onPress={() => navigation.openDrawer()} />
       </View>
 
       {/* RPG Profile Section (Still uses Firebase for XP/Level) */}
@@ -211,16 +201,8 @@ export default function ProgressScreen() {
           />
         </View>
 
-        <TouchableOpacity style={ProgressScreenUI.rankButton}>
-          <LinearGradient
-            colors={KARELA.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={ProgressScreenUI.gradientButton}
-          >
-            <Text style={ProgressScreenUI.buttonText}>See Ranks</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+        {/* TODO: no screen for ranks yet, so this does nothing when tapped. */}
+        <Button label="See ranks" icon="podium-outline" block style={ProgressScreenUI.rankButton} />
       </View>
 
       {/* Paging Stats (SQLite Driven) */}
@@ -260,9 +242,7 @@ export default function ProgressScreen() {
       <View style={ProgressScreenUI.sectionContainer}>
         <View style={ProgressScreenUI.row}>
           <Text style={ProgressScreenUI.sectionTitle}>Performance Preview</Text>
-          <TouchableOpacity onPress={() => router.push("/performanceGraph")}>
-            <Text style={ProgressScreenUI.viewDetailsText}>View details</Text>
-          </TouchableOpacity>
+          <Button label="View details" variant="link" size="sm" onPress={() => router.push("/performanceGraph")} />
         </View>
         <View style={ProgressScreenUI.previewChartWrapper}>
           {realChartData && realChartData.length > 1 ? (

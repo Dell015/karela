@@ -1,3 +1,4 @@
+import { Button, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { KARELA } from "@/styles/designSystem";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -101,16 +102,16 @@ export default function CalendarScreen() {
       <Animated.View entering={FadeInUp.duration(500)} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
-            <View>
+            <IconButton
+              icon="chevron-back"
+              label="Back"
+              onPress={() => router.replace("/drawer/dashboard")}
+            />
+            <View style={{ flex: 1 }}>
               <Text style={styles.headerTitle}>Calendar</Text>
-              <View style={styles.statusRow}>
-                <View style={[styles.dot, { backgroundColor: KARELA.color.brand }]} />
-                <Text style={styles.statusText}>Connected: Sander&apos;s Airpods Pro 2</Text>
-              </View>
             </View>
-            <TouchableOpacity style={styles.bellButton}>
-              <Ionicons name="notifications" size={24} color={KARELA.color.textPrimary} />
-            </TouchableOpacity>
+            {/* TODO: no reminders screen yet, so this does nothing. */}
+            <IconButton icon="notifications-outline" label="Reminders" />
           </View>
 
           <View style={styles.tabContainer}>
@@ -118,8 +119,8 @@ export default function CalendarScreen() {
               <LinearGradient colors={KARELA.gradients.brand} style={StyleSheet.absoluteFill} />
             </Animated.View>
             {["Daily", "Weekly", "Monthly"].map((type, i) => (
-              <TouchableOpacity key={type} style={styles.tabButton} onPress={() => handleToggle(type, i)} activeOpacity={1}>
-                <Text style={[styles.tabText, { color: viewType === type ? KARELA.color.textPrimary : KARELA.color.textMuted }]}>{type}</Text>
+              <TouchableOpacity key={type} style={styles.tabButton} onPress={() => handleToggle(type, i)} activeOpacity={1} accessibilityRole="button" accessibilityState={{ selected: viewType === type }}>
+                <Text style={[styles.tabText, { color: viewType === type ? KARELA.color.onBright : KARELA.color.textMuted }]}>{type}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -148,7 +149,7 @@ export default function CalendarScreen() {
                   const hasActivity = dayNum < today;
                   return (
                     <TouchableOpacity key={i} style={[styles.modernDayBox, { width: DAY_SIZE, height: DAY_SIZE }, isToday && styles.todayActiveBox, hasActivity && styles.activityDotBox]}>
-                      <Text style={[styles.modernDayText, isToday && styles.todayActiveText, !isToday && !hasActivity && { color: "#48484A" }]}>{dayNum}</Text>
+                      <Text style={[styles.modernDayText, isToday && styles.todayActiveText, !isToday && !hasActivity && { color: KARELA.color.textFaint }]}>{dayNum}</Text>
                       {hasActivity && !isToday && <View style={styles.smallActivityIndicator} />}
                     </TouchableOpacity>
                   );
@@ -159,7 +160,7 @@ export default function CalendarScreen() {
             <View style={styles.summaryContainer}>
               <View style={styles.summaryHeader}>
                 <Text style={styles.summaryTitle}>History Overview</Text>
-                <TouchableOpacity onPress={() => router.back()}><Text style={styles.viewAllText}>Dashboard</Text></TouchableOpacity>
+                <Button label="Dashboard" variant="link" size="sm" onPress={() => router.back()} />
               </View>
               <View style={styles.daysRow}>
                 {[9, 10, 11, 12, 13, 14, 15].map((d, i) => (
@@ -205,13 +206,11 @@ export default function CalendarScreen() {
             <View style={styles.recContainer}>
               <View style={styles.coachHeader}>
                 <MaterialCommunityIcons name="account-tie-voice" size={20} color={KARELA.color.brand} />
-                <Text style={styles.recTitle}>Karela&apos;s Advice</Text>
+                <Text style={styles.recTitle}>Ani&apos;s advice</Text>
               </View>
               <Text style={styles.recText}>&quot;{selectedQuest?.rec}&quot;</Text>
             </View>
-            <TouchableOpacity style={styles.closeBtn} onPress={() => setModalVisible(false)}>
-              <Text style={styles.closeBtnText}>Dismiss</Text>
-            </TouchableOpacity>
+            <Button label="Close" variant="secondary" block onPress={() => setModalVisible(false)} style={{ marginTop: KARELA.space.lg }} />
           </Animated.View>
         </Pressable>
       </Modal>
@@ -237,12 +236,9 @@ const NewQuestCard = ({ title, distance, time, progress, onDetails }: any) => (
       <Text style={styles.percentText}>{Math.round(progress * 100)}%</Text>
     </View>
     <View style={styles.buttonRow}>
-      <TouchableOpacity style={styles.detailsBtn} onPress={onDetails}><Text style={styles.detailsBtnText}>Details</Text></TouchableOpacity>
-      <TouchableOpacity style={styles.fullTrackBtn}>
-        <LinearGradient colors={KARELA.gradients.brand} style={styles.gradientBtn}>
-          <Text style={styles.trackBtnText}>Track Progress</Text>
-        </LinearGradient>
-      </TouchableOpacity>
+      <Button label="Details" variant="secondary" size="sm" onPress={onDetails} style={{ flex: 1 }} block />
+      {/* TODO: nothing to track yet, so this does nothing. */}
+      <Button label="Track progress" size="sm" style={{ flex: 1 }} block />
     </View>
   </View>
 );
@@ -250,11 +246,8 @@ const NewQuestCard = ({ title, distance, time, progress, onDetails }: any) => (
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "transparent" },
   scrollContent: { padding: 25 },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 25 },
-  headerTitle: { fontSize: 38, fontFamily: KARELA.font.bold, color: KARELA.color.textPrimary },
-  statusRow: { flexDirection: "row", alignItems: "center", marginTop: 5 },
-  dot: { width: 6, height: 6, borderRadius: 3, marginRight: 6 },
-  statusText: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.regular },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: KARELA.space.md, marginBottom: 25 },
+  headerTitle: { fontSize: KARELA.size.display, fontFamily: KARELA.font.bold, color: KARELA.color.textPrimary },
   bellButton: { backgroundColor: KARELA.color.surface, padding: KARELA.space.md, borderRadius: 25 },
   tabContainer: { flexDirection: "row", backgroundColor: KARELA.color.surface, borderRadius: 22, padding: 6, marginBottom: 35, position: "relative" },
   animatedPill: { position: "absolute", top: 6, left: 6, bottom: 6, borderRadius: KARELA.radius.lg, overflow: "hidden", width: "31%" },

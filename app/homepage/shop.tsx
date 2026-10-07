@@ -1,6 +1,7 @@
+import { Button, Chip, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { KARELA } from "@/styles/designSystem";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "expo-router";
 import React, { useState } from "react";
@@ -40,9 +41,7 @@ export default function ShopScreen() {
       <StatusBar barStyle="light-content" />
       <View style={styles.mainWrapper}>
         <View style={styles.currencyHeader}>
-          <TouchableOpacity onPress={() => (navigation as any).openDrawer()}>
-            <Ionicons name="menu" size={28} color={KARELA.color.brand} />
-          </TouchableOpacity>
+          <IconButton icon="menu" label="Open menu" onPress={() => (navigation as any).openDrawer()} />
           <View style={styles.balanceContainer}>
             <View style={styles.currencyBox}>
               <MaterialCommunityIcons name="diamond-stone" size={16} color={KARELA.vibrant.sky} />
@@ -63,9 +62,7 @@ export default function ShopScreen() {
 
           <View style={styles.tabBar}>
             {SHOP_CATEGORIES.map((tab) => (
-              <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)} style={[styles.tab, activeTab === tab && styles.activeTab]}>
-                <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>{tab}</Text>
-              </TouchableOpacity>
+              <Chip key={tab} label={tab.charAt(0) + tab.slice(1).toLowerCase()} selected={activeTab === tab} onPress={() => setActiveTab(tab)} />
             ))}
           </View>
 
@@ -81,7 +78,8 @@ export default function ShopScreen() {
                     <MaterialCommunityIcons name="diamond-stone" size={12} color={KARELA.vibrant.sky} />
                     <Text style={styles.priceText}>{item.price}</Text>
                   </View>
-                  <TouchableOpacity style={styles.buyBtn}><Text style={styles.buyBtnText}>Buy</Text></TouchableOpacity>
+                  {/* TODO: buying is not built yet, so this does nothing. */}
+                  <Button label="Buy" size="sm" block style={{ marginTop: KARELA.space.sm }} />
                 </LinearGradient>
               </TouchableOpacity>
             ))}

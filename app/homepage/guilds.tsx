@@ -1,3 +1,4 @@
+import { Button, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { KARELA } from "@/styles/designSystem";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -91,9 +92,7 @@ export default function GuildsScreen() {
               <Text style={styles.headerTitle}>{showDetails ? "Your guild" : "Guilds"}</Text>
               <Text style={styles.headerSubtitle}>{showDetails ? myGuild.name : "Tuguegarao City"}</Text>
             </View>
-            <TouchableOpacity style={styles.menuButton} onPress={() => showDetails ? handleToggleDetails() : (navigation as any).openDrawer()}>
-              <Ionicons name={showDetails ? "chevron-down" : "menu"} size={28} color={KARELA.color.brand} />
-            </TouchableOpacity>
+            <IconButton icon={showDetails ? "chevron-down" : "menu"} label={showDetails ? "Close guild details" : "Open menu"} onPress={() => showDetails ? handleToggleDetails() : (navigation as any).openDrawer()} />
           </View>
 
           {/* Active Guild Card */}
@@ -144,10 +143,7 @@ export default function GuildsScreen() {
                         </View>
                         <View style={styles.progressTrack}><View style={[styles.progressFill, { width: `${mission.progress * 100}%` }]} /></View>
                         <Text style={styles.missionGoal}>{mission.goal} • {Math.round(mission.progress * 100)}%</Text>
-                        <TouchableOpacity style={styles.submitButton} onPress={() => handleSubmitImpact(mission.title)}>
-                          <MaterialCommunityIcons name="target" size={18} color={KARELA.color.onBright} />
-                          <Text style={styles.submitButtonText}>Submit proof</Text>
-                        </TouchableOpacity>
+                        <Button label="Submit proof" variant="civic" icon="camera-outline" block onPress={() => handleSubmitImpact(mission.title)} />
                       </View>
                     ) : (
                       <View style={styles.progressTrackMini}><View style={[styles.progressFill, { width: `${mission.progress * 100}%` }]} /></View>
@@ -155,11 +151,12 @@ export default function GuildsScreen() {
                   </TouchableOpacity>
                 );
               })}
-              <TouchableOpacity style={styles.rosterBtn}><Text style={styles.rosterBtnText}>See all members</Text></TouchableOpacity>
+              {/* TODO: member list not built yet, so this does nothing. */}
+              <Button label="See all members" variant="secondary" block style={{ marginTop: KARELA.space.md }} />
             </View>
           ) : (
             <>
-              <View style={styles.sectionHeader}><Text style={styles.sectionLabel}>Find a guild</Text><TouchableOpacity><Text style={styles.viewAllText}>Filter</Text></TouchableOpacity></View>
+              <View style={styles.sectionHeader}><Text style={styles.sectionLabel}>Find a guild</Text>{/* TODO: filters not built yet. */}<Button label="Filter" variant="link" size="sm" /></View>
               {MOCK_GUILDS.map((guild) => (
                 <TouchableOpacity key={guild.id} style={styles.listCard}>
                   <View style={styles.listIconBox}><MaterialCommunityIcons name={guild.icon as any} size={24} color={guild.color} /></View>
@@ -167,7 +164,8 @@ export default function GuildsScreen() {
                   <Ionicons name="chevron-forward" size={20} color={KARELA.color.textFaint} />
                 </TouchableOpacity>
               ))}
-              <TouchableOpacity style={styles.createBtn}><Ionicons name="add-circle-outline" size={20} color={KARELA.color.textMuted} /><Text style={styles.createBtnText}>Start a guild</Text></TouchableOpacity>
+              {/* TODO: creating a guild is not built yet, so this does nothing. */}
+              <Button label="Start a guild" variant="secondary" icon="add-circle-outline" block style={{ marginTop: KARELA.space.md }} />
             </>
           )}
         </ScrollView>

@@ -1,7 +1,8 @@
+import { Button, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { QuestCard } from "@/components/QuestCard";
 import { KARELA } from "@/styles/designSystem";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useIsFocused, useNavigation } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -240,6 +241,8 @@ export default function Dashboard() {
                 <View style={dashboard_ui.LeftGroup}>
                   <TouchableOpacity
                     onPress={() => router.push("/drawer/profile")}
+                    accessibilityRole="button"
+                    accessibilityLabel="Your profile"
                   >
                     <Image
                       source={require("@/assets/images/profile_example.jpg")}
@@ -256,12 +259,7 @@ export default function Dashboard() {
                     </Text>
                   </View>
                 </View>
-                <TouchableOpacity
-                  style={dashboard_ui.menuButton}
-                  onPress={() => navigation.openDrawer()}
-                >
-                  <Ionicons name="menu" size={32} color={KARELA.color.brand} />
-                </TouchableOpacity>
+                <IconButton icon="menu" label="Open menu" onPress={() => navigation.openDrawer()} />
               </View>
 
               {/* Player Card */}
@@ -320,37 +318,26 @@ export default function Dashboard() {
                 </View>
 
                 {/* RECENTER BUTTON (Targeting User) */}
-                <TouchableOpacity
-                  style={{
-                    position: "absolute",
-                    left: KARELA.space.md,
-                    top: 1,
-                    backgroundColor: KARELA.color.brand,
-                    borderColor: KARELA.color.brand,
-                    padding: KARELA.space.md, // 20 icon + 2x12 padding = 44pt tap target
-                    borderRadius: KARELA.radius.md,
-                    borderWidth: 1,
-                    zIndex: 10,
-                  }}
+                <IconButton
+                  icon="navigate"
+                  label="Center the map on me"
+                  tone="brand"
                   onPress={recenterMap}
-                  accessibilityLabel="Center the map on me"
-                >
-                  <Ionicons name="navigate" size={20} color={KARELA.color.onBright} />
-                </TouchableOpacity>
+                  style={{ position: "absolute", left: KARELA.space.md, top: KARELA.space.md, zIndex: 10 }}
+                />
 
                 <Image
                   source={require("@/assets/images/Sun.png")}
                   style={dashboard_ui.weatherOverlayIcon}
                 />
 
-                <TouchableOpacity
-                  style={dashboard_ui.mapButton}
+                <Button
+                  label="Open map"
+                  size="sm"
+                  icon="map-outline"
                   onPress={() => router.push("/drawer/maps")}
-                >
-                  <Text style={dashboard_ui.mapButtonText}>
-                    Open map
-                  </Text>
-                </TouchableOpacity>
+                  style={dashboard_ui.mapButton}
+                />
               </View>
 
               {/* Character Avatars */}
@@ -368,17 +355,15 @@ export default function Dashboard() {
                     <AniView action={currentAniAction} />
                   </TouchableOpacity>
                   {/* CUSTOMIZE BUTTON */}
-                  <TouchableOpacity
-                    style={dashboard_ui.customizeBtn}
+                  <Button
+                    label="Customize"
+                    variant="secondary"
+                    size="sm"
+                    icon="color-palette-outline"
+                    block
                     onPress={() => router.push("/homepage/CustomizeAni")}
-                  >
-                    <MaterialCommunityIcons
-                      name="palette-swatch"
-                      size={14}
-                      color={KARELA.color.brand}
-                    />
-                    <Text style={dashboard_ui.customizeBtnText}>Customize</Text>
-                  </TouchableOpacity>
+                    style={dashboard_ui.customizeBtn}
+                  />
                 </View>
 
                 {/* RANDEL COLUMN */}
@@ -412,11 +397,13 @@ export default function Dashboard() {
                         style={dashboard_ui.nestedInput}
                         returnKeyType="send"
                       />
-                      <TouchableOpacity
+                      <IconButton
+                        icon="arrow-forward"
+                        label="Open chat with Ani"
+                        tone="brand"
+                        size={40}
                         onPress={() => router.push("/drawer/ai_coach")}
-                      >
-                        <Ionicons name="arrow-forward" size={20} color={KARELA.color.textPrimary} />
-                      </TouchableOpacity>
+                      />
                     </View>
                   </View>
                 </View>
@@ -434,18 +421,7 @@ export default function Dashboard() {
                 <Text style={[dashboard_ui.sectionTitle, { marginBottom: 0 }]}>
                   Quest Progress
                 </Text>
-                <TouchableOpacity onPress={() => router.push("/drawer/quests")}>
-                  <Text
-                    style={{
-                      color: KARELA.color.brand,
-                      fontSize: KARELA.size.label,
-                      fontFamily: KARELA.font.bold,
-                      marginRight: 5,
-                    }}
-                  >
-                    VIEW ALL
-                  </Text>
-                </TouchableOpacity>
+                <Button label="View all" variant="link" size="sm" onPress={() => router.push("/drawer/quests")} />
               </View>
 
               <View style={{ marginBottom: 20 }}>
@@ -510,8 +486,7 @@ export default function Dashboard() {
                           { textAlign: "center", color: KARELA.color.textMuted, marginTop: 10 },
                         ]}
                       >
-                        No active missions detected.{"\n"}Visit the Quest Board
-                        to generate intel.
+                        No quests yet.{"\n"}Open Quests and Ani will pick one for you.
                       </Text>
                     </View>
                   </TouchableOpacity>

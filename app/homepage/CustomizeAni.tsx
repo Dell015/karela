@@ -1,5 +1,6 @@
+import { Button, Chip, IconButton } from "@/components/ui/Button";
 import { KARELA } from "@/styles/designSystem";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useState } from "react";
@@ -28,9 +29,7 @@ export default function CustomizeScreen() {
 
       {/* --- TOP NAVIGATION BAR --- */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={28} color={KARELA.color.brand} />
-        </TouchableOpacity>
+        <IconButton icon="chevron-back" label="Back" onPress={() => router.back()} />
         <Text style={styles.headerTitle}>Customize Ani</Text>
         <MaterialCommunityIcons name="shield-sync" size={24} color={KARELA.color.brand} />
       </View>
@@ -41,9 +40,7 @@ export default function CustomizeScreen() {
         <AniView action={currentAction} />
         <View style={styles.actionPills}>
           {["IDLE", "WALK", "RUN"].map((act) => (
-            <TouchableOpacity key={act} onPress={() => setCurrentAction(`Female_rig|female_${act}`)} style={[styles.pill, currentAction.includes(act) && styles.pillActive]}>
-              <Text style={[styles.pillText, currentAction.includes(act) && styles.pillTextActive]}>{act}</Text>
-            </TouchableOpacity>
+            <Chip key={act} label={act.charAt(0) + act.slice(1).toLowerCase()} selected={currentAction.includes(act)} onPress={() => setCurrentAction(`Female_rig|female_${act}`)} />
           ))}
         </View>
       </View>
@@ -51,9 +48,7 @@ export default function CustomizeScreen() {
       {/* --- CATEGORY SELECTOR TABS --- */}
       <View style={styles.categoryBar}>
         {categories.map((cat) => (
-          <TouchableOpacity key={cat} onPress={() => setSelectedCategory(cat)} style={[styles.catItem, selectedCategory === cat && styles.catItemActive]}>
-            <Text style={[styles.catText, selectedCategory === cat && styles.catTextActive]}>{cat}</Text>
-          </TouchableOpacity>
+          <Chip key={cat} label={cat.charAt(0) + cat.slice(1).toLowerCase()} selected={selectedCategory === cat} onPress={() => setSelectedCategory(cat)} />
         ))}
       </View>
 
@@ -72,9 +67,7 @@ export default function CustomizeScreen() {
 
       {/* --- FOOTER SAVE ACTION --- */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.saveBtn} onPress={() => router.back()}>
-          <Text style={styles.saveBtnText}>Save</Text>
-        </TouchableOpacity>
+        <Button label="Save" block onPress={() => router.back()} />
       </View>
     </SafeAreaView>
   );

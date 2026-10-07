@@ -1,5 +1,6 @@
+import { Button, Chip } from "@/components/ui/Button";
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Pressable, Dimensions } from 'react-native';
+import { View, Text, Pressable, Dimensions } from 'react-native';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -8,7 +9,6 @@ import Animated, {
   interpolate, 
   Extrapolation 
 } from 'react-native-reanimated';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AniView from "@/components/AniModel";
 import { dashboard_ui } from "@/styles/dashboardStyle";
 
@@ -46,25 +46,16 @@ export const AniConsole = () => {
           <Text style={dashboard_ui.consoleTitle}>Ani&apos;s moves</Text>
           <View style={dashboard_ui.btnRow}>
             {['IDLE', 'WALK', 'RUN'].map((mode) => (
-              <TouchableOpacity 
+              <Chip
                 key={mode}
+                label={mode.charAt(0) + mode.slice(1).toLowerCase()}
+                icon={mode === "IDLE" ? "pause" : mode === "WALK" ? "walk" : "fitness"}
+                selected={currentAniAction.includes(mode)}
                 onPress={() => setCurrentAniAction(`Female_rig|female_${mode}`)}
-                style={[dashboard_ui.commandBtn, currentAniAction.includes(mode) && dashboard_ui.commandBtnActive]}
-              >
-                <MaterialCommunityIcons 
-                  name={mode === 'IDLE' ? "pause" : mode === 'WALK' ? "walk" : "run"} 
-                  size={24} 
-                  color={currentAniAction.includes(mode) ? "#000" : "#7CF205"} 
-                />
-                <Text style={[dashboard_ui.commandBtnText, currentAniAction.includes(mode) && dashboard_ui.commandBtnTextActive]}>
-                  {mode}
-                </Text>
-              </TouchableOpacity>
+              />
             ))}
           </View>
-          <TouchableOpacity style={dashboard_ui.closeConsoleBtn} onPress={toggleConsole}>
-            <Text style={dashboard_ui.closeConsoleBtnText}>Close</Text>
-          </TouchableOpacity>
+          <Button label="Close" variant="secondary" size="sm" block onPress={toggleConsole} style={{ marginTop: KARELA.space.md }} />
         </Animated.View>
       </Pressable>
     </Animated.View>
