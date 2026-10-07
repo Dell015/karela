@@ -1,10 +1,9 @@
 import { KARELA } from "@/styles/designSystem";
+import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
-import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    ActivityIndicator,
     Alert,
     Image,
     KeyboardAvoidingView,
@@ -13,7 +12,6 @@ import {
     StyleSheet,
     Text,
     TextInput,
-    TouchableOpacity,
     View,
 } from "react-native";
 import { signIn } from "../../services/database/supabase/auth";
@@ -92,25 +90,12 @@ export default function Login() {
               />
             </View>
 
-            <TouchableOpacity 
-              style={[styles.loginBtn, loading && { opacity: 0.7 }]} 
-              onPress={handleLogin}
-              disabled={loading}
-            >
-              <LinearGradient
-                colors={KARELA.gradients.brand}
-                style={styles.gradientBtn}
-              >
-                {loading ? <ActivityIndicator color={KARELA.color.textPrimary} /> : <Text style={styles.loginBtnText}>Log In</Text>}
-              </LinearGradient>
-            </TouchableOpacity>
+            <Button label="Log in" block loading={loading} onPress={handleLogin} style={styles.loginBtn} />
           </View>
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>New to Karela? </Text>
-            <TouchableOpacity onPress={() => router.push("/auth/signup")}>
-              <Text style={styles.signupText}>Sign Up</Text>
-            </TouchableOpacity>
+            <Button label="Sign up" variant="link" onPress={() => router.push("/auth/signup")} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -127,10 +112,7 @@ const styles = StyleSheet.create({
   form: { gap: KARELA.space.xl },
   inputContainer: { borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.3)" },
   input: { color: KARELA.color.textPrimary, paddingVertical: KARELA.space.md, fontSize: 16, fontFamily: KARELA.font.regular },
-  loginBtn: { borderRadius: KARELA.radius.xl, overflow: "hidden", marginTop: KARELA.space.xl },
-  gradientBtn: { paddingVertical: KARELA.space.lg, alignItems: "center" },
-  loginBtnText: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h2, fontFamily: KARELA.font.bold },
-  footer: { flexDirection: "row", justifyContent: "center", marginTop: KARELA.space.xxxl },
+  loginBtn: { marginTop: KARELA.space.xl },
+  footer: { flexDirection: "row", justifyContent: "center", alignItems: "center", gap: KARELA.space.xs, marginTop: KARELA.space.xxxl },
   footerText: { color: KARELA.color.textMuted, fontFamily: KARELA.font.regular },
-  signupText: { color: KARELA.color.brand, fontFamily: KARELA.font.bold },
 });

@@ -1,4 +1,5 @@
 import { CIVIC_CATEGORIES, CivicCategory } from "@/services/engines/CivicEngine";
+import { Button } from "@/components/ui/Button";
 import { KARELA } from "@/styles/designSystem";
 import { ResonanceState } from "@/services/engines/ResonanceSystem";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,6 +22,7 @@ import {
 import Animated, {
     cancelAnimation,
     useAnimatedStyle,
+    useReducedMotion,
     useSharedValue,
     withRepeat,
     withSequence,
@@ -57,7 +59,8 @@ const FONT = KARELA.font;
 interface CivicHUDProps {
   isRacing: boolean;
   resonance: ResonanceState | null;
-  nearbyCount: number;
+  /** Nearby reports that need someone: pending (needs reports) or aging (needs a check). */
+  needsCheckCount: number;
   onSubmitReport: (category: CivicCategory, photoUri: string) => Promise<void>;
 }
 
@@ -85,39 +88,47 @@ const ROLE_CONFIG = {
 export const CivicHUD = ({
   isRacing,
   resonance,
-  nearbyCount,
+  needsCheckCount,
   onSubmitReport,
 }: CivicHUDProps) => {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const reduceMotion = useReducedMotion();
 
-  // Pulse animation for the FAB
-  const pulse = useSharedValue(1);
-  useEffect(() => {
-    pulse.value = withRepeat(
-      withSequence(
-        withTiming(1.08, { duration: 1000 }),
-        withTiming(1, { duration: 1000 })
-      ),
-      -1,
-      true
-    );
-    // An infinite withRepeat keeps running on the UI thread unless cancelled.
-    return () => cancelAnimation(pulse);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const fabAnimStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulse.value }],
-  }));
-
-  if (!isRacing) return null;
-
-  const role = resonance?.currentRole ?? "scout";
+  // Reporting works any time. Resonance (and its "focus" pause) only applies
+  // during a run.
+  const role = isRacing ? (resonance?.currentRole ?? "scout") : "scout";
   const config = ROLE_CONFIG[role];
   const stamina = resonance ? Math.round(resonance.staminaScore * 100) : 100;
   const suppressed = role === "suppressed";
   const isScout = role === "scout";
+
+  // Motion with a reason: pulse only while a nearby report needs someone,
+  // never while civic is paused, and never with reduce motion on.
+  const shouldPulse = needsCheckCount > 0 && !suppressed && !reduceMotion;
+  const pulse = useSharedValue(1);
+  useEffect(() => {
+    if (shouldPulse) {
+      pulse.value = withRepeat(
+        withSequence(
+          withTiming(1.08, { duration: 1000 }),
+          withTiming(1, { duration: 1000 })
+        ),
+        -1,
+        true
+      );
+    } else {
+      cancelAnimation(pulse);
+      pulse.value = withTiming(1, { duration: 200 });
+    }
+    // An infinite withRepeat keeps running on the UI thread unless cancelled.
+    return () => cancelAnimation(pulse);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldPulse]);
+
+  const fabAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulse.value }],
+  }));
 
   const handlePick = async (category: CivicCategory) => {
     // 1. Check existing permission status first to decide whether to show
@@ -184,7 +195,8 @@ export const CivicHUD = ({
 
   return (
     <>
-      {/* RESONANCE INDICATOR PILL (top) */}
+      {/* RESONANCE INDICATOR PILL (top, runs only) */}
+      {isRacing && (
       <View style={styles.resonanceWrap} pointerEvents="none">
         <BlurView intensity={45} tint="dark" style={styles.resonancePill}>
           {/* Scout mode gets the signature Karela gradient dot; others a solid color */}
@@ -218,8 +230,10 @@ export const CivicHUD = ({
           )}
         </BlurView>
       </View>
+      )}
 
-      {/* CIVIC FAB (bottom-left) */}
+      {/* CIVIC REPORT BUTTON (bottom-left): an orange pill with a viewfinder
+          icon, echoing the site's report screen (corner brackets). */}
       <Animated.View style={[styles.fabWrap, fabAnimStyle]}>
         <TouchableOpacity
           activeOpacity={0.85}
@@ -228,24 +242,52 @@ export const CivicHUD = ({
             setSheetOpen(true);
           }}
           disabled={suppressed}
+          accessibilityRole="button"
+          accessibilityLabel={
+            suppressed
+              ? "Reporting is paused while you push hard"
+              : needsCheckCount > 0
+                ? `Report an issue. ${needsCheckCount} nearby ${needsCheckCount === 1 ? "report needs" : "reports need"} a check`
+                : "Report an issue"
+          }
         >
           <LinearGradient
             colors={suppressed ? MUTED_GRADIENT : CIVIC_GRADIENT}
-            style={[styles.fab, !suppressed && styles.fabActiveShadow]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.fab, suppressed ? styles.fabMuted : styles.fabActiveShadow]}
           >
-            <Ionicons
-              name={suppressed ? "lock-closed" : "camera"}
-              size={24}
-              color={suppressed ? C.textSecondary : C.onBright}
-            />
-            {nearbyCount > 0 && !suppressed && (
-              <LinearGradient colors={KARELA_GRADIENT} style={styles.fabBadge}>
-                <Text style={styles.fabBadgeText}>{nearbyCount}</Text>
-              </LinearGradient>
-            )}
+            <View style={[styles.fabIconWell, suppressed && styles.fabIconWellMuted]}>
+              {!suppressed && (
+                <>
+                  <View style={[styles.corner, styles.cornerTL]} />
+                  <View style={[styles.corner, styles.cornerTR]} />
+                  <View style={[styles.corner, styles.cornerBL]} />
+                  <View style={[styles.corner, styles.cornerBR]} />
+                </>
+              )}
+              <Ionicons
+                name={suppressed ? "lock-closed" : "camera"}
+                size={16}
+                color={suppressed ? C.textSecondary : C.onBright}
+              />
+            </View>
+            <Text style={[styles.fabText, suppressed && styles.fabTextMuted]}>
+              {suppressed ? "Paused" : "Report"}
+            </Text>
           </LinearGradient>
         </TouchableOpacity>
-        <Text style={styles.fabLabel}>{suppressed ? "Paused" : "Report"}</Text>
+
+        {/* Badge sits outside the pill so nothing can clip it. */}
+        {needsCheckCount > 0 && !suppressed && (
+          <LinearGradient
+            colors={KARELA_GRADIENT}
+            style={styles.fabBadge}
+            pointerEvents="none"
+          >
+            <Text style={styles.fabBadgeText}>{needsCheckCount}</Text>
+          </LinearGradient>
+        )}
       </Animated.View>
 
       {/* REPORT BOTTOM SHEET */}
@@ -308,12 +350,13 @@ export const CivicHUD = ({
               <Text style={styles.submittingText}>Submitting report…</Text>
             </View>
           ) : (
-            <TouchableOpacity
-              style={styles.cancelBtn}
+            <Button
+              label="Cancel"
+              variant="secondary"
+              block
               onPress={() => setSheetOpen(false)}
-            >
-              <Text style={styles.cancelText}>Cancel</Text>
-            </TouchableOpacity>
+              style={styles.cancelBtn}
+            />
           )}
         </View>
       </Modal>
@@ -372,40 +415,70 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: SP.lg,
     bottom: 150,
-    alignItems: "center",
     zIndex: 50,
+    overflow: "visible",
   },
   fab: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: "center",
+    flexDirection: "row",
     alignItems: "center",
+    gap: SP.sm + 2,
+    height: 52, // above the 48 tap minimum
+    paddingLeft: SP.sm,
+    paddingRight: SP.xl,
+    borderRadius: R.pill,
+    // thin light edge so the pill reads against bright map tiles too
+    borderWidth: 1,
+    borderColor: "rgba(255,214,10,0.45)", // gold at 45%
   },
   // A shadow is right here: the button floats over the map.
   fabActiveShadow: KARELA.glow.civic,
-  fabBadge: {
-    position: "absolute",
-    top: -3,
-    right: -3,
-    minWidth: 22,
-    height: 22,
-    borderRadius: 11,
+  fabMuted: { borderColor: C.border },
+  fabIconWell: {
+    width: 36,
+    height: 36,
+    borderRadius: R.md,
+    backgroundColor: "rgba(4,33,10,0.12)", // dark ink at 12%
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: SP.xs,
+  },
+  fabIconWellMuted: { backgroundColor: C.border },
+  // Viewfinder corners, like the site's report screen
+  corner: {
+    position: "absolute",
+    width: 8,
+    height: 8,
+    borderColor: C.onBright,
+  },
+  cornerTL: { top: 5, left: 5, borderTopWidth: 2, borderLeftWidth: 2, borderTopLeftRadius: 3 },
+  cornerTR: { top: 5, right: 5, borderTopWidth: 2, borderRightWidth: 2, borderTopRightRadius: 3 },
+  cornerBL: { bottom: 5, left: 5, borderBottomWidth: 2, borderLeftWidth: 2, borderBottomLeftRadius: 3 },
+  cornerBR: { bottom: 5, right: 5, borderBottomWidth: 2, borderRightWidth: 2, borderBottomRightRadius: 3 },
+  fabText: {
+    color: C.onBright,
+    fontSize: KARELA.size.body,
+    fontFamily: FONT.bold,
+  },
+  fabTextMuted: { color: C.textSecondary },
+  fabBadge: {
+    position: "absolute",
+    top: -8,
+    right: -8,
+    minWidth: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 6,
     borderWidth: 2,
     borderColor: KARELA.color.bg,
   },
-  fabBadgeText: { color: C.onBright, fontSize: KARELA.size.caption, fontFamily: FONT.black },
-  fabLabel: {
-    color: C.textPrimary,
+  fabBadgeText: {
+    color: C.onBright,
     fontSize: KARELA.size.caption,
-    fontFamily: FONT.bold,
-    marginTop: SP.xs + 2,
-    letterSpacing: 0.5,
-    textShadowColor: "rgba(0,0,0,0.8)",
-    textShadowRadius: 4,
+    lineHeight: 14,
+    fontFamily: FONT.black,
+    includeFontPadding: false, // Android adds padding that pushed the digit out
+    textAlignVertical: "center",
   },
 
   /* ---------- Bottom sheet ---------- */
@@ -493,14 +566,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   categoryLabel: { color: C.textPrimary, fontSize: 13, fontFamily: FONT.medium, flex: 1 },
-  cancelBtn: {
-    marginTop: SP.xl,
-    paddingVertical: SP.lg,
-    borderRadius: R.md,
-    backgroundColor: C.cancel,
-    alignItems: "center",
-  },
-  cancelText: { color: C.textSecondary, fontFamily: FONT.bold, fontSize: 14 },
+  cancelBtn: { marginTop: SP.xl },
   submittingRow: {
     marginTop: SP.xl,
     paddingVertical: SP.lg,

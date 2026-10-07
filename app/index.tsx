@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/Button";
 import { KARELA } from "@/styles/designSystem";
 import { db } from '@/services/database/sqlite/database';
 import { PermissionManager } from '@/services/PermissionsManager';
@@ -190,9 +191,7 @@ export default function Index() {
                     <Animated.View style={[styles.skipContainer, {
                         opacity: morphAnim.interpolate({ inputRange: [0, 0.3], outputRange: [1, 0], extrapolate: 'clamp' })
                     }]}>
-                        <TouchableOpacity onPress={() => router.push("/auth/login")} style={styles.skipButton}>
-                            <Text style={styles.skipText}>Skip</Text>
-                        </TouchableOpacity>
+                        <Button label="Skip" variant="link" onPress={() => router.push("/auth/login")} />
                     </Animated.View>
 
                     <View style={styles.centerWrapper}>
@@ -202,7 +201,20 @@ export default function Index() {
                                 translateX: morphAnim.interpolate({ inputRange: [0, 1], outputRange: [width / 2 - 90, 0] })
                             }]
                         }]}>
-                            <TouchableOpacity style={styles.primaryButtonFill} onPress={scrollToNext} activeOpacity={0.8}>
+                            {/* Same look as <Button variant="primary">; kept custom for the grow animation. */}
+                            <LinearGradient
+                                colors={KARELA.gradient}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={StyleSheet.absoluteFill}
+                            />
+                            <TouchableOpacity
+                                style={styles.primaryButtonFill}
+                                onPress={scrollToNext}
+                                activeOpacity={0.8}
+                                accessibilityRole="button"
+                                accessibilityLabel={currentIndex === SLIDES.length - 1 ? "Allow location" : "Next"}
+                            >
                                 <View style={styles.buttonTextWrapper}>
                                     <Animated.Text style={[styles.primaryButtonText, {
                                         opacity: morphAnim.interpolate({ inputRange: [0, 0.3], outputRange: [1, 0] }),
@@ -243,9 +255,7 @@ const styles = StyleSheet.create({
     footerRow: { width: '100%', height: 60, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 30 },
     skipContainer: { position: 'absolute', left: 30, zIndex: 2 },
     centerWrapper: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    skipButton: { padding: 10 },
-    skipText: { color: KARELA.color.textSecondary, fontFamily: KARELA.font.bold, fontSize: 16 },
-    morphedButtonContainer: { height: 56, backgroundColor: KARELA.color.brand, borderRadius: KARELA.radius.xl, overflow: 'hidden' },
+    morphedButtonContainer: { height: 52, borderRadius: KARELA.radius.pill, overflow: 'hidden' },
     primaryButtonFill: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     buttonTextWrapper: { alignItems: 'center', justifyContent: 'center', width: '100%' },
     primaryButtonText: { color: KARELA.color.onBright, fontFamily: KARELA.font.bold, fontSize: 16 },

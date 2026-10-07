@@ -7,13 +7,13 @@ import {
   Alert,
   Platform,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import MapView, { Callout, Marker, Polyline } from "react-native-maps";
 
 // Hooks & Services
 import { CivicHUD } from "@/components/CivicHUD";
+import { Button, IconButton } from "@/components/ui/Button";
 import { NodeDetailModal } from "@/components/NodeDetailModal";
 import { useAuth } from "@/context/AuthContext";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
@@ -22,7 +22,9 @@ import { getLatestGhostRun } from "@/services/database/sqlite/database";
 import {
   CivicCategory,
   CivicNode,
+  describeConsensus,
   getNearbyNodes,
+  getNodeReportCount,
   reconfirmNode,
   submitCivicReport,
   uploadCivicPhoto
@@ -292,10 +294,12 @@ export default function MapScreen() {
         // Report submitted — small reward
         await gainXP(50);
         await earnGems(5);
-        Alert.alert(
-          "Report sent",
-          "It stays pending until 3 people nearby report it.\n+50 XP, +5 Gems",
-        );
+        const count = result.node_id ? await getNodeReportCount(result.node_id) : null;
+        const progress =
+          count != null
+            ? describeConsensus(count)
+            : "It stays pending until 3 people nearby report it.";
+        Alert.alert("Report sent", `${progress}\n+50 XP, +5 Gems`);
       }
     } else {
       Alert.alert("Report not sent", result.message || "Check your connection and try again.");
@@ -649,61 +653,48 @@ export default function MapScreen() {
       {/* TOOLS (Only visible when NOT racing) */}
       {!isRacing && (
         <>
-          <TouchableOpacity
-            style={styles.backButton}
+          <IconButton
+            icon="chevron-back"
+            label="Back"
             onPress={() => router.back()}
-          >
-            <Ionicons name="chevron-back" size={28} color="white" />
-          </TouchableOpacity>
+            style={styles.backButton}
+          />
 
-          <TouchableOpacity
-            style={[styles.rightButtonBase, styles.compassButton]}
+          <IconButton
+            icon="compass-outline"
+            label="Point the map north"
             onPress={() => changeCameraHeading("N", currentLocation)}
-          >
-            <Ionicons name="compass" size={24} color={KARELA.color.gold} />
-          </TouchableOpacity>
+            style={[styles.rightButtonBase, styles.compassButton]}
+          />
 
-          <TouchableOpacity
-            style={[
-              styles.rightButtonBase,
-              styles.ghostButton,
-              {
-                backgroundColor: isGhostEnabled
-                  ? KARELA.color.brand
-                  : "rgba(0,0,0,0.85)",
-              },
-            ]}
+          <IconButton
+            icon="flash"
+            label={isGhostEnabled ? "Hide your ghost" : "Race your ghost"}
+            tone={isGhostEnabled ? "brand" : "surface"}
             onPress={toggleGhost}
-          >
-            <Ionicons
-              name="flash"
-              size={24}
-              color={isGhostEnabled ? "black" : KARELA.color.gold}
-            />
-          </TouchableOpacity>
+            style={[styles.rightButtonBase, styles.ghostButton]}
+            accessibilityState={{ selected: isGhostEnabled }}
+          />
 
-          <TouchableOpacity
-            style={[styles.rightButtonBase, styles.flagSpawner]}
-            onPress={handleSpawnFlag}
-          >
+          <View style={[styles.rightButtonBase, styles.flagSpawner]}>
+            <IconButton icon="flag-outline" label="Add a checkpoint" onPress={handleSpawnFlag} />
             {checkpoints.length > 0 && (
-              <View style={styles.flagCountBadge}>
-                <Text
-                  style={{ color: KARELA.color.textPrimary, fontSize: KARELA.size.caption, fontFamily: KARELA.font.bold }}
-                >
-                  {checkpoints.length}
-                </Text>
+              <View style={styles.flagCountBadge} pointerEvents="none">
+                <Text style={styles.flagCountText}>{checkpoints.length}</Text>
               </View>
             )}
-            <Ionicons name="flag" size={24} color={KARELA.color.gold} />
-          </TouchableOpacity>
+          </View>
         </>      )}
 
       {/* CIVIC HUD — Resonance indicator + Report FAB + Report sheet */}
       <CivicHUD
         isRacing={isRacing}
         resonance={resonance}
-        nearbyCount={nearbyNodes.length}
+        // Reports nearby that need someone: pending ones need more reports,
+        // aging ones need a "still there?" check.
+        needsCheckCount={
+          nearbyNodes.filter((n) => n.status === "pending" || n.status === "aging").length
+        }
         onSubmitReport={handleCivicReport}
       />
 
@@ -717,15 +708,13 @@ export default function MapScreen() {
 
       {/* ACTION BUTTON */}
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[
-            styles.actionButton,
-            { backgroundColor: isRacing ? KARELA.color.danger : KARELA.color.brand },
-          ]}
+        <Button
+          label={isRacing ? "Stop" : "Start"}
+          variant={isRacing ? "danger" : "primary"}
+          icon={isRacing ? "stop" : "play"}
           onPress={() => (isRacing ? handleStopRace() : handleStartRace())}
-        >
-          <Text style={styles.buttonText}>{isRacing ? "Stop" : "Start"}</Text>
-        </TouchableOpacity>
+          style={[styles.actionButton, isRacing ? KARELA.glow.coral : KARELA.glow.brand]}
+        />
       </View>
     </View>
   );

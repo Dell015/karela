@@ -80,13 +80,18 @@ export interface SubmitReportResult {
 // CONSTANTS
 // ============================================================
 
+// Labels match the landing page's report screen. The ids are stored in the
+// database, so never rename an id, only its label.
 export const CIVIC_CATEGORIES: { id: CivicCategory; label: string; icon: string }[] = [
-  { id: "trash", label: "Trash/Litter", icon: "trash-outline" },
+  { id: "trash", label: "Trash", icon: "trash-outline" },
   { id: "flooding", label: "Flooding", icon: "water-outline" },
-  { id: "drain_blockage", label: "Drain Blockage", icon: "warning-outline" },
-  { id: "damaged_infrastructure", label: "Damaged Infrastructure", icon: "construct-outline" },
-  { id: "unsafe_area", label: "Unsafe Area", icon: "alert-circle-outline" },
+  { id: "drain_blockage", label: "Drain blockage", icon: "warning-outline" },
+  { id: "damaged_infrastructure", label: "Road damage", icon: "construct-outline" },
+  { id: "unsafe_area", label: "Unsafe area", icon: "alert-circle-outline" },
 ];
+
+export const getCategoryLabel = (id: string): string =>
+  CIVIC_CATEGORIES.find((c) => c.id === id)?.label ?? id;
 
 // Category-specific decay rates (μ) — matches the SQL function
 export const DECAY_RATES: Record<CivicCategory, number> = {
@@ -104,9 +109,39 @@ export const CONSENSUS_CONFIG = {
   TIME_WINDOW_HOURS: 72,    // Reports must arrive within this window
 };
 
+/**
+ * Plain-language progress toward verification, like the site's
+ * "2 of 3 reports. One more verifies it."
+ */
+export const describeConsensus = (
+  reportCount: number,
+  minReports: number = CONSENSUS_CONFIG.MIN_REPORTS,
+): string => {
+  const count = Math.max(0, Math.min(reportCount, minReports));
+  const left = minReports - count;
+  if (left <= 0) return `${minReports} of ${minReports} reports. Verified by neighbours.`;
+  const more = left === 1 ? "One more report verifies it." : `${left} more reports verify it.`;
+  return `${count} of ${minReports} reports here. ${more}`;
+};
+
 // ============================================================
 // PUBLIC API
 // ============================================================
+
+/**
+ * Reads how many people have reported a node. submit_civic_report does not
+ * return this, and logged-in users may read civic_nodes (05_lock_down_civic.sql
+ * keeps SELECT). Returns null if it cannot be read (offline, etc).
+ */
+export const getNodeReportCount = async (nodeId: string): Promise<number | null> => {
+  const { data, error } = await supabase
+    .from("civic_nodes")
+    .select("report_count")
+    .eq("id", nodeId)
+    .single();
+  if (error || data == null) return null;
+  return Number(data.report_count);
+};
 
 /**
  * Submits a civic report.

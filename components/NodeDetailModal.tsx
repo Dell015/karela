@@ -1,4 +1,5 @@
-import { CivicNode } from "@/services/engines/CivicEngine";
+import { CivicNode, describeConsensus, getCategoryLabel } from "@/services/engines/CivicEngine";
+import { Button, IconButton } from "@/components/ui/Button";
 import { KARELA } from "@/styles/designSystem";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -8,7 +9,6 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 
@@ -25,14 +25,6 @@ const STATUS_CONFIG = {
   aging: { color: KARELA.vibrant.techOrange, label: "AGING", icon: "alert-circle" },
   expired: { color: KARELA.color.danger, label: "EXPIRED", icon: "close-circle" },
 } as const;
-
-const CATEGORY_LABELS: Record<string, string> = {
-  trash: "Trash / Litter",
-  flooding: "Flooding",
-  drain_blockage: "Drain Blockage",
-  damaged_infrastructure: "Damaged Infrastructure",
-  unsafe_area: "Unsafe Area",
-};
 
 export const NodeDetailModal = ({
   visible,
@@ -64,15 +56,15 @@ export const NodeDetailModal = ({
             <Ionicons name={status.icon as any} size={14} color={status.color} />
             <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
           </View>
-          <TouchableOpacity onPress={onClose}>
-            <Ionicons name="close" size={24} color={KARELA.color.textMuted} />
-          </TouchableOpacity>
+          <IconButton icon="close" label="Close" tone="plain" iconColor={KARELA.color.textMuted} onPress={onClose} />
         </View>
 
         {/* CATEGORY TITLE */}
-        <Text style={styles.title}>{CATEGORY_LABELS[node.category] || node.category}</Text>
+        <Text style={styles.title}>{getCategoryLabel(node.category)}</Text>
         <Text style={styles.subtitle}>
-          Reported by {node.report_count} {node.report_count === 1 ? "person" : "people"}
+          {node.status === "pending"
+            ? describeConsensus(node.report_count)
+            : `Reported by ${node.report_count} ${node.report_count === 1 ? "person" : "people"}`}
         </Text>
 
         {/* CONFIDENCE METER */}
@@ -100,23 +92,17 @@ export const NodeDetailModal = ({
 
         {/* RECONFIRM CTA */}
         {canReconfirm && (
-          <TouchableOpacity
-            style={styles.reconfirmBtn}
+          <Button
+            label="Still there"
+            variant="civic"
+            icon="checkmark-done"
+            block
             onPress={() => {
               onReconfirm(node.id);
               onClose();
             }}
-          >
-            <LinearGradient
-              colors={KARELA.gradients.brand}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.reconfirmGradient}
-            >
-              <Ionicons name="checkmark-done" size={18} color={KARELA.color.onBright} />
-              <Text style={styles.reconfirmText}>Still there</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+            style={styles.reconfirmBtn}
+          />
         )}
 
         {/* INFO FOOTER */}
@@ -167,9 +153,7 @@ const styles = StyleSheet.create({
   meterTrack: { height: 8, backgroundColor: KARELA.color.surfaceSoft, borderRadius: 4, overflow: "hidden" },
   meterFill: { height: "100%", borderRadius: 4 },
   meterHint: { color: KARELA.color.textFaint, fontSize: KARELA.size.caption, fontFamily: KARELA.font.regular, marginTop: 6 },
-  reconfirmBtn: { borderRadius: KARELA.radius.md, overflow: "hidden", marginBottom: KARELA.space.xl },
-  reconfirmGradient: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: KARELA.space.sm, paddingVertical: 14 },
-  reconfirmText: { color: KARELA.color.onBright, fontSize: KARELA.size.body, fontFamily: KARELA.font.bold },
+  reconfirmBtn: { marginBottom: KARELA.space.xl },
   infoRow: { flexDirection: "row", gap: KARELA.space.xl },
   infoItem: { flexDirection: "row", alignItems: "center", gap: 5 },
   infoText: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.regular },

@@ -1,10 +1,9 @@
 import { KARELA } from "@/styles/designSystem";
+import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
-import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    ActivityIndicator,
     Alert,
     Image,
     KeyboardAvoidingView,
@@ -13,7 +12,6 @@ import {
     StyleSheet,
     Text,
     TextInput,
-    TouchableOpacity,
     View,
 } from "react-native";
 import { registerUser } from "../../services/database/supabase/auth";
@@ -175,31 +173,13 @@ export default function Signup() {
             <UserInput placeholder="Confirm Password" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
 
             {/* ACTION BUTTON */}
-            <TouchableOpacity 
-                style={[styles.signupBtn, loading && { opacity: 0.7 }]} 
-                onPress={handleSignup}
-                disabled={loading}
-            >
-              <LinearGradient
-                colors={KARELA.gradients.brand}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                style={styles.gradientBtn}
-              >
-                {loading ? (
-                    <ActivityIndicator color={KARELA.color.textPrimary} />
-                ) : (
-                    <Text style={styles.signupBtnText}>Analyze & Sign up</Text>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
+            <Button label="Create account" block loading={loading} onPress={handleSignup} style={styles.signupBtn} />
           </View>
 
           {/* FOOTER */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => router.push("/auth/login")}>
-              <Text style={styles.loginText}>Log in</Text>
-            </TouchableOpacity>
+            <Button label="Log in" variant="link" onPress={() => router.push("/auth/login")} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -254,33 +234,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingVertical: 10,
   },
-  signupBtn: {
-    marginTop: KARELA.space.xl,
-    borderRadius: KARELA.radius.xl,
-    overflow: "hidden",
-  },
-  gradientBtn: {
-    paddingVertical: KARELA.space.lg,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 55,
-  },
-  signupBtnText: {
-    color: KARELA.color.textPrimary,
-    fontFamily: KARELA.font.bold,
-    fontSize: KARELA.size.h2,
-  },
+  signupBtn: { marginTop: KARELA.space.xl },
   footer: {
     flexDirection: "row",
+    alignItems: "center",
+    gap: KARELA.space.xs,
     justifyContent: "center",
     marginTop: 30,
   },
   footerText: {
     color: KARELA.color.textMuted,
     fontFamily: KARELA.font.regular,
-  },
-  loginText: {
-    color: KARELA.color.brand,
-    fontFamily: KARELA.font.bold,
   },
 });

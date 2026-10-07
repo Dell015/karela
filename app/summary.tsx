@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { useAuth } from "@/context/AuthContext";
 import { KARELA } from "@/styles/designSystem";
@@ -9,13 +10,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    ActivityIndicator,
     Alert,
     Dimensions,
     SafeAreaView,
     StyleSheet,
     Text,
-    TouchableOpacity,
     View,
 } from "react-native";
 
@@ -220,33 +219,21 @@ export default function SummaryScreen() {
 
         {/* Action Buttons */}
         <View style={styles.footer}>
-          <TouchableOpacity
-            style={styles.ghostButton}
+          <Button
+            label="Save as ghost"
+            variant="secondary"
+            icon="copy-outline"
+            block
             onPress={handleSaveGhost}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="copy-outline" size={20} color={KARELA.color.brand} />
-            <Text style={styles.ghostButtonText}>Save as ghost</Text>
-          </TouchableOpacity>
+            style={styles.ghostButton}
+          />
 
-          <TouchableOpacity
-            style={styles.primaryButton}
+          <Button
+            label="Save and finish"
+            block
+            loading={isSaving}
             onPress={handleFinalizeMission}
-            disabled={isSaving}
-          >
-            <LinearGradient
-              colors={KARELA.gradients.brand}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.gradientButton}
-            >
-              {isSaving ? (
-                <ActivityIndicator color={KARELA.color.onBright} />
-              ) : (
-                <Text style={styles.primaryButtonText}>Save and finish</Text>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
+          />
         </View>
       </SafeAreaView>
     </View>
@@ -317,27 +304,6 @@ const styles = StyleSheet.create({
 
   footer: { padding: 30, width: "100%" },
   ghostButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 15,
-    marginBottom: 15,
-    borderRadius: KARELA.radius.md,
-    borderWidth: 1,
-    borderColor: KARELA.color.brand,
-  },
-  ghostButtonText: { color: KARELA.color.brand, fontFamily: KARELA.font.bold, marginLeft: 10 },
-  primaryButton: {
-    width: "100%",
-    height: 60,
-    borderRadius: KARELA.radius.md,
-    overflow: "hidden",
-  },
-  gradientButton: { flex: 1, justifyContent: "center", alignItems: "center" },
-  primaryButtonText: {
-    color: KARELA.color.textPrimary,
-    fontSize: KARELA.size.h2,
-    fontFamily: KARELA.font.black,
-    letterSpacing: 1,
+    marginBottom: KARELA.space.md,
   },
 });

@@ -1,5 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
-import { ScreenHeader } from "@/components/ui";
+import { Button, Chip, ScreenHeader } from "@/components/ui";
 import { Screen } from "@/components/ui/Screen";
 import { QuestEngine } from "@/services/engines/QuestEngine";
 import {
@@ -16,7 +16,6 @@ import {
     ScrollView,
     StyleSheet,
     Text,
-    TouchableOpacity,
     View,
 } from "react-native";
 
@@ -141,46 +140,25 @@ export default function QuestsScreen() {
       />
 
       <View style={styles.categoryContainer}>
-        {["solo", "team"].map((cat: any) => (
-          <TouchableOpacity
+        {(["solo", "team"] as const).map((cat) => (
+          <Chip
             key={cat}
+            label={cat === "solo" ? "Solo" : "Team"}
+            selected={activeCategory === cat}
             onPress={() => setActiveCategory(cat)}
-            style={[
-              styles.categoryTab,
-              activeCategory === cat && styles.activeCategoryTab,
-            ]}
-          >
-            <Text
-              style={[
-                styles.categoryTabText,
-                activeCategory === cat && styles.activeCategoryText,
-              ]}
-            >
-              {cat.toUpperCase()} OPS
-            </Text>
-          </TouchableOpacity>
+            style={styles.categoryTab}
+          />
         ))}
       </View>
 
       <View style={styles.freqContainer}>
-        {["daily", "weekly", "monthly"].map((freq: any) => (
-          <TouchableOpacity
+        {(["daily", "weekly", "monthly"] as const).map((freq) => (
+          <Chip
             key={freq}
+            label={freq.charAt(0).toUpperCase() + freq.slice(1)}
+            selected={activeFreq === freq}
             onPress={() => setActiveFreq(freq)}
-            style={[
-              styles.freqChip,
-              activeFreq === freq && styles.activeFreqChip,
-            ]}
-          >
-            <Text
-              style={[
-                styles.freqChipText,
-                activeFreq === freq && styles.activeFreqText,
-              ]}
-            >
-              {freq.toUpperCase()}
-            </Text>
-          </TouchableOpacity>
+          />
         ))}
       </View>
 
@@ -189,10 +167,10 @@ export default function QuestsScreen() {
           <ActivityIndicator color={KARELA.color.brand} style={{ marginTop: 50 }} />
         ) : missions.length === 0 ? (
           <View style={styles.emptyWrap}>
-            <Ionicons name="radio-outline" size={40} color="#2A2A2A" />
-            <Text style={styles.emptyText}>No missions detected</Text>
+            <Ionicons name="radio-outline" size={40} color={KARELA.color.textFaint} />
+            <Text style={styles.emptyText}>No quests yet</Text>
             <Text style={styles.emptySub}>
-              Ani is calibrating your next quest.
+              Ani is picking your next quest.
             </Text>
           </View>
         ) : (
@@ -226,21 +204,12 @@ export default function QuestsScreen() {
                     />
                   </View>
                   <Text style={styles.progressLabel}>
-                    {(item.currentValue || 0).toFixed(1)} / {item.targetValue} KM
+                    {(item.currentValue || 0).toFixed(1)} / {item.targetValue} km
                   </Text>
                 </View>
 
                 {isComplete ? (
-                  <TouchableOpacity onPress={() => claimReward(item)}>
-                    <LinearGradient
-                      colors={KARELA.gradient}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.claimBtn}
-                    >
-                      <Text style={styles.btnText}>Claim reward</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
+                  <Button label="Claim reward" icon="gift-outline" block onPress={() => claimReward(item)} />
                 ) : (
                   <View style={styles.lockedBtn}>
                     <Text style={styles.lockedText}>In progress</Text>
@@ -266,30 +235,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: KARELA.color.lineSoft,
   },
-  categoryTab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: "center",
-    borderRadius: KARELA.radius.sm,
-  },
-  activeCategoryTab: {
-    backgroundColor: KARELA.color.surfaceSoft,
-    borderWidth: 1,
-    borderColor: "#333",
-  },
-  categoryTabText: { color: "#555", fontFamily: KARELA.font.bold, fontSize: 12 },
-  activeCategoryText: { color: KARELA.color.brand },
+  categoryTab: { flex: 1, justifyContent: "center", borderWidth: 0 },
   freqContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: KARELA.space.xl,
+    gap: KARELA.space.sm,
     marginHorizontal: KARELA.space.xl,
     marginBottom: KARELA.space.xl,
   },
-  freqChip: { paddingVertical: 6, paddingHorizontal: 14, borderRadius: 8 },
-  activeFreqChip: { borderBottomWidth: 2, borderBottomColor: KARELA.color.brand },
-  freqChipText: { color: "#555", fontSize: 11, fontFamily: KARELA.font.bold, letterSpacing: 1 },
-  activeFreqText: { color: "#FFF" },
   list: { paddingHorizontal: KARELA.space.xl, paddingBottom: 140 },
   card: {
     backgroundColor: KARELA.color.surface,
@@ -300,7 +253,7 @@ const styles = StyleSheet.create({
     borderColor: KARELA.color.lineSoft,
   },
   cardHeader: { flexDirection: "row", marginBottom: KARELA.space.lg, gap: KARELA.space.md },
-  missionTitle: { color: "#FFF", fontSize: 17, fontFamily: KARELA.font.bold },
+  missionTitle: { color: KARELA.color.textPrimary, fontSize: 17, fontFamily: KARELA.font.bold },
   missionDesc: {
     color: KARELA.color.textMuted,
     fontSize: 13,
@@ -325,22 +278,21 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   fill: { height: "100%", borderRadius: 4 },
-  progressLabel: { color: "#555", fontSize: 10, fontFamily: KARELA.font.medium },
-  claimBtn: { paddingVertical: 14, borderRadius: KARELA.radius.sm, alignItems: "center" },
-  btnText: { color: "#04210A", fontFamily: KARELA.font.bold, letterSpacing: 0.5 },
+  progressLabel: { color: KARELA.color.textMuted, fontSize: KARELA.size.caption, fontFamily: KARELA.font.medium },
+  // A status, not a button: no pill, so it is never mistaken for one.
   lockedBtn: {
     paddingVertical: 14,
-    borderRadius: KARELA.radius.sm,
+    borderRadius: KARELA.radius.md,
     alignItems: "center",
     backgroundColor: KARELA.color.surfaceSoft,
   },
-  lockedText: { color: "#444", fontFamily: KARELA.font.bold, fontSize: 12 },
+  lockedText: { color: KARELA.color.textMuted, fontFamily: KARELA.font.bold, fontSize: 13 },
   emptyWrap: { alignItems: "center", marginTop: 100, gap: KARELA.space.md },
   emptyText: {
-    color: "#555",
+    color: KARELA.color.textSecondary,
     textAlign: "center",
     fontFamily: KARELA.font.bold,
     fontSize: 15,
   },
-  emptySub: { color: "#444", fontSize: 12, fontFamily: KARELA.font.regular },
+  emptySub: { color: KARELA.color.textMuted, fontSize: 12, fontFamily: KARELA.font.regular },
 });

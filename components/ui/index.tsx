@@ -1,62 +1,14 @@
 import { KARELA } from "@/styles/designSystem";
-import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TextStyle,
-  TouchableOpacity,
-  View,
-  ViewStyle,
-} from "react-native";
+import { StyleSheet, Text, TextStyle, View, ViewStyle } from "react-native";
+
+import { IconButton } from "./Button";
 
 export { Screen } from "./Screen";
 
-/* ============================================================
-   GRADIENT BUTTON — primary CTA in the Karela language
-   ============================================================ */
-interface GradientButtonProps {
-  label: string;
-  onPress: () => void;
-  loading?: boolean;
-  disabled?: boolean;
-  icon?: keyof typeof Ionicons.glyphMap;
-  style?: ViewStyle;
-}
-
-export const GradientButton = ({
-  label,
-  onPress,
-  loading,
-  disabled,
-  icon,
-  style,
-}: GradientButtonProps) => (
-  <TouchableOpacity
-    activeOpacity={0.85}
-    onPress={onPress}
-    disabled={disabled || loading}
-    style={[ui.btnWrap, (disabled || loading) && { opacity: 0.6 }, style]}
-  >
-    <LinearGradient
-      colors={KARELA.gradient}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={ui.btnGradient}
-    >
-      {loading ? (
-        <ActivityIndicator color="#04210A" />
-      ) : (
-        <View style={ui.btnInner}>
-          {icon && <Ionicons name={icon} size={18} color="#04210A" />}
-          <Text style={ui.btnText}>{label}</Text>
-        </View>
-      )}
-    </LinearGradient>
-  </TouchableOpacity>
-);
+/* Buttons: one family for the whole app. See ./Button.tsx. */
+export { Button, Chip, IconButton } from "./Button";
 
 /* ============================================================
    CARD — standard elevated surface
@@ -98,11 +50,9 @@ export const ScreenHeader = ({
 }: ScreenHeaderProps) => (
   <View style={ui.header}>
     {onBack ? (
-      <TouchableOpacity onPress={onBack} style={ui.headerBack}>
-        <Ionicons name="chevron-back" size={26} color="#fff" />
-      </TouchableOpacity>
+      <IconButton icon="chevron-back" label="Back" onPress={onBack} style={ui.headerBack} />
     ) : (
-      <View style={ui.headerBack} />
+      <View style={{ width: KARELA.tap }} />
     )}
     <View style={ui.headerCenter}>
       <Text style={ui.headerTitle}>{title}</Text>
@@ -124,20 +74,6 @@ export const SectionTitle = ({
 }) => <Text style={[ui.sectionTitle, style]}>{children}</Text>;
 
 const ui = StyleSheet.create({
-  // Gradient button
-  btnWrap: { borderRadius: KARELA.radius.xl, overflow: "hidden" },
-  btnGradient: {
-    paddingVertical: KARELA.space.lg,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  btnInner: { flexDirection: "row", alignItems: "center", gap: KARELA.space.sm },
-  btnText: {
-    color: "#04210A",
-    fontSize: 16,
-    fontFamily: KARELA.font.bold,
-  },
-
   // Card
   card: {
     backgroundColor: KARELA.color.surface,
@@ -158,7 +94,7 @@ const ui = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: KARELA.space.lg,
   },
-  headerBack: { width: 40, alignItems: "flex-start" },
+  headerBack: { marginLeft: -4 },
   headerCenter: { flex: 1, alignItems: "center" },
   headerTitle: {
     color: KARELA.color.textPrimary,
@@ -171,7 +107,7 @@ const ui = StyleSheet.create({
     fontFamily: KARELA.font.medium,
     marginTop: 2,
   },
-  headerRight: { width: 40, alignItems: "flex-end" },
+  headerRight: { width: KARELA.tap, alignItems: "flex-end" },
 
   // Section title
   sectionTitle: {
