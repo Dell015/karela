@@ -5,35 +5,36 @@ Karela is a hybrid fitness and civic app: adaptive running plus crowdsourced rep
 The repo holds two separate things. Keep them apart.
 
 1. **The mobile app** (repo root): Expo SDK 57, React Native 0.86, React 19, TypeScript, expo-router (file-based), Supabase (with PostGIS), expo-sqlite for offline-first, Gemini for the Ani coach.
-2. **The landing page** (`website/` and `website-v2/`): plain HTML, CSS and JS. No framework, no build step, no npm.
+2. **The landing page** (`website-v2/`): plain HTML, CSS and JS. No framework, no build step, no npm.
 
 When a task mentions "the site", "the landing page" or "the page", it means `website-v2/`. Only touch the app when the task clearly says so.
 
 ## Hard rules (never break these)
 
 - **Never read, print, log or commit `.env`.** It holds real keys. Use `.env.example` when you need to know what exists.
-- **Never put any app key in `website/` or `website-v2/`.** In particular never paste `EXPO_PUBLIC_SUPABASE_ANON_KEY`, the Gemini key or the weather key there. Site forms (waitlist, survey) must use a **separate** Formspree form or a **separate** Supabase project.
+- **Never put any app key in `website-v2/`.** In particular never paste `EXPO_PUBLIC_SUPABASE_ANON_KEY`, the Gemini key or the weather key there. Site forms (waitlist, survey) must use a **separate** Formspree form or a **separate** Supabase project.
 - Do not run destructive commands (`git reset --hard`, `git clean`, `rm -rf`, force-push) without asking first.
 - Do not commit or push unless asked. When committing, stage only the files for the task (`git add website-v2/`), never `git add -A`.
 - Do not edit `node_modules/`, `android/`, `.expo/` or `app-example/`.
-- Do not invent facts about the project. If a number, claim or feature is not in `aboutkarela.md`, `README.md` or the code, ask. In particular, **do not state where the name "Karela" comes from.** The owner has not said.
-- Privacy claims must stay accurate. Phrase them as "by design" and match `aboutkarela.md` (RA 10173 Data Privacy Act, raw GPS stays on the phone, Privacy Zones, account deletion within 72 hours).
+- Do not invent facts about the project. If a number, claim or feature is not in `docs/aboutkarela.md`, `README.md` or the code, ask. In particular, **do not state where the name "Karela" comes from.** The owner has not said.
+- Privacy claims must stay accurate. Phrase them as "by design" and match `docs/aboutkarela.md` (RA 10173 Data Privacy Act, raw GPS stays on the phone, Privacy Zones, account deletion within 72 hours).
 
 ## Where things are
 
 | What | Where |
 | --- | --- |
-| Full vision, algorithms, research framework | `aboutkarela.md` (large, search it, do not read it whole) |
+| Full vision, algorithms, research framework | `docs/aboutkarela.md` (large, search it, do not read it whole) |
 | Setup, structure, env vars | `README.md` |
-| Computation formulas | `COMPUTATIONS.md` |
-| Known issues | `AUDIT_FINDINGS.md`, `AUDIT_CHECKLIST.md` |
+| Computation formulas | `docs/COMPUTATIONS.md` |
+| Known issues | `docs/QA_REPORT.md` |
+| Expo SDK upgrade history | `docs/SDK_UPGRADE_LOG.md` |
 | Screens | `app/` (`app/drawer/*` is the main app) |
 | Components | `components/` (`PlayerCard`, `QuestCard`, `CivicHUD`, `AniConsole`, ...) |
 | Business logic | `services/` (for example `streakMultiplier.ts`) |
 | Design tokens | `styles/designSystem.ts`, `theme.ts` |
 | Database | `supabase/*.sql`, run in order (`schema.sql`, `02_...`, `03_...`, `04_...`) |
-| Landing page, current | `website-v2/` |
-| Landing page, original (kept as reference) | `website/` |
+| Landing page | `website-v2/` |
+| 3D models the app loads | `assets/3d/*.glb` (sources: `assets/3d/source/`, not bundled) |
 
 ## The mobile app
 
@@ -61,7 +62,7 @@ Conventions:
 
 Use these terms the same way in code, UI and site copy.
 
-- **Ani**: the AI coach and mascot. Female character, 3D model `assets/test_3dmodel/female_final.glb` (made by Cyduanne Biraquit and the team). The model may be used publicly. There is no credit line yet, so do not add one unless asked.
+- **Ani**: the AI coach and mascot. Female character, 3D model `assets/3d/female_final.glb` (made by Cyduanne Biraquit and the team). The model may be used publicly. There is no credit line yet, so do not add one unless asked.
 - **Ghost**: a pace target built from how the user actually runs, not from their personal best.
 - **Resonance**: reads how the body is doing (stamina) against what the app asks of the user (civic requests) and adjusts.
 - **Quests**: fitness quests and civic quests. Civic work counts equally to running.
@@ -134,7 +135,7 @@ The goal: it must not look AI-generated. These rules come from the owner.
 - Real og image (`assets/img/og-placeholder.png` is a placeholder).
 - Privacy policy page (the waitlist copy says "coming soon").
 - Store links when the app is published.
-- Decide when `website-v2/` replaces `website/` (rename or point the host at it), then delete the old folder.
+- Point the host at `website-v2/` (the old `website/` folder was deleted on 2026-10-08).
 
 ## Working with the owner
 

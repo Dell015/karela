@@ -4,7 +4,7 @@
 
 Karela combines adaptive running algorithms with crowdsourced urban sensing — turning everyday movement into health progress and civic impact. Features an AI coach (Ani), RPG progression, Ghost pacing, and a Bayanihan disaster-response protocol.
 
-> For the full project vision, specification, algorithms, and research framework, see **[aboutkarela.md](./aboutkarela.md)**.
+> For the full project vision, specification, algorithms, and research framework, see **[docs/aboutkarela.md](./docs/aboutkarela.md)**.
 
 ---
 
@@ -101,11 +101,10 @@ karela/
 │   │   ├── calendar.tsx        # Activity calendar
 │   │   ├── progress.tsx        # Progress & stats
 │   │   ├── profile.tsx         # User profile (with edit modal)
-│   │   └── settings.tsx        # App settings
-│   ├── homepage/               # Sub-screens
-│   │   ├── active-run.tsx      # Active run view
 │   │   ├── guilds.tsx          # Guild & squad screen
 │   │   ├── shop.tsx            # Gem shop
+│   │   └── settings.tsx        # App settings
+│   ├── homepage/               # Sub-screens
 │   │   └── CustomizeAni.tsx    # Ani customization
 │   └── dashboard/
 │       └── character_creation.tsx
@@ -160,16 +159,19 @@ karela/
 │   └── QuestGenerator.ts       # (Deprecated) Legacy quest gen
 ├── styles/                     # Shared stylesheets
 ├── supabase/                   # Database migrations
-│   ├── schema.sql              # Core schema
-│   ├── 02_realtime_and_history.sql
-│   ├── 03_civic_engine.sql
-│   └── 04_civic_fixes_and_storage.sql
-├── assets/                     # Images, fonts, 3D models
+│   ├── schema.sql              # Core schema (run first)
+│   └── 02_ ... 07_*.sql        # Migrations, run in number order
+├── assets/
+│   ├── fonts/                  # Excon font family
+│   ├── images/                 # App icons, onboarding slides, UI images
+│   └── 3d/                     # Ani (female_final.glb) and other .glb models
+│       └── source/             # Blender and FBX source files (not bundled)
+├── docs/                       # Project documentation (see below)
+├── website-v2/                 # Landing page (plain HTML/CSS/JS, separate from the app)
 ├── .env.example                # Environment variable template
-├── app.json                    # Expo configuration
+├── app.config.js               # Expo configuration
 ├── package.json
-├── tsconfig.json
-└── aboutkarela.md              # Full project specification
+└── tsconfig.json
 ```
 
 ---
@@ -322,7 +324,7 @@ The following critical issues were identified and fixed:
 
 ## Remaining Work
 
-See **[AUDIT_FINDINGS.md](./AUDIT_FINDINGS.md)** for the full audit report with priorities.
+See **[docs/QA_REPORT.md](./docs/QA_REPORT.md)** for the full QA report with priorities.
 
 ### High Priority (Security)
 - [ ] Move Gemini API key to a Supabase Edge Function (currently exposed in client bundle)
@@ -352,10 +354,11 @@ See **[AUDIT_FINDINGS.md](./AUDIT_FINDINGS.md)** for the full audit report with 
 
 | Document | Contents |
 |---|---|
-| [aboutkarela.md](./aboutkarela.md) | Full project specification, algorithms, research framework, business model |
-| [AUDIT_FINDINGS.md](./AUDIT_FINDINGS.md) | Codebase audit results, all findings, and priority action plan |
-| [COMPUTATIONS.md](./COMPUTATIONS.md) | Algorithm computations and formulas |
-| [AUDIT_CHECKLIST.md](./AUDIT_CHECKLIST.md) | Audit checklist |
+| [docs/aboutkarela.md](./docs/aboutkarela.md) | Full project specification, algorithms, research framework, business model |
+| [docs/QA_REPORT.md](./docs/QA_REPORT.md) | QA report (October 2026): findings, priorities, and what happened to every older audit item |
+| [docs/COMPUTATIONS.md](./docs/COMPUTATIONS.md) | Algorithm computations and formulas |
+| [docs/SDK_UPGRADE_LOG.md](./docs/SDK_UPGRADE_LOG.md) | Record of Expo SDK upgrades |
+| [website-v2/BACKLOG.md](./website-v2/BACKLOG.md) | Landing page to-do list |
 
 ---
 

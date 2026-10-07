@@ -13,7 +13,7 @@ function CharacterModel({ currentAction }: { currentAction: string }) {
   const group = useRef<THREE.Group>(null);
 
   const { scene, animations } = useGLTF(
-    require("@/assets/test_3dmodel/female_final.glb"),
+    require("@/assets/3d/female_final.glb"),
   ) as unknown as GLTFResult;
 
   // useGLTF caches one parsed scene for the whole app. A three.js object can

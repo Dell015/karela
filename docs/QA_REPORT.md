@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-07
 **Scope:** the whole app: 20 screens and routes, 14 components, 5 hooks, 25 services and engines, `context/`, 4 SQL migrations, config and build files, and the docs that make claims about the app.
-**Replaces:** `AUDIT_CHECKLIST.md` (June 2026) and `AUDIT_FINDINGS.md` (July 2026). Both are out of date. Section 3 shows what happened to every old finding, so nothing is lost. You can delete the two old files once you have read it.
+**Replaces:** `AUDIT_CHECKLIST.md` (June 2026) and `AUDIT_FINDINGS.md` (July 2026). Both were deleted on 2026-10-08 (still in git history). Section 3 shows what happened to every old finding, so nothing is lost.
 
 ---
 

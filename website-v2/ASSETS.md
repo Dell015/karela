@@ -4,7 +4,7 @@ Every asset the site needs but does not have yet is rendered as an on-brand
 placeholder (dashed lime border, diagonal hatch, "PLACEHOLDER" corner flag)
 showing the asset name and target dimensions.
 
-**Find every slot:** search `website/` for `ph__flag` or `TODO(assets)`.
+**Find every slot:** search `website-v2/` for `ph__flag` or `TODO(assets)`.
 
 ## How to swap a placeholder for a real asset
 
@@ -73,7 +73,7 @@ Convert to WebP and compress. `assets/images/karelala.png` is **25 MB** and must
 never ship to the web as-is.
 
 ```bash
-npx @squoosh/cli --webp '{"quality":82}' -d website/assets/img/screens/ <input>
+npx @squoosh/cli --webp '{"quality":82}' -d website-v2/assets/img/screens/ <input>
 ```
 
 Target budget: each screenshot under 150 KB, hero video under 3 MB.

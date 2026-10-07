@@ -11,7 +11,7 @@ import Svg, { Defs, Ellipse, RadialGradient, Stop } from "react-native-svg";
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-// Ani's real animation clips (assets/test_3dmodel/female_final.glb).
+// Ani's real animation clips (assets/3d/female_final.glb).
 const MOVES: { id: string; label: string; icon: IconName }[] = [
   { id: "IDLE", label: "Idle", icon: "pause" },
   { id: "WALK", label: "Walk", icon: "walk" },

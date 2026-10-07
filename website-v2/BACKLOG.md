@@ -32,7 +32,7 @@ search string to find it.
 
 ```
 karela/
-├── website/                 <- the showcase site (this document's subject)
+├── website-v2/                 <- the showcase site (this document's subject)
 │   ├── index.html           <- single page, 11 sections, all content inline
 │   ├── 404.html             <- styled not-found page
 │   ├── css/
@@ -51,7 +51,7 @@ karela/
 │   ├── BACKLOG.md           <- this file
 │   ├── netlify.toml         <- deploy + security headers + caching
 │   └── vercel.json          <- same, for Vercel
-└── aboutkarela.md           <- source of truth for ALL site copy (41 sections)
+└── docs/aboutkarela.md      <- source of truth for ALL site copy (41 sections)
 ```
 
 **Run it locally:**
@@ -64,7 +64,7 @@ There is no build step, no package.json, and no dependencies. Editing a file
 and refreshing the browser is the entire dev loop.
 
 **Golden rule when committing:** this repo has unrelated uncommitted work in
-the app source. Only ever `git add website/`. Never `git add .` or `git add -A`.
+the app source. Only ever `git add website-v2/`. Never `git add .` or `git add -A`.
 
 ---
 
@@ -72,7 +72,7 @@ the app source. Only ever `git add website/`. Never `git add .` or `git add -A`.
 
 ### P0-1. Waitlist form does not submit anywhere
 
-**Where:** `website/js/config.js` → `WAITLIST.endpoint` (currently `""`)
+**Where:** `website-v2/js/config.js` → `WAITLIST.endpoint` (currently `""`)
 **Search:** `WAITLIST_ENDPOINT`
 
 The waitlist form is fully built: it validates email format, handles keyboard
@@ -89,7 +89,7 @@ silently dropping signups would be worse than admitting the form is not live.
 
 **Option A — Formspree (fastest, ~10 minutes)**
 1. Create a form at https://formspree.io, copy the endpoint URL.
-2. Set `endpoint` in `website/js/config.js`:
+2. Set `endpoint` in `website-v2/js/config.js`:
    ```js
    WAITLIST: { endpoint: "https://formspree.io/f/YOUR_ID", method: "POST" }
    ```
@@ -120,7 +120,7 @@ silently dropping signups would be worse than admitting the form is not live.
    the new project's anon key to `WAITLIST.headers`.
 
 > **SECURITY — do not skip.** The app's `EXPO_PUBLIC_SUPABASE_ANON_KEY` must
-> never appear in `website/`. The app's anon key grants access to user
+> never appear in `website-v2/`. The app's anon key grants access to user
 > profiles, missions, and civic nodes under its RLS policies. A marketing page
 > is a public, unauthenticated surface; putting that key in it widens the
 > app's attack surface for zero benefit. Use a separate project.
@@ -132,7 +132,7 @@ backend, and the success state renders. Test with a real address.
 
 ### P0-2. Every app screenshot is a placeholder
 
-**Where:** 7 slots in `website/index.html`
+**Where:** 7 slots in `website-v2/index.html`
 **Search:** `ph__flag`
 
 No screenshots of the app exist in the repo. Each slot renders an on-brand
@@ -157,7 +157,7 @@ from `index.html`, and no `ph__flag` matches remain.
 
 ### P0-3. All statistics are illustrative, not measured
 
-**Where:** `website/js/config.js` → `STATS`
+**Where:** `website-v2/js/config.js` → `STATS`
 **Search:** `TODO(stats)`
 
 The hero stat strip and the Civic Engine counters show plausible-looking
@@ -208,7 +208,7 @@ Still worth doing if you have vector source: an SVG wordmark would be roughly
 
 ### P1-5. No real Open Graph image
 
-**Where:** `website/assets/img/og-placeholder.png`
+**Where:** `website-v2/assets/img/og-placeholder.png`
 **Search:** `TODO(assets)` in `index.html`
 
 A 1200×630 placeholder was generated programmatically so the meta tag resolves
@@ -244,7 +244,7 @@ controller needs a published privacy notice stating what is collected, why, how
 long it is retained, and how to request deletion.
 
 `aboutkarela.md` §23 already contains the substance — it needs to become a
-page. Create `website/privacy.html` reusing the same CSS, and link it from the
+page. Create `website-v2/privacy.html` reusing the same CSS, and link it from the
 footer (a placeholder link with `aria-disabled` is already there).
 
 Also noted in §23: NPC registration as a personal information controller is
@@ -256,7 +256,7 @@ required prior to public launch.
 
 ### P1-8. Store badges are intentionally disabled
 
-**Where:** `website/index.html`, hero and waitlist sections
+**Where:** `website-v2/index.html`, hero and waitlist sections
 **Search:** `data-store-badge`
 
 The app is not published (`aboutkarela.md` line 5: `Status: Active_Development`,
@@ -274,7 +274,7 @@ rather than fake badges for exactly this reason.
 
 ### P1-9. Team section has no photos
 
-**Where:** `website/index.html`, `#team`
+**Where:** `website-v2/index.html`, `#team`
 
 Six members, six circular placeholders showing initials. Initials-in-a-circle
 is a legitimate permanent design choice, so this is only P1 if you want
@@ -282,7 +282,7 @@ photos.
 
 `assets/images/sir-sander.jpg` already exists in the app repo for Sander
 Sedano. Needed: 400×400 square crops for Randel, Trishia, Steven, Qarisha, and
-Cyduanne, saved to `website/assets/img/team/`.
+Cyduanne, saved to `website-v2/assets/img/team/`.
 
 ---
 
@@ -366,7 +366,7 @@ since they are never fetched).
 
 ### P2-13. ~~No 404 page~~ — RESOLVED 2026-07-31
 
-`website/404.html` added, reusing the same token and component CSS. Netlify and
+`website-v2/404.html` added, reusing the same token and component CSS. Netlify and
 Vercel both serve it automatically; GitHub Pages does too.
 
 ---
@@ -395,8 +395,8 @@ Low priority; current behaviour is the safe default.
 
 ## P3 — Future
 
-- **P3-16.** Interactive 3D Ani model. `assets/miku_chibi.glb` (1.8 MB) and
-  `test_3dmodel/female_final.glb` (1.2 MB) exist. `<model-viewer>` would work
+- **P3-16.** Interactive 3D Ani model. `assets/3d/miku_chibi.glb` (1.8 MB) and
+  `assets/3d/female_final.glb` (1.2 MB) exist. `<model-viewer>` would work
   but adds roughly 300 KB of JS — needs lazy loading behind a click, and the
   1.8 MB payload is hostile to the prepaid-data audience the app targets.
 - **P3-17.** LGU / partner landing page. §24 describes a B2B model; a dedicated
@@ -438,14 +438,14 @@ Run before any deploy.
 npx http-server website -p 8080
 
 # 2. JS parses
-node --check website/js/main.js
-node --check website/js/config.js
+node --check website-v2/js/main.js
+node --check website-v2/js/config.js
 
 # 3. No unresolved placeholders (should be 0 before public launch)
-grep -c "ph__flag" website/index.html
+grep -c "ph__flag" website-v2/index.html
 
 # 4. No TODOs left in shipped code
-grep -rn "TODO" website/ --include=*.html --include=*.css --include=*.js
+grep -rn "TODO" website-v2/ --include=*.html --include=*.css --include=*.js
 ```
 
 Manual checks:
@@ -463,10 +463,10 @@ Manual checks:
 
 ## Deploy
 
-No build step. Point any static host at `website/`.
+No build step. Point any static host at `website-v2/`.
 
-**Netlify** — `website/netlify.toml` is committed and ready.
-**Vercel** — `website/vercel.json` is committed and ready.
+**Netlify** — `website-v2/netlify.toml` is committed and ready.
+**Vercel** — `website-v2/vercel.json` is committed and ready.
 **GitHub Pages** — repo Settings → Pages → deploy from `main`, folder
 `/website`. Note that Pages cannot serve the custom headers in those config
 files.
@@ -507,5 +507,5 @@ the source section first.
 | Team | §41 (line 1978) |
 
 **Design tokens** come from `styles/designSystem.ts`, ported to
-`website/css/tokens.css`. If a colour changes in the app, change it there and
+`website-v2/css/tokens.css`. If a colour changes in the app, change it there and
 re-port — do not let the two drift.

@@ -44,7 +44,7 @@ function Model({ url }: { url: string }) {
 }
 
 export default function DatiViewer() {
-  const [assets] = useAssets([require("../../assets/miku_chibi.glb")]);
+  const [assets] = useAssets([require("../../assets/3d/miku_chibi.glb")]);
 
   return (
     <View style={styles.container}>
