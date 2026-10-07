@@ -42,7 +42,12 @@ window.KARELA_CONFIG = (function () {
 
        Where answers go (same options as the waitlist)
          Formspree:  endpoint: "https://formspree.io/f/YOUR_ID"
-         Supabase:   a SEPARATE project, never the app's.
+         Supabase:   a SEPARATE project, never the app's. Run
+                     backend/supabase-site.sql in it, then use:
+                       endpoint: "https://YOUR.supabase.co/rest/v1/survey_responses",
+                       headers: { apikey: "ANON_KEY", Authorization: "Bearer ANON_KEY",
+                                  Prefer: "return=minimal",
+                                  "Content-Type": "application/json" }
        Until an endpoint is set, the survey says plainly that
        answers were not saved. It never pretends.
 
