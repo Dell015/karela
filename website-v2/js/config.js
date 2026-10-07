@@ -21,11 +21,13 @@ window.KARELA_CONFIG = (function () {
        this list, so adding content means editing this array
        only. No HTML or CSS changes needed.
 
-       The questions below are SAMPLES. Replace them, then set
-       showSampleBadge to false to hide the orange "Sample
-       questions" note.
+       These are the Karela Market Validation Survey questions
+       (shortened from 20 to 13 questions, plus an optional email at the end).
+       showSampleBadge is false, so the orange "Sample questions"
+       note is hidden.
 
        Question types
+         info     text only, no answer   { text: "..." }
          single   pick one         { options: [...] }
          multi    pick any         { options: [...] }
          scale    1 to 5           { low: "label", high: "label" }
@@ -52,14 +54,14 @@ window.KARELA_CONFIG = (function () {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       payloadExtras: { source: "karela-website-survey" },
-      showSampleBadge: true,
+      showSampleBadge: false,
 
       messages: {
         required: "Pick an answer to continue.",
         emailInvalid: "That email doesn't look right. Check it, or leave it blank.",
         sending: "Sending your answers…",
         doneTitle: "Thank you.",
-        doneBody: "Your answers will help decide what we build first.",
+        doneBody: "Your answers help shape Karela. Karela Research Team, University of Saint Louis, Tuguegarao City.",
         error: "Something went wrong sending your answers. Try again in a moment.",
         notConfigured:
           "The survey isn't connected to a backend yet, so your answers weren't saved.",
@@ -67,46 +69,114 @@ window.KARELA_CONFIG = (function () {
 
       questions: [
         {
-          id: "exercise_frequency",
+          id: "uses_app",
           type: "single",
-          title: "How often do you exercise in a normal week?",
+          title: "Do you currently use a fitness, running or walking tracker app (Strava, Nike Run Club, Pacer, Google Fit, or similar)?",
           required: true,
-          options: ["Almost never", "1 to 2 times", "3 to 4 times", "5 times or more"],
+          options: ["Yes, regularly", "Yes, but rarely", "I used to, but stopped", "No, never"],
         },
         {
-          id: "barriers",
-          type: "multi",
-          title: "What gets in the way most?",
-          hint: "Pick all that apply.",
-          required: false,
-          options: [
-            "Not enough time",
-            "Low motivation",
-            "Safety outdoors",
-            "Cost",
-            "Not sure where to start",
-          ],
+          id: "walk_frequency",
+          type: "single",
+          title: "How often do you walk, jog or commute on foot in a typical week?",
+          required: true,
+          options: ["Rarely or never", "1 to 2 times", "3 to 5 times", "Almost daily"],
         },
         {
-          id: "report_likelihood",
+          id: "noticed_issues",
+          type: "single",
+          title: "Have you noticed a public problem while walking or commuting, like trash, flooding or broken roads?",
+          required: true,
+          options: ["Yes, often", "Yes, a few times", "No, never"],
+        },
+        {
+          id: "built_for_athletes",
           type: "scale",
-          title: "If it took one tap, how likely are you to report a flooded drain or broken road?",
+          title: "My fitness app feels built for athletes, not for someone who just walks or commutes daily.",
           required: true,
-          low: "Very unlikely",
-          high: "Very likely",
+          low: "Strongly disagree",
+          high: "Strongly agree",
         },
         {
-          id: "daily_use",
+          id: "everyday_not_counted",
+          type: "scale",
+          title: "My everyday walking (commuting, errands, campus walks) feels like it doesn\u2019t count, because no app rewards it.",
+          required: true,
+          low: "Strongly disagree",
+          high: "Strongly agree",
+        },
+        {
+          id: "stopped_before",
+          type: "single",
+          title: "Have you ever stopped using a fitness app because you lost motivation?",
+          required: true,
+          options: ["Yes", "No", "I have never used one"],
+        },
+        {
+          id: "data_and_phone",
+          type: "scale",
+          title: "My fitness app doesn\u2019t suit my phone or mobile data (needs strong internet, uses a lot of data, runs slowly).",
+          required: true,
+          low: "Strongly disagree",
+          high: "Strongly agree",
+        },
+        {
+          id: "wants_reporting",
+          type: "scale",
+          title: "I wish I could report community problems, like trash, damaged roads or flood-prone spots, easily through an app.",
+          required: true,
+          low: "Strongly disagree",
+          high: "Strongly agree",
+        },
+        {
+          id: "community_motivation",
+          type: "scale",
+          title: "I would be more motivated to exercise regularly if my effort also helped my community.",
+          required: true,
+          low: "Strongly disagree",
+          high: "Strongly agree",
+        },
+        {
+          id: "about_karela",
+          type: "info",
+          title: "About Karela",
+          text: "Karela is a mobile app that turns your everyday walking, jogging or commuting into an adaptive fitness experience with a personal AI coach. It also lets you report and verify community problems like trash and flood risks, so your movement counts for your own progress and for your city.",
+        },
+        {
+          id: "likely_to_use",
+          type: "single",
+          title: "How likely are you to use an app like this if it were available today?",
+          required: true,
+          options: ["Definitely will not", "Probably will not", "Not sure", "Probably will", "Definitely will"],
+        },
+        {
+          id: "would_recommend",
+          type: "scale",
+          title: "I would recommend an app like this to friends, classmates or family.",
+          required: true,
+          low: "Strongly disagree",
+          high: "Strongly agree",
+        },
+        {
+          id: "feature_feedback",
           type: "text",
-          title: "What would make a running app worth opening every day?",
+          title: "What excites you most about this idea, or what would you add or change?",
+          hint: "Optional.",
           required: false,
           placeholder: "Anything goes",
         },
         {
+          id: "age_range",
+          type: "single",
+          title: "What is your age range?",
+          required: true,
+          options: ["Under 18", "18 to 24", "25 to 34", "35 and above"],
+        },
+        {
           id: "contact_email",
           type: "email",
-          title: "Want to hear about the results?",
-          hint: "Optional. Leave your email and we'll share them.",
+          title: "Want to hear when Karela opens?",
+          hint: "Optional. We will only use your email to contact you about Karela. Under 18? Please skip this one.",
           required: false,
           placeholder: "you@example.com",
         },

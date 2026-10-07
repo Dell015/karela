@@ -794,7 +794,9 @@
       if (q.hint) wrap.appendChild(el("p", "q__hint", q.hint));
       const saved = answers[q.id];
 
-      if (q.type === "single" || q.type === "multi") {
+      if (q.type === "info") {
+        wrap.appendChild(el("p", "q__info", q.text || ""));
+      } else if (q.type === "single" || q.type === "multi") {
         const list = el("div", "q__opts");
         q.options.forEach((o) => {
           const on = q.type === "multi" ? Array.isArray(saved) && saved.indexOf(o) > -1 : saved === o;
@@ -838,7 +840,9 @@
       const last = idx === Q.length - 1;
       next.textContent = last ? "Send answers" : "Next";
       back.hidden = idx === 0;
-      count.textContent = "Question " + (idx + 1) + " of " + Q.length;
+      const realTotal = Q.filter((x) => x.type !== "info").length;
+      const realNo = Q.slice(0, idx + 1).filter((x) => x.type !== "info").length;
+      count.textContent = q.type === "info" ? "Before the next questions" : "Question " + realNo + " of " + realTotal;
       const pct = Math.round((idx / Q.length) * 100);
       bar.style.width = pct + "%";
       progress.setAttribute("aria-valuenow", String(pct));
@@ -850,6 +854,7 @@
     function collect() {
       const q = Q[idx];
       let v = null;
+      if (q.type === "info") return true;
       if (q.type === "single" || q.type === "scale") {
         const c = $("input:checked", body);
         v = c ? (q.type === "scale" ? Number(c.value) : c.value) : null;

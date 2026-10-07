@@ -1515,3 +1515,10 @@ textarea.q__text {
     border-top: 1px solid var(--line);
   }
 }
+
+.q__info {
+  max-width: 52ch;
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  color: var(--ink-2);
+}
