@@ -11,8 +11,14 @@ import {
     DrawerItem,
     DrawerItemList,
 } from "expo-router/drawer";
+import { DynamicDock } from "@/components/DynamicDock";
 import React from "react";
 import { Alert, StyleSheet, View } from "react-native";
+
+// Screens that show the bottom dock. Drawn here, once, around the screen
+// (not inside it), so it is identical everywhere and stays still while the
+// screen content fades in.
+const DOCK_SCREENS = new Set(["dashboard", "quests", "guilds", "shop"]);
 
 function CustomDrawerContent(props: any) {
   const router = useRouter();
@@ -57,6 +63,12 @@ function CustomDrawerContent(props: any) {
 export default function DrawerLayout() {
   return (
     <Drawer
+      screenLayout={({ children, route }) => (
+        <View style={{ flex: 1 }}>
+          {children}
+          {DOCK_SCREENS.has(route.name) && <DynamicDock />}
+        </View>
+      )}
       key="main-drawer-v1"
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{

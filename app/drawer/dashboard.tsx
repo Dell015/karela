@@ -29,7 +29,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 // Custom Hooks & Styles
 import AniView from "@/components/AniModel";
-import { DynamicDock } from "@/components/DynamicDock";
 import { PlayerCard } from "@/components/PlayerCard";
 import { useAuth } from "@/context/AuthContext";
 import { useLocationEngine } from "@/hooks/useLocationEngine";
@@ -534,9 +533,6 @@ export default function Dashboard() {
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
 
-      {/* 3. THE DOCK - Placed OUTSIDE the ScrollView but INSIDE the root View 
-            This ensures it floats on top of the content. */}
-      {!isKeyboardVisible && <DynamicDock />}
     </SafeAreaView>
     </Screen>
   );

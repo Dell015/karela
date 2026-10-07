@@ -20,7 +20,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { DynamicDock } from "@/components/DynamicDock";
 
 if (
   Platform.OS === "android" &&
@@ -172,7 +171,6 @@ export default function GuildsScreen() {
             </>
           )}
         </ScrollView>
-        <DynamicDock />
       </View>
     </SafeAreaView>
     </Screen>

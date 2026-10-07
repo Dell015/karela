@@ -16,7 +16,6 @@ import {
     View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { DynamicDock } from "@/components/DynamicDock";
 
 const { width } = Dimensions.get("window");
 const SHOP_CATEGORIES = ["GEAR", "BOOSTS", "AVATAR"];
@@ -87,7 +86,6 @@ export default function ShopScreen() {
             ))}
           </View>
         </ScrollView>
-        <DynamicDock />
       </View>
     </SafeAreaView>
     </Screen>

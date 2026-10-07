@@ -1,4 +1,3 @@
-import { DynamicDock } from "@/components/DynamicDock";
 import { getEffectiveStreak } from "@/services/streakService";
 import { useAuth } from "@/context/AuthContext";
 import { Button, Chip, ScreenHeader } from "@/components/ui";
@@ -222,7 +221,6 @@ export default function QuestsScreen() {
           })
         )}
       </ScrollView>
-      <DynamicDock />
     </Screen>
   );
 }
