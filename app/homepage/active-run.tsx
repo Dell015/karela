@@ -101,7 +101,7 @@ export default function ActiveRunScreen() {
               <Ionicons name={isActive ? "pause" : "play"} size={32} color={KARELA.color.textPrimary} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.stopBtn} onLongPress={() => router.back()}>
-              <LinearGradient colors={[KARELA.color.danger, '#941B15']} style={styles.stopGradient}>
+              <LinearGradient colors={[KARELA.color.danger, KARELA.color.danger]} style={styles.stopGradient}>
                 <Text style={styles.stopText}>Hold to finish</Text>
               </LinearGradient>
             </TouchableOpacity>

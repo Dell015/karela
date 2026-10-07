@@ -1,3 +1,4 @@
+import { Screen } from "@/components/ui/Screen";
 import { QuestCard } from "@/components/QuestCard";
 import { KARELA } from "@/styles/designSystem";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -33,7 +34,6 @@ import {
 } from "@/services/database/supabase/missions";
 import { dashboard_ui } from "@/styles/dashboardStyle";
 import { ghostMapStyle } from "@/styles/ghostMapStyle";
-import { theme } from "@/styles/theme";
 import { getWeatherLine, getWeatherTier, WeatherTier } from "@/services/weatherSafety";
 import type { DrawerNavigationProp } from "expo-router/drawer";
 
@@ -216,7 +216,8 @@ export default function Dashboard() {
   }, [isFocused, profile, loading]); // Added profile and loading for better sync
 
   return (
-    <SafeAreaView style={[theme.container, { backgroundColor: KARELA.color.bg }]}>
+    <Screen variant="default">
+    <SafeAreaView style={{ flex: 1 }}>
       <StatusBar barStyle="light-content" />
 
       <KeyboardAvoidingView
@@ -227,10 +228,10 @@ export default function Dashboard() {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView
             showsVerticalScrollIndicator={false}
-            style={{ backgroundColor: KARELA.color.bg }}
+            style={{ backgroundColor: "transparent" }}
             contentContainerStyle={{
               paddingBottom: isKeyboardVisible ? 20 : 160,
-              backgroundColor: KARELA.color.bg,
+              backgroundColor: "transparent",
             }}
           >
             <View style={dashboard_ui.dashboard}>
@@ -326,14 +327,15 @@ export default function Dashboard() {
                     top: 1,
                     backgroundColor: KARELA.color.brand,
                     borderColor: KARELA.color.brand,
-                    padding: 5,
-                    borderRadius: KARELA.radius.sm,
+                    padding: KARELA.space.md, // 20 icon + 2x12 padding = 44pt tap target
+                    borderRadius: KARELA.radius.md,
                     borderWidth: 1,
                     zIndex: 10,
                   }}
                   onPress={recenterMap}
+                  accessibilityLabel="Center the map on me"
                 >
-                  <Ionicons name="navigate" size={20} color={KARELA.color.textPrimary} />
+                  <Ionicons name="navigate" size={20} color={KARELA.color.onBright} />
                 </TouchableOpacity>
 
                 <Image
@@ -525,5 +527,6 @@ export default function Dashboard() {
             This ensures it floats on top of the content. */}
       {!isKeyboardVisible && <DynamicDock />}
     </SafeAreaView>
+    </Screen>
   );
 }

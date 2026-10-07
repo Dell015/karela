@@ -1,3 +1,5 @@
+import { Screen } from "@/components/ui/Screen";
+import { KARELA } from "@/styles/designSystem";
 import { useAuth } from "@/context/AuthContext";
 import {
   AggregatedStats,
@@ -60,7 +62,7 @@ export default function ProgressScreen() {
           </Text>
           <View style={ProgressScreenUI.activeIndicator}>
             <View
-              style={[ProgressScreenUI.dot, { backgroundColor: "#7CF205" }]}
+              style={[ProgressScreenUI.dot, { backgroundColor: KARELA.color.brand }]}
             />
             <Text style={ProgressScreenUI.activeIndicatorText}>
               Tracking on
@@ -76,7 +78,7 @@ export default function ProgressScreen() {
             <Ionicons
               name="location"
               size={28}
-              color="#7CF205"
+              color={KARELA.color.brand}
               style={ProgressScreenUI.statIcon}
             />
           </View>
@@ -88,7 +90,7 @@ export default function ProgressScreen() {
                 <MaterialCommunityIcons
                   name="lightning-bolt"
                   size={18}
-                  color="#FFD700"
+                  color={KARELA.color.gold}
                 />
                 <View>
                   <Text style={ProgressScreenUI.statLabelSmall}>Streak</Text>
@@ -98,7 +100,7 @@ export default function ProgressScreen() {
                 </View>
               </View>
               <View style={ProgressScreenUI.smallCard}>
-                <MaterialCommunityIcons name="fire" size={18} color="#FF5A00" />
+                <MaterialCommunityIcons name="fire" size={18} color={KARELA.color.civic} />
                 <View>
                   <Text style={ProgressScreenUI.statLabelSmall}>Burned</Text>
                   <Text style={ProgressScreenUI.statValueSmall}>
@@ -110,7 +112,7 @@ export default function ProgressScreen() {
 
             <View style={ProgressScreenUI.statCardRow}>
               <View style={ProgressScreenUI.smallCard}>
-                <Ionicons name="trophy" size={16} color="#FFD700" />
+                <Ionicons name="trophy" size={16} color={KARELA.color.gold} />
                 <View>
                   <Text style={ProgressScreenUI.statLabelSmall}>Wins</Text>
                   <Text style={ProgressScreenUI.statValueSmall}>
@@ -122,7 +124,7 @@ export default function ProgressScreen() {
                 <MaterialCommunityIcons
                   name="shoe-print"
                   size={16}
-                  color="#BF5AF2"
+                  color={KARELA.vibrant.neonTeal}
                 />
                 <View>
                   <Text style={ProgressScreenUI.statLabelSmall}>Steps</Text>
@@ -139,6 +141,7 @@ export default function ProgressScreen() {
   };
 
   return (
+    <Screen variant="aurora">
     <ScrollView
       style={ProgressScreenUI.container}
       contentContainerStyle={{ paddingBottom: 40 }}
@@ -152,16 +155,16 @@ export default function ProgressScreen() {
           style={ProgressScreenUI.backButton}
           onPress={() => router.replace("/drawer/dashboard")}
         >
-          <Ionicons name="chevron-back" size={28} color="white" />
+          <Ionicons name="chevron-back" size={28} color={KARELA.color.textPrimary} />
         </TouchableOpacity>
-        <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
+        <Text style={{ color: KARELA.color.textPrimary, fontFamily: KARELA.font.bold, fontSize: 16 }}>
           @{profile?.username || "strider"}
         </Text>
         <TouchableOpacity
           style={ProgressScreenUI.menuButton}
           onPress={() => navigation.openDrawer()}
         >
-          <Ionicons name="menu" size={32} color="#7CF205" />
+          <Ionicons name="menu" size={32} color={KARELA.color.brand} />
         </TouchableOpacity>
       </View>
 
@@ -169,7 +172,7 @@ export default function ProgressScreen() {
       <View style={ProgressScreenUI.profileSection}>
         <View style={ProgressScreenUI.avatarWrapper}>
           <LinearGradient
-            colors={["#7CF205", "#209F77"]}
+            colors={KARELA.gradient}
             style={ProgressScreenUI.avatarGradient}
           >
             <Image
@@ -193,7 +196,7 @@ export default function ProgressScreen() {
           style={{
             width: "60%",
             height: 6,
-            backgroundColor: "#111",
+            backgroundColor: KARELA.color.surface,
             borderRadius: 3,
             marginTop: 10,
             overflow: "hidden",
@@ -203,14 +206,14 @@ export default function ProgressScreen() {
             style={{
               width: `${Math.min((profile?.stats?.xp || 0) / 10, 100)}%`,
               height: "100%",
-              backgroundColor: "#7CF205",
+              backgroundColor: KARELA.color.brand,
             }}
           />
         </View>
 
         <TouchableOpacity style={ProgressScreenUI.rankButton}>
           <LinearGradient
-            colors={["#7CF205", "#209F77"]}
+            colors={KARELA.gradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={ProgressScreenUI.gradientButton}
@@ -246,7 +249,7 @@ export default function ProgressScreen() {
               width: 8,
               height: 8,
               borderRadius: 4,
-              backgroundColor: activeIndex === i ? "#7CF205" : "#222",
+              backgroundColor: activeIndex === i ? KARELA.color.brand : KARELA.color.surfaceSoft,
               marginHorizontal: 4,
             }}
           />
@@ -265,8 +268,8 @@ export default function ProgressScreen() {
           {realChartData && realChartData.length > 1 ? (
             <LineChart.Provider data={realChartData}>
               <LineChart height={100} width={width - 72} yGutter={10}>
-                <LineChart.Path color="#7CF205">
-                  <LineChart.Gradient color="#7CF205" opacity={0.1} />
+                <LineChart.Path color={KARELA.color.brand}>
+                  <LineChart.Gradient color={KARELA.color.brand} opacity={0.1} />
                 </LineChart.Path>
               </LineChart>
             </LineChart.Provider>
@@ -278,7 +281,7 @@ export default function ProgressScreen() {
                 alignItems: "center",
               }}
             >
-              <Text style={{ color: "#444", fontSize: 12 }}>
+              <Text style={{ color: KARELA.color.textMuted, fontSize: 12 }}>
                 No mission history yet
               </Text>
             </View>
@@ -295,5 +298,6 @@ export default function ProgressScreen() {
         />
       )}
     </ScrollView>
+    </Screen>
   );
 }

@@ -1,3 +1,4 @@
+import { Screen } from "@/components/ui/Screen";
 import { KARELA } from "@/styles/designSystem";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -94,6 +95,7 @@ export default function CalendarScreen() {
   };
 
   return (
+    <Screen variant="calm">
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       <Animated.View entering={FadeInUp.duration(500)} style={{ flex: 1 }}>
@@ -214,6 +216,7 @@ export default function CalendarScreen() {
         </Pressable>
       </Modal>
     </SafeAreaView>
+    </Screen>
   );
 }
 
@@ -245,7 +248,7 @@ const NewQuestCard = ({ title, distance, time, progress, onDetails }: any) => (
 );
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: KARELA.color.bg },
+  container: { flex: 1, backgroundColor: "transparent" },
   scrollContent: { padding: 25 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 25 },
   headerTitle: { fontSize: 38, fontFamily: KARELA.font.bold, color: KARELA.color.textPrimary },

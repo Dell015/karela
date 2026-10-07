@@ -1,3 +1,4 @@
+import { Screen } from "@/components/ui/Screen";
 import { KARELA } from "@/styles/designSystem";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -78,6 +79,7 @@ export default function GuildsScreen() {
   };
 
   return (
+    <Screen variant="ember">
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" />
 
@@ -172,11 +174,12 @@ export default function GuildsScreen() {
         <DynamicDock />
       </View>
     </SafeAreaView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: KARELA.color.bg },
+  safeArea: { flex: 1, backgroundColor: "transparent" },
   mainWrapper: { flex: 1 },
   scrollContent: { paddingHorizontal: KARELA.space.xl, paddingBottom: 140 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 15, marginBottom: 25 },

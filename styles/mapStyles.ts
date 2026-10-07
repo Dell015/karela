@@ -225,9 +225,8 @@ export const styles = StyleSheet.create({
     elevation: 8,
   },
   buttonText: {
-    color: KARELA.color.textPrimary,
+    color: KARELA.color.onBright,
     fontSize: KARELA.space.xl,
     fontFamily: KARELA.font.bold,
-    letterSpacing: 2,
   },
 });

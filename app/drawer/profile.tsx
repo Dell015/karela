@@ -1,3 +1,4 @@
+import { Screen } from "@/components/ui/Screen";
 import { useAuth } from "@/context/AuthContext";
 import { KARELA } from "@/styles/designSystem";
 import { updateUserProfileData } from "@/services/database/supabase/userData";
@@ -79,6 +80,7 @@ export default function ProfilePage() {
   };
 
   return (
+    <Screen variant="default">
     <ScrollView style={s.container} contentContainerStyle={{ paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
       {/* IDENTITY BANNER */}
       <LinearGradient colors={["#0d1a06", KARELA.color.bg]} style={s.banner}>
@@ -319,6 +321,7 @@ export default function ProfilePage() {
         </KeyboardAvoidingView>
       </Modal>
     </ScrollView>
+    </Screen>
   );
 }
 
@@ -333,7 +336,7 @@ const StatTile = ({ icon, color, value, label }: { icon: string; color: string; 
 
 // --- STYLES ---
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: KARELA.color.bg },
+  container: { flex: 1, backgroundColor: "transparent" },
 
   // Banner
   banner: { paddingTop: 60, paddingHorizontal: KARELA.space.xl, paddingBottom: 24 },

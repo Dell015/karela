@@ -1,3 +1,4 @@
+import { Screen } from "@/components/ui/Screen";
 import { useAuth } from "@/context/AuthContext";
 import { KARELA } from "@/styles/designSystem";
 import { saveGhostRun } from "@/services/database/sqlite/database";
@@ -158,6 +159,7 @@ export default function SummaryScreen() {
   };
 
   return (
+    <Screen variant="energy">
     <View style={styles.container}>
       <LinearGradient
         colors={[KARELA.color.bg, KARELA.color.surface]}
@@ -248,11 +250,12 @@ export default function SummaryScreen() {
         </View>
       </SafeAreaView>
     </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: KARELA.color.bg },
+  container: { flex: 1, backgroundColor: "transparent" },
   header: { alignItems: "center", marginTop: KARELA.space.xxxl },
   missionText: {
     color: KARELA.color.brand,

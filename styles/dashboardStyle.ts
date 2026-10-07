@@ -7,7 +7,7 @@ export const dashboard_ui = StyleSheet.create({
   dashboard: {
     flex: 1,
     paddingHorizontal: KARELA.space.xl,
-    backgroundColor: KARELA.color.bg,
+    backgroundColor: "transparent", // the <Screen> glow shows through
     zIndex: 10,
   },
   ProfileHeader: {

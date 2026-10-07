@@ -1,3 +1,5 @@
+import { Screen } from "@/components/ui/Screen";
+import { KARELA } from "@/styles/designSystem";
 import { useAuth } from "@/context/AuthContext";
 import { getChartData } from "@/services/statsService";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -37,13 +39,16 @@ export default function PerformanceGraph() {
 
   if (loading) {
     return (
+      <Screen variant="aurora">
       <View style={[styles.container, { justifyContent: "center" }]}>
-        <ActivityIndicator color="#7CF205" size="large" />
+        <ActivityIndicator color={KARELA.color.brand} size="large" />
       </View>
+      </Screen>
     );
   }
 
   return (
+    <Screen variant="aurora">
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
 
@@ -52,7 +57,7 @@ export default function PerformanceGraph() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons name="chevron-back" size={24} color="white" />
+          <Ionicons name="chevron-back" size={24} color={KARELA.color.textPrimary} />
         </TouchableOpacity>
         <View style={{ alignItems: "center" }}>
           <Text style={styles.headerTitle}>Activity Analysis</Text>
@@ -85,10 +90,10 @@ export default function PerformanceGraph() {
           {data.length > 1 ? (
             <LineChart.Provider data={data}>
               <LineChart height={220} width={width - 80} yGutter={20}>
-                <LineChart.Path color="#7CF205" width={3}>
-                  <LineChart.Gradient color="#7CF205" opacity={0.15} />
+                <LineChart.Path color={KARELA.color.brand} width={3}>
+                  <LineChart.Gradient color={KARELA.color.brand} opacity={0.15} />
                 </LineChart.Path>
-                <LineChart.CursorCrosshair color="#7CF205">
+                <LineChart.CursorCrosshair color={KARELA.color.brand}>
                   <LineChart.Tooltip style={styles.tooltipContainer}>
                     <LineChart.PriceText
                       style={styles.tooltipValue}
@@ -114,7 +119,7 @@ export default function PerformanceGraph() {
               <MaterialCommunityIcons
                 name="radar"
                 size={40}
-                color="#7CF205"
+                color={KARELA.color.brand}
                 style={{ opacity: 0.2 }}
               />
               <Text style={styles.emptyText}>
@@ -138,32 +143,33 @@ export default function PerformanceGraph() {
             label="Avg Session"
             value={avgDist}
             unit="km"
-            color="#7CF205"
+            color={KARELA.color.brand}
           />
           <MetricCard
             icon="fire"
             label="Energy"
             value={Math.floor(totalKm * 60)}
             unit="kcal"
-            color="#FF453A"
+            color={KARELA.color.danger}
           />
           <MetricCard
             icon="account-clock"
             label="Sessions"
             value={data.length}
             unit="total"
-            color="#0A84FF"
+            color={KARELA.vibrant.sky}
           />
           <MetricCard
             icon="trophy-outline"
             label="Wins"
             value={profile?.stats?.ghostWins || 0}
             unit="pts"
-            color="#BF5AF2"
+            color={KARELA.vibrant.neonTeal}
           />
         </View>
       </View>
     </SafeAreaView>
+    </Screen>
   );
 }
 
@@ -185,7 +191,7 @@ function MetricCard({ icon, label, value, unit, color }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#000" },
+  container: { flex: 1, backgroundColor: "transparent" },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -193,27 +199,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
   },
-  backButton: { backgroundColor: "#111", padding: 10, borderRadius: 14 },
-  headerTitle: { color: "white", fontSize: 16, fontWeight: "900" },
-  userSubtitle: { color: "#7CF205", fontSize: 12, fontWeight: "600" },
+  backButton: { backgroundColor: KARELA.color.surface, padding: 10, borderRadius: 14 },
+  headerTitle: { color: KARELA.color.textPrimary, fontSize: 16, fontFamily: KARELA.font.black },
+  userSubtitle: { color: KARELA.color.brand, fontSize: 12, fontFamily: KARELA.font.medium },
   avatarMini: {
     width: 35,
     height: 35,
     borderRadius: 10,
-    backgroundColor: "#111",
+    backgroundColor: KARELA.color.surface,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: KARELA.color.line,
   },
-  avatarText: { color: "white", fontWeight: "bold" },
+  avatarText: { color: KARELA.color.textPrimary, fontFamily: KARELA.font.bold },
   content: { flex: 1, paddingHorizontal: 20 },
   chartWrapper: {
-    backgroundColor: "#0A0A0A",
+    backgroundColor: KARELA.color.surface,
     borderRadius: 30,
     padding: 20,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.05)",
+    borderColor: KARELA.color.lineSoft,
     marginVertical: 15,
   },
   chartHeader: {
@@ -222,10 +228,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 15,
   },
-  chartSubtitle: { color: "#8E8E93", fontSize: 12, fontWeight: "700" },
+  chartSubtitle: { color: KARELA.color.textMuted, fontSize: 12, fontFamily: KARELA.font.bold },
   mainValueRow: { flexDirection: "row", alignItems: "baseline" },
-  chartMainValue: { color: "white", fontSize: 34, fontWeight: "900" },
-  mainUnit: { color: "#444", fontSize: 16, fontWeight: "900", marginLeft: 6 },
+  chartMainValue: { color: KARELA.color.textPrimary, fontSize: 34, fontFamily: KARELA.font.black },
+  mainUnit: { color: KARELA.color.textMuted, fontSize: 16, fontFamily: KARELA.font.black, marginLeft: 6 },
   badge: {
     backgroundColor: "rgba(124, 242, 5, 0.1)",
     paddingHorizontal: 10,
@@ -233,36 +239,36 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 8,
   },
-  badgeText: { color: "#7CF205", fontSize: 9, fontWeight: "900" },
+  badgeText: { color: KARELA.color.brand, fontSize: KARELA.size.caption, fontFamily: KARELA.font.black },
   tooltipContainer: {
-    backgroundColor: "#111",
+    backgroundColor: KARELA.color.surface,
     padding: 12,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#7CF205",
+    borderColor: KARELA.color.brand,
     alignItems: "center",
   },
-  tooltipValue: { color: "white", fontSize: 18, fontWeight: "900" },
-  tooltipDate: { color: "#8E8E93", fontSize: 10, marginTop: 4 },
+  tooltipValue: { color: KARELA.color.textPrimary, fontSize: 18, fontFamily: KARELA.font.black },
+  tooltipDate: { color: KARELA.color.textMuted, fontSize: KARELA.size.caption, marginTop: 4 },
   xAxis: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 15,
   },
-  axisText: { color: "#333", fontSize: 10, fontWeight: "900" },
+  axisText: { color: KARELA.color.textMuted, fontSize: KARELA.size.caption, fontFamily: KARELA.font.black },
   metricsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
   },
   card: {
-    backgroundColor: "#0A0A0A",
+    backgroundColor: KARELA.color.surface,
     width: (width - 55) / 2,
     padding: 20,
     borderRadius: 26,
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.03)",
+    borderColor: KARELA.color.lineSoft,
   },
   iconCircle: {
     width: 34,
@@ -271,9 +277,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  cardLabel: { color: "#8E8E93", fontSize: 12, fontWeight: "700" },
-  cardValue: { color: "white", fontSize: 22, fontWeight: "900" },
-  cardUnit: { color: "#444", fontSize: 12, fontWeight: "700" },
+  cardLabel: { color: KARELA.color.textMuted, fontSize: 12, fontFamily: KARELA.font.bold },
+  cardValue: { color: KARELA.color.textPrimary, fontSize: 22, fontFamily: KARELA.font.black },
+  cardUnit: { color: KARELA.color.textMuted, fontSize: 12, fontFamily: KARELA.font.bold },
   emptyState: { height: 220, justifyContent: "center", alignItems: "center" },
-  emptyText: { color: "#444", marginTop: 10, fontWeight: "600", fontSize: 12 },
+  emptyText: { color: KARELA.color.textMuted, marginTop: 10, fontFamily: KARELA.font.medium, fontSize: 12 },
 });

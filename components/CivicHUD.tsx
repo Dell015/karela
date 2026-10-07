@@ -1,4 +1,5 @@
 import { CIVIC_CATEGORIES, CivicCategory } from "@/services/engines/CivicEngine";
+import { KARELA } from "@/styles/designSystem";
 import { ResonanceState } from "@/services/engines/ResonanceSystem";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
@@ -28,32 +29,30 @@ import Animated, {
 
 const { width } = Dimensions.get("window");
 
-/* ============================================================
-   DESIGN TOKENS — single source of truth for the Civic HUD
-   ============================================================ */
-const KARELA_GRADIENT = ["#7CF205", "#209F77"] as const; // signature brand gradient
-const CIVIC_GRADIENT = ["#FF6B35", "#F7411D"] as const;   // civic-action accent
+/* Short local names for the shared tokens in styles/designSystem.ts. */
+const KARELA_GRADIENT = KARELA.gradient;
+// Civic is the site's orange, solid (orange -> coral would read as danger).
+const CIVIC_GRADIENT = [KARELA.color.civic, KARELA.color.civic] as const;
+const MUTED_GRADIENT = [KARELA.color.surfaceSoft, KARELA.color.surfaceAlt] as const;
 
 const C = {
-  brand: "#7CF205",
-  brandDeep: "#209F77",
-  civic: "#FF6B35",
-  gold: "#FFB347",
-  bgSheet: "#141414",
-  surface: "#161616",
-  surfaceAlt: "#1F1F1F",
-  cancel: "#202020",
-  border: "rgba(255,255,255,0.08)",
-  borderSoft: "rgba(255,255,255,0.05)",
-  textPrimary: "#FFFFFF",
-  textSecondary: "#A0A0A0",
-  textMuted: "#6B6B6B",
+  brand: KARELA.color.brand,
+  civic: KARELA.color.civic,
+  gold: KARELA.color.gold,
+  bgSheet: KARELA.color.surface,
+  surfaceAlt: KARELA.color.surfaceAlt,
+  cancel: KARELA.color.surfaceSoft,
+  border: KARELA.color.line,
+  borderSoft: KARELA.color.lineSoft,
+  textPrimary: KARELA.color.textPrimary,
+  textSecondary: KARELA.color.textSecondary,
+  textMuted: KARELA.color.textMuted,
+  onBright: KARELA.color.onBright,
+  civicTint: "rgba(255,159,28,0.14)", // civic orange at 14%
 };
-
-// 4-point spacing scale
-const SP = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 28 };
-// Radius scale
-const R = { sm: 12, md: 16, lg: 20, xl: 28, pill: 999 };
+const SP = KARELA.space;
+const R = KARELA.radius;
+const FONT = KARELA.font;
 
 interface CivicHUDProps {
   isRacing: boolean;
@@ -231,13 +230,13 @@ export const CivicHUD = ({
           disabled={suppressed}
         >
           <LinearGradient
-            colors={suppressed ? ["#3A3A3A", "#2A2A2A"] : CIVIC_GRADIENT}
+            colors={suppressed ? MUTED_GRADIENT : CIVIC_GRADIENT}
             style={[styles.fab, !suppressed && styles.fabActiveShadow]}
           >
             <Ionicons
               name={suppressed ? "lock-closed" : "camera"}
               size={24}
-              color="#fff"
+              color={suppressed ? C.textSecondary : C.onBright}
             />
             {nearbyCount > 0 && !suppressed && (
               <LinearGradient colors={KARELA_GRADIENT} style={styles.fabBadge}>
@@ -344,8 +343,8 @@ const styles = StyleSheet.create({
   },
   roleDot: { width: 10, height: 10, borderRadius: 5 },
   roleTextGroup: { justifyContent: "center" },
-  roleLabel: { fontSize: 13, fontWeight: "900", letterSpacing: 1.2 },
-  roleSub: { color: C.textSecondary, fontSize: 10, marginTop: 1 },
+  roleLabel: { fontSize: 13, fontFamily: FONT.black, letterSpacing: 1.2 },
+  roleSub: { color: C.textSecondary, fontSize: KARELA.size.caption, fontFamily: FONT.regular, marginTop: 1 },
   staminaRing: {
     flexDirection: "row",
     alignItems: "center",
@@ -361,12 +360,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: SP.md,
     paddingVertical: SP.xs + 2,
     borderRadius: R.pill,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: KARELA.color.surfaceSoft,
   },
-  staminaText: { color: C.textPrimary, fontSize: 15, fontWeight: "800" },
-  staminaPct: { color: C.textMuted, fontSize: 10, marginLeft: 1 },
-  staminaTextOnBrand: { color: "#04210A", fontSize: 15, fontWeight: "900" },
-  staminaPctOnBrand: { color: "#04210A", fontSize: 10, marginLeft: 1, fontWeight: "800" },
+  staminaText: { color: C.textPrimary, fontSize: 15, fontFamily: FONT.bold },
+  staminaPct: { color: C.textMuted, fontSize: KARELA.size.caption, fontFamily: FONT.regular, marginLeft: 1 },
+  staminaTextOnBrand: { color: C.onBright, fontSize: 15, fontFamily: FONT.black },
+  staminaPctOnBrand: { color: C.onBright, fontSize: KARELA.size.caption, marginLeft: 1, fontFamily: FONT.bold },
 
   /* ---------- FAB ---------- */
   fabWrap: {
@@ -383,13 +382,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  fabActiveShadow: {
-    elevation: 10,
-    shadowColor: C.civic,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.55,
-    shadowRadius: 8,
-  },
+  // A shadow is right here: the button floats over the map.
+  fabActiveShadow: KARELA.glow.civic,
   fabBadge: {
     position: "absolute",
     top: -3,
@@ -401,13 +395,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: SP.xs,
     borderWidth: 2,
-    borderColor: "#0d0d0d",
+    borderColor: KARELA.color.bg,
   },
-  fabBadgeText: { color: "#04210A", fontSize: 10, fontWeight: "900" },
+  fabBadgeText: { color: C.onBright, fontSize: KARELA.size.caption, fontFamily: FONT.black },
   fabLabel: {
     color: C.textPrimary,
-    fontSize: 10,
-    fontWeight: "700",
+    fontSize: KARELA.size.caption,
+    fontFamily: FONT.bold,
     marginTop: SP.xs + 2,
     letterSpacing: 0.5,
     textShadowColor: "rgba(0,0,0,0.8)",
@@ -445,7 +439,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "#3A3A3A",
+    backgroundColor: KARELA.color.textFaint,
     alignSelf: "center",
     marginBottom: SP.xl,
   },
@@ -461,14 +455,15 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "rgba(255,107,53,0.12)",
+    backgroundColor: C.civicTint,
     justifyContent: "center",
     alignItems: "center",
   },
-  sheetTitle: { color: C.textPrimary, fontSize: 20, fontWeight: "800", letterSpacing: 0.3 },
+  sheetTitle: { color: C.textPrimary, fontSize: 20, fontFamily: FONT.bold },
   sheetSub: {
     color: C.textSecondary,
-    fontSize: 12,
+    fontSize: KARELA.size.label,
+    fontFamily: FONT.regular,
     marginTop: SP.xs + 1,
     lineHeight: 17,
   },
@@ -493,11 +488,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "rgba(255,107,53,0.12)",
+    backgroundColor: C.civicTint,
     justifyContent: "center",
     alignItems: "center",
   },
-  categoryLabel: { color: C.textPrimary, fontSize: 13, fontWeight: "600", flex: 1 },
+  categoryLabel: { color: C.textPrimary, fontSize: 13, fontFamily: FONT.medium, flex: 1 },
   cancelBtn: {
     marginTop: SP.xl,
     paddingVertical: SP.lg,
@@ -505,7 +500,7 @@ const styles = StyleSheet.create({
     backgroundColor: C.cancel,
     alignItems: "center",
   },
-  cancelText: { color: C.textSecondary, fontWeight: "700", fontSize: 14 },
+  cancelText: { color: C.textSecondary, fontFamily: FONT.bold, fontSize: 14 },
   submittingRow: {
     marginTop: SP.xl,
     paddingVertical: SP.lg,
@@ -516,5 +511,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: SP.md,
   },
-  submittingText: { color: C.textSecondary, fontWeight: "700", fontSize: 13 },
+  submittingText: { color: C.textSecondary, fontFamily: FONT.bold, fontSize: 13 },
 });

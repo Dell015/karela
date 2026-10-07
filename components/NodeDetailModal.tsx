@@ -20,7 +20,7 @@ interface NodeDetailModalProps {
 }
 
 const STATUS_CONFIG = {
-  verified: { color: KARELA.color.civic, label: "VERIFIED", icon: "checkmark-circle" },
+  verified: { color: KARELA.color.brand, label: "VERIFIED", icon: "checkmark-circle" },
   pending: { color: KARELA.color.textMuted, label: "PENDING", icon: "time" },
   aging: { color: KARELA.vibrant.techOrange, label: "AGING", icon: "alert-circle" },
   expired: { color: KARELA.color.danger, label: "EXPIRED", icon: "close-circle" },

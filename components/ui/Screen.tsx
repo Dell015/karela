@@ -1,34 +1,34 @@
 import { GlowVariant, KARELA } from "@/styles/designSystem";
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
 import React, { useMemo } from "react";
-import { Dimensions, StyleSheet, View, ViewStyle } from "react-native";
-
-const { width: SW, height: SH } = Dimensions.get("window");
+import { StyleSheet, useWindowDimensions, View, ViewStyle } from "react-native";
+import Svg, { Circle, Defs, RadialGradient, Stop } from "react-native-svg";
 
 interface ScreenProps {
   children: React.ReactNode;
-  /** Ambient glow palette to use. Each screen/section can set its own mood. */
+  /** Glow palette, like data-palette on the site's sections. */
   variant?: GlowVariant;
-  /** Toggle the ambient glow orbs entirely (still keeps the dark base). */
+  /** Turn the glow off and keep only the dark base. */
   glow?: boolean;
-  /** Slightly randomize orb placement per mount for an organic, living feel. */
+  /** Nudge the blobs a little per mount so screens don't look stamped. */
   randomize?: boolean;
   style?: ViewStyle;
 }
 
 /**
- * Dynamic Karela background.
+ * The Karela background, matching the landing page (website-v2/css/base.css
+ * ".bg__blob"): a green-black base with three large, soft radial blobs of
+ * colour. Same sizes and positions as the site; strengths about half the
+ * site's (34/30/13%), because a phone screen is mostly blob:
+ *   blob 1: 120vmax, top-right,    18%
+ *   blob 2: 110vmax, bottom-left,  16%
+ *   blob 3:  80vmax, middle,        7%
  *
- * Renders the deep dark base, then 2–3 luminous, blurred gradient
- * "orbs" (color set chosen by `variant`) behind a heavy dark blur.
- * This produces a vibrant-yet-readable aurora glow rather than a
- * bright background — white text stays AA-legible on top.
+ * Drawn as SVG radial gradients, so there is no blur pass: cheap on
+ * low-end Android, and static (no motion to reduce).
+ * The site's film grain is not reproduced: react-native-svg has no
+ * feTurbulence filter.
  *
- * Usage:
- *   <Screen variant="energy">...</Screen>
- *   <Screen variant="civic" randomize>...</Screen>
- *   <Screen glow={false}>...</Screen>   // flat dark
+ * Children should have a transparent background so the glow shows.
  */
 export const Screen = ({
   children,
@@ -37,68 +37,46 @@ export const Screen = ({
   randomize = false,
   style,
 }: ScreenProps) => {
-  const colors = KARELA.glowSets[variant];
+  const { width: W, height: H } = useWindowDimensions();
+  const [c1, c2, c3] = KARELA.glowSets[variant];
 
-  // Stable per-mount jitter so orbs feel organic but don't flicker on re-render
+  // Stable per mount, so the glow never flickers on re-render.
   const jitter = useMemo(() => {
-    if (!randomize) return { ox1: 0, oy1: 0, ox2: 0, oy2: 0 };
-    const r = (n: number) => (Math.random() - 0.5) * n;
-    return { ox1: r(120), oy1: r(120), ox2: r(120), oy2: r(120) };
+    const r = () => (randomize ? (Math.random() - 0.5) * 0.08 : 0);
+    return [r(), r(), r(), r()];
   }, [randomize]);
+
+  const M = Math.max(W, H); // 1vmax = M / 100
+  const blobs = [
+    // centre x, centre y, radius, colour, strength (CSS closest-side gradient)
+    { cx: W - 0.02 * M + jitter[0] * M, cy: -0.02 * M, r: 0.6 * M, color: c1, a: 0.18 },
+    { cx: -0.05 * M, cy: H + jitter[1] * M, r: 0.55 * M, color: c2, a: 0.16 },
+    { cx: 0.32 * W + 0.4 * M + jitter[2] * M, cy: 0.28 * H + 0.4 * M + jitter[3] * M, r: 0.4 * M, color: c3, a: 0.07 },
+  ];
 
   return (
     <View style={[styles.base, style]}>
       {glow && (
-        <View style={styles.glowContainer} pointerEvents="none">
-          {/* Orb 1 — top-right, primary accent */}
-          <LinearGradient
-            colors={[colors[0], "transparent"] as any}
-            style={[
-              styles.orb,
-              {
-                width: SW * 1.2,
-                height: SW * 1.2,
-                top: -SW * 0.3 + jitter.oy1,
-                right: -SW * 0.4 + jitter.ox1,
-                opacity: 0.85,
-              },
-            ]}
-          />
-          {/* Orb 2 — mid-left, secondary accent */}
-          <LinearGradient
-            colors={[colors[1], "transparent"] as any}
-            style={[
-              styles.orb,
-              {
-                width: SW * 1.0,
-                height: SW * 1.0,
-                top: SH * 0.3 + jitter.oy2,
-                left: -SW * 0.35 + jitter.ox2,
-                opacity: 0.7,
-              },
-            ]}
-          />
-          {/* Orb 3 — bottom accent (only for 3-color sets like aurora) */}
-          {colors.length > 2 && (
-            <LinearGradient
-              colors={[colors[2], "transparent"] as any}
-              style={[
-                styles.orb,
-                {
-                  width: SW * 0.9,
-                  height: SW * 0.9,
-                  bottom: -SW * 0.2,
-                  right: -SW * 0.1,
-                  opacity: 0.6,
-                },
-              ]}
-            />
-          )}
-          {/* Lighter blur — lets more color through */}
-          <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
-          {/* Thinner veil — just enough for text legibility */}
-          <View style={styles.veil} />
-        </View>
+        <Svg
+          width={W}
+          height={H}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        >
+          <Defs>
+            {blobs.map((b, i) => (
+              <RadialGradient key={i} id={`karela-blob-${i}`} cx="50%" cy="50%" r="50%">
+                <Stop offset="0" stopColor={b.color} stopOpacity={b.a} />
+                <Stop offset="1" stopColor={b.color} stopOpacity={0} />
+              </RadialGradient>
+            ))}
+          </Defs>
+          {blobs.map((b, i) => (
+            <Circle key={i} cx={b.cx} cy={b.cy} r={b.r} fill={`url(#karela-blob-${i})`} />
+          ))}
+        </Svg>
       )}
       {children}
     </View>
@@ -109,18 +87,5 @@ const styles = StyleSheet.create({
   base: {
     flex: 1,
     backgroundColor: KARELA.color.bg,
-  },
-  glowContainer: {
-    ...StyleSheet.absoluteFill,
-    overflow: "hidden",
-    backgroundColor: KARELA.color.bgGlow,
-  },
-  orb: {
-    position: "absolute",
-    borderRadius: 9999,
-  },
-  veil: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: "rgba(13,13,13,0.25)",
   },
 });

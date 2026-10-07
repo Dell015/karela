@@ -1,3 +1,4 @@
+import { Screen } from "@/components/ui/Screen";
 import { KARELA } from "@/styles/designSystem";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -34,6 +35,7 @@ export default function ShopScreen() {
   const filteredItems = MOCK_ITEMS.filter((item) => item.type === activeTab);
 
   return (
+    <Screen variant="energy">
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" />
       <View style={styles.mainWrapper}>
@@ -88,6 +90,7 @@ export default function ShopScreen() {
         <DynamicDock />
       </View>
     </SafeAreaView>
+    </Screen>
   );
 }
 
@@ -101,7 +104,7 @@ const getRarityColor = (rarity: string) => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: KARELA.color.bg },
+  safeArea: { flex: 1, backgroundColor: "transparent" },
   mainWrapper: { flex: 1 },
   scrollContent: { paddingHorizontal: KARELA.space.xl, paddingBottom: 140 },
   currencyHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: KARELA.space.xl, paddingVertical: 15 },

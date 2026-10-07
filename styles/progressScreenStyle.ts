@@ -6,7 +6,7 @@ const { width } = Dimensions.get("window");
 export const ProgressScreenUI = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: KARELA.color.bg,
+    backgroundColor: "transparent",
   },
   header: {
     flexDirection: "row",
