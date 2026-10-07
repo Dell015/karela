@@ -244,10 +244,12 @@ export default function Dashboard() {
                     accessibilityRole="button"
                     accessibilityLabel="Your profile"
                   >
-                    <Image
-                      source={require("@/assets/images/profile_example.jpg")}
-                      style={dashboard_ui.Image}
-                    />
+                    {/* No profile photos yet: show the first letter of the name. */}
+                    <View style={[dashboard_ui.Image, dashboard_ui.avatarInitial]}>
+                      <Text style={dashboard_ui.avatarInitialText}>
+                        {(profile?.displayName || "S").trim().charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                   <View>
                     <Text style={dashboard_ui.welcomeText}>Welcome back</Text>
@@ -366,15 +368,16 @@ export default function Dashboard() {
                   />
                 </View>
 
-                {/* RANDEL COLUMN */}
+                {/* YOUR CHARACTER: the user's own avatar, once character creation exists */}
                 <View style={dashboard_ui.characterColumn}>
-                  <Text style={dashboard_ui.characterTitle}>Randel</Text>
-                  <View style={[dashboard_ui.characterBox, { opacity: 0.5 }]}>
+                  <Text style={dashboard_ui.characterTitle}>You</Text>
+                  <View style={[dashboard_ui.characterBox, dashboard_ui.characterLocked]}>
                     <MaterialCommunityIcons
-                      name="lock"
+                      name="account-plus-outline"
                       size={32}
-                      color={KARELA.color.textFaint}
+                      color={KARELA.color.textMuted}
                     />
+                    <Text style={dashboard_ui.characterLockedText}>Your character is coming soon</Text>
                   </View>
                 </View>
               </View>

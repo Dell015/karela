@@ -1,3 +1,4 @@
+import { KARELA } from "@/styles/designSystem";
 import { Button, Chip } from "@/components/ui/Button";
 import React, { useState } from 'react';
 import { View, Text, Pressable, Dimensions } from 'react-native';
@@ -26,7 +27,7 @@ export const AniConsole = () => {
     left: interpolate(aniExpandProgress.value, [0, 1], [0, -20]),
     borderRadius: interpolate(aniExpandProgress.value, [0, 1], [15, 0]),
     zIndex: aniExpandProgress.value > 0 ? 10000 : 1,
-    backgroundColor: "#161616",
+    backgroundColor: KARELA.color.surfaceAlt,
   }));
 
   const animatedControlsStyle = useAnimatedStyle(() => ({

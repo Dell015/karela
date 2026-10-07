@@ -137,7 +137,7 @@ export const ProgressScreenUI = StyleSheet.create({
   },
 
   previewChartWrapper: {
-    backgroundColor: "#111",
+    backgroundColor: KARELA.color.surface,
     borderRadius: KARELA.radius.xl,
     padding: KARELA.space.lg,
     marginTop: KARELA.space.md,

@@ -1,3 +1,4 @@
+import { KARELA } from "@/styles/designSystem";
 import {
   Environment,
   OrbitControls,
@@ -47,7 +48,7 @@ export default function DatiViewer() {
 
   return (
     <View style={styles.container}>
-      <Suspense fallback={<ActivityIndicator size="large" color="#7CF205" />}>
+      <Suspense fallback={<ActivityIndicator size="large" color={KARELA.color.brand} />}>
         {assets ? (
           <Canvas
             camera={{ position: [0, 1.5, 8], fov: 40 }}

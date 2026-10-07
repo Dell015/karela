@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   accent: { position: "absolute", top: 0, left: 0, right: 0, height: 3 },
-  handle: { width: 44, height: 4, borderRadius: 2, backgroundColor: "#3A3A3A", alignSelf: "center", marginBottom: KARELA.space.xl },
+  handle: { width: 44, height: 4, borderRadius: 2, backgroundColor: KARELA.color.textFaint, alignSelf: "center", marginBottom: KARELA.space.xl },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: KARELA.space.md },
   statusBadge: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: KARELA.radius.pill },
   statusText: { fontSize: 11, fontFamily: KARELA.font.bold, letterSpacing: 1 },

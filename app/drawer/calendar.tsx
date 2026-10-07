@@ -1,3 +1,4 @@
+import { SampleNote } from "@/components/ui/SampleNote";
 import { Button, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { KARELA } from "@/styles/designSystem";
@@ -32,8 +33,8 @@ const PaceChart = () => (
   <View style={styles.chartWrapper}>
     <Text style={styles.chartTitle}>Pace Consistency (min/km)</Text>
     <Svg height="80" width="100%">
-      <Line x1="0" y1="20" x2="100%" y2="20" stroke="#3A3A3C" strokeWidth="1" strokeDasharray="4 4" />
-      <Line x1="0" y1="50" x2="100%" y2="50" stroke="#3A3A3C" strokeWidth="1" strokeDasharray="4 4" />
+      <Line x1="0" y1="20" x2="100%" y2="20" stroke={KARELA.color.line} strokeWidth="1" strokeDasharray="4 4" />
+      <Line x1="0" y1="50" x2="100%" y2="50" stroke={KARELA.color.line} strokeWidth="1" strokeDasharray="4 4" />
       <Path d="M0 60 Q 30 20, 60 45 T 120 35 T 180 55 T 240 30 T 300 40" fill="none" stroke={KARELA.color.brand} strokeWidth="3" strokeLinecap="round" />
     </Svg>
     <View style={styles.chartLabels}>
@@ -54,7 +55,7 @@ const ProgressCircle = ({ progress, size, date, strokeWidth = 5, color = KARELA.
   return (
     <View style={{ width: size, height: size, justifyContent: "center", alignItems: "center" }}>
       <Svg width={size} height={size} style={{ transform: [{ rotate: "-90deg" }] }}>
-        <Circle cx={size / 2} cy={size / 2} r={radius} stroke="#2C2C2E" strokeWidth={strokeWidth} fill="none" />
+        <Circle cx={size / 2} cy={size / 2} r={radius} stroke={KARELA.color.surfaceSoft} strokeWidth={strokeWidth} fill="none" />
         <AnimatedCircle cx={size / 2} cy={size / 2} r={radius} stroke={color} strokeWidth={strokeWidth} fill="none" strokeDasharray={circumference} animatedProps={animatedProps} strokeLinecap="round" />
       </Svg>
       {date && (
@@ -72,7 +73,7 @@ export default function CalendarScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedQuest, setSelectedQuest] = useState<any>(null);
 
-  const today = 11;
+  const today = new Date().getDate();
   const currentStreak = 5;
   const transition = useSharedValue(1);
   const GRID_SPACING = 12;
@@ -90,7 +91,7 @@ export default function CalendarScreen() {
   const openDetails = (title: string, dist: string, type: string) => {
     const recommendations = type === "Daily"
       ? "Focus on high-intensity intervals. Karela noticed you're on a streak—keep that momentum!"
-      : "Maintain a steady heart rate. Your consistency is paying off. Hydrate well, Sander.";
+      : "Maintain a steady heart rate. Your consistency is paying off. Hydrate well.";
     setSelectedQuest({ title, dist, rec: recommendations, type });
     setModalVisible(true);
   };
@@ -113,6 +114,8 @@ export default function CalendarScreen() {
             {/* TODO: no reminders screen yet, so this does nothing. */}
             <IconButton icon="notifications-outline" label="Reminders" />
           </View>
+
+          <SampleNote style={{ marginBottom: KARELA.space.lg }}>The streak and run details here are examples until the calendar reads your run history.</SampleNote>
 
           <View style={styles.tabContainer}>
             <Animated.View style={[styles.animatedPill, animatedPillStyle]}>

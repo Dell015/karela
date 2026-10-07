@@ -385,7 +385,7 @@ export default function MapScreen() {
           {
             justifyContent: "center",
             alignItems: "center",
-            backgroundColor: "#1A1A1A",
+            backgroundColor: KARELA.color.surface,
           },
         ]}
       >
@@ -455,7 +455,7 @@ export default function MapScreen() {
                 width: 24,
                 height: 24,
                 borderRadius: 12,
-                backgroundColor: "#FFD700",
+                backgroundColor: KARELA.color.gold,
                 borderWidth: 3,
                 borderColor: "white",
                 elevation: 5, // Fix for Android clipping
@@ -472,8 +472,8 @@ export default function MapScreen() {
         {questPath.length > 1 && (
           <Polyline
             coordinates={[currentLocation, ...questPath.slice(1)]}
-            strokeColor="#FFD700"
-            strokeColors={["#FFD700"]} // Force plural to override native blue
+            strokeColor={KARELA.color.gold}
+            strokeColors={[KARELA.color.gold]} // Force plural to override native blue
             strokeWidth={6}
             lineCap="round"
             lineJoin="round"
@@ -521,7 +521,7 @@ export default function MapScreen() {
                 width: 20,
                 height: 20,
                 borderRadius: 10,
-                backgroundColor: "#7CF205",
+                backgroundColor: KARELA.color.brand,
                 borderWidth: 3,
                 borderColor: "white",
                 shadowColor: "#000",
@@ -552,7 +552,7 @@ export default function MapScreen() {
                 <View style={styles.checkpointLabel}>
                   <Text style={styles.checkpointText}>{index + 1}</Text>
                 </View>
-                <Ionicons name="flag" size={36} color="#FFD700" />
+                <Ionicons name="flag" size={36} color={KARELA.color.gold} />
               </View>
 
               <Callout
@@ -594,9 +594,9 @@ export default function MapScreen() {
               width: 28,
               height: 28,
               borderRadius: 14,
-              backgroundColor: node.status === "verified" ? "#FF6B35" : node.status === "aging" ? "#FFB347" : "#888",
+              backgroundColor: node.status === "verified" ? KARELA.color.brand : node.status === "aging" ? KARELA.color.civic : KARELA.color.textMuted,
               borderWidth: 2,
-              borderColor: "#fff",
+              borderColor: KARELA.color.textPrimary,
               justifyContent: "center",
               alignItems: "center",
             }}>
@@ -608,7 +608,7 @@ export default function MapScreen() {
                   node.category === "unsafe_area" ? "alert-circle" : "warning"
                 }
                 size={14}
-                color="#fff"
+                color={KARELA.color.onBright}
               />
             </View>
           </Marker>
@@ -628,7 +628,7 @@ export default function MapScreen() {
             <Text
               style={[
                 styles.hudValue,
-                (currentSpeed ?? 0) > 35 && { color: "#FF3B30" },
+                (currentSpeed ?? 0) > 35 && { color: KARELA.color.danger },
               ]}
             >
               {currentSpeed ?? 0}

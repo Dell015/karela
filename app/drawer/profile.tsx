@@ -84,7 +84,7 @@ export default function ProfilePage() {
     <Screen variant="default">
     <ScrollView style={s.container} contentContainerStyle={{ paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
       {/* IDENTITY BANNER */}
-      <LinearGradient colors={["#0d1a06", KARELA.color.bg]} style={s.banner}>
+      <LinearGradient colors={[KARELA.color.surfaceAlt, "transparent"]} style={s.banner}>
         <IconButton icon="chevron-back" label="Back" onPress={() => router.back()} style={s.backBtn} />
 
         <View style={s.identityRow}>
@@ -165,7 +165,7 @@ export default function ProfilePage() {
             <StatTile icon="location" color={KARELA.color.brand} value={`${(stats?.total_distance_km || 0).toFixed(1)} km`} label="Total Distance" />
             <StatTile icon="trophy" color={KARELA.color.gold} value={`${stats?.ghostWins || 0}`} label="Ghost Wins" />
             <StatTile icon="flame" color={KARELA.vibrant.techOrange} value={`${stats?.total_calories_burned || 0}`} label="Calories Burned" />
-            <StatTile icon="speedometer" color="#BF5AF2" value={stats?.avg_pace_mins_km ? `${stats.avg_pace_mins_km.toFixed(1)}` : "--"} label="Avg Pace (min/km)" />
+            <StatTile icon="speedometer" color={KARELA.vibrant.neonTeal} value={stats?.avg_pace_mins_km ? `${stats.avg_pace_mins_km.toFixed(1)}` : "--"} label="Avg Pace (min/km)" />
           </View>
         ) : (
           <View style={s.statsGrid}>
@@ -234,7 +234,7 @@ export default function ProfilePage() {
             <Ionicons name="location-outline" size={18} color={KARELA.color.brand} />
             <View style={{ flex: 1 }}>
               <Text style={s.utilityLabel}>Privacy Zones</Text>
-              <Text style={s.utilityDesc}>0 zones active • GPS masked near home/office</Text>
+              <Text style={s.utilityDesc}>Coming soon</Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={KARELA.color.textFaint} />
           </TouchableOpacity>
@@ -244,7 +244,7 @@ export default function ProfilePage() {
               <Ionicons name="checkmark-done" size={18} color={KARELA.vibrant.techOrange} />
               <View style={{ flex: 1 }}>
                 <Text style={s.utilityLabel}>Vanguard Review Score</Text>
-                <Text style={s.utilityDesc}>Active • Good standing</Text>
+                <Text style={s.utilityDesc}>Coming soon</Text>
               </View>
               <Ionicons name="chevron-forward" size={16} color={KARELA.color.textFaint} />
             </TouchableOpacity>
@@ -254,7 +254,7 @@ export default function ProfilePage() {
             <Ionicons name="notifications-outline" size={18} color={KARELA.color.textMuted} />
             <View style={{ flex: 1 }}>
               <Text style={s.utilityLabel}>Notifications</Text>
-              <Text style={s.utilityDesc}>Quiet hours: 10 PM – 7 AM</Text>
+              <Text style={s.utilityDesc}>Coming soon</Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={KARELA.color.textFaint} />
           </TouchableOpacity>
@@ -348,19 +348,19 @@ const s = StyleSheet.create({
   xpBar: { height: 6, backgroundColor: KARELA.color.surface, borderRadius: 3, overflow: "hidden" },
   xpFill: { height: "100%", borderRadius: 3 },
   metricsRow: { flexDirection: "row", gap: 10, marginTop: KARELA.space.lg },
-  metricCard: { flex: 1, backgroundColor: "#111", borderRadius: KARELA.radius.lg, padding: KARELA.space.lg, alignItems: "center", gap: KARELA.space.xs, borderWidth: 1, borderColor: KARELA.color.surface },
+  metricCard: { flex: 1, backgroundColor: KARELA.color.surface, borderRadius: KARELA.radius.lg, padding: KARELA.space.lg, alignItems: "center", gap: KARELA.space.xs, borderWidth: 1, borderColor: KARELA.color.surface },
   metricValue: { color: KARELA.color.textPrimary, fontSize: KARELA.space.xl, fontFamily: KARELA.font.black },
   metricSub: { color: KARELA.color.textFaint, fontSize: KARELA.size.caption, fontFamily: KARELA.font.medium, textAlign: "center" },
   metricHint: { color: KARELA.color.textFaint, fontSize: 9, marginTop: 2 },
 
   // Dual Track
-  trackTabs: { flexDirection: "row", backgroundColor: "#111", borderRadius: KARELA.radius.md, padding: KARELA.space.xs, marginBottom: KARELA.space.lg },
+  trackTabs: { flexDirection: "row", backgroundColor: KARELA.color.surface, borderRadius: KARELA.radius.md, padding: KARELA.space.xs, marginBottom: KARELA.space.lg },
   trackTab: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 10, borderRadius: KARELA.radius.sm },
   trackTabActive: { backgroundColor: KARELA.color.surface, borderWidth: 1, borderColor: KARELA.color.surfaceSoft },
   trackTabText: { color: KARELA.color.textFaint, fontSize: KARELA.size.label, fontFamily: KARELA.font.black },
   trackTabTextActive: { color: KARELA.color.textPrimary },
   statsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  statTile: { width: (width - 40 - 10) / 2, backgroundColor: "#111", borderRadius: KARELA.radius.md, padding: KARELA.space.lg, alignItems: "center", gap: 6, borderWidth: 1, borderColor: KARELA.color.surface },
+  statTile: { width: (width - 40 - 10) / 2, backgroundColor: KARELA.color.surface, borderRadius: KARELA.radius.md, padding: KARELA.space.lg, alignItems: "center", gap: 6, borderWidth: 1, borderColor: KARELA.color.surface },
   statTileValue: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h2, fontFamily: KARELA.font.black },
   statTileLabel: { color: KARELA.color.textFaint, fontSize: KARELA.size.caption, fontFamily: KARELA.font.medium, textAlign: "center" },
 
@@ -370,12 +370,12 @@ const s = StyleSheet.create({
   aniName: { color: KARELA.color.brand, fontSize: KARELA.size.body, fontFamily: KARELA.font.black },
   aniSub: { color: KARELA.color.textFaint, fontSize: 11, fontFamily: KARELA.font.regular },
   aniChatLink: { color: KARELA.color.brand, fontSize: KARELA.size.label, fontFamily: KARELA.font.bold },
-  aniMessage: { backgroundColor: "#111", borderRadius: KARELA.radius.lg, padding: KARELA.space.lg, borderLeftWidth: 3, borderLeftColor: KARELA.color.brand },
+  aniMessage: { backgroundColor: KARELA.color.surface, borderRadius: KARELA.radius.lg, padding: KARELA.space.lg, borderLeftWidth: 3, borderLeftColor: KARELA.color.brand },
   aniText: { color: KARELA.color.textSecondary, fontSize: 13, lineHeight: 20, fontFamily: KARELA.font.regular },
 
   // Social empty states
   sectionTitle: { color: KARELA.color.textPrimary, fontSize: 16, fontFamily: KARELA.font.black, marginBottom: KARELA.space.md },
-  emptyCard: { backgroundColor: "#111", borderRadius: KARELA.radius.lg, padding: KARELA.space.xxl, alignItems: "center", gap: 10, borderWidth: 1, borderColor: KARELA.color.surface },
+  emptyCard: { backgroundColor: KARELA.color.surface, borderRadius: KARELA.radius.lg, padding: KARELA.space.xxl, alignItems: "center", gap: 10, borderWidth: 1, borderColor: KARELA.color.surface },
   emptyTitle: { color: KARELA.color.textPrimary, fontSize: 15, fontFamily: KARELA.font.black },
   emptyDesc: { color: KARELA.color.textFaint, fontSize: KARELA.size.label, fontFamily: KARELA.font.regular, textAlign: "center", lineHeight: 18, maxWidth: 260 },
   emptyBtn: { backgroundColor: "rgba(124,242,5,0.1)", paddingHorizontal: KARELA.space.xl, paddingVertical: 10, borderRadius: KARELA.radius.sm, marginTop: 6, borderWidth: 1, borderColor: "rgba(124,242,5,0.2)" },
@@ -383,7 +383,7 @@ const s = StyleSheet.create({
 
   // Utility
   utilityGrid: { gap: 2 },
-  utilityItem: { flexDirection: "row", alignItems: "center", gap: KARELA.space.lg, backgroundColor: "#111", paddingVertical: KARELA.space.lg, paddingHorizontal: KARELA.space.lg, borderRadius: KARELA.radius.md, marginBottom: KARELA.space.sm },
+  utilityItem: { flexDirection: "row", alignItems: "center", gap: KARELA.space.lg, backgroundColor: KARELA.color.surface, paddingVertical: KARELA.space.lg, paddingHorizontal: KARELA.space.lg, borderRadius: KARELA.radius.md, marginBottom: KARELA.space.sm },
   utilityLabel: { color: KARELA.color.textPrimary, fontSize: KARELA.size.body, fontFamily: KARELA.font.medium },
   utilityDesc: { color: KARELA.color.textFaint, fontSize: 11, fontFamily: KARELA.font.regular, marginTop: 2 },
 

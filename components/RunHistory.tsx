@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   runStats: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#111",
+    backgroundColor: KARELA.color.surface,
     borderRadius: KARELA.radius.md,
     paddingVertical: KARELA.space.lg,
     paddingHorizontal: KARELA.space.lg,

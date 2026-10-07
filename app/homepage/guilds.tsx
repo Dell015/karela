@@ -1,3 +1,4 @@
+import { SampleNote } from "@/components/ui/SampleNote";
 import { Button, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { KARELA } from "@/styles/designSystem";
@@ -94,6 +95,8 @@ export default function GuildsScreen() {
             </View>
             <IconButton icon={showDetails ? "chevron-down" : "menu"} label={showDetails ? "Close guild details" : "Open menu"} onPress={() => showDetails ? handleToggleDetails() : (navigation as any).openDrawer()} />
           </View>
+
+          <SampleNote style={{ marginBottom: KARELA.space.lg }}>These guilds are examples. Joining and creating guilds is not built yet.</SampleNote>
 
           {/* Active Guild Card */}
           <Text style={styles.sectionLabel}>Your guild</Text>

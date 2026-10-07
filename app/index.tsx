@@ -237,7 +237,7 @@ export default function Index() {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: KARELA.color.bg },
-    splashContainer: { ...StyleSheet.absoluteFill, backgroundColor: '#000', zIndex: 100, alignItems: 'center', justifyContent: 'center' },
+    splashContainer: { ...StyleSheet.absoluteFill, backgroundColor: KARELA.color.bg, zIndex: 100, alignItems: 'center', justifyContent: 'center' },
     splashLogo: { width: 120, height: 120, resizeMode: 'contain' },
     splashLogoContainer: { flex: 1, justifyContent: 'center' },
     loadingBarTrack: { width: '60%', height: 4, backgroundColor: KARELA.color.surfaceSoft, borderRadius: 2, marginBottom: 100, overflow: 'hidden' },

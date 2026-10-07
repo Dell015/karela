@@ -1,3 +1,4 @@
+import { SampleNote } from "@/components/ui/SampleNote";
 import { Button, Chip, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { KARELA } from "@/styles/designSystem";
@@ -59,6 +60,7 @@ export default function ShopScreen() {
             <Text style={styles.title}>Shop</Text>
             <Text style={styles.subtitle}>Spend Gems on boosts and outfits for Ani</Text>
           </View>
+          <SampleNote style={{ marginBottom: KARELA.space.lg }}>These items are examples. Buying is not built yet.</SampleNote>
 
           <View style={styles.tabBar}>
             {SHOP_CATEGORIES.map((tab) => (
@@ -95,7 +97,7 @@ export default function ShopScreen() {
 const getRarityColor = (rarity: string) => {
   switch (rarity) {
     case "Legendary": return KARELA.color.gold;
-    case "Epic": return "#A06BFF";
+    case "Epic": return KARELA.vibrant.sky;
     case "Rare": return KARELA.vibrant.sky;
     default: return KARELA.color.textFaint;
   }
@@ -113,7 +115,7 @@ const styles = StyleSheet.create({
   title: { color: KARELA.color.textPrimary, fontSize: KARELA.size.display, fontFamily: KARELA.font.black, letterSpacing: 2 },
   subtitle: { color: KARELA.color.brand, fontSize: KARELA.size.label, fontFamily: KARELA.font.medium, letterSpacing: 0.5 },
   tabBar: { flexDirection: "row", gap: 15, marginBottom: 25 },
-  tab: { paddingVertical: KARELA.space.sm, paddingHorizontal: 15, borderRadius: KARELA.space.sm, backgroundColor: "#111" },
+  tab: { paddingVertical: KARELA.space.sm, paddingHorizontal: 15, borderRadius: KARELA.space.sm, backgroundColor: KARELA.color.surface },
   activeTab: { backgroundColor: "rgba(124, 242, 5, 0.15)", borderWidth: 1, borderColor: KARELA.color.brand },
   tabText: { color: KARELA.color.textFaint, fontSize: 11, fontFamily: KARELA.font.black },
   activeTabText: { color: KARELA.color.brand },
