@@ -435,7 +435,24 @@ gems_earned = total_sectors × 5
 ### 6.6 Calorie Estimate
 
 ```
-calories ≈ distance_km × 60   (rough MET-based approximation)
+calories ≈ distance_km × body_weight_kg × 1.0
+```
+
+The usual rule of thumb for running and brisk walking (about 1 kcal per kg
+per km). Weight comes from the profile; 70 kg if it's missing or outside
+20 to 300 kg. Shown as an estimate everywhere. Code: `services/runMath.ts`
+(`caloriesFor`), which also holds distance, pace, XP (1 per 10 m) and the
+display formats, so the run screen, the summary and the saved run agree.
+
+### 6.7 Run distance, time and pace
+
+```
+distance = sum of path segments, leaving out:
+           vehicle-speed points (> 35 km/h), jumps over 100 m between fixes,
+           and segments recorded while paused
+time     = now − start − paused time   (read from the clock, not counted)
+pace     = time / distance, shown as min:ss per km
+           only for runs of 100 m or more, and only between 2:30 and 30:00 /km
 ```
 
 ---

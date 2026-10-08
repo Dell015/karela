@@ -113,7 +113,7 @@ The app now sends the fixed 25 m radius, but the server still accepts any radius
 `app/summary.tsx` still reads distance, time, calories, XP and the route from the URL.
 *Fix:* save the finished run on the phone with an id and open the summary by id; let the server compute XP (C1).
 
-**C6. Runs stop when the screen locks. (Open)**
+**C6. Runs stop when the screen locks. (Partly)** The run time is now read from the clock, so it stays right after a background trip, and the summary never shows NaN. GPS still stops while the screen is locked, so distance has a gap.
 No background location task; duration comes from a timer that pauses in the background. ("Keep screen on during runs" in Settings is a stopgap.)
 *Fix:* background location task with an Android foreground service; duration from GPS timestamps.
 
@@ -164,14 +164,15 @@ No run outbox, no run UUIDs. Finishing offline fails. (Territory uploads already
 - **M3. Time zones (Partly).** Three spots still use UTC dates (`dashboard.tsx:210`, `onboarding.ts:124,137`). The new server code uses Philippine time throughout.
 - **M4. Speed quests are tracked by distance (Open).**
 - **M5. Adaptive features run on empty input (Open).** `decayModel: null` in 3 places; Resonance always gets `isGhostAhead: false`.
-- **M6. Stats are estimates shown as facts (Open).** Calories 62/km regardless of weight, steps 1,310/km.
+- **M6. Stats are estimates shown as facts (Partly).** Calories now use body weight (1 kcal/kg/km) and are labelled as estimates; steps are still 1,310/km.
 - **M8. Robustness (Open).** Level-up lock is per device; `syncRunToMissions` uses `Promise.all`; no limit on `getMissions`; a failed profile load leaves the user signed in with no profile.
 - **M9. Accessibility (Partly).** 61 labels and roles now (was 0), and the new screens are labelled. Older screens and colour-only states (ghost ahead/behind) remain.
 - **M10. Routing uses the public OSRM demo server (Open).**
 - **M11. Auth hardening (Open).** No client throttling; weather city hardcoded to Tuguegarao.
 - **M12. No app tests (Open).** jest isn't installed, so `npm test` fails. SQL tests exist now (`supabase/tests`).
-- **M13. App id looks like a typo (Open).** Section 3.
+- **M13. App id looks like a typo (Open).** Section 3. Also: `react-native-wagmi-charts` is no longer used anywhere (charts are drawn with react-native-svg now); remove it with `npm uninstall react-native-wagmi-charts --legacy-peer-deps` and check the app still starts.
 - **M14. Reconfirming a civic node has no limit (Open).**
+- **M15. Progress stats only counted runs saved as a ghost (Fixed).** Progress and Your activity now read `run_history` (every finished run) through `services/runAnalytics.ts`, with real charts (`components/charts/`).
 - **M7. Placeholder screens (Fixed).** Calendar uses real data, Shop and Guilds are real, the random build id is gone.
 
 ### 5.5 Low

@@ -5,6 +5,16 @@ import { KARELA } from "@/styles/designSystem";
 import { saveGhostRun } from "@/services/database/sqlite/database";
 import { onRunCompleted } from "@/services/engines/GhostModelManager";
 import { stripPrivacyZones } from "@/services/privacyZones";
+import {
+  caloriesFor,
+  clockText,
+  kmText,
+  numParam,
+  paceFor,
+  paceText,
+  speedFor,
+  xpFor,
+} from "@/services/runMath";
 import { recordRunTerritory } from "@/services/territory";
 import { GEM_EARNINGS, getTotalSectors } from "@/services/gemSystem";
 import { Ionicons } from "@expo/vector-icons";
@@ -33,24 +43,29 @@ const { width } = Dimensions.get("window");
 
 export default function SummaryScreen() {
   const router = useRouter();
-  const { meters, seconds, kcal, xp, path } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const { path } = params;
   const { user, profile, gainXP, earnGems } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
 
-  const formatTime = (totalSeconds: number) => {
-    const m = Math.floor(Number(totalSeconds) / 60);
-    const s = Number(totalSeconds) % 60;
-    return `${m}:${s.toString().padStart(2, "0")}`;
-  };
+  // Read every number safely (0 if missing), and work out XP and calories
+  // here from the distance with the shared formulas (services/runMath.ts),
+  // so a run with no time or no distance never shows NaN.
+  const meters = Math.floor(numParam(params.meters));
+  const seconds = Math.floor(numParam(params.seconds));
+  const xp = xpFor(meters);
+  const kcal = caloriesFor(meters, profile?.stats?.weight);
+  const avgPace = paceFor(meters, seconds);
+  const avgKmh = speedFor(meters, seconds);
 
   const logRunToHistory = async () => {
     if (!user) return;
     try {
       await logRunHistory(user.uid, {
-        distance_meters: Number(meters),
-        duration_seconds: Number(seconds),
-        calories: Number(kcal),
-        xp_earned: Number(xp),
+        distance_meters: meters,
+        duration_seconds: seconds,
+        calories: kcal,
+        xp_earned: xp,
       });
     } catch (error) {
       console.error("Run history log error:", error);
@@ -76,8 +91,8 @@ export default function SummaryScreen() {
         // await, the catch below could never see an error and the success alert
         // fired even when the write failed.
         const saved = await saveGhostRun(
-          Number(meters),
-          Number(seconds),
+          meters,
+          seconds,
           safePath,
         );
 
@@ -89,9 +104,9 @@ export default function SummaryScreen() {
         onRunCompleted({
           id: Date.now(),
           date: Date.now(),
-          distance: Number(meters),
-          duration: Number(seconds),
-          avg_speed: Number(seconds) > 0 ? (Number(meters) / Number(seconds)) * 3.6 : 0,
+          distance: meters,
+          duration: seconds,
+          avg_speed: seconds > 0 ? (meters / seconds) * 3.6 : 0,
           path_data: JSON.stringify(safePath),
         });
 
@@ -115,22 +130,22 @@ export default function SummaryScreen() {
     }
 
     try {
-      const distanceInKm = Number(meters) / 1000;
+      const distanceInKm = meters / 1000;
       // Guard against a zero-duration run producing Infinity/NaN, which would
       // be written to the profile and to mission progress.
       const avgSpeedKmh =
-        Number(seconds) > 0 ? (Number(meters) / Number(seconds)) * 3.6 : 0;
+        seconds > 0 ? (meters / seconds) * 3.6 : 0;
 
       await incrementStats(user.uid, {
         total_distance_km: Number(distanceInKm.toFixed(2)),
-        total_calories_burned: Number(Number(kcal).toFixed(2)),
+        total_calories_burned: kcal,
       });
 
       await logRunToHistory();
 
       const runData = {
-        distance: Number(meters),
-        duration: Number(seconds),
+        distance: meters,
+        duration: seconds,
         avgSpeed: avgSpeedKmh,
         sectors: [],
         pace: avgSpeedKmh,
@@ -162,9 +177,9 @@ export default function SummaryScreen() {
         });
       }
 
-      if (xp) await gainXP(Number(xp));
+      if (xp > 0) await gainXP(xp);
 
-      const totalSectors = getTotalSectors(Number(meters));
+      const totalSectors = getTotalSectors(meters);
       if (totalSectors > 0) {
         const gemsEarned = totalSectors * GEM_EARNINGS.SECTOR_BONUS;
         await earnGems(gemsEarned);
@@ -199,47 +214,47 @@ export default function SummaryScreen() {
         <View style={styles.content}>
           {/* Main XP Display */}
           <View style={styles.xpCircleContainer}>
-            <LinearGradient
-              colors={KARELA.gradients.brand}
-              style={styles.xpCircle}
-            >
+            <LinearGradient colors={KARELA.gradients.brand} style={styles.xpCircle}>
               <Text style={styles.xpAmount}>+{xp}</Text>
-              <Text style={styles.xpLabel}>XP GAINED</Text>
+              <Text style={styles.xpLabel}>XP earned</Text>
             </LinearGradient>
           </View>
 
-          {/* Stats Grid */}
+          {/* Stats */}
           <View style={styles.statsGrid}>
-            <View style={styles.statTile}>
+            <View style={styles.statTile} accessible accessibilityLabel={`Distance ${kmText(meters)} kilometres`}>
               <Ionicons name="location-outline" size={24} color={KARELA.color.brand} />
-              <Text style={styles.tileValue}>{meters}m</Text>
-              <Text style={styles.tileLabel}>DISTANCE</Text>
+              <Text style={styles.tileValue}>{kmText(meters)} km</Text>
+              <Text style={styles.tileLabel}>Distance</Text>
             </View>
 
-            <View style={styles.statTile}>
+            <View style={styles.statTile} accessible accessibilityLabel={`Time ${clockText(seconds)}`}>
               <Ionicons name="time-outline" size={24} color={KARELA.color.brand} />
-              <Text style={styles.tileValue}>
-                {formatTime(Number(seconds))}
-              </Text>
-              <Text style={styles.tileLabel}>DURATION</Text>
+              <Text style={styles.tileValue}>{clockText(seconds)}</Text>
+              <Text style={styles.tileLabel}>Time</Text>
             </View>
 
-            <View style={styles.statTile}>
+            <View
+              style={styles.statTile}
+              accessible
+              accessibilityLabel={avgPace ? `Average pace ${paceText(avgPace)} per kilometre` : "Average pace not available"}
+            >
+              <Ionicons name="speedometer-outline" size={24} color={KARELA.color.brand} />
+              <Text style={styles.tileValue}>{avgPace ? `${paceText(avgPace)} /km` : "--"}</Text>
+              <Text style={styles.tileLabel}>
+                {avgPace && avgKmh ? `Avg pace, ${avgKmh.toFixed(1)} km/h` : "Avg pace"}
+              </Text>
+            </View>
+
+            <View style={styles.statTile} accessible accessibilityLabel={`About ${kcal} calories`}>
               <Ionicons name="flame-outline" size={24} color={KARELA.color.brand} />
               <Text style={styles.tileValue}>{kcal}</Text>
-              <Text style={styles.tileLabel}>CALORIES</Text>
-            </View>
-
-            <View style={styles.statTile}>
-              <Ionicons name="speedometer-outline" size={24} color={KARELA.color.brand} />
-              <Text style={styles.tileValue}>
-                {seconds && meters
-                  ? ((Number(meters) / Number(seconds)) * 3.6).toFixed(1)
-                  : 0}
-              </Text>
-              <Text style={styles.tileLabel}>AVG KM/H</Text>
+              <Text style={styles.tileLabel}>Calories, est.</Text>
             </View>
           </View>
+          {!avgPace && (
+            <Text style={styles.paceNote}>Pace shows once a run is at least 100 m long.</Text>
+          )}
         </View>
 
         {/* Action Buttons */}
@@ -325,7 +340,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   tileValue: { color: KARELA.color.textPrimary, fontSize: KARELA.space.xl, fontFamily: KARELA.font.bold, marginTop: KARELA.space.sm },
-  tileLabel: { color: KARELA.color.textMuted, fontSize: KARELA.size.caption, fontFamily: KARELA.font.medium, letterSpacing: 1, marginTop: KARELA.space.xs },
+  tileLabel: { color: KARELA.color.textMuted, fontSize: KARELA.size.caption, fontFamily: KARELA.font.medium, marginTop: KARELA.space.xs, textAlign: "center" },
+  paceNote: { color: KARELA.color.textMuted, fontSize: KARELA.size.caption, fontFamily: KARELA.font.regular, marginTop: KARELA.space.sm },
 
   footer: { padding: 30, width: "100%" },
   ghostButton: {

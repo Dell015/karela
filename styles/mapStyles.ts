@@ -35,43 +35,6 @@ export const styles = StyleSheet.create({
     width: width,
     height: height,
   },
-  // --- HUD Overlay (Racing Stats) ---
-  hudOverlay: {
-    position: "absolute",
-    top: 50,
-    left: 10,
-    right: 10,
-    flexDirection: "row",
-    backgroundColor: "rgba(0, 0, 0, 0.9)",
-    borderRadius: KARELA.radius.sm,
-    paddingVertical: KARELA.space.md,
-    paddingHorizontal: 5,
-    borderWidth: 1.5,
-    borderColor: KARELA.color.brand,
-    justifyContent: "space-around",
-    alignItems: "center",
-    zIndex: 1000,
-  },
-  hudStat: {
-    alignItems: "center",
-    flex: 1,
-  },
-  hudLabel: {
-    color: KARELA.color.textMuted,
-    fontSize: 8,
-    fontFamily: KARELA.font.bold,
-    marginBottom: 2,
-  },
-  hudValue: {
-    color: KARELA.color.textPrimary,
-    fontSize: KARELA.size.body,
-    fontFamily: KARELA.font.black,
-  },
-  hudDivider: {
-    width: 1,
-    height: "60%",
-    backgroundColor: KARELA.color.surfaceSoft,
-  },
   // --- Markers & Ghost ---
   markerWrapper: {
     width: 44,
@@ -262,5 +225,12 @@ export const styles = StyleSheet.create({
     alignSelf: "center",
     minWidth: 200,
     borderRadius: KARELA.radius.pill,
+  },
+  // During a run: Pause and End side by side, thumb-sized.
+  runControls: {
+    flexDirection: "row",
+    gap: KARELA.space.md,
+    width: "100%",
+    paddingHorizontal: KARELA.space.xl,
   },
 });

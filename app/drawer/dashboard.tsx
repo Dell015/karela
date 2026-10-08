@@ -1,7 +1,7 @@
 import { TodayCard } from "@/components/TodayCard";
 import { getNearbyNodes } from "@/services/engines/CivicEngine";
 import { dayKey } from "@/services/calendarData";
-import { getEffectiveStreak } from "@/services/streakService";
+import { getEffectiveStreak, isStreakAtRisk } from "@/services/streakService";
 import { Button, IconButton } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { useBuffs } from "@/services/buffs";
@@ -275,9 +275,6 @@ export default function Dashboard() {
                     <Text style={dashboard_ui.nameText}>
                       {profile?.displayName || "Strider"}
                     </Text>
-                    <Text style={dashboard_ui.LevelLabel}>
-                      LVL {currentLevel} STRIDER
-                    </Text>
                   </View>
                 </View>
                 <IconButton icon="menu" label="Open menu" onPress={() => navigation.openDrawer()} />
@@ -286,10 +283,11 @@ export default function Dashboard() {
               {/* Player Card */}
               <PlayerCard
                 level={currentLevel}
-                username={profile?.username || "Strider_01"}
-                streak={currentStreak}
                 xp={currentXP}
+                streak={currentStreak}
+                streakAtRisk={isStreakAtRisk(profile?.stats)}
                 gems={Number(profile?.stats?.gems || 0)}
+                freezes={Number(profile?.stats?.streak_freeze_count || 0)}
                 onPress={() => router.push("/drawer/progress")}
               />
 

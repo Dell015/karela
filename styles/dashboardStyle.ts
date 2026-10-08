@@ -63,13 +63,6 @@ export const dashboard_ui = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
   },
-  LevelLabel: {
-    color: KARELA.color.textPrimary,
-    fontSize: KARELA.size.caption,
-    fontFamily: KARELA.font.medium,
-    opacity: 0.7,
-    letterSpacing: 1,
-  },
   nameLabel: {
     color: KARELA.color.textPrimary,
     fontSize: KARELA.space.xl,

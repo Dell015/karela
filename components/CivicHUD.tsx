@@ -368,7 +368,8 @@ const styles = StyleSheet.create({
   /* ---------- Resonance pill ---------- */
   resonanceWrap: {
     position: "absolute",
-    top: 110,
+    // Below the run panel (components/run/RunHUD.tsx), which is up to ~220 tall.
+    top: 236,
     alignSelf: "center",
     zIndex: 50,
   },

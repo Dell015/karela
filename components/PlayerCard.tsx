@@ -4,65 +4,77 @@ import { getStreakTier } from "@/services/streakMultiplier";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 interface PlayerCardProps {
   level: number;
-  username: string;
-  streak: number;
+  /** XP inside the current level (0 to 999). */
   xp: number;
+  /** Effective streak (services/streakService.getEffectiveStreak). */
+  streak: number;
+  /** Has a streak but hasn't run (or been protected) today. */
+  streakAtRisk?: boolean;
   gems: number;
+  /** Streak Freezes held (Shop). */
+  freezes: number;
   onPress?: () => void;
 }
 
-const XP_PER_LEVEL = 1000;
+const XP_PER_LEVEL = 1000; // COMPUTATIONS.md
 
 /**
- * The Player Card — the hero stat surface on the dashboard.
- * Vibrant gradient frame → dark inner → high-contrast white content.
- * Pulls every value from the KARELA design system.
+ * Never tells the user to run: in a storm the app must not (Bayanihan rule).
+ * TodayCard, which knows the weather, gives that advice.
+ *
+ * The Player Card on Home: level and XP to the next one, the streak and its
+ * XP multiplier, Gems and Streak Freezes. Tapping it opens Progress.
+ * The name is in the header right above it, so it isn't repeated here.
  */
-export const PlayerCard = ({
-  level,
-  username,
-  streak,
-  xp,
-  gems,
-  onPress,
-}: PlayerCardProps) => {
-  // Guard against negative XP leaking from a race condition in normalizeXP
-  const safeXP = Math.max(0, xp);
-  const progress = Math.min((safeXP / XP_PER_LEVEL) * 100, 100);
+export const PlayerCard = ({ level, xp, streak, streakAtRisk, gems, freezes, onPress }: PlayerCardProps) => {
+  // XP can briefly read 1000+ before the level-up lands; never show more than a full bar.
+  const levelXP = Math.min(Math.max(0, xp), XP_PER_LEVEL);
+  const toNext = XP_PER_LEVEL - levelXP;
+  const progress = (levelXP / XP_PER_LEVEL) * 100;
   const tier = getStreakTier(streak);
+  const streakColor = streak === 0 ? KARELA.color.textFaint : streakAtRisk ? KARELA.color.civic : KARELA.vibrant.techOrange;
+
+  const a11y = [
+    `Level ${level}, ${toNext.toLocaleString()} XP to level ${level + 1}`,
+    `${streak}-day streak${streak > 0 ? `, ${tier.multiplier}x XP` : ""}${streakAtRisk ? ", at risk today" : ""}`,
+    `${gems.toLocaleString()} Gems`,
+    `${freezes} Streak ${freezes === 1 ? "Freeze" : "Freezes"}`,
+  ].join(". ");
 
   return (
-    <TouchableOpacity activeOpacity={0.9} onPress={onPress}>
-      {/* Vibrant gradient frame */}
-      <LinearGradient
-        colors={KARELA.gradients.brand}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.frame}
-      >
-        {/* Dark inner surface keeps text AA-legible */}
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={a11y}
+      accessibilityHint="Opens your progress"
+      style={({ pressed }) => pressed && { opacity: 0.9 }}
+    >
+      {/* Thin Karela-gradient border */}
+      <LinearGradient colors={KARELA.gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.frame}>
         <View style={styles.inner}>
-          {/* Top row: identity + streak */}
           <View style={styles.topRow}>
-            <View>
-              <Text style={styles.label}>LVL {level} STRIDER</Text>
-              <Text style={styles.name}>{username}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>Level</Text>
+              <Text style={styles.level}>{level}</Text>
             </View>
             <View style={styles.streakBox}>
-              <Text style={styles.label}>STREAK</Text>
+              <Text style={styles.label}>Streak</Text>
               <View style={styles.streakValueRow}>
-                <KarelaIcon name="streak" size={16} color={KARELA.vibrant.techOrange} />
-                <Text style={styles.streakValue}>{streak}d</Text>
+                <KarelaIcon name="streak" size={20} color={streakColor} />
+                <Text style={styles.streakValue}>
+                  {streak} {streak === 1 ? "day" : "days"}
+                </Text>
               </View>
-              <Text style={styles.multiplier}>×{tier.multiplier}</Text>
+              <Text style={[styles.multiplier, streakAtRisk && { color: KARELA.color.civic }]}>
+                {streakAtRisk ? "At risk today" : `${tier.multiplier}x XP`}
+              </Text>
             </View>
           </View>
 
-          {/* XP meter — electric pulse gradient */}
           <View style={styles.meterRow}>
             <View style={styles.track}>
               <LinearGradient
@@ -72,104 +84,76 @@ export const PlayerCard = ({
                 style={[styles.fill, { width: `${progress}%` }]}
               />
             </View>
-            <Text style={styles.xpText}>
-              {safeXP}/{XP_PER_LEVEL} XP
-            </Text>
+            <View style={styles.meterLabels}>
+              <Text style={styles.meterText}>
+                {levelXP.toLocaleString()} / {XP_PER_LEVEL.toLocaleString()} XP
+              </Text>
+              <Text style={styles.meterText}>
+                {toNext.toLocaleString()} to level {level + 1}
+              </Text>
+            </View>
           </View>
 
-          {/* Footer: gems + CTA */}
           <View style={styles.footer}>
-            <View style={styles.gemsPill}>
-              <KarelaIcon name="gem" size={14} color={KARELA.vibrant.sky} />
-              <Text style={styles.gemsText}>{gems}</Text>
-              <Text style={styles.gemsLabel}>Gems</Text>
+            <View style={styles.pills}>
+              <View style={styles.pill}>
+                <KarelaIcon name="gem" size={15} color={KARELA.vibrant.sky} />
+                <Text style={styles.pillValue}>{gems.toLocaleString()}</Text>
+                <Text style={styles.pillLabel}>Gems</Text>
+              </View>
+              <View style={styles.pill}>
+                <KarelaIcon name="freeze" size={15} color={KARELA.vibrant.neonTeal} />
+                <Text style={styles.pillValue}>{freezes}</Text>
+                <Text style={styles.pillLabel}>{freezes === 1 ? "Freeze" : "Freezes"}</Text>
+              </View>
             </View>
             <View style={styles.ctaRow}>
-              <Text style={styles.ctaText}>View Progress</Text>
+              <Text style={styles.ctaText}>Progress</Text>
               <Ionicons name="chevron-forward" size={14} color={KARELA.color.textMuted} />
             </View>
           </View>
         </View>
       </LinearGradient>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
   frame: {
     borderRadius: KARELA.radius.lg,
-    padding: 2, // thin gradient border
+    padding: 2,
     marginBottom: KARELA.space.md,
-    ...KARELA.glow.brand,
   },
   inner: {
-    backgroundColor: "rgba(13,13,13,0.92)",
+    backgroundColor: KARELA.color.surface,
     borderRadius: KARELA.radius.lg - 2,
     padding: KARELA.space.lg,
   },
-  topRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-  label: {
-    color: KARELA.color.textMuted,
-    fontSize: KARELA.size.caption,
-    letterSpacing: 1,
-    fontFamily: KARELA.font.medium,
-  },
-  name: {
-    color: KARELA.color.textPrimary,
-    fontSize: KARELA.size.h1,
-    fontFamily: KARELA.font.bold,
-    marginTop: 2,
-  },
+  topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
+  label: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.medium },
+  level: { color: KARELA.color.textPrimary, fontSize: KARELA.size.display, fontFamily: KARELA.font.black, marginTop: 2 },
   streakBox: { alignItems: "flex-end" },
-  streakValueRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
-  streakValue: {
-    color: KARELA.color.textPrimary,
-    fontSize: KARELA.size.h2,
-    fontFamily: KARELA.font.bold,
-  },
-  multiplier: {
-    color: KARELA.color.brand,
-    fontSize: KARELA.size.caption,
-    fontFamily: KARELA.font.bold,
-    marginTop: 1,
-  },
+  streakValueRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 },
+  streakValue: { color: KARELA.color.textPrimary, fontSize: KARELA.size.h2, fontFamily: KARELA.font.bold },
+  multiplier: { color: KARELA.color.brand, fontSize: KARELA.size.label, fontFamily: KARELA.font.bold, marginTop: 2 },
   meterRow: { marginTop: KARELA.space.lg },
-  track: {
-    width: "100%",
-    height: 10,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderRadius: 5,
-    overflow: "hidden",
-  },
+  track: { width: "100%", height: 10, backgroundColor: KARELA.color.surfaceSoft, borderRadius: 5, overflow: "hidden" },
   fill: { height: "100%", borderRadius: 5 },
-  xpText: {
-    color: KARELA.color.textMuted,
-    fontSize: KARELA.size.caption,
-    textAlign: "right",
-    marginTop: 5,
-    fontFamily: KARELA.font.medium,
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: KARELA.space.md,
-  },
-  gemsPill: {
+  meterLabels: { flexDirection: "row", justifyContent: "space-between", marginTop: 6 },
+  meterText: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.medium },
+  footer: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: KARELA.space.md, gap: KARELA.space.sm },
+  pills: { flexDirection: "row", gap: KARELA.space.sm, flexShrink: 1, flexWrap: "wrap" },
+  pill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "rgba(124,242,5,0.1)",
+    backgroundColor: KARELA.color.surfaceAlt,
     paddingHorizontal: KARELA.space.md,
-    paddingVertical: 6,
+    minHeight: 32,
     borderRadius: KARELA.radius.pill,
   },
-  gemsText: { color: KARELA.color.textPrimary, fontSize: KARELA.size.label, fontFamily: KARELA.font.bold },
-  gemsLabel: { color: KARELA.color.textMuted, fontSize: KARELA.size.caption },
-  ctaRow: { flexDirection: "row", alignItems: "center", gap: 2 },
-  ctaText: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.medium },
+  pillValue: { color: KARELA.color.textPrimary, fontSize: KARELA.size.label, fontFamily: KARELA.font.bold },
+  pillLabel: { color: KARELA.color.textMuted, fontSize: KARELA.size.label, fontFamily: KARELA.font.regular },
+  ctaRow: { flexDirection: "row", alignItems: "center", gap: 2, minHeight: 32 },
+  ctaText: { color: KARELA.color.textSecondary, fontSize: KARELA.size.label, fontFamily: KARELA.font.medium },
 });

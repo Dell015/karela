@@ -1,275 +1,208 @@
+import { BarChart } from "@/components/charts/BarChart";
 import { KarelaIcon } from "@/components/icons/KarelaIcon";
-import { getEffectiveStreak } from "@/services/streakService";
-import { Button, IconButton } from "@/components/ui/Button";
-import { Avatar } from "@/components/ui/Avatar";
-import { Screen } from "@/components/ui/Screen";
-import { KARELA } from "@/styles/designSystem";
-import { useAuth } from "@/context/AuthContext";
-import {
-  AggregatedStats,
-  getChartData,
-  getDynamicStats,
-} from "@/services/statsService";
 import { RunHistory } from "@/components/RunHistory";
-import { ProgressScreenUI } from "@/styles/progressScreenStyle";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+import { Avatar } from "@/components/ui/Avatar";
+import { Button, Chip, IconButton } from "@/components/ui/Button";
+import { Screen } from "@/components/ui/Screen";
+import { useAuth } from "@/context/AuthContext";
+import { useBuffs } from "@/services/buffs";
+import { formatDuration, getRunsSince, lastNDays, RunRow } from "@/services/calendarData";
+import {
+  analyzeRuns,
+  bucketLabel,
+  formatKmValue,
+  formatPace,
+  shortDate,
+} from "@/services/runAnalytics";
+import { getEffectiveStreak } from "@/services/streakService";
+import { KARELA } from "@/styles/designSystem";
+import { ProgressScreenUI as ui } from "@/styles/progressScreenStyle";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Stack, useFocusEffect, useNavigation, useRouter } from "expo-router";
 import type { DrawerNavigationProp } from "expo-router/drawer";
-import React, { useCallback, useState } from "react";
-import {
-  Dimensions,
-  FlatList,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-import { LineChart } from "react-native-wagmi-charts";
+import { ReactNode, useCallback, useMemo, useState } from "react";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
-const { width } = Dimensions.get("window");
+const PERIODS = [
+  { days: 1, label: "Today" },
+  { days: 7, label: "7 days" },
+  { days: 30, label: "30 days" },
+];
+
+/** Steps are an estimate from distance (COMPUTATIONS.md). */
+const STEPS_PER_KM = 1310;
 
 export default function ProgressScreen() {
   const router = useRouter();
   const { profile } = useAuth();
+  const buffs = useBuffs();
   const navigation = useNavigation<DrawerNavigationProp<any>>();
+  const level = Number(profile?.stats?.level || 1);
+  // XP can read 1000+ for a moment before the level-up lands.
+  const levelXP = Math.min(Math.max(0, Number(profile?.stats?.xp || 0)), 1000);
+  const uid = profile?.uid;
 
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [statsArray, setStatsArray] = useState<AggregatedStats[]>([]);
-  const [realChartData, setRealChartData] = useState<
-    { timestamp: number; value: number }[]
-  >([]);
+  // Every finished run from the account (run_history), last 30 days.
+  const [runs, setRuns] = useState<RunRow[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [period, setPeriod] = useState(7);
 
   useFocusEffect(
     useCallback(() => {
-      // Pulls fresh calculations from SQLite
-      setStatsArray(getDynamicStats());
-      setRealChartData(getChartData());
-    }, []),
+      if (!uid) return;
+      let alive = true;
+      getRunsSince(uid, lastNDays(30)[0]).then((r) => {
+        if (!alive) return;
+        setRuns(r ?? []);
+        setFailed(r === null);
+      });
+      return () => {
+        alive = false;
+      };
+    }, [uid]),
   );
 
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const scrollOffset = event.nativeEvent.contentOffset.x;
-    const index = Math.round(scrollOffset / width);
-    setActiveIndex(index);
-  };
+  const stats = useMemo(() => (runs ? analyzeRuns(runs, period) : null), [runs, period]);
+  const month = useMemo(() => (runs ? analyzeRuns(runs, 30) : null), [runs]);
+  const streak = getEffectiveStreak(profile?.stats);
 
-  const renderStats = ({ item }: { item: AggregatedStats }) => {
-    return (
-      <View style={ProgressScreenUI.statsSlide}>
-        <View style={ProgressScreenUI.row}>
-          <Text style={ProgressScreenUI.sectionTitle}>
-            {item.title} Statistics
-          </Text>
-          <View style={ProgressScreenUI.activeIndicator}>
-            <View
-              style={[ProgressScreenUI.dot, { backgroundColor: KARELA.color.brand }]}
-            />
-            <Text style={ProgressScreenUI.activeIndicatorText}>
-              Tracking on
-            </Text>
-          </View>
-        </View>
-
-        <View style={ProgressScreenUI.statsGrid}>
-          {/* Main Distance Card */}
-          <View style={[ProgressScreenUI.statCard, ProgressScreenUI.bigCard]}>
-            <Text style={ProgressScreenUI.statLabel}>Distance</Text>
-            <Text style={ProgressScreenUI.statValue}>{item.distance} km</Text>
-            <Ionicons
-              name="location"
-              size={28}
-              color={KARELA.color.brand}
-              style={ProgressScreenUI.statIcon}
-            />
-          </View>
-
-          {/* Right Column Metrics */}
-          <View style={ProgressScreenUI.statsRightCol}>
-            <View style={ProgressScreenUI.statCardRow}>
-              <View style={ProgressScreenUI.smallCard}>
-                <KarelaIcon name="streak" size={18} color={KARELA.color.gold} />
-                <View>
-                  <Text style={ProgressScreenUI.statLabelSmall}>Streak</Text>
-                  <Text style={ProgressScreenUI.statValueSmall}>
-                    {item.streak} d
-                  </Text>
-                </View>
-              </View>
-              <View style={ProgressScreenUI.smallCard}>
-                <MaterialCommunityIcons name="fire" size={18} color={KARELA.color.civic} />
-                <View>
-                  <Text style={ProgressScreenUI.statLabelSmall}>Burned</Text>
-                  <Text style={ProgressScreenUI.statValueSmall}>
-                    {item.burned}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={ProgressScreenUI.statCardRow}>
-              <View style={ProgressScreenUI.smallCard}>
-                <KarelaIcon name="ghost" size={18} color={KARELA.color.gold} />
-                <View>
-                  <Text style={ProgressScreenUI.statLabelSmall}>Wins</Text>
-                  <Text style={ProgressScreenUI.statValueSmall}>
-                    {item.ghostWins}
-                  </Text>
-                </View>
-              </View>
-              <View style={ProgressScreenUI.smallCard}>
-                <MaterialCommunityIcons
-                  name="shoe-print"
-                  size={16}
-                  color={KARELA.vibrant.neonTeal}
-                />
-                <View>
-                  <Text style={ProgressScreenUI.statLabelSmall}>Steps</Text>
-                  <Text style={ProgressScreenUI.statValueSmall}>
-                    {item.steps}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
-        </View>
-      </View>
-    );
-  };
+  // Average on the days you ran (rest days aren't failures).
+  const activeAvg = month && month.activeDays > 0 ? month.totalKm / month.activeDays : 0;
+  const bestIdx = month?.bestBucket ? month.buckets.indexOf(month.bestBucket) : -1;
 
   return (
     <Screen variant="aurora">
-    <ScrollView
-      style={ProgressScreenUI.container}
-      contentContainerStyle={{ paddingBottom: 40 }}
-      showsVerticalScrollIndicator={false}
-    >
-      <Stack.Screen options={{ gestureEnabled: false, headerShown: false }} />
+      <ScrollView style={ui.container} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        <Stack.Screen options={{ gestureEnabled: false, headerShown: false }} />
 
-      {/* Custom Header */}
-      <View style={ProgressScreenUI.header}>
-        <IconButton icon="chevron-back" label="Back" onPress={() => router.replace("/drawer/dashboard")} />
-        <Text style={{ color: KARELA.color.textPrimary, fontFamily: KARELA.font.bold, fontSize: 16 }}>
-          @{profile?.username || "strider"}
-        </Text>
-        <IconButton icon="menu" label="Open menu" onPress={() => navigation.openDrawer()} />
-      </View>
-
-      {/* RPG Profile Section (Still uses Firebase for XP/Level) */}
-      <View style={ProgressScreenUI.profileSection}>
-        <View style={ProgressScreenUI.avatarWrapper}>
-          <LinearGradient
-            colors={KARELA.gradient}
-            style={ProgressScreenUI.avatarGradient}
-          >
-            <Avatar uri={profile?.profilePicture} name={profile?.displayName} size={112} />
-          </LinearGradient>
-        </View>
-        <Text style={ProgressScreenUI.rankText}>
-          LVL {profile?.stats?.level || 1} STRIDER
-        </Text>
-        <Text style={ProgressScreenUI.xpText}>
-          {profile?.stats?.xp || 0}/1000 XP
-        </Text>
-
-        {/* XP Bar Progress */}
-        <View
-          style={{
-            width: "60%",
-            height: 6,
-            backgroundColor: KARELA.color.surface,
-            borderRadius: 3,
-            marginTop: 10,
-            overflow: "hidden",
-          }}
-        >
-          <View
-            style={{
-              width: `${Math.min((profile?.stats?.xp || 0) / 10, 100)}%`,
-              height: "100%",
-              backgroundColor: KARELA.color.brand,
-            }}
-          />
+        <View style={ui.header}>
+          <IconButton icon="chevron-back" label="Back" onPress={() => router.replace("/drawer/dashboard")} />
+          <Text style={ui.headerTitle}>
+            {profile?.displayName || (profile?.username ? `@${profile.username}` : "Your progress")}
+          </Text>
+          <IconButton icon="menu" label="Open menu" onPress={() => navigation.openDrawer()} />
         </View>
 
-        {/* TODO: no screen for ranks yet, so this does nothing when tapped. */}
-        <Button label="See ranks" icon="podium-outline" block style={ProgressScreenUI.rankButton} />
-      </View>
-
-      {/* Paging Stats (SQLite Driven) */}
-      <FlatList
-        data={statsArray}
-        renderItem={renderStats}
-        keyExtractor={(item) => item.id}
-        horizontal
-        pagingEnabled
-        onScroll={handleScroll}
-        showsHorizontalScrollIndicator={false}
-      />
-
-      {/* Page Dots */}
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "center",
-          marginTop: 20,
-        }}
-      >
-        {statsArray.map((_, i) => (
-          <View
-            key={i}
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: 4,
-              backgroundColor: activeIndex === i ? KARELA.color.brand : KARELA.color.surfaceSoft,
-              marginHorizontal: 4,
-            }}
-          />
-        ))}
-      </View>
-
-      {/* Performance Preview Chart */}
-      <View style={ProgressScreenUI.sectionContainer}>
-        <View style={ProgressScreenUI.row}>
-          <Text style={ProgressScreenUI.sectionTitle}>Performance Preview</Text>
-          <Button label="View details" variant="link" size="sm" onPress={() => router.push("/performanceGraph")} />
+        {/* Level and XP (from the account) */}
+        <View style={ui.profileSection}>
+          <Avatar uri={profile?.profilePicture} name={profile?.displayName} size={120} ring frame={buffs.frame} style={{ marginBottom: 10 }} />
+          <Text style={ui.rankText}>Level {level}</Text>
+          <Text style={ui.xpText}>
+            {levelXP.toLocaleString()} / 1,000 XP, {(1000 - levelXP).toLocaleString()} to level {level + 1}
+          </Text>
+          <View style={ui.xpTrack} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: 1000, now: levelXP }}>
+            <View style={[ui.xpFill, { width: `${levelXP / 10}%` }]} />
+          </View>
         </View>
-        <View style={ProgressScreenUI.previewChartWrapper}>
-          {realChartData && realChartData.length > 1 ? (
-            <LineChart.Provider data={realChartData}>
-              <LineChart height={100} width={width - 72} yGutter={10}>
-                <LineChart.Path color={KARELA.color.brand}>
-                  <LineChart.Gradient color={KARELA.color.brand} opacity={0.1} />
-                </LineChart.Path>
-              </LineChart>
-            </LineChart.Provider>
+
+        {/* Period totals */}
+        <View style={ui.sectionContainer}>
+          <View style={ui.periodRow} accessibilityRole="tablist">
+            {PERIODS.map((p) => (
+              <Chip key={p.days} label={p.label} selected={period === p.days} onPress={() => setPeriod(p.days)} />
+            ))}
+          </View>
+
+          {!stats ? (
+            <ActivityIndicator color={KARELA.color.brand} style={{ marginVertical: 30 }} />
           ) : (
-            <View
-              style={{
-                height: 100,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ color: KARELA.color.textMuted, fontSize: 12 }}>
-                No mission history yet
-              </Text>
+            <View style={ui.statsGrid}>
+              <View style={[ui.statCard, ui.bigCard]} accessible accessibilityLabel={`Distance: ${formatKmValue(stats.totalKm)} kilometres`}>
+                <Text style={ui.statLabel}>Distance</Text>
+                <Text style={ui.statValue}>
+                  {formatKmValue(stats.totalKm)}
+                  <Text style={ui.statUnit}> km</Text>
+                </Text>
+                <Text style={ui.statFoot}>
+                  {stats.runs} {stats.runs === 1 ? "run" : "runs"}
+                  {stats.avgPaceS ? `, avg ${formatPace(stats.avgPaceS)} /km` : ""}
+                </Text>
+              </View>
+
+              <View style={ui.statsRightCol}>
+                <View style={ui.statCardRow}>
+                  <SmallStat icon={<KarelaIcon name="streak" size={18} color={KARELA.color.gold} />} label="Streak" value={`${streak} ${streak === 1 ? "day" : "days"}`} />
+                  <SmallStat icon={<MaterialCommunityIcons name="timer-outline" size={18} color={KARELA.vibrant.sky} />} label="Time" value={formatDuration(stats.durationS)} />
+                </View>
+                <View style={ui.statCardRow}>
+                  <SmallStat icon={<MaterialCommunityIcons name="fire" size={18} color={KARELA.color.civic} />} label="Calories, est." value={Math.round(stats.calories).toLocaleString()} />
+                  <SmallStat icon={<MaterialCommunityIcons name="shoe-print" size={16} color={KARELA.vibrant.neonTeal} />} label="Steps, est." value={Math.round(stats.totalKm * STEPS_PER_KM).toLocaleString()} />
+                </View>
+              </View>
             </View>
           )}
         </View>
-      </View>
 
-      {/* Run History + Analytics */}
-      {profile?.uid && (
-        <RunHistory
-          userId={profile.uid}
-          streak={getEffectiveStreak(profile.stats)}
-          gems={profile.stats?.gems || 0}
-        />
-      )}
-    </ScrollView>
+        {/* Last 30 days, day by day */}
+        <View style={ui.sectionContainer}>
+          <View style={ui.row}>
+            <Text style={ui.sectionTitle}>Last 30 days</Text>
+            <Button label="View details" variant="link" size="sm" onPress={() => router.push("/performanceGraph")} />
+          </View>
+          <View style={ui.chartCard}>
+            {!month ? (
+              <ActivityIndicator color={KARELA.color.brand} style={{ marginVertical: 50 }} />
+            ) : month.runs === 0 ? (
+              <Text style={ui.empty}>
+                {failed
+                  ? "Couldn't load your runs. Check your connection, then open this screen again."
+                  : "No runs in the last 30 days yet. Your days will fill in here as you go."}
+              </Text>
+            ) : (
+              <>
+                <View style={ui.chartStats}>
+                  <ChartStat value={`${formatKmValue(month.totalKm)} km`} label="distance" />
+                  <ChartStat value={`${month.activeDays} of 30`} label="days you moved" rule />
+                  <ChartStat value={formatPace(month.avgPaceS)} label="avg pace /km" rule />
+                </View>
+                <BarChart
+                  data={month.buckets.map((b) => ({
+                    value: b.km,
+                    readout: `${bucketLabel(b, "day")}: ${b.km > 0 ? `${formatKmValue(b.km)} km in ${b.runs} ${b.runs === 1 ? "run" : "runs"}` : "rest day"}`,
+                  }))}
+                  unit="km"
+                  height={150}
+                  xLabels={[
+                    { index: 0, text: shortDate(month.buckets[0].date) },
+                    { index: 14, text: shortDate(month.buckets[14].date) },
+                    { index: 29, text: "Today" },
+                  ]}
+                  highlight={29}
+                  average={activeAvg}
+                  averageLabel={`avg ${formatKmValue(activeAvg)}`}
+                  bestIndex={bestIdx >= 0 ? bestIdx : undefined}
+                  bestLabel={month.bestBucket ? `${formatKmValue(month.bestBucket.km)} km` : undefined}
+                  summary={`Distance per day for the last 30 days. You moved on ${month.activeDays} days, ${formatKmValue(month.totalKm)} kilometres in total. Best day ${month.bestBucket ? `${shortDate(month.bestBucket.date)}, ${formatKmValue(month.bestBucket.km)} kilometres` : "none"}.`}
+                />
+                <Text style={ui.chartNote}>
+                  The line is your average on the days you moved. Short marks are rest days.
+                </Text>
+              </>
+            )}
+          </View>
+        </View>
+
+        {profile?.uid && (
+          <RunHistory userId={profile.uid} streak={streak} gems={profile.stats?.gems || 0} />
+        )}
+      </ScrollView>
     </Screen>
   );
 }
+
+const SmallStat = ({ icon, label, value }: { icon: ReactNode; label: string; value: string }) => (
+  <View style={ui.smallCard} accessible accessibilityLabel={`${label}: ${value}`}>
+    {icon}
+    <View style={{ flexShrink: 1 }}>
+      <Text style={ui.statLabelSmall}>{label}</Text>
+      <Text style={ui.statValueSmall} numberOfLines={1}>{value}</Text>
+    </View>
+  </View>
+);
+
+const ChartStat = ({ value, label, rule }: { value: string; label: string; rule?: boolean }) => (
+  <View style={[ui.chartStat, rule && ui.chartStatRule]}>
+    <Text style={ui.chartStatValue}>{value}</Text>
+    <Text style={ui.chartStatLabel}>{label}</Text>
+  </View>
+);

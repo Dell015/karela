@@ -92,7 +92,7 @@ export const useLocationEngine = (savedGhostData: any[]) => {
         if (pos) {
           setGhostPosition({ latitude: pos.latitude, longitude: pos.longitude });
         }
-      }, 100);
+      }, 250); // 4 updates a second: smooth enough, and each one re-renders the map
     }
 
     return () => clearInterval(ghostTimer);
@@ -208,17 +208,28 @@ export const useLocationEngine = (savedGhostData: any[]) => {
   }, []);
 
   // --- COMPASS (Magnetometer fallback for low-speed / stationary) ---
+  // Throttled on purpose: every heading update re-renders the whole run
+  // screen (map, trail, zones). At the sensor's default rate that kept the
+  // JS thread so busy the run timer stopped updating.
+  const shownHeadingRef = useRef(0);
   useEffect(() => {
     if (!isRacing) return;
+    Magnetometer.setUpdateInterval(250); // 4 readings a second is plenty
     const sub = Magnetometer.addListener((data) => {
       const { x, y } = data;
       let angle = Math.atan2(-x, y) * (180 / Math.PI);
       if (angle < 0) angle += 360;
-      // Low-pass filter to reduce magnetometer jitter
-      const smoothed =
-        lastHeadingRef.current + (angle - lastHeadingRef.current) * 0.1;
+      // Low-pass filter along the shortest way round, so 359 -> 1 degree
+      // moves 2 degrees instead of swinging back through 180.
+      const delta = ((angle - lastHeadingRef.current + 540) % 360) - 180;
+      const smoothed = (lastHeadingRef.current + delta * 0.2 + 360) % 360;
       lastHeadingRef.current = smoothed;
-      setCompassHeading(smoothed);
+      // Only re-render when the heading really changed.
+      const shownDelta = Math.abs(((smoothed - shownHeadingRef.current + 540) % 360) - 180);
+      if (shownDelta >= 3) {
+        shownHeadingRef.current = smoothed;
+        setCompassHeading(smoothed);
+      }
     });
     return () => sub.remove();
   }, [isRacing]);

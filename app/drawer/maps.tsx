@@ -2,10 +2,11 @@ import { KarelaIcon } from "@/components/icons/KarelaIcon";
 import { KARELA } from "@/styles/designSystem";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  AppState,
   Platform,
   Text,
   View,
@@ -14,6 +15,9 @@ import MapView, { Circle, Marker, Polyline, Region } from "react-native-maps";
 
 // Hooks & Services
 import { CivicHUD } from "@/components/CivicHUD";
+import { gpsQuality, RunHUD } from "@/components/run/RunHUD";
+import { UserMarker } from "@/components/run/UserMarker";
+import { clockText, kmText, MIN_SAVE_M, paceFor, pathDistance } from "@/services/runMath";
 import { Button, IconButton } from "@/components/ui/Button";
 import { NodeDetailModal } from "@/components/NodeDetailModal";
 import { useAuth } from "@/context/AuthContext";
@@ -60,9 +64,17 @@ export default function MapScreen() {
   const { user, earnGems, gainXP } = useAuth();
   const mapRef = useRef<MapView>(null);
   const [hasZoomed, setHasZoomed] = useState(false);
+  const [mapHeading, setMapHeading] = useState(0);
   const isProcessing = useRef(false);
+  // Time comes from the clock (Date.now), never from counting ticks, so it
+  // stays right if the phone is slow or the app was in the background.
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [physicalMeters, setPhysicalMeters] = useState(0);
+  const startedAtRef = useRef<number | null>(null);
+  const pausedMsRef = useRef(0); // total paused time before the current pause
+  const pauseStartRef = useRef<number | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  // Path segments recorded while paused don't count: [from, to] segment indexes.
+  const [pauseRanges, setPauseRanges] = useState<{ from: number; to: number | null }[]>([]);
   const lastInteractionTime = useRef<number>(0);
   const SNAP_BACK_DELAY = 15000; // 15 seconds in milliseconds
 
@@ -83,6 +95,7 @@ export default function MapScreen() {
     currentLocation,
     currentSpeed,
     compassHeading,
+    gpsAccuracy,
     setIsRacing,
     setPath,
   } = useLocationEngine(activeGhostData);
@@ -97,32 +110,18 @@ export default function MapScreen() {
     updateRemainingPath,
   } = useRouteBuilder(mapRef);
 
-  // --- PHYSICAL DISTANCE TRACKER (Haversine Logic) ---
-  useEffect(() => {
-    if (isRacing && path.length > 1) {
-      const lastPoint = path[path.length - 1];
-      const prevPoint = path[path.length - 2];
-
-      const R = 6371000; // Earth's radius in meters
-      const dLat = ((lastPoint.latitude - prevPoint.latitude) * Math.PI) / 180;
-      const dLon =
-        ((lastPoint.longitude - prevPoint.longitude) * Math.PI) / 180;
-
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos((prevPoint.latitude * Math.PI) / 180) *
-          Math.cos((lastPoint.latitude * Math.PI) / 180) *
-          Math.sin(dLon / 2) *
-          Math.sin(dLon / 2);
-
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      const distanceMoved = R * c;
-
-      if (!lastPoint.isVehicle && distanceMoved > 1.5 && distanceMoved < 40) {
-        setPhysicalMeters((prev) => prev + distanceMoved);
-      }
-    }
-  }, [path, isRacing]);
+  // --- DISTANCE: one sum over the whole path (services/runMath.ts) ---
+  // The same rule the summary and the saved run use, so they always agree.
+  const physicalMeters = useMemo(
+    () =>
+      pathDistance(path, (i) =>
+        pauseRanges.some((r) => i > r.from && (r.to === null || i <= r.to)),
+      ),
+    [path, pauseRanges],
+  );
+  const lastPoint = path[path.length - 1];
+  const inVehicle = !!lastPoint?.isVehicle && !isPaused;
+  const avgPaceS = paceFor(physicalMeters, elapsedTime);
 
   // --- SHOP AND GUILD: trail colour, map theme, landmark zones ---
   const buffs = useBuffs();
@@ -159,29 +158,81 @@ export default function MapScreen() {
   }, [currentLocation, isRacing]);
 
   // --- RACE CONTROLS ---
+  const resetRunClock = () => {
+    startedAtRef.current = null;
+    pausedMsRef.current = 0;
+    pauseStartRef.current = null;
+    setIsPaused(false);
+    setPauseRanges([]);
+    setElapsedTime(0);
+  };
+
   const handleStartRace = async () => {
     const locationAllowed = await PermissionManager.requestLocation();
     if (locationAllowed) {
-      setPhysicalMeters(0);
-      setElapsedTime(0);
+      resetRunClock();
+      startedAtRef.current = Date.now();
       setPath([]);
       setIsRacing(true);
     }
   };
 
-  const handleStopRace = async () => {
-    setIsRacing(false);
+  const togglePause = () => {
+    const now = Date.now();
+    if (!isPaused) {
+      pauseStartRef.current = now;
+      setPauseRanges((r) => [...r, { from: path.length - 1, to: null }]);
+      setIsPaused(true);
+    } else {
+      if (pauseStartRef.current) pausedMsRef.current += now - pauseStartRef.current;
+      pauseStartRef.current = null;
+      // The next point recorded bridges the pause; it doesn't count either.
+      setPauseRanges((r) => r.map((x) => (x.to === null ? { ...x, to: path.length } : x)));
+      setIsPaused(false);
+    }
+    tickClock();
+  };
 
+  const finishRun = () => {
+    const seconds = currentElapsed();
+    const meters = Math.floor(physicalMeters);
+    setIsRacing(false);
+    resetRunClock();
     router.push({
       pathname: "/summary",
       params: {
-        meters: Math.floor(physicalMeters),
-        seconds: elapsedTime,
-        kcal: (physicalMeters * 0.062).toFixed(1),
-        xp: Math.floor(physicalMeters * 0.1),
+        // XP and calories are worked out on the summary screen from these.
+        meters,
+        seconds,
         path: JSON.stringify(path),
       },
     });
+  };
+
+  const handleStopRace = () => {
+    if (physicalMeters < MIN_SAVE_M) {
+      Alert.alert(
+        "End this run?",
+        `You've covered less than ${MIN_SAVE_M} m, so there's nothing to save yet.`,
+        [
+          { text: "Keep going", style: "cancel" },
+          {
+            text: "Discard run",
+            style: "destructive",
+            onPress: () => {
+              setIsRacing(false);
+              resetRunClock();
+              setPath([]);
+            },
+          },
+        ],
+      );
+      return;
+    }
+    Alert.alert("End this run?", `${kmText(physicalMeters)} km in ${clockText(currentElapsed())}.`, [
+      { text: "Keep going", style: "cancel" },
+      { text: "End run", onPress: finishRun },
+    ]);
   };
 
   // --- FIXED GHOST LOGIC ---
@@ -250,6 +301,14 @@ export default function MapScreen() {
 
   const handleRegionChange = (region: Region, details?: { isGesture?: boolean }) => {
     mapCenter.current = { latitude: region.latitude, longitude: region.longitude };
+    // iPhone (Apple Maps) can't rotate markers with the map, so the arrow
+    // needs the map's rotation. Android markers turn with the map by themselves.
+    if (Platform.OS === "ios" && mapRef.current) {
+      mapRef.current
+        .getCamera()
+        .then((c) => setMapHeading((prev) => (Math.abs((c.heading ?? 0) - prev) >= 1 ? c.heading ?? 0 : prev)))
+        .catch(() => {});
+    }
     // The user moved the map by hand: pause auto-follow for a while.
     // Runs on a map event, never during render (the purity rule cannot tell).
     // eslint-disable-next-line react-hooks/purity
@@ -266,13 +325,31 @@ export default function MapScreen() {
     setPlacing(null);
   };
 
-  // Timer Logic
+  // --- RUN CLOCK ---
+  // Seconds since Start, minus paused time, read from the clock.
+  function currentElapsed() {
+    if (!startedAtRef.current) return 0;
+    const now = Date.now();
+    const pausedNow = pauseStartRef.current ? now - pauseStartRef.current : 0;
+    return Math.max(0, Math.floor((now - startedAtRef.current - pausedMsRef.current - pausedNow) / 1000));
+  }
+  function tickClock() {
+    setElapsedTime(currentElapsed());
+  }
+
   useEffect(() => {
-    let interval: any;
-    if (isRacing) {
-      interval = setInterval(() => setElapsedTime((prev) => prev + 1), 1000);
-    }
-    return () => clearInterval(interval);
+    if (!isRacing) return;
+    tickClock();
+    const interval = setInterval(tickClock, 1000);
+    // Coming back from the background: show the right time straight away.
+    const sub = AppState.addEventListener("change", (st) => {
+      if (st === "active") tickClock();
+    });
+    return () => {
+      clearInterval(interval);
+      sub.remove();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRacing]);
 
   // --- RESONANCE SYSTEM (Updates immediately + every 5 seconds during a run) ---
@@ -370,15 +447,6 @@ export default function MapScreen() {
     }
   };
 
-  const formatTime = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return h > 0
-      ? `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
-      : `${m}:${s.toString().padStart(2, "0")}`;
-  };
-
   // --- CAMERA AUTO-FOLLOW ---
   // --- CAMERA AUTO-FOLLOW (FIXED) ---
   useEffect(() => {
@@ -405,12 +473,14 @@ export default function MapScreen() {
           pitch: 55,
           zoom: 20,
         },
-        { duration: 1500 },
+        { duration: 1000 },
       );
 
+      // Let each camera move finish before the next one starts, so turns
+      // glide instead of being cut off halfway.
       setTimeout(() => {
         isProcessing.current = false;
-      }, 800);
+      }, 1000);
     }
   }, [currentLocation, compassHeading, isRacing]);
 
@@ -589,31 +659,8 @@ export default function MapScreen() {
           );
         })}
 
-        {/* 2. PLACE YOUR CUSTOM DOT MARKER HERE (Inside MapView) */}
-        {currentLocation && (
-          <Marker
-            coordinate={currentLocation}
-            anchor={{ x: 0.5, y: 0.5 }}
-            flat
-            zIndex={999}
-          >
-            <View
-              style={{
-                width: 20,
-                height: 20,
-                borderRadius: 10,
-                backgroundColor: KARELA.color.brand,
-                borderWidth: 3,
-                borderColor: "white",
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.8,
-                shadowRadius: 2,
-                elevation: 5,
-              }}
-            />
-          </Marker>
-        )}
+        {/* You: dot plus an arrow for the way you're facing */}
+        {currentLocation && <UserMarker coordinate={currentLocation} mapHeading={mapHeading} />}
 
         {/* FLAGS (Checkpoints)
             Kept as simple as the report pins below, which work on both
@@ -706,37 +753,20 @@ export default function MapScreen() {
 
       {/* HUD */}
       {isRacing && (
-        <View style={styles.hudOverlay}>
-          <View style={styles.hudStat}>
-            <Text style={styles.hudLabel}>TIME</Text>
-            <Text style={styles.hudValue}>{formatTime(elapsedTime)}</Text>
-          </View>
-          <View style={styles.hudDivider} />
-          <View style={styles.hudStat}>
-            <Text style={styles.hudLabel}>KM/H</Text>
-            <Text
-              style={[
-                styles.hudValue,
-                (currentSpeed ?? 0) > 35 && { color: KARELA.color.danger },
-              ]}
-            >
-              {currentSpeed ?? 0}
-            </Text>
-          </View>
-          <View style={styles.hudDivider} />
-          <View style={styles.hudStat}>
-            <Text style={styles.hudLabel}>METERS</Text>
-            <Text style={styles.hudValue}>{Math.floor(physicalMeters)}</Text>
-          </View>
-          <View style={styles.hudDivider} />
-          <View style={styles.hudStat}>
-            <Text style={styles.hudLabel}>GOAL</Text>
-            <Text style={styles.hudValue}>
-              {checkpoints.filter((f) => (f as any).isReached).length}/
-              {checkpoints.length}
-            </Text>
-          </View>
-        </View>
+        <RunHUD
+          meters={physicalMeters}
+          seconds={elapsedTime}
+          avgPaceS={avgPaceS}
+          speedKmh={currentSpeed ?? 0}
+          gps={gpsQuality(gpsAccuracy, !!currentLocation)}
+          paused={isPaused}
+          inVehicle={inVehicle}
+          flags={
+            checkpoints.length > 0
+              ? { reached: checkpoints.filter((f) => (f as any).isReached).length, total: checkpoints.length }
+              : undefined
+          }
+        />
       )}
 
       {/* TOOLS (Only visible when NOT racing, and not while placing a flag) */}
@@ -828,13 +858,21 @@ export default function MapScreen() {
             </View>
           </View>
         ) : (
-          <Button
-            label={isRacing ? "Stop" : "Start"}
-            variant={isRacing ? "danger" : "primary"}
-            icon={isRacing ? "stop" : "play"}
-            onPress={() => (isRacing ? handleStopRace() : handleStartRace())}
-            style={[styles.actionButton, isRacing ? KARELA.glow.coral : KARELA.glow.brand]}
-          />
+          isRacing ? (
+            <View style={styles.runControls}>
+              <Button
+                label={isPaused ? "Resume" : "Pause"}
+                variant={isPaused ? "primary" : "secondary"}
+                icon={isPaused ? "play" : "pause"}
+                onPress={togglePause}
+                style={{ flex: 1 }}
+                block
+              />
+              <Button label="End" variant="danger" icon="stop" onPress={handleStopRace} style={{ flex: 1 }} block />
+            </View>
+          ) : (
+            <Button label="Start" icon="play" onPress={handleStartRace} style={[styles.actionButton, KARELA.glow.brand]} />
+          )
         )}
       </View>
     </View>
