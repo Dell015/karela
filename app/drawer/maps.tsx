@@ -1,3 +1,4 @@
+import { KarelaIcon } from "@/components/icons/KarelaIcon";
 import { KARELA } from "@/styles/designSystem";
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
@@ -9,7 +10,7 @@ import {
   Text,
   View,
 } from "react-native";
-import MapView, { Marker, Polyline, Region } from "react-native-maps";
+import MapView, { Circle, Marker, Polyline, Region } from "react-native-maps";
 
 // Hooks & Services
 import { CivicHUD } from "@/components/CivicHUD";
@@ -38,7 +39,10 @@ import {
 import { useLocalSettings } from "@/services/localSettings";
 import { PermissionManager } from "@/services/PermissionsManager";
 import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
-import { ghostMapStyle } from "@/styles/ghostMapStyle";
+import { bayanihanMapStyle, ghostMapStyle } from "@/styles/ghostMapStyle";
+import { civicXpMultiplier, useBuffs } from "@/services/buffs";
+import { guildColor } from "@/services/guilds";
+import { getTerritories, HOLDER_REASON, LandmarkState } from "@/services/territory";
 import { styles } from "@/styles/mapStyles";
 
 /**
@@ -119,6 +123,20 @@ export default function MapScreen() {
       }
     }
   }, [path, isRacing]);
+
+  // --- SHOP AND GUILD: trail colour, map theme, landmark zones ---
+  const buffs = useBuffs();
+  const trailColors = buffs.trail?.length ? buffs.trail : [KARELA.color.brand];
+  const [landmarks, setLandmarks] = useState<LandmarkState[]>([]);
+  useEffect(() => {
+    let alive = true;
+    getTerritories()
+      .then((t) => alive && setLandmarks(t.landmarks))
+      .catch(() => {}); // not set up yet or offline: the map just has no zones
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // --- KEEP SCREEN ON (Settings > Keep screen on during runs) ---
   const localSettings = useLocalSettings();
@@ -319,22 +337,24 @@ export default function MapScreen() {
     if (result.success) {
       if (result.consensus_reached) {
         // Node verified — full reward
-        await gainXP(200);
+        const boost = civicXpMultiplier(buffs);
+        await gainXP(Math.round(200 * boost));
         await earnGems(20);
         Alert.alert(
           "Report verified",
-          "Neighbours confirmed this issue.\n+200 XP, +20 Gems",
+          `Neighbours confirmed this issue.\n+200 XP, +20 Gems${boost > 1 ? "\nBayanihan Boost: +25% XP" : ""}`,
         );
       } else {
         // Report submitted — small reward
-        await gainXP(50);
+        const boost = civicXpMultiplier(buffs);
+        await gainXP(Math.round(50 * boost));
         await earnGems(5);
         const count = result.node_id ? await getNodeReportCount(result.node_id) : null;
         const progress =
           count != null
             ? describeConsensus(count)
             : "It stays pending until 3 people nearby report it.";
-        Alert.alert("Report sent", `${progress}\n+50 XP, +5 Gems`);
+        Alert.alert("Report sent", `${progress}\n+50 XP, +5 Gems${boost > 1 ? "\nBayanihan Boost: +25% XP" : ""}`);
       }
     } else {
       Alert.alert("Report not sent", result.message || "Check your connection and try again.");
@@ -445,7 +465,7 @@ export default function MapScreen() {
         userInterfaceStyle="dark"
         //googleRenderer="LATEST"
         onRegionChangeComplete={handleRegionChange}
-        customMapStyle={ghostMapStyle}
+        customMapStyle={buffs.guild_map_theme ? bayanihanMapStyle : ghostMapStyle}
         showsUserLocation={false}
         showsMyLocationButton={false}
         initialRegion={{
@@ -455,6 +475,32 @@ export default function MapScreen() {
           longitudeDelta: 0.05,
         }}
       >
+        {/* --- LANDMARK TERRITORY (guilds) --- */}
+        {landmarks.map((l) => {
+          const color = l.holder.guild_id ? guildColor(l.holder.color) : KARELA.color.textMuted;
+          return (
+            <React.Fragment key={`landmark_${l.id}`}>
+              <Circle
+                center={{ latitude: l.latitude, longitude: l.longitude }}
+                radius={l.radius_m}
+                strokeColor={color}
+                strokeWidth={2}
+                fillColor={l.holder.guild_id ? `${color}22` : "rgba(147,158,143,0.08)"}
+                zIndex={50}
+              />
+              <Marker
+                coordinate={{ latitude: l.latitude, longitude: l.longitude }}
+                title={l.name}
+                description={l.holder.guild_id ? `${l.holder.name}: ${HOLDER_REASON[l.holder.reason].toLowerCase()}` : "Unclaimed. Guilds win it by running here."}
+                tracksViewChanges={false}
+                anchor={{ x: 0.5, y: 1 }}
+              >
+                <KarelaIcon name="territory" size={24} color={color} />
+              </Marker>
+            </React.Fragment>
+          );
+        })}
+
         {/* --- GHOST ENGINE LAYER --- */}
         {/* GHOST LINE (The static path of the saved run) */}
         {isGhostEnabled && activeGhostData.length > 1 && (
@@ -520,7 +566,11 @@ export default function MapScreen() {
           const prevPoint = path[index - 1];
 
           // We define the color here
-          const segmentColor = point.isVehicle ? KARELA.color.danger : KARELA.color.brand;
+          // Coral always means "vehicle". Otherwise the trail bought in the
+          // Shop; several colours shift along the run.
+          const segmentColor = point.isVehicle
+            ? KARELA.color.danger
+            : trailColors[Math.min(trailColors.length - 1, Math.floor((index * trailColors.length) / path.length))];
 
           return (
             <Polyline

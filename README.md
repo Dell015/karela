@@ -78,7 +78,13 @@ Scan the QR code with Expo Go (Android) or the Camera app (iOS) to open on your 
    supabase/06_schedule_decay.sql
    supabase/07_close_stats_hole.sql
    supabase/08_account_deletion.sql
+   supabase/09_profile_pictures.sql
+   supabase/10_streak_protection_and_shop.sql
+   supabase/11_squads.sql
+   supabase/12_guilds.sql
+   supabase/13_territory.sql
    ```
+   Then add landmarks for territory (see the top of `13_territory.sql`).
 3. Enable the **PostGIS** extension in your Supabase dashboard (Database → Extensions)
 4. Enable **Realtime** on the `profiles`, `missions`, and `civic_nodes` tables
 
@@ -164,13 +170,15 @@ karela/
 ├── styles/                     # Shared stylesheets
 ├── supabase/                   # Database migrations
 │   ├── schema.sql              # Core schema (run first)
-│   └── 02_ ... 08_*.sql        # Migrations, run in number order
+│   └── 02_ ... 13_*.sql        # Migrations, run in number order
 ├── assets/
 │   ├── fonts/                  # Excon font family
 │   ├── images/                 # App icons, onboarding slides, UI images
+│   │   └── game/               # 3D-rendered Shop items and guild badges (WebP)
 │   └── 3d/                     # Ani (female_final.glb) and other .glb models
 │       └── source/             # Blender and FBX source files (not bundled)
 ├── docs/                       # Project documentation (see below)
+├── scripts/render-game-art/    # Re-renders assets/images/game from low-poly models
 ├── website-v2/                 # Landing page (plain HTML/CSS/JS, separate from the app)
 ├── .env.example                # Environment variable template
 ├── app.config.js               # Expo configuration

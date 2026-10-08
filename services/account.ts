@@ -63,6 +63,17 @@ export const exportMyData = async (uid: string): Promise<string> => {
     read("missions"),
     read("civic_reports"),
   ]);
+  // Shop and streak tables (migration 10). Missing before it's run: skip them.
+  const optional = async (table: string) => {
+    const { data, error } = await supabase.from(table).select("*").eq("user_id", uid);
+    return error ? undefined : data;
+  };
+  const [purchases, items, protectedDays] = await Promise.all([
+    optional("purchases"),
+    optional("user_items"),
+    optional("streak_protections"),
+  ]);
+  const squad = await supabase.rpc("get_my_squad");
   const { privacyZones } = await getLocalSettings();
 
   return JSON.stringify(
@@ -75,6 +86,12 @@ export const exportMyData = async (uid: string): Promise<string> => {
       run_summaries: runSummaries,
       missions,
       civic_reports: civicReports,
+      shop_purchases: purchases,
+      owned_items: items,
+      protected_streak_days: protectedDays,
+      squad: squad.error || !squad.data?.squad
+        ? null
+        : { name: squad.data.squad.name, role: squad.data.my_role },
       on_this_phone: {
         privacy_zone_count: privacyZones.length,
       },

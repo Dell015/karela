@@ -1,3 +1,4 @@
+import { KarelaIcon } from "@/components/icons/KarelaIcon";
 import { getEffectiveStreak } from "@/services/streakService";
 import { Button, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
@@ -212,7 +213,7 @@ export default function CalendarScreen() {
 
           {/* Streak: same value and tiers as the dashboard (services/streakMultiplier.ts) */}
           <View style={styles.streakRow}>
-            <MaterialCommunityIcons name="fire" size={22} color={KARELA.color.civic} />
+            <KarelaIcon name="streak" size={22} color={KARELA.color.civic} />
             <Text style={styles.streakText}>
               {streak} day streak
               <Text style={styles.streakTier}>  ·  {tier.multiplier.toFixed(1)}x XP</Text>

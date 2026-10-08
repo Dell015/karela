@@ -1,3 +1,4 @@
+import { KarelaIcon } from "@/components/icons/KarelaIcon";
 import { KARELA } from "@/styles/designSystem";
 import { supabase } from "@/services/database/supabase/config";
 import { getStreakTier } from "@/services/streakMultiplier";
@@ -94,14 +95,14 @@ export const RunHistory = ({ userId, streak, gems }: RunHistoryProps) => {
       {/* STREAK & GEMS BAR */}
       <View style={styles.metricsBar}>
         <View style={styles.metricPill}>
-          <Ionicons name="flame" size={14} color={KARELA.color.gold} />
+          <KarelaIcon name="streak" size={15} color={KARELA.color.gold} />
           <Text style={styles.metricValue}>{streak}d</Text>
           <Text style={styles.metricLabel}>
             {tier.multiplier}x
           </Text>
         </View>
         <View style={styles.metricPill}>
-          <Ionicons name="diamond" size={14} color={KARELA.color.brand} />
+          <KarelaIcon name="gem" size={15} color={KARELA.vibrant.sky} />
           <Text style={styles.metricValue}>{gems}</Text>
           <Text style={styles.metricLabel}>gems</Text>
         </View>

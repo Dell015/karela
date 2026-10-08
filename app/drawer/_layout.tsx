@@ -12,6 +12,7 @@ import {
     DrawerItemList,
 } from "expo-router/drawer";
 import { DynamicDock } from "@/components/DynamicDock";
+import { KarelaIcon } from "@/components/icons/KarelaIcon";
 import React from "react";
 import { Alert, StyleSheet, View } from "react-native";
 
@@ -111,27 +112,21 @@ export default function DrawerLayout() {
         name="quests"
         options={{
           drawerLabel: "Quests",
-          drawerIcon: ({ color }) => (
-            <Ionicons name="trophy-outline" size={22} color={color} />
-          ),
+          drawerIcon: ({ color }) => <KarelaIcon name="medal" size={22} color={color} />,
         }}
       />
       <Drawer.Screen
         name="guilds"
         options={{
-          drawerLabel: "Guilds",
-          drawerIcon: ({ color }) => (
-            <Ionicons name="shield-half-outline" size={22} color={color} />
-          ),
+          drawerLabel: "Squad and guild",
+          drawerIcon: ({ color }) => <KarelaIcon name="squad" size={22} color={color} />,
         }}
       />
       <Drawer.Screen
         name="shop"
         options={{
           drawerLabel: "Shop",
-          drawerIcon: ({ color }) => (
-            <Ionicons name="bag-handle-outline" size={22} color={color} />
-          ),
+          drawerIcon: ({ color }) => <KarelaIcon name="gem" size={22} color={color} />,
         }}
       />
       <Drawer.Screen

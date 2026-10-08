@@ -9,18 +9,21 @@ interface AvatarProps {
   uri?: string | null;
   name?: string | null;
   size?: number;
-  /** Karela gradient ring around the picture. */
+  /** Ring around the picture: Karela gradient, or `frame` colours if given. */
   ring?: boolean;
+  /** Frame bought in the Shop (two colours); shows a ring even without `ring`. */
+  frame?: readonly string[] | null;
   style?: StyleProp<ViewStyle>;
 }
 
 /** The user's profile picture, or their initial when there is none. */
-export const Avatar = ({ uri, name, size = 56, ring, style }: AvatarProps) => {
+export const Avatar = ({ uri, name, size = 56, ring, frame, style }: AvatarProps) => {
   // A broken or deleted URL falls back to the initial instead of a blank circle.
   const [failedUri, setFailedUri] = useState<string | null>(null);
   const showPhoto = !!uri && failedUri !== uri;
   const initial = (name || "K").trim().charAt(0).toUpperCase() || "K";
-  const ringWidth = ring ? 3 : 0;
+  const ringColors = frame?.length ? frame : ring ? KARELA.gradients.brand : null;
+  const ringWidth = ringColors ? 3 : 0;
   const inner = size - ringWidth * 2;
 
   const face = (
@@ -28,7 +31,7 @@ export const Avatar = ({ uri, name, size = 56, ring, style }: AvatarProps) => {
       style={[
         s.inner,
         { width: inner, height: inner, borderRadius: inner / 2 },
-        !ring && s.border,
+        !ringColors && s.border,
       ]}
     >
       {showPhoto ? (
@@ -54,9 +57,9 @@ export const Avatar = ({ uri, name, size = 56, ring, style }: AvatarProps) => {
       accessibilityRole="image"
       accessibilityLabel={showPhoto ? `Profile photo of ${name || "you"}` : `${name || "Your"} initial`}
     >
-      {ring ? (
+      {ringColors ? (
         <LinearGradient
-          colors={KARELA.gradients.brand}
+          colors={(ringColors.length > 1 ? ringColors : [ringColors[0], ringColors[0]]) as [string, string, ...string[]]}
           style={{ width: size, height: size, borderRadius: size / 2, padding: ringWidth }}
         >
           {face}

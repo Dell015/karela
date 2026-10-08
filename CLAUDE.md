@@ -26,7 +26,6 @@ When a task mentions "the site", "the landing page" or "the page", it means `web
 | Full vision, algorithms, research framework | `docs/aboutkarela.md` (large, search it, do not read it whole) |
 | Setup, structure, env vars | `README.md` |
 | Computation formulas | `docs/COMPUTATIONS.md` |
-| Known issues | `docs/QA_REPORT.md` |
 | Expo SDK upgrade history | `docs/SDK_UPGRADE_LOG.md` |
 | Screens | `app/` (`app/drawer/*` is the main app) |
 | Components | `components/` (`PlayerCard`, `QuestCard`, `CivicHUD`, `AniConsole`, ...) |
@@ -35,6 +34,10 @@ When a task mentions "the site", "the landing page" or "the page", it means `web
 | Database | `supabase/*.sql`, run in order (`schema.sql`, `02_...`, `03_...`, `04_...`) |
 | Landing page | `website-v2/` |
 | 3D models the app loads | `assets/3d/*.glb` (sources: `assets/3d/source/`, not bundled) |
+| Karela icons (SVG) | `components/icons/KarelaIcon.tsx`: use for Karela concepts (Gems, streak, squad, guild...); keep standard icons for back/close/settings |
+| Shop and badge art | `assets/images/game/*.webp`, re-render with `node scripts/render-game-art/render.mjs` (needs Chrome + Python), map in `services/gameArt.ts` |
+| Shop, squads, guilds, territory | server rules in `supabase/10_...` to `13_...`; app side in `services/shop.ts`, `squads.ts`, `guilds.ts`, `territory.ts`, `buffs.ts`; screens `app/drawer/shop.tsx`, `app/drawer/guilds.tsx` + `components/guild/` |
+| Status and to-do list | `docs/QA_REPORT.md` |
 
 ## The mobile app
 
@@ -69,6 +72,10 @@ Use these terms the same way in code, UI and site copy.
 - **Streak multiplier**: tiers by day. 1 to 3 is 1.0x, 4 to 6 is 1.2x, 7 to 13 is 1.5x, 14 to 29 is 2.0x, 30 and up is 3.0x (the cap). The source of truth is `services/streakMultiplier.ts`. If the code and the site disagree, the code wins.
 - **Bayanihan protocol**: the disaster response mode. Safety tiers 0 to 4 (Normal, Watch, Warning, Hard lock, Recovery). Its most important rule is a limit on itself: **Karela must never be the reason someone gets hurt.** In a storm the app stops asking users to run.
 - **Civic reports**: confirmed by neighbours, expire when they go stale, and exported as verified data local governments can use.
+- **Protected day**: a day the streak survives without a run, from a Streak Freeze (used automatically), a Streak Repair (bought the day after one missed day) or a squad's Collective Shield. It keeps the streak alive but doesn't add to it. The server counts streaks (`settle_streak`).
+- **Squads and guilds**: a squad is 3 to 12 people (create at Level 3, join with a 6-character code). A squad with 5,000 Squad XP founds a guild of up to 10 squads. Numbers live in `karela_squad_rules()` / `karela_guild_rules()` in the SQL, not in the app.
+- **Territory**: guilds win landmarks (250 m circles) by distance run inside them each month. Only the km inside a circle leaves the phone, never the route.
+- **Gems** are earned by playing only, never bought with money. Cosmetics are visual only.
 
 ## The landing page (`website-v2/`)
 

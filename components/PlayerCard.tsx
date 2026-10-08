@@ -1,3 +1,4 @@
+import { KarelaIcon } from "@/components/icons/KarelaIcon";
 import { KARELA } from "@/styles/designSystem";
 import { getStreakTier } from "@/services/streakMultiplier";
 import { Ionicons } from "@expo/vector-icons";
@@ -54,7 +55,7 @@ export const PlayerCard = ({
             <View style={styles.streakBox}>
               <Text style={styles.label}>STREAK</Text>
               <View style={styles.streakValueRow}>
-                <Ionicons name="flame" size={16} color={KARELA.vibrant.techOrange} />
+                <KarelaIcon name="streak" size={16} color={KARELA.vibrant.techOrange} />
                 <Text style={styles.streakValue}>{streak}d</Text>
               </View>
               <Text style={styles.multiplier}>×{tier.multiplier}</Text>
@@ -79,7 +80,7 @@ export const PlayerCard = ({
           {/* Footer: gems + CTA */}
           <View style={styles.footer}>
             <View style={styles.gemsPill}>
-              <Ionicons name="diamond" size={13} color={KARELA.color.brand} />
+              <KarelaIcon name="gem" size={14} color={KARELA.vibrant.sky} />
               <Text style={styles.gemsText}>{gems}</Text>
               <Text style={styles.gemsLabel}>Gems</Text>
             </View>

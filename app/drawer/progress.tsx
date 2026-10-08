@@ -1,3 +1,4 @@
+import { KarelaIcon } from "@/components/icons/KarelaIcon";
 import { getEffectiveStreak } from "@/services/streakService";
 import { Button, IconButton } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
@@ -88,11 +89,7 @@ export default function ProgressScreen() {
           <View style={ProgressScreenUI.statsRightCol}>
             <View style={ProgressScreenUI.statCardRow}>
               <View style={ProgressScreenUI.smallCard}>
-                <MaterialCommunityIcons
-                  name="lightning-bolt"
-                  size={18}
-                  color={KARELA.color.gold}
-                />
+                <KarelaIcon name="streak" size={18} color={KARELA.color.gold} />
                 <View>
                   <Text style={ProgressScreenUI.statLabelSmall}>Streak</Text>
                   <Text style={ProgressScreenUI.statValueSmall}>
@@ -113,7 +110,7 @@ export default function ProgressScreen() {
 
             <View style={ProgressScreenUI.statCardRow}>
               <View style={ProgressScreenUI.smallCard}>
-                <Ionicons name="trophy" size={16} color={KARELA.color.gold} />
+                <KarelaIcon name="ghost" size={18} color={KARELA.color.gold} />
                 <View>
                   <Text style={ProgressScreenUI.statLabelSmall}>Wins</Text>
                   <Text style={ProgressScreenUI.statValueSmall}>

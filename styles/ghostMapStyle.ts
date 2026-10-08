@@ -39,3 +39,16 @@ export const ghostMapStyle = [
     "stylers": [{ "color": "#000000" }]
   }
 ];
+/**
+ * Guild map theme, unlocked by the Bayanihan Heart badge (12_guilds.sql):
+ * the same dark map with green-black land, teal parks and deep-teal water,
+ * from the Karela palette. Android only, like ghostMapStyle (Apple Maps on
+ * iOS has no custom styles).
+ */
+export const bayanihanMapStyle = [
+  ...ghostMapStyle,
+  { "elementType": "geometry", "stylers": [{ "color": "#111813" }] },
+  { "featureType": "poi.park", "elementType": "geometry", "stylers": [{ "color": "#17211A" }] },
+  { "featureType": "road", "elementType": "geometry.fill", "stylers": [{ "color": "#1E2B22" }] },
+  { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#0E3B2E" }] },
+];

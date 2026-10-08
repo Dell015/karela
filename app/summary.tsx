@@ -5,6 +5,7 @@ import { KARELA } from "@/styles/designSystem";
 import { saveGhostRun } from "@/services/database/sqlite/database";
 import { onRunCompleted } from "@/services/engines/GhostModelManager";
 import { stripPrivacyZones } from "@/services/privacyZones";
+import { recordRunTerritory } from "@/services/territory";
 import { GEM_EARNINGS, getTotalSectors } from "@/services/gemSystem";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -25,7 +26,7 @@ import {
     logRunHistory,
 } from "@/services/database/supabase/runService";
 import { calculateStreak } from "@/services/statsService";
-import { fetchStreakFromHistory } from "@/services/streakService";
+import { fetchStreakFromHistory, settleStreak } from "@/services/streakService";
 import { QuestEngine } from "@/services/engines/QuestEngine";
 
 const { width } = Dimensions.get("window");
@@ -136,21 +137,30 @@ export default function SummaryScreen() {
       };
       await generateAndSaveRunSummary(user.uid, runData);
 
+      // Guild territory: distance inside landmark zones, worked out on this
+      // phone from the full route (only the km leave the phone).
+      if (path) {
+        try {
+          await recordRunTerritory(JSON.parse(path as string));
+        } catch (e) {
+          console.warn("Territory not recorded:", e);
+        }
+      }
+
       // Sync run distance to all active missions via QuestEngine
       await QuestEngine.syncRunProgress(user.uid, distanceInKm, avgSpeedKmh);
 
-      // Count from run_history (has every run, including this one). Falls
-      // back to the local count if the history cannot be read.
-      const currentStreak = (await fetchStreakFromHistory(user.uid)) ?? calculateStreak();
-      const longestStreak = Math.max(
-        currentStreak,
-        Number(profile?.stats?.longest_streak || 0)
-      );
-      await setStats(user.uid, {
-        streak: currentStreak,
-        longest_streak: longestStreak,
-        last_active_date: new Date().toISOString(),
-      });
+      // The server counts the streak (runs plus Freeze, Repair and Shield
+      // days) and saves it. If it can't (migration 10 not run, or offline),
+      // count from run_history here, then from the phone.
+      await setStats(user.uid, { last_active_date: new Date().toISOString() });
+      if (!(await settleStreak())) {
+        const currentStreak = (await fetchStreakFromHistory(user.uid)) ?? calculateStreak();
+        await setStats(user.uid, {
+          streak: currentStreak,
+          longest_streak: Math.max(currentStreak, Number(profile?.stats?.longest_streak || 0)),
+        });
+      }
 
       if (xp) await gainXP(Number(xp));
 

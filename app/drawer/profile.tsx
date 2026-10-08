@@ -1,6 +1,7 @@
 import { Button, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { Avatar } from "@/components/ui/Avatar";
+import { useBuffs } from "@/services/buffs";
 import { Field, Sheet, sheet } from "@/components/ui/Sheet";
 import { useAuth } from "@/context/AuthContext";
 import { formatDuration, formatKm } from "@/services/calendarData";
@@ -57,6 +58,7 @@ const runDate = (iso: string) => {
 export default function ProfilePage() {
   const router = useRouter();
   const { profile, logout, reloadProfile } = useAuth();
+  const buffs = useBuffs();
   const uid = profile?.uid;
   const createdAt = profile?.createdAt;
 
@@ -214,7 +216,7 @@ export default function ProfilePage() {
             disabled={photoBusy}
             style={({ pressed }) => pressed && { opacity: 0.8 }}
           >
-            <Avatar uri={profile?.profilePicture} name={name} size={76} ring />
+            <Avatar uri={profile?.profilePicture} name={name} size={76} ring frame={buffs.frame} />
             <View style={s.photoBadge}>
               {photoBusy ? (
                 <ActivityIndicator size="small" color={KARELA.color.onBright} />
@@ -345,7 +347,7 @@ export default function ProfilePage() {
         {/* SOCIAL + ACCOUNT */}
         <Text style={s.sectionTitle}>More</Text>
         <View style={s.list}>
-          <Row icon="people-outline" label="Squads and guilds" onPress={() => router.push("/drawer/guilds")} />
+          <Row icon="people-outline" label="Squad and guild" onPress={() => router.push("/drawer/guilds")} />
           <Row icon="settings-outline" label="Settings" onPress={() => router.push("/drawer/settings")} />
           <Row icon="log-out-outline" label="Log out" danger onPress={confirmLogout} last />
         </View>

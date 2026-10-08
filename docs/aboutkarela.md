@@ -880,9 +880,9 @@ On Day 7, Ani delivers a personalized shareable summary card — organic marketi
 
 Small accountability groups. The primary social unit of Karela.
 
-**Formation:** A user who has reached a minimum level and shown enough participation (runs and civic activity) can create a Squad. *Exact thresholds: to be decided* (an earlier draft used Level 2+). Discovery is via geographic proximity (majority of members within 5km) or mutual friend suggestion. Proximity must respect the privacy design: raw GPS never leaves the phone, so discovery uses a coarse area (for example a chosen barangay) or invite codes, not members' live locations.
+**Formation:** A user who has reached a minimum level and shown enough participation (runs and civic activity) can create a Squad. *Decided 2026-10-08:* Level 3 or higher to create a squad; 3 to 12 members; one squad per person; join with a 6-character invite code, accepted by the leader or a co-leader. Discovery is via geographic proximity (majority of members within 5km) or mutual friend suggestion. Proximity must respect the privacy design: raw GPS never leaves the phone, so discovery uses a coarse area (for example a chosen barangay) or invite codes, not members' live locations.
 
-**Roles and membership (proposed, to confirm):** Squads work like a typical game party.
+**Roles and membership (confirmed 2026-10-08):** Squads work like a typical game party.
 
 | Role | Can do |
 |---|---|
@@ -890,7 +890,7 @@ Small accountability groups. The primary social unit of Karela.
 | Co-leader | Invite, accept or decline join requests, remove members (not the leader or other co-leaders) |
 | Member | Invite (if the squad allows it), leave at any time |
 
-**Guard rails against abuse** (specific numbers to be decided): cooldowns on renaming and on re-joining a squad just left, a limit on pending invites, and limits on how often leadership can change hands. Every rule is enforced on the server, never only in the app.
+**Guard rails against abuse** (decided 2026-10-08): rename once every 7 days, re-join a squad you left after 24 hours, up to 10 pending join requests per squad. *A limit on how often leadership can change hands: still to be decided.* Every rule is enforced on the server, never only in the app.
 
 **Squad experience:** squads earn Squad XP from their members' activity. Enough Squad XP lets a squad found a Guild (below).
 
@@ -911,7 +911,7 @@ This mechanic is the most direct digital expression of Bayanihan in the platform
 
 Large regional organizations competing for landmark territory.
 
-**Formation:** a squad with enough Squad experience can found a Guild. *Threshold: to be decided.* Guilds bring several squads together for a larger party and larger activities: community clean-up drives, fun runs and similar events. Guild roles follow the same pattern as squads (leader, co-leaders, members), with the same server-enforced guard rails.
+**Formation:** a squad with enough Squad experience can found a Guild. *Decided 2026-10-08:* a squad with 5,000 Squad XP (the XP its members earned while in it) and at least 3 members; up to 10 squads per guild; other squads apply and the guild leader or a co-leader accepts. Guilds bring several squads together for a larger party and larger activities: community clean-up drives, fun runs and similar events. Guild roles follow the same pattern as squads (leader, co-leaders, members), with the same server-enforced guard rails.
 
 **Territory Quest Specification:**
 

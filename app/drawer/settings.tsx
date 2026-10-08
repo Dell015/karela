@@ -1,4 +1,5 @@
 import { Avatar } from "@/components/ui/Avatar";
+import { useBuffs } from "@/services/buffs";
 import { Button, Chip, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { SettingsGroup, SettingsRow } from "@/components/ui/SettingsRow";
@@ -59,6 +60,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { profile, user, logout, reloadProfile } = useAuth();
   const local = useLocalSettings();
+  const buffs = useBuffs();
 
   // ---------------- Permissions (re-read when the user comes back from OS settings)
   const [perms, setPerms] = useState<Permissions | null>(null);
@@ -284,7 +286,7 @@ export default function SettingsScreen() {
           accessibilityLabel="Open your profile"
           style={({ pressed }) => [styles.profileCard, pressed && { opacity: 0.85 }]}
         >
-          <Avatar uri={profile?.profilePicture} name={profile?.displayName || profile?.username} size={56} />
+          <Avatar uri={profile?.profilePicture} name={profile?.displayName || profile?.username} size={56} frame={buffs.frame} />
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{profile?.displayName || "Your profile"}</Text>
             {profile?.username ? <Text style={styles.handle}>@{profile.username}</Text> : null}
@@ -485,8 +487,9 @@ export default function SettingsScreen() {
       {/* Delete account */}
       <Sheet visible={delOpen} title="Delete account" onClose={() => !deleting && setDelOpen(false)}>
         <Text style={styles.sheetBody}>
-          This deletes your account right away: your profile, level, Gems, run history, quests, and your civic
-          reports and their photos. Problems you reported stay on the map for your neighbours, without your name.
+          This deletes your account right away: your profile, level, Gems, Shop items, run history, quests, and your
+          civic reports and their photos. Problems you reported stay on the map for your neighbours, without your name.
+          You leave your squad; if you lead it, the next person in line takes over.
         </Text>
         <Text style={styles.sheetBody}>
           Runs saved on this phone are deleted too. This can&apos;t be undone. If you want a copy first, use

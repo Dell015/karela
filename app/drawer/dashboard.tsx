@@ -4,6 +4,7 @@ import { dayKey } from "@/services/calendarData";
 import { getEffectiveStreak } from "@/services/streakService";
 import { Button, IconButton } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
+import { useBuffs } from "@/services/buffs";
 import { Screen } from "@/components/ui/Screen";
 import { QuestCard } from "@/components/QuestCard";
 import { KARELA } from "@/styles/designSystem";
@@ -45,6 +46,7 @@ import type { DrawerNavigationProp } from "expo-router/drawer";
 
 export default function Dashboard() {
   const { profile, loading } = useAuth();
+  const buffs = useBuffs();
   const mapRef = useRef<MapView>(null);
   const [activeGhostData] = useState<any[]>([]);
 
@@ -266,7 +268,7 @@ export default function Dashboard() {
                     accessibilityRole="button"
                     accessibilityLabel="Your profile"
                   >
-                    <Avatar uri={profile?.profilePicture} name={profile?.displayName} size={50} />
+                    <Avatar uri={profile?.profilePicture} name={profile?.displayName} size={50} frame={buffs.frame} />
                   </TouchableOpacity>
                   <View>
                     <Text style={dashboard_ui.welcomeText}>Welcome back</Text>

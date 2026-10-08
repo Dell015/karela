@@ -1,3 +1,4 @@
+import { KarelaIcon, KarelaIconName } from "@/components/icons/KarelaIcon";
 import { KARELA } from "@/styles/designSystem";
 import { Ionicons } from "@expo/vector-icons";
 import { usePathname, useRouter } from "expo-router";
@@ -7,7 +8,7 @@ import { useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 /**
- * The bottom dock. Shown on Home, Quests, Guilds and Shop (all drawer
+ * The bottom dock. Shown on Home, Quests, Squad and Shop (all drawer
  * screens, so switching between them behaves the same way everywhere).
  * Run is the raised lime button in the middle: it opens the full-screen
  * run map, which has no dock of its own.
@@ -17,12 +18,20 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
  */
 type IconName = keyof typeof Ionicons.glyphMap;
 
-const TABS: { route: string; icon: IconName; iconActive: IconName; label: string; primary?: boolean }[] = [
+// Karela's own icons for Karela things; standard ones for Home and Run.
+const TABS: {
+  route: string;
+  icon: IconName;
+  iconActive: IconName;
+  karela?: KarelaIconName;
+  label: string;
+  primary?: boolean;
+}[] = [
   { route: "/drawer/dashboard", icon: "home-outline", iconActive: "home", label: "Home" },
-  { route: "/drawer/quests", icon: "trophy-outline", iconActive: "trophy", label: "Quests" },
+  { route: "/drawer/quests", icon: "trophy-outline", iconActive: "trophy", karela: "medal", label: "Quests" },
   { route: "/drawer/maps", icon: "play", iconActive: "play", label: "Run", primary: true },
-  { route: "/drawer/guilds", icon: "shield-half-outline", iconActive: "shield-half", label: "Guilds" },
-  { route: "/drawer/shop", icon: "bag-handle-outline", iconActive: "bag-handle", label: "Shop" },
+  { route: "/drawer/guilds", icon: "people-outline", iconActive: "people", karela: "squad", label: "Squad" },
+  { route: "/drawer/shop", icon: "diamond-outline", iconActive: "diamond", karela: "gem", label: "Shop" },
 ];
 
 /** Space a screen should leave at the bottom so content clears the dock. */
@@ -74,11 +83,20 @@ export const DynamicDock = () => {
                 </View>
               ) : (
                 <View style={[styles.iconWell, active && styles.iconWellActive]}>
-                  <Ionicons
-                    name={active ? tab.iconActive : tab.icon}
-                    size={22}
-                    color={active ? KARELA.color.brand : KARELA.color.textMuted}
-                  />
+                  {tab.karela ? (
+                    <KarelaIcon
+                      name={tab.karela}
+                      size={22}
+                      color={active ? KARELA.color.brand : KARELA.color.textMuted}
+                      fillOpacity={active ? 0.35 : 0}
+                    />
+                  ) : (
+                    <Ionicons
+                      name={active ? tab.iconActive : tab.icon}
+                      size={22}
+                      color={active ? KARELA.color.brand : KARELA.color.textMuted}
+                    />
+                  )}
                 </View>
               )}
               <Text style={[styles.label, (active || tab.primary) && styles.labelActive]}>{tab.label}</Text>

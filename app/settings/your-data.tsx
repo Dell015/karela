@@ -12,6 +12,9 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
  *     run_summaries hold no coordinates
  *   - Gemini: services/ai/aiService.ts and app/drawer/ai_coach.tsx prompts
  *   - reports: civic_reports readable by signed-in users, civic-photos bucket public
+ *   - squads/guilds: karela_public_member() in 11_squads.sql (name, username,
+ *     photo, frame, level, streak); territory: services/territory.ts sends
+ *     only (landmark, km)
  * Update this screen whenever one of those changes.
  */
 
@@ -21,6 +24,13 @@ const SECTIONS: { title: string; body: string[] }[] = [
     body: [
       "The GPS trail of each run is saved only on this phone, so your ghost can learn from it. Your account gets the distance, time, calories and XP of a run, not the route.",
       "Inside a Privacy Zone, the route isn't saved at all.",
+      "If you're in a guild, your phone works out how far you ran inside each landmark's circle and sends only that distance, never the route.",
+    ],
+  },
+  {
+    title: "What your squad and guild see",
+    body: [
+      "People in your squad or guild see your display name, username, profile photo, level and streak. They don't see your email, your body details, your runs or where you are.",
     ],
   },
   {

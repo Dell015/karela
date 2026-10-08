@@ -7,7 +7,9 @@ import {
     subscribeToProfile,
 } from "../services/database/supabase/profiles";
 import { applyStreakMultiplier } from "../services/streakMultiplier";
-import { getEffectiveStreak } from "../services/streakService";
+import { clearBuffs, getBuffs, refreshBuffs } from "../services/buffs";
+import { getEffectiveStreak, settleStreak } from "../services/streakService";
+import { flushTerritoryQueue, getTerritories } from "../services/territory";
 
 // 1. STYLED INTERFACE (unchanged — keeps the rest of the app compatible)
 export interface UserProfile {
@@ -40,6 +42,8 @@ export interface UserProfile {
     last_daily_reset?: string;
     last_weekly_reset?: string;
     last_monthly_reset?: string;
+    /** "YYYY-MM-DD", latest Freeze/Repair/Shield day (server, migration 10). */
+    streak_protected_through?: string;
   };
   settings: {
     units: "metric" | "imperial";
@@ -64,7 +68,6 @@ interface AuthContextType {
   gainXP: (amount: number) => Promise<void>;
   syncProgression: () => Promise<void>;
   earnGems: (amount: number) => Promise<void>;
-  useStreakFreeze: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -76,7 +79,6 @@ const AuthContext = createContext<AuthContextType>({
   gainXP: async () => {},
   syncProgression: async () => {},
   earnGems: async () => {},
-  useStreakFreeze: async () => false,
 });
 
 const DEFAULT_STATS = {
@@ -169,7 +171,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Apply streak multiplier to the raw XP amount. Effective streak: a
     // streak lost by missing a day must not keep boosting XP.
     const streak = getEffectiveStreak(profile.stats);
-    const boostedAmount = amount > 0 ? applyStreakMultiplier(amount, streak) : 0;
+    // Guild Pioneer badge: +2% XP (services/buffs.ts).
+    const { xp_multiplier } = await getBuffs();
+    const boostedAmount =
+      amount > 0 ? Math.round(applyStreakMultiplier(amount, streak) * xp_multiplier) : 0;
 
     try {
       // Atomic add so a stale client value can never overwrite server state.
@@ -204,30 +209,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const earnGems = async (amount: number) => {
     if (!user || !profile || amount <= 0) return;
     try {
-      await incrementStats(user.uid, { gems: amount });
+      // Guild Century Walkers badge: +5% Gems (services/buffs.ts).
+      const { gem_multiplier } = await getBuffs();
+      await incrementStats(user.uid, { gems: Math.round(amount * gem_multiplier) });
       await reloadProfile();
     } catch (error) {
       console.error("Gem Update Failed:", error);
-    }
-  };
-
-  const useStreakFreeze = async (): Promise<boolean> => {
-    if (!user || !profile) return false;
-    const currentGems = Number(profile.stats?.gems || 0);
-    const FREEZE_COST = 80;
-
-    if (currentGems < FREEZE_COST) return false;
-
-    try {
-      await incrementStats(user.uid, {
-        gems: -FREEZE_COST,
-        streak_freeze_count: 1,
-      });
-      await reloadProfile();
-      return true;
-    } catch (error) {
-      console.error("Streak Freeze Failed:", error);
-      return false;
     }
   };
 
@@ -301,6 +288,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Superseded by a newer session event, or unmounted — do not subscribe.
         if (disposed || seq !== sessionSeq) return;
 
+        // Once per sign-in: let the server use Streak Freezes for missed days,
+        // load Shop and guild buffs, and send territory saved while offline.
+        // None of it blocks the app; each keeps working offline.
+        void (async () => {
+          if (await settleStreak()) await loadProfile(su.id);
+          const buffs = await refreshBuffs();
+          if (buffs.guild_id) await getTerritories().catch(() => {});
+          await flushTerritoryQueue();
+        })();
+
         // Realtime profile subscription (replaces Firestore onSnapshot)
         if (unsubscribeProfile) unsubscribeProfile();
         unsubscribeProfile = subscribeToProfile(su.id, (row) => {
@@ -316,6 +313,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
         setUser(null);
         setProfile(null);
+        clearBuffs();
       }
       if (!disposed) setLoading(false);
     };
@@ -342,7 +340,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, reloadProfile, logout, gainXP, syncProgression, earnGems, useStreakFreeze }}
+      value={{ user, profile, loading, reloadProfile, logout, gainXP, syncProgression, earnGems }}
     >
       {children}
     </AuthContext.Provider>

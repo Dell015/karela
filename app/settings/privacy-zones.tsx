@@ -1,3 +1,4 @@
+import { KarelaIcon } from "@/components/icons/KarelaIcon";
 import { Button, Chip, IconButton } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { Field, sheet } from "@/components/ui/Sheet";
@@ -9,7 +10,6 @@ import {
 } from "@/services/localSettings";
 import { PermissionManager } from "@/services/PermissionsManager";
 import { KARELA } from "@/styles/designSystem";
-import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -117,7 +117,7 @@ export default function PrivacyZonesScreen() {
           <View style={styles.list}>
             {zones.map((z, i) => (
               <View key={z.id} style={[styles.zoneRow, i === zones.length - 1 && { borderBottomWidth: 0 }]}>
-                <Ionicons name="shield-checkmark" size={20} color={KARELA.color.brand} />
+                <KarelaIcon name="shield" size={20} color={KARELA.color.brand} />
                 <Text style={styles.zoneName}>{z.name}</Text>
                 <IconButton
                   icon="trash-outline"
