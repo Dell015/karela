@@ -805,6 +805,8 @@ ghost_routes table (SQLite)
 
 **Seasonal cap:** Gems above 500 at season-end convert to non-spendable Legacy Tokens. This hard-caps the max advantage any user can accumulate, preventing a pay-to-win dynamic from emerging through the Scout Pass.
 
+**Buying Gems** (decided 2026-10-09): Gems can also be bought with money, in Gem packs (proposed: 120 for ₱49, 300 for ₱99, 650 for ₱199, 1,400 for ₱399). *Still to be decided: whether bought Gems may buy items that affect competition, such as the Territory Boost and streak protection.*
+
 ### Your Character (Player Avatar)
 
 Every user has their own character, separate from Ani. It is the user's presence in the game.
@@ -1064,6 +1066,10 @@ SMEs pay a monthly subscription to become a gamified destination on the Karela m
 90-day seasonal battle pass at **₱149/season**.
 
 Benefits: exclusive Ani skins, rare map trail cosmetics, +20% Gems from Sector Bonuses, early access to new quest types, season badge. All cosmetics earned are **permanent** — users keep their content when the season ends. Only the +20% Gem rate expires.
+
+*Added 2026-10-09:* the pass has a 20-level reward track (free row for everyone, Scout Pass row for pass holders), levelled by XP from runs during the season. The draft track is in `services/store.ts`.
+
+**Stream 2b — Gem packs (decided 2026-10-09).** Gems can also be bought (see "The Dual Currency Economy").
 
 **Stream 3 — LGU / NGO White-Label (B2G)**
 
@@ -1955,6 +1961,37 @@ Karela sits at the intersection of three technical domains:
   - LGU White-Label product launch
   - Scout Pass Season 2
   - **Gate:** 3 LGU partners; ₱50k MRR; 10,000 DAU across Cagayan Valley
+
+### Build status (as of 2026-10-09)
+
+The phases above are the plan. This is what the code has today. Some Phase 2 features were built early. The full done / to-do list, with priorities, is `docs/QA_REPORT.md`. "Built" means written, type-checked and (for SQL) tested, not yet tested with pilot users. Most server features need their SQL file run in Supabase.
+
+| Roadmap item | Status |
+|---|---|
+| Sensor fusion, outdoor | Built: GPS with Kalman smoothing, jump and vehicle-speed rejection |
+| Sensor fusion, indoor mode | Not built |
+| Ghost System with personal + Ani Pacer fallback | Built (personal Ghost); adaptive inputs partly empty (QA M5) |
+| Resonance System | Built: stamina score, Scout or Vanguard civic role, civic load. One input is always empty (QA M5) |
+| Ani coaching | Built: body profile, quest generation, post-run recap, wellness-only rules. No chat memory yet, no weekly plan |
+| SQLite offline logging + sync | Partly: territory uploads queue offline with UUIDs; runs don't yet (QA C7) |
+| Supabase Auth + RLS | Built: RLS on every table; game rules in server functions |
+| XP / Streak / Gem system | Built: server-counted streaks with Streak Freeze and Repair; XP and Gems for runs still awarded by the phone (QA C1) |
+| 7-day onboarding arc | Written but not wired up (QA H3) |
+| Basic Squad formation | Built |
+| Civic quests + Vanguard review | Civic reports, consensus and decay built; Vanguard review not built |
+| B2B Quest Nodes | Not built |
+| Collective Shield (Phase 2) | Built |
+| Guild formation + Territory Quests (Phase 2) | Built; landmarks still to be added |
+| Guild badges | Built: Pioneer, Century Walkers, Bayanihan Heart, Iron Streak. Vanguard Guild waits for the Vanguard system |
+| Gem Shop | Built: Streak Freeze, Streak Repair, Bayanihan Boost, Territory Boost, trails, photo frames |
+| Squad Ghost, Community Ghost, Squad Vision | Not built |
+| Notification architecture | Partly: daily reminder outside quiet hours; no push notifications |
+| Scout Pass, seasonal Gem cap | Not built |
+| Localization (Tagalog, Ibanag) | Not built |
+| Bayanihan Protocol | Tiers 0 and 1 built (live weather, storm safety); Tiers 2 to 4 not built |
+| Privacy controls (section 23) | Built: Privacy Zones, download my data, delete account |
+| Admin panel, LGU exports, Community Hero mode | Not built |
+| Player character (section 17) | Not built (`character_creation` is a stub) |
 
 ---
 

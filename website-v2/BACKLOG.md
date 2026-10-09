@@ -1,463 +1,244 @@
-# Karela Website — Backlog & Handoff
+# Karela website: backlog and handoff
 
-> **Purpose of this document.** Everything the showcase site needs that is not
-> done yet, written so that any human or AI agent can pick it up cold. Every
-> item states what is missing, where it lives, why it was deferred, and exactly
-> what "done" looks like.
->
-> **Status:** Phases 1–7 of the build are complete. The site is functional,
-> responsive, accessible, performance-optimised, and deployable, with Netlify
-> and Vercel configs committed. What remains is real content (screenshots,
-> copy, numbers) and one backend decision.
->
-> **Last updated:** 2026-07-31
+What the landing page (`website-v2/`) still needs, written so anyone can pick
+it up cold. Each item says what is missing, where it lives and what "done"
+looks like.
+
+**Last updated:** 2026-10-09. This replaces the 2026-07-31 backlog, which
+described an earlier version of the page (screenshot placeholders,
+`placeholders.css`, `components.css`, a stat strip). Those are gone; see
+"Done since the July backlog" below. The old text is in git history.
+
+The house rules for the page (CSP, no frameworks, design rules, voice,
+accessibility floor, how to test) are in the repo's `CLAUDE.md` under
+"The landing page". Read that first.
 
 ---
 
-## How to read this document
+## Where things stand
+
+The page is built: 11 sections (hero, problem, system, ghost, Ani tour,
+Bayanihan, compare, built for the Philippines, waitlist, survey, team), three
+phone screens drawn in HTML and CSS from `<template>`s, Ani sprites rendered
+from the 3D model, one fixed background that blends palettes as you scroll,
+and Netlify and Vercel configs with a strict CSP.
+
+What's left is mostly outside the code: switching on the two form backends,
+real artwork for link previews, a privacy page, and store links at launch.
 
 | Priority | Meaning |
 |---|---|
-| **P0** | Site is misleading, broken, or embarrassing without this. Fix before showing anyone outside the team. |
-| **P1** | Site works but converts poorly. Fix before any public launch or pitch. |
-| **P2** | Polish. Improves quality but nothing breaks without it. |
-| **P3** | Nice to have / future expansion. |
-
-Every code location is given as a path relative to the repo root, with the
-search string to find it.
+| **P0** | Needed before showing the page to anyone outside the team |
+| **P1** | Needed before a public launch |
+| **P2** | Polish |
+| **P3** | Later |
 
 ---
 
-## Quick orientation for a new agent
+## P0
 
-```
-karela/
-├── website-v2/                 <- the showcase site (this document's subject)
-│   ├── index.html           <- single page, 11 sections, all content inline
-│   ├── 404.html             <- styled not-found page
-│   ├── css/
-│   │   ├── tokens.css       <- design system, ported from styles/designSystem.ts
-│   │   ├── base.css         <- fonts, reset, utilities, reveal animations
-│   │   ├── components.css   <- nav, buttons, cards, footer
-│   │   ├── sections.css     <- per-section layouts (hero through team)
-│   │   └── placeholders.css  <- DELETE THIS FILE once all assets land
-│   ├── js/
-│   │   ├── config.js        <- ALL tunable settings live here. Start here.
-│   │   └── main.js          <- nav, reveals, interactive widgets
-│   ├── assets/
-│   │   ├── fonts/           <- Excon family, self-hosted (6 weights)
-│   │   └── img/             <- logos, favicon, OG placeholder
-│   ├── ASSETS.md            <- asset manifest + swap instructions
-│   ├── BACKLOG.md           <- this file
-│   ├── netlify.toml         <- deploy + security headers + caching
-│   └── vercel.json          <- same, for Vercel
-└── docs/aboutkarela.md      <- source of truth for ALL site copy (41 sections)
-```
+### P0-1. Waitlist and survey don't save anything yet
 
-**Run it locally:**
-```bash
-npx http-server website -p 8080
-# then open http://127.0.0.1:8080
-```
+**Where:** `website-v2/js/config.js`, `WAITLIST.endpoint` and `SURVEY.endpoint`
+(both `""`).
 
-There is no build step, no package.json, and no dependencies. Editing a file
-and refreshing the browser is the entire dev loop.
+Both forms are finished: validation, keyboard use, screen-reader messages,
+sending and error states. While the endpoint is empty they say plainly that
+nothing was saved. They never fake a success.
 
-**Golden rule when committing:** this repo has unrelated uncommitted work in
-the app source. Only ever `git add website-v2/`. Never `git add .` or `git add -A`.
+The backend is ready to set up:
+- `website-v2/backend/supabase-site.sql` creates the `waitlist` and
+  `survey_responses` tables in a **new** Supabase project made only for the
+  site. Anyone can add a row; nobody can read, change or delete rows with the
+  public key. You read the data in the Supabase dashboard.
+- The CSP in `netlify.toml` and `vercel.json` already allows
+  `https://formspree.io` and `https://*.supabase.co` in `connect-src`. Once
+  you pick one, you can narrow it to that exact origin.
 
----
+**Steps (Supabase):** create a new project, run `backend/supabase-site.sql`,
+then fill in `endpoint` and `headers` as the comments in `config.js` show.
+**Never use the mobile app's project or its `EXPO_PUBLIC_SUPABASE_ANON_KEY`.**
 
-## P0 — Blocking issues
+**Steps (Formspree):** create two forms, paste their URLs as the endpoints.
 
-### P0-1. Waitlist form does not submit anywhere
+**Done looks like:** a real email on the waitlist and a real survey
+submission each show up as a row, and the success message shows. Also test
+the "not connected" message (empty endpoint) and the validation message.
 
-**Where:** `website-v2/js/config.js` → `WAITLIST.endpoint` (currently `""`)
-**Search:** `WAITLIST_ENDPOINT`
+### P0-2. Two offline claims are ahead of the app
 
-The waitlist form is fully built: it validates email format, handles keyboard
-submission, manages focus, announces errors to screen readers via an ARIA live
-region, and shows loading/success/error states. It does not post anywhere,
-because no backend has been chosen.
+**Where:** `index.html`, the compare table ("Does it work offline?") and the
+"Built for the Philippines" section ("Tracking runs offline in SQLite and
+syncs ... Every event carries a UUID").
 
-**Current behaviour when unconfigured:** the form validates the email, then
-displays an honest fallback message pointing the user to the GitHub repo. It
-does **not** pretend to have saved the address. This was a deliberate choice —
-silently dropping signups would be worse than admitting the form is not live.
+Today the app queues only territory uploads offline with a UUID. Runs aren't
+saved offline yet (app QA item C7 in `docs/QA_REPORT.md`, section 7).
 
-**To make it work, pick one:**
-
-**Option A — Formspree (fastest, ~10 minutes)**
-1. Create a form at https://formspree.io, copy the endpoint URL.
-2. Set `endpoint` in `website-v2/js/config.js`:
-   ```js
-   WAITLIST: { endpoint: "https://formspree.io/f/YOUR_ID", method: "POST" }
-   ```
-3. Done. The existing `fetch` call already sends `{ email, source, timestamp }`
-   as JSON and handles the response.
-
-**Option B — Separate Supabase project (owns the data, ~1 hour)**
-1. Create a **new** Supabase project. Do **not** reuse the app's project.
-2. Run this SQL:
-   ```sql
-   create table public.waitlist (
-     id          uuid primary key default gen_random_uuid(),
-     email       text not null unique,
-     source      text,
-     created_at  timestamptz not null default now()
-   );
-
-   alter table public.waitlist enable row level security;
-
-   -- Anonymous visitors may insert, and nothing else.
-   create policy "anon can join waitlist"
-     on public.waitlist for insert to anon with check (true);
-
-   -- No select/update/delete policy = nobody can read the list via the
-   -- anon key. Read it from the Supabase dashboard or with the service key.
-   ```
-3. Set the endpoint to `https://<project>.supabase.co/rest/v1/waitlist` and add
-   the new project's anon key to `WAITLIST.headers`.
-
-> **SECURITY — do not skip.** The app's `EXPO_PUBLIC_SUPABASE_ANON_KEY` must
-> never appear in `website-v2/`. The app's anon key grants access to user
-> profiles, missions, and civic nodes under its RLS policies. A marketing page
-> is a public, unauthenticated surface; putting that key in it widens the
-> app's attack surface for zero benefit. Use a separate project.
-
-**Done looks like:** submitting a valid email inserts a row you can see in the
-backend, and the success state renders. Test with a real address.
+**Done looks like:** either the app's run outbox is built (C7), or the two
+lines say it is planned. The owner decides which. The page hasn't been
+changed.
 
 ---
 
-### P0-2. Every app screenshot is a placeholder
+## P1
 
-**Where:** 7 slots in `website-v2/index.html`
-**Search:** `ph__flag`
+### P1-3. No real link-preview image
 
-No screenshots of the app exist in the repo. Each slot renders an on-brand
-dashed panel naming the exact file and dimensions required. The site looks
-intentional, but a visitor cannot see the product — which defeats the purpose
-of a showcase site.
+**Where:** `assets/img/og-placeholder.png`, search `TODO(assets)` in
+`index.html`.
 
-Full manifest, capture commands, and compression settings: **`ASSETS.md`**.
+The 1200 by 630 image is a placeholder. Any link shared on Messenger,
+Facebook or X shows it, and those are the main sharing channels here.
 
-Highest impact first:
-1. Active run with ghost pacing (hero)
-2. Ani chat conversation
-3. Civic report / CivicHUD
-4. Dashboard
-5. Quests
-6. Progress graph
+**Done looks like:** real artwork at `assets/img/og.png` (keep it small, under
+about 150 KB), the `og:image` meta tag pointing at it, the `TODO(assets)`
+comment removed, and the placeholder file deleted.
 
-**Done looks like:** `css/placeholders.css` is deleted, its `<link>` removed
-from `index.html`, and no `ph__flag` matches remain.
+### P1-4. No privacy policy page
 
----
+The waitlist says "Privacy policy coming soon." Once the forms save email
+addresses, RA 10173 needs a published privacy notice: what is collected, why,
+how long it's kept, and how to ask for deletion. `docs/aboutkarela.md`
+section 23 has the substance. NPC registration as a personal information
+controller is also needed before public launch (section 23).
 
-### P0-3. All statistics are illustrative, not measured
+**Done looks like:** `website-v2/privacy.html` using the same CSS (start each
+extra page with its own doctype, charset and viewport), linked from the
+waitlist note and the footer, with the "coming soon" text removed. Privacy
+claims phrased "by design" and matching `docs/aboutkarela.md`.
 
-**Where:** `website-v2/js/config.js` → `STATS`
-**Search:** `TODO(stats)`
+### P1-5. Store links at launch
 
-The hero stat strip and the Civic Engine counters show plausible-looking
-numbers. **These are not real measurements.** The app is in development with no
-pilot data collected yet.
+**Where:** `config.js`, `STORE_LINKS` (both `null`); the "App Store soon" and
+"Google Play soon" labels in the waitlist section of `index.html`.
 
-They are centralised in one config object specifically so they can be replaced
-or removed in one edit, and each is labelled in the UI as a design target
-rather than an achieved result.
+**When the app ships:** set the real store URLs and drop the "soon" labels.
+Official badge artwork must come from Apple and Google; their guidelines
+don't allow recreations.
 
-**Do one of these before any public launch:**
-- Replace with real pilot numbers once Tuguegarao data exists, or
-- Delete the stat strip entirely (`data-stats` block in `index.html`), or
-- Keep them but ensure the "design target" framing stays visible.
+### P1-6. Point the host at `website-v2/`
 
-Publishing invented metrics as achievements is a real reputational and legal
-risk, especially for a thesis project. Do not remove the qualifying label
-without replacing the numbers.
+The old `website/` folder was deleted on 2026-10-08. The Netlify or Vercel
+project must now publish `website-v2/` (both config files live in that
+folder).
 
 ---
 
-## P1 — Needed before public launch
+## P2
 
-### P1-4. ~~Nav logo is 657 KB~~ — RESOLVED 2026-07-31
+### P2-7. Team section (photos added 2026-10-09)
 
-The source `karela_word-logo.png` was a **4388 × 4388 square canvas** being
-rendered at 120 × 30 CSS pixels, almost entirely transparent padding. It was
-trimmed to its actual content bounds (4344 × 764, a true 5.69:1 ratio) and
-resampled to 360 × 63 with bicubic interpolation.
+**Where:** `#team` in `index.html`. Four people show with photos
+(`assets/img/randel.webp`, `yshia.webp` for Trishia, `steven.webp`,
+`sander.webp`, 480 by 480, about 20 KB each). Qarisha Collado and Cyduanne
+Biraquit were taken off the page for now at the owner's request (2026-10-09).
+To add someone back: copy a `<li class="member member--x">` block, add a
+480 by 480 webp, and use a free colour class (`member--d` coral and
+`member--e` sky are unused). From 760 px wide the grid shows 4 per row;
+with 5 or 6 people, check that the last row looks right.
 
-**657 KB → 12 KB, a 98.1% reduction.**
+### P2-8. Ghost and consensus visuals are illustrations
 
-The markup `width`/`height` attributes were also wrong — they said 120 × 30
-(4:1), which did not match the real 5.69:1 ratio and would have caused the
-logo to render squashed or shifted once dimensions were respected. Now 171 × 30
-in the nav and 159 × 28 in the footer.
+The ghost chart and the consensus animation explain the ideas correctly but
+are drawn, not made from real data. Once there are real (anonymised) runs and
+verified reports, they could be plotted from that data. Keep the page light:
+no map library or tiles on load.
 
-`icon.png` was also 1024 × 1024 at 393 KB while only serving as the
-`apple-touch-icon`; resized to 180 × 180, now 30 KB. Unused `fire.png` removed.
+### P2-9. Unused image
 
-**Total image payload: 1,077 KB → 89 KB.**
+`assets/img/coach.png` (28 KB) isn't used by the page or the CSS. Delete it,
+or use it.
 
-Still worth doing if you have vector source: an SVG wordmark would be roughly
-4 KB and scale perfectly. Also still true — **never ship**
-`assets/images/karelala.png` (25 MB) or `karela_logo.png` (2.3 MB) to the web.
+### P2-10. Fonts could be subset
 
----
+All seven fonts are WOFF2 already. Subsetting to Latin would make them
+smaller still. Low priority.
 
-### P1-5. No real Open Graph image
+### P2-11. Save the sprite render script
 
-**Where:** `website-v2/assets/img/og-placeholder.png`
-**Search:** `TODO(assets)` in `index.html`
-
-A 1200×630 placeholder was generated programmatically so the meta tag resolves
-instead of 404ing. It literally says "PLACEHOLDER" on it. Any link shared to
-Facebook, Messenger, X, or Discord will show it.
-
-Given Messenger and Facebook are the primary sharing channels in the
-Philippines, this matters more than it would elsewhere.
-
-**Done looks like:** real 1200×630 artwork at `img/og.png`, meta tag updated,
-validated at https://www.opengraph.xyz.
+The Ani sprites (`ani-run`, `ani-walk`, `ani-idle`, `ani-face`) were rendered
+from `assets/3d/female_final.glb` with three.js in headless Chromium, but the
+script isn't in the repo (only the app's game-art script,
+`scripts/render-game-art/`, is). Saving it means the sprites can be
+re-rendered when the model changes, as `CLAUDE.md` asks.
 
 ---
 
-### P1-6. No analytics
+## P3
 
-Nothing measures whether the site converts. Recommended: Plausible or Umami
-(both privacy-respecting, cookieless, and therefore consistent with the RA
-10173 posture the app takes; neither needs a cookie banner).
-
-Events worth tracking: waitlist submit success, waitlist submit failure, scroll
-depth past each section, streak-slider interaction, nav link clicks.
-
-Add the snippet to `index.html` before `</head>`. Do **not** add Google
-Analytics without also adding a consent banner.
+- **P3-12.** Tagalog version of the page, once the app has Tagalog.
+- **P3-13.** A page for LGU coordinators and partners (`docs/aboutkarela.md`
+  section 24).
+- **P3-14.** Devlog for the thesis and for search.
+- **P3-15.** A short demo video, lazy-loaded behind a click, kept small for
+  prepaid data.
 
 ---
 
-### P1-7. No privacy policy or terms page
+## Done since the July backlog
 
-The site collects email addresses. Under RA 10173, a personal information
-controller needs a published privacy notice stating what is collected, why, how
-long it is retained, and how to request deletion.
-
-`aboutkarela.md` §23 already contains the substance — it needs to become a
-page. Create `website-v2/privacy.html` reusing the same CSS, and link it from the
-footer (a placeholder link with `aria-disabled` is already there).
-
-Also noted in §23: NPC registration as a personal information controller is
-required prior to public launch.
-
-**This is a legal requirement, not a nice-to-have, once the form goes live.**
-
----
-
-### P1-8. Store badges are intentionally disabled
-
-**Where:** `website-v2/index.html`, hero and waitlist sections
-**Search:** `data-store-badge`
-
-The app is not published (`aboutkarela.md` line 5: `Status: Active_Development`,
-v3.1). App Store and Play Store badges are built and styled but rendered with
-`aria-disabled="true"` and a "Coming soon" label, so they are visible as intent
-without being a broken promise.
-
-**When the app ships:** remove `aria-disabled`, set the real store URLs in
-`config.js` → `STORE_LINKS`, and drop the "Coming soon" label. Official badge
-artwork must come from Apple and Google — their brand guidelines prohibit
-recreations, and the current implementation uses text-and-icon stand-ins
-rather than fake badges for exactly this reason.
+- **Phone screens:** the 7 screenshot placeholders and `placeholders.css` are
+  gone. The Ani, civic and streak phone screens are built in HTML and CSS
+  (`css/screens.css`, three `<template>`s), sized in `cqw` so they scale as
+  one piece.
+- **Invented numbers removed:** the old stat strip with illustrative numbers
+  (`TODO(stats)`) is gone. The hero says "In development. Piloting in
+  Tuguegarao City."
+- **Survey:** real questions from the Karela research team in `config.js`;
+  the "Sample questions" badge is off (`showSampleBadge: false`).
+- **Form backend ready:** `backend/supabase-site.sql` for a separate site
+  project, and the CSP already allows the form origins.
+- **Ani on the page:** 8-frame webp sprite sheets (about 50 KB each) and a
+  face image, plus a few handwritten Taglish notes in Gochi Hand.
+- **Interactive pieces:** Resonance chart you can drag through a run, ghost
+  chart, sticky phone tour, consensus animation, streak slider that drives
+  the phone screen, safety tier selector that shifts the page palette, run
+  scrollbar tracker.
+- **Background:** one fixed background blends palettes by scroll position
+  (`data-palette` on each section), so sections have no hard edges.
+- **Fonts:** all WOFF2, self-hosted.
+- **Accessibility and performance work from July** (contrast, skip link,
+  keyboard-scrollable regions, menu dialog semantics, image payload from
+  about 1 MB to under 100 KB, 404 page) carried over.
 
 ---
 
-### P1-9. Team section has no photos
+## Decided against
 
-**Where:** `website-v2/index.html`, `#team`
+Do not "fix" these without revisiting the decision.
 
-Six members, six circular placeholders showing initials. Initials-in-a-circle
-is a legitimate permanent design choice, so this is only P1 if you want
-photos.
-
-`assets/images/sir-sander.jpg` already exists in the app repo for Sander
-Sedano. Needed: 400×400 square crops for Randel, Trishia, Steven, Qarisha, and
-Cyduanne, saved to `website-v2/assets/img/team/`.
-
----
-
-## Resolved during the phase 1–6 build
-
-Logged so nobody re-investigates a fixed problem. Each was found by audit
-rather than assumed.
-
-| Issue | Finding | Fix |
-|---|---|---|
-| **Contrast failure** | `--text-faint: #555555` measured **2.61:1** against `--bg`, far below the WCAG AA 4.5:1 minimum for body text — and it was applied to roughly ten small-text elements (captions, fine print, table footnotes, input placeholders). | Raised to `#7a7a7a` (**4.53:1**). Original preserved as `--text-faint-app` for reference. Three hardcoded `fill="#555"` SVG axis labels updated to match. |
-| **Invalid `dl` markup** | The hero stat list emitted `<dd>` before `<dt>`, which violates the HTML definition-list content model. | Reordered to `dt` then `dd`, with `flex-direction: column-reverse` keeping the number visually on top. A screen reader now reads "Max streak multiplier: 3.0×". |
-| **Meaningless ARIA** | `aria-disabled="true"` was set on non-interactive `<span>` elements (store badges, privacy note). ARIA states only apply to elements with interactive roles. | Replaced with a `.store-badge--soon` class; state is conveyed by the visible "Coming soon" text. |
-| **Keyboard-inaccessible scroll regions** | The comparison table and both formula blocks scroll horizontally on narrow viewports but could not be reached or scrolled by keyboard (WCAG 2.1.1). | Added `tabindex="0"`, `role="region"`, and descriptive `aria-label` to all three. |
-| **Skip link did not move focus** | `#main` was not focusable, so the skip link scrolled without transferring focus. | Added `tabindex="-1"` to `<main>`. |
-| **Focus-trapped menu lacked dialog semantics** | The mobile menu traps focus but was a plain `<div>`, so assistive tech had no signal it was modal. | Added `role="dialog"` and `aria-modal="true"`. |
-| **Oversized images** | Logo was a 4388×4388 canvas at 657 KB rendered at 120×30; `icon.png` was 1024×1024 at 393 KB for a 180px slot. | Trimmed, resampled, and corrected aspect ratios. Image payload **1,077 KB → 89 KB**. |
-| **Fonts shipped as OTF** | Six OTF weights totalling 191 KB, with no WOFF2 anywhere. | All six converted; `@font-face` lists WOFF2 first with OTF fallback. **191 KB → 110 KB**. |
-
-Also added in the same pass: `prefers-contrast: more` support (brighter
-secondary text, solid borders, glow orbs removed), and `forced-colors: active`
-support — gradient-clipped text renders **invisible** in Windows High Contrast
-mode because its fill is transparent, so `--webkit-text-fill-color` is restored
-to `currentColor` there.
-
-**Measured payload after this pass** — approximately 202 KB on the critical
-path (HTML 70 KB, CSS 64 KB, JS 20 KB, two preloaded WOFF2 weights 36 KB, logo
-12 KB). No blocking third-party requests, because there are none.
-
----
-
-## P2 — Polish
-
-### P2-10. Ghost System and Civic Engine diagrams are CSS/SVG approximations
-
-**Where:** `#ghost` and `#civic` in `index.html`
-
-Both sections are hand-built SVG and CSS animations that communicate the
-concept correctly but are illustrative, not generated from real data.
-
-- **Ghost System:** shows the effort-decay curve
-  `P(t) = P_baseline × e^(−λ × max(0, t − t_fatigue))` from §10.2 as a hand-drawn
-  SVG path, with a static PB ghost shown for contrast. Plotting a real curve
-  from actual run data would be more honest and more impressive.
-- **Civic Engine:** animates three report pins converging into a verified
-  cluster (§12.2 spatial consensus, ε = 15–30 m, minPts = 3). It is a loop, not
-  a real map.
-
-**Upgrade path:** export anonymised real data from the SQLite `ghost_routes`
-table and plot it, and/or embed a real Tuguegarao map (MapLibre GL + free
-CARTO dark tiles fits the palette and needs no API key).
-
----
-
-### P2-11. No favicon set beyond a single 32px PNG
-
-Add `apple-touch-icon` at 180×180, `favicon.svg`, and a `site.webmanifest` with
-theme colour `#0d0d0d`.
-
----
-
-### P2-12. ~~Excon is served as OTF, not WOFF2~~ — RESOLVED 2026-07-31
-
-All six weights converted to WOFF2 via `ttf2woff2`. Each `@font-face` now lists
-WOFF2 first with the OTF kept as a fallback, so any browser that cannot handle
-WOFF2 still renders correctly — in practice every current browser takes the
-WOFF2.
-
-**191.1 KB → 110.0 KB across all six weights, roughly 42% per file.**
-
-Only Black (900) and Regular (400) are preloaded, and those preloads now point
-at the WOFF2. Preloading all six would compete with the hero render for
-bandwidth.
-
-Still open, lower value: **subsetting to Latin only** would cut this further.
-The OTF fallbacks could also be deleted once you are satisfied nothing in your
-audience needs them, saving another 191 KB on disk (though not on the wire,
-since they are never fetched).
-
----
-
-### P2-13. ~~No 404 page~~ — RESOLVED 2026-07-31
-
-`website-v2/404.html` added, reusing the same token and component CSS. Netlify and
-Vercel both serve it automatically; GitHub Pages does too.
-
----
-
-### P2-14. Single-language only
-
-The app plans Tagalog and Ibanag support (`README.md` "Add i18n framework").
-The site is English-only. For a Tuguegarao beachhead, a Tagalog toggle would
-likely lift conversion.
-
-All copy is inline in `index.html`, so this would mean either a second
-`index-tl.html` or extracting strings to JSON with a small runtime swap.
-Deferred as a larger architectural decision.
-
----
-
-### P2-15. Reduced-motion coverage is broad-brush
-
-`base.css` kills nearly all animation under
-`@media (prefers-reduced-motion: reduce)`, and `main.js` skips observers
-entirely. This is correct and safe, but blunt — some non-vestibular animations
-(colour fades, opacity) could be preserved for users who only object to motion.
-Low priority; current behaviour is the safe default.
-
----
-
-## P3 — Future
-
-- **P3-16.** Interactive 3D Ani model. `assets/3d/miku_chibi.glb` (1.8 MB) and
-  `assets/3d/female_final.glb` (1.2 MB) exist. `<model-viewer>` would work
-  but adds roughly 300 KB of JS — needs lazy loading behind a click, and the
-  1.8 MB payload is hostile to the prepaid-data audience the app targets.
-- **P3-17.** LGU / partner landing page. §24 describes a B2B model; a dedicated
-  page for LGU coordinators (persona "Mang Ben") would serve a different buyer
-  with different needs.
-- **P3-18.** Blog or devlog for SEO and thesis documentation.
-- **P3-19.** Real-time waitlist counter, once there are numbers worth showing.
-- **P3-20.** Video demo replacing the hero screenshot. Highest-converting asset
-  for an app site, and also the most work.
-- **P3-21.** Press kit page — logos, screenshots, boilerplate.
-
----
-
-## Deliberate omissions
-
-Things a reviewer might flag as missing that were **decided against**, with
-reasoning. Do not "fix" these without revisiting the decision.
-
-| Omitted | Why |
+| Left out | Why |
 |---|---|
-| Download buttons linking to stores | App is not published. Linking to a dead store page is worse than an honest waitlist. |
-| Testimonials / user quotes | No users yet. Fabricating social proof is dishonest and easy to catch. |
-| "Trusted by" LGU logos | No signed partnerships. Implying government endorsement without it carries real risk. |
-| Newsletter popup / exit-intent modal | Hostile UX, and the page already has two waitlist CTAs. |
-| Cookie banner | No cookies are set, and no third-party trackers are loaded. A banner would be theatre. Revisit if analytics are added. |
-| A JS framework | Zero dependencies means zero supply-chain risk, no build step, and any team member can edit it. The site is one page. |
-| Tailwind or a CSS framework | The design system already exists in `styles/designSystem.ts`. Porting it to CSS variables keeps the site and app in sync; a framework would fight that. |
-| Live GPS / map embed on load | Costs an API key, adds significant weight, and needs a consent story. The animated SVG communicates the concept at a fraction of the cost. |
-| Precise health claims ("burn X calories") | `aboutkarela.md` §16 is explicit that Ani avoids medical claims. Site copy mirrors that restraint. |
+| Analytics snippets | The CSP allows no outside scripts, and `CLAUDE.md` rules them out. Revisit only with a self-hosted, cookieless option and a privacy-page update. |
+| Store download buttons before launch | Linking to a missing store page is worse than an honest waitlist. |
+| Testimonials, "trusted by" logos, user counts | No users or signed partners yet. Inventing them is dishonest and easy to catch. |
+| Popups and exit-intent modals | Hostile, and the page already has a waitlist. |
+| Cookie banner | No cookies, no trackers. |
+| Frameworks, build tools, CDNs | One page, no build step, no supply-chain risk. The CSP blocks CDNs anyway. |
+| Live map on load | Needs a key, adds weight, and needs a consent story. |
+| Health claims ("burn X calories") | Ani gives general wellness coaching only. The page keeps the same restraint. |
 
 ---
 
-## Verification checklist
-
-Run before any deploy.
+## Before any deploy
 
 ```bash
-# 1. Serve locally
-npx http-server website -p 8080
+# Serve locally (pick one)
+npx serve website-v2
+python -m http.server 8770 --directory website-v2
 
-# 2. JS parses
+# JS parses
 node --check website-v2/js/main.js
 node --check website-v2/js/config.js
 
-# 3. No unresolved placeholders (should be 0 before public launch)
-grep -c "ph__flag" website-v2/index.html
-
-# 4. No TODOs left in shipped code
+# Leftover TODOs (only TODO(assets) for the og image should remain until P1-3)
 grep -rn "TODO" website-v2/ --include=*.html --include=*.css --include=*.js
 ```
 
-Manual checks:
-- [ ] Tab through the whole page — focus ring always visible, order logical
-- [ ] Open mobile menu with keyboard, confirm Tab stays trapped, Esc closes
-- [ ] Set OS to "reduce motion", reload, confirm nothing animates
-- [ ] Resize from 320 px to 2560 px, confirm no horizontal scroll at any width
-- [ ] Run Lighthouse — target 95+ on all four categories
-- [ ] Screen reader pass (NVDA or VoiceOver) on the waitlist form
-- [ ] Validate at https://validator.w3.org
-- [ ] Check contrast on lime `#7CF205` text — it needs dark ink `#04210A` on
-      bright fills, which `tokens.css` provides as `--on-bright`
+Then the manual checks in `CLAUDE.md`: widths 320, 390, 768, 1024, 1440 and
+1920 with no sideways scroll; no console errors; reduced motion still gives a
+complete page; keyboard through nav, menu, run tracker, Resonance slider, tier
+selector, forms and survey; both form messages.
 
 ---
 
@@ -465,47 +246,12 @@ Manual checks:
 
 No build step. Point any static host at `website-v2/`.
 
-**Netlify** — `website-v2/netlify.toml` is committed and ready.
-**Vercel** — `website-v2/vercel.json` is committed and ready.
-**GitHub Pages** — repo Settings → Pages → deploy from `main`, folder
-`/website`. Note that Pages cannot serve the custom headers in those config
-files.
+- **Netlify:** `website-v2/netlify.toml`
+- **Vercel:** `website-v2/vercel.json`
+- **GitHub Pages:** works, but can't send the security headers, so the CSP is
+  lost.
 
-Both configs set long-lived immutable caching for `assets/`, no-cache for HTML,
-and the security headers below.
-
-**Security headers already configured:** `X-Content-Type-Options: nosniff`,
-`X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`,
-and a `Content-Security-Policy`.
-
-> **CSP warning.** The policy is currently restrictive:
-> `default-src 'self'`. When you add a waitlist endpoint or analytics, you
-> **must** add those origins to `connect-src` and `script-src` or the requests
-> will be silently blocked by the browser. This is the single most likely cause
-> of "the form worked locally but not in production".
-
----
-
-## Source-of-truth map
-
-Every claim on the site traces to `aboutkarela.md`. When editing copy, check
-the source section first.
-
-| Site section | Source |
-|---|---|
-| Hero tagline | line 2 — "A Better You, One Quest at a Time." |
-| Hero subhead | line 3 — the thesis one-liner |
-| The Problem | §2 (line 99) |
-| Two Tracks / Resonance | §1 (line 76), §14 (line 595) |
-| Ghost System | §10 (line 345), §10.2 decay function (line 371), §17 (line 758) |
-| Meet Ani | §16 (line 650) — quest generation, body-aware coaching, limitations |
-| Civic Engine | §12 (line 448), §12.2 consensus (line 479), §12.3 decay (line 506) |
-| Bayanihan Protocol | §21 (line 917) — safety tiers, quest tables, PoI verification |
-| Progression | §17 (line 740) — XP, streak multiplier, dual currency |
-| Why Not Strava | §4 (line 129) |
-| Built for the Philippines | §8 offline sync (line 306), §23 privacy (line 992) |
-| Team | §41 (line 1978) |
-
-**Design tokens** come from `styles/designSystem.ts`, ported to
-`website-v2/css/tokens.css`. If a colour changes in the app, change it there and
-re-port — do not let the two drift.
+Both configs set long caching for `assets/`, no caching for HTML, and these
+headers: `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`
+and the CSP. When a form endpoint is chosen, keep `connect-src` in **both**
+files in step.

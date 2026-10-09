@@ -75,7 +75,7 @@ Use these terms the same way in code, UI and site copy.
 - **Protected day**: a day the streak survives without a run, from a Streak Freeze (used automatically), a Streak Repair (bought the day after one missed day) or a squad's Collective Shield. It keeps the streak alive but doesn't add to it. The server counts streaks (`settle_streak`).
 - **Squads and guilds**: a squad is 3 to 12 people (create at Level 3, join with a 6-character code). A squad with 5,000 Squad XP founds a guild of up to 10 squads. Numbers live in `karela_squad_rules()` / `karela_guild_rules()` in the SQL, not in the app.
 - **Territory**: guilds win landmarks (250 m circles) by distance run inside them each month. Only the km inside a circle leaves the phone, never the route.
-- **Gems** are earned by playing only, never bought with money. Cosmetics are visual only.
+- **Gems** are earned by playing and can also be bought with money (Gem packs; owner decision 2026-10-09). The **Scout Pass** is the paid 90-day season pass with a reward track. Prices, the season and the track live in `services/store.ts`. Purchases are screens only until store billing is built (`STORE_OPEN = false`): never fake a purchase. Whether bought Gems may buy competitive items (Territory Boost, streak items) is still undecided. Cosmetics are visual only.
 
 ## The landing page (`website-v2/`)
 
@@ -137,8 +137,8 @@ The goal: it must not look AI-generated. These rules come from the owner.
 
 ### Still to do (see `website-v2/BACKLOG.md`)
 
-- Real survey questions and a survey endpoint.
-- Waitlist backend (separate Formspree or Supabase project).
+- Survey and waitlist endpoints. The survey questions are final, and `website-v2/backend/supabase-site.sql` is ready for a separate Supabase project; only the endpoints in `config.js` are missing.
+- Two offline claims on the page are ahead of the app (runs aren't saved offline yet). Build the app's run outbox or soften the lines; the owner decides.
 - Real og image (`assets/img/og-placeholder.png` is a placeholder).
 - Privacy policy page (the waitlist copy says "coming soon").
 - Store links when the app is published.

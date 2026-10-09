@@ -19,6 +19,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { GEMINI_MODEL } from "@/services/ai/aiService";
 import { ANI_DISCLOSURE, ANI_RULES } from "@/services/ai/aniPersona";
+import { demoReply, hasDemoReply } from "@/services/ai/demoReplies";
 import { getProfile } from "@/services/database/supabase/profiles";
 import { getRecentRunMemories } from "@/services/database/supabase/runService";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -99,7 +100,7 @@ export default function AiCoach() {
     const textToSend = textOverride || inputText;
     if (!textToSend.trim() || isTyping) return;
 
-    if (!API_KEY) {
+    if (!API_KEY && !hasDemoReply(textToSend)) {
       Alert.alert("Ani isn't available", "Ani isn't set up in this version of the app yet.");
       return;
     }
@@ -116,6 +117,7 @@ export default function AiCoach() {
     setIsTyping(true);
 
     try {
+      if (!API_KEY) throw new Error("No Gemini key in this build.");
       const stats = userProfile?.stats;
 
       const memoryPrompt =
@@ -148,6 +150,29 @@ export default function AiCoach() {
 
       setMessages((prev) => [...prev, aiMsg]);
     } catch (error) {
+      // Development builds only: the quick-reply buttons still get a premade
+      // answer (services/ai/demoReplies.ts), so the screen can be demoed
+      // without a working Gemini key. Release builds show the error below.
+      const demo = await demoReply(textToSend, {
+        userId: user?.uid,
+        name: userProfile?.displayName ?? user?.displayName,
+        stats: userProfile?.stats,
+      }).catch(() => null);
+      if (demo) {
+        // A plain log, not an error, so no red box covers a screenshot.
+        console.log("Ani: Gemini didn't answer, showing a premade demo reply (development builds only).", String(error));
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            text: demo,
+            sender: "ai",
+            timestamp: new Date(),
+            isAnalysis: textToSend.toLowerCase().includes("analyze"),
+          },
+        ]);
+        return;
+      }
       console.error("Coach Link Error:", error);
       setMessages((prev) => [
         ...prev,

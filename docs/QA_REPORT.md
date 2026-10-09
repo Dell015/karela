@@ -1,6 +1,6 @@
 # Karela QA Report and to-do list
 
-**Updated:** 2026-10-08 (replaces the 2026-10-07 report; every old finding is carried over below with its new status)
+**Updated:** 2026-10-09 (checks re-run and the work committed late on 2026-10-08 added. Replaces the 2026-10-07 report; every old finding is carried over below with its new status)
 **Scope:** the whole app (`app/`, `components/`, `hooks/`, `services/`, `context/`), all 13 SQL files (schema plus 12 migrations), config, and the docs and landing-page claims about the app.
 
 This is the one place that says what is done and what is left. Section 3 is **your** list (things only you can do). Section 5 is the work list, most urgent first.
@@ -11,11 +11,11 @@ This is the one place that says what is done and what is left. Section 3 is **yo
 
 | Check | Result |
 | --- | --- |
-| `npm run type-check` (strict TypeScript) | **0 errors** in the app. (The only errors are in `app-example/`, the old Expo starter, which is gitignored and can be deleted.) |
+| `npm run type-check` (strict TypeScript) | **8 errors** in the app (was 0 on 2026-10-08). All type mismatches, not crashes; see T1 in 5.1b. (Errors in `app-example/`, the old Expo starter, are ignored: it is gitignored and can be deleted.) |
 | `npm run lint` | **0 errors, 32 warnings** (was 51 findings with 4 errors on 2026-10-07). Details in 5.6. |
-| `npx expo-doctor` | **21 of 21 checks pass.** |
-| Bundling | `npx expo export` builds for **Android and iOS** with no errors. |
-| SQL tests (`supabase/tests`, new) | **105 of 105 pass** for migrations 10 to 13 (shop, streaks, squads, guilds, territory), on a throwaway Postgres. |
+| `npx expo-doctor` | **21 of 21 checks pass** (2026-10-08, not re-run; needs internet). |
+| Bundling | `npx expo export` builds for **Android and iOS** with no errors (2026-10-08, not re-run). |
+| SQL tests (`supabase/tests`) | **104 of 105 pass** for migrations 10 to 13 (shop, streaks, squads, guilds, territory), on a throwaway Postgres. The one failure is a timing fault in the test, not in the guild code (T2 in 5.1b). Because `npm test` stops at the first failing file, run the four files one by one to see all results. |
 | Code read | Every finding from the old report re-checked against today's code. |
 
 **Not checked:**
@@ -30,19 +30,20 @@ This is the one place that says what is done and what is left. Section 3 is **yo
 
 | Area | Status | Summary |
 | --- | --- | --- |
-| Build, types, lint | **Good** | Clean types, no lint errors, both platforms bundle |
+| Build, types, lint | **Good, 8 type errors** | No lint errors, both platforms bundle; 8 new type mismatches (T1) |
 | Auth and profile | **Good, needs signup checks** | Login, signup, verification, profile editing, profile photos. Signup still has no validation or consent (H9) |
 | Settings and privacy | **Done** (needs 08) | Privacy Zones, daily reminder, permissions, change password, download data, delete account, honest "Your data" page |
 | Streaks | **Done** (needs 10) | Server counts streaks; Freeze, Repair and Collective Shield all protect days |
 | Shop | **Done** (needs 10 and 13) | Real catalogue, server-checked purchases, cosmetics on map and profile |
 | Squads, guilds, territory | **Done** (needs 11 to 13, plus landmarks) | Full rules on the server, three-tab screen, map zones |
-| Run tracking | **At risk** | No background tracking, no crash recovery, results passed through the URL (C5 to C7) |
+| Run tracking | **Better screen, still at risk** | New run screen (live stats panel, heading marker, clock-based time, shared run maths). Still no background tracking, no crash recovery, results passed through the URL (C5 to C7) |
+| Progress and stats | **Done** | Progress and Your activity read every finished run, with real pace and bar charts (M15) |
 | Rewards (XP, Gems) | **Still forgeable** | The phone still awards XP and Gems itself (C1) |
 | Civic engine | **Mostly locked** | Writes locked (05), decay scheduled (06). Photos public, reports readable by all, rewards farmable (C4, H5, H6) |
 | Ani | **Safer, still client-side** | Wellness-only rules in every prompt. Key in the app, no chat memory (C3, H10) |
 | Offline-first | **Not built for runs** | Only territory uploads queue offline. Runs don't (C7) |
-| Accessibility | **Improving** | 61 labels/roles now (was 0). Colour-only states remain in places |
-| Tests | **SQL only** | 105 SQL tests. No app tests; jest isn't installed (M12) |
+| Accessibility | **Improving** | 83 labels/roles now (was 0 on 2026-10-07). Colour-only states remain in places |
+| Tests | **SQL only** | 105 SQL tests (104 pass, see T2). No app tests; jest isn't installed (M12) |
 | Icons and art | **Done** | Custom Karela icon set and 18 low-poly 3D renders |
 
 ---
@@ -59,7 +60,7 @@ This is the one place that says what is done and what is left. Section 3 is **yo
    | `11_squads.sql` | Squads and Collective Shield | Squad tab can't load |
    | `12_guilds.sql` | Guilds and badges | Guild tab can't load |
    | `13_territory.sql` | Landmarks, territory scoring, Territory Boost, buffs | Territory tab and map zones can't load |
-2. **Add landmarks** for territory with exact coordinates (I didn't invent any). Example at the top of `13_territory.sql`.
+2. **Add landmarks:** the first three (Ugac Sur, Ugac Norte, Buntun) are in `supabase/landmarks_tuguegarao.sql`; run it. Add more there.
 3. **Decide the privacy wording about Ani.** `docs/aboutkarela.md` says body data is "never shared with third parties", but Ani's prompts send display name, weight, age, notes for Ani and run summaries to Google Gemini. The in-app "Your data" page describes what really happens. Either change the spec wording or trim the prompts (or both).
 4. **Check the app id** `com.worshestershire.karela` (looks like a typo of "worcestershire"). It can't change after the first store upload. (M13)
 5. **Set the EAS environment variables** (Supabase, Gemini, weather, Google Maps) before a cloud build, or the release app stops at launch. (H8)
@@ -81,6 +82,9 @@ This is the one place that says what is done and what is left. Section 3 is **yo
 - **Guilds** (`12_`): found at 5,000 Squad XP and 3 members, up to 10 squads, applications, guild roles and hand-over, leadership passes on automatically when people leave, guild closes when its last squad leaves, all five spec badges with their buffs (Pioneer +2% XP 30 days, Century Walkers +5% Gems, Bayanihan Heart map theme, Iron Streak 500 Gems once; Vanguard Guild shown as "coming later").
 - **Territory** (`13_`): landmark zones, monthly scoring, last-month winner holds, 150% weekly challenge, 14-day forfeit, Territory Boost. The phone sends only km inside each zone (never the route), queued offline with a UUID so retries never double-count. Zones and holder colours show on the run map.
 - **Icons and art:** a custom Karela SVG icon set (`components/icons/KarelaIcon.tsx`) used in the drawer, dock, Shop, Squad and guild screens, streak and Gem displays; 18 low-poly 3D renders (about 4 KB each) for Shop items and badges, with the render script saved in `scripts/render-game-art/`.
+- **Run screen and stats** (committed late on 2026-10-08): a live stats panel on the run screen (`components/run/RunHUD.tsx`); your position shown as an arrow that turns with your heading (`components/run/UserMarker.tsx`); one shared set of run maths (`services/runMath.ts`: distance, time from the clock, pace, XP at 1 per 10 m, calories from body weight) so the run screen, summary and saved run agree; Progress, Your activity and the performance graph read every finished run through `services/runAnalytics.ts` and draw real pace and bar charts (`components/charts/`); the ghost marker moves more smoothly.
+- **Gem packs and Scout Pass screens** (2026-10-09): Shop has a Scout Pass entry and four Gem packs; `app/scout-pass.tsx` shows the benefits, your season level from real run XP and the 20-level track. Screens only (N7). Not yet tried on a phone.
+- **Territory map** (2026-10-09): Territory tab > See the map opens `app/territory-map.tsx`, with every landmark circle filled in its holder's colour, a legend of who holds what, and a card with this month's km when you tap a circle. Not yet tried on a phone.
 - **Housekeeping:** project folders reorganized (docs in `docs/`, 3D sources in `assets/3d/source/`, 40 MB of unused files removed); dead sample-data seeders removed; a misleading notification-permission prompt removed; old client-side gem prices removed (the server holds them).
 
 **Earlier rounds (still true)**
@@ -124,6 +128,18 @@ No run outbox, no run UUIDs. Finishing offline fails. (Territory uploads already
 **C2. Anyone could edit civic nodes. (Fixed by `05_`)**
 **C8. Civic nodes never decayed. (Fixed by `06_`)**
 
+### 5.1b Found on 2026-10-09 (fix first, both are small)
+
+**T1. 8 TypeScript errors. (Open)** They came in with the latest commits. None should crash the app, but `npm run type-check` no longer passes.
+- `app/drawer/_layout.tsx` lines 115, 122, 129: the drawer gives `KarelaIcon` a `ColorValue`, but its `color` prop only accepts a `string`.
+- `services/privacyZones.ts:21`, `services/runMath.ts:29`, `services/territory.ts:87-88`: `calculateDistance` (`services/tracker/geoUtils.ts`) asks for a `MapCoordinate`, which is stricter than the plain `{ latitude, longitude }` points these callers pass.
+*Fix:* widen `KarelaIcon`'s `color` to `ColorValue` (or `String(color)` in the drawer), and let `calculateDistance` take any `{ latitude: number; longitude: number }`.
+
+**T2. One SQL test depends on the time of day. (Open)** `supabase/tests/t12.mjs` (Century Walkers) logs its 1,000 km run at 8:00 AM Manila time today, but the guild is founded "now". After 8 AM the run is earlier than the guild, so it doesn't count and the check fails. It passed when it was written because that was before 8 AM. The guild code is right; the test is wrong. Because the files run with `&&`, the failure also stops `t13` (territory) from running under `npm test`. Run alone, `t13` passes 21 of 21.
+*Fix:* log that run a minute after the guild is founded (for example `now() + interval '1 minute'`).
+
+**T3. Territory bars could draw in the wrong order and overflow. (Fixed 2026-10-09)** `get_territories` doesn't promise an order for `month_top`, but the Territory tab treated the first entry as the leader and sized every bar against it. Found while building the demo data. The tab now sorts by km itself (`components/guild/TerritoryTab.tsx`); no SQL change needed.
+
 ### 5.2 High
 
 **H2. Quest claim isn't atomic, and its XP comes from the phone. (Open)** `QuestEngine.claimQuest` reads, marks claimed, then awards in separate calls; AI-written rewards aren't clamped. *Fix:* one `claim_mission` server function (see C1); clamp AI rewards.
@@ -155,6 +171,7 @@ No run outbox, no run UUIDs. Finishing offline fails. (Territory uploads already
 **N3. No landmarks yet** (section 3).
 **N4. Seasonal Gem cap not built** (spec: Gems above 500 at season end become Legacy Tokens). Needs a season length decision.
 **N5. Squad Vision (opt-in live squad locations) not built.** Must stay opt-in and off by default.
+**N7. Gem packs and the Scout Pass are screens only.** `services/store.ts` has `STORE_OPEN = false`; Buy says nothing was charged. To sell for real: publish, create the products in Play Console and App Store Connect (ids are in `store.ts`), add a billing library (needs a development build, not Expo Go), and add Gems or the pass only after the server checks the receipt. The Scout Pass track, season dates and pack prices are drafts for the owner to review. **Open decision:** may bought Gems buy competitive items (Territory Boost, streak items)?
 **N6. Reset progress lowers Squad XP.** Squad XP counts XP earned while in the squad, so a member who resets takes their share back to zero. Probably fine; decide if a reset should keep it.
 
 ### 5.4 Medium
@@ -166,7 +183,7 @@ No run outbox, no run UUIDs. Finishing offline fails. (Territory uploads already
 - **M5. Adaptive features run on empty input (Open).** `decayModel: null` in 3 places; Resonance always gets `isGhostAhead: false`.
 - **M6. Stats are estimates shown as facts (Partly).** Calories now use body weight (1 kcal/kg/km) and are labelled as estimates; steps are still 1,310/km.
 - **M8. Robustness (Open).** Level-up lock is per device; `syncRunToMissions` uses `Promise.all`; no limit on `getMissions`; a failed profile load leaves the user signed in with no profile.
-- **M9. Accessibility (Partly).** 61 labels and roles now (was 0), and the new screens are labelled. Older screens and colour-only states (ghost ahead/behind) remain.
+- **M9. Accessibility (Partly).** 83 labels and roles now (was 0), and the new screens are labelled. Older screens and colour-only states (ghost ahead/behind) remain.
 - **M10. Routing uses the public OSRM demo server (Open).**
 - **M11. Auth hardening (Open).** No client throttling; weather city hardcoded to Tuguegarao.
 - **M12. No app tests (Open).** jest isn't installed, so `npm test` fails. SQL tests exist now (`supabase/tests`).
@@ -256,12 +273,13 @@ Test on a mid-range Android phone (and an iPhone if you can). Expected failures 
 ## 9. Suggested order of work
 
 1. **You:** run `07_` today (security), then `08_` to `13_`, add landmarks, set EAS variables.
-2. **C5 + C7 together:** runs saved on the phone with a UUID and an outbox, summary opened by id, offline finishing. This also makes the website's offline claim true.
-3. **C1:** server-side rewards (`finish_run`, `claim_mission`, civic rewards), then revoke the stats functions from the app. Fold in H2 and H3.
-4. **C6:** background tracking with a foreground service.
-5. **C3 + H10:** Ani behind an Edge Function, with chat memory.
-6. **Before a pilot:** H5, H6, C4, H9, N1, and the privacy wording decision.
-7. **Quality:** jest and app tests (M12), M2 performance, M3 dates, accessibility on older screens, remove dead code (L1).
+2. **T1 + T2:** the 8 type errors and the time-dependent test (both under an hour).
+3. **C5 + C7 together:** runs saved on the phone with a UUID and an outbox, summary opened by id, offline finishing. This also makes the website's offline claim true.
+4. **C1:** server-side rewards (`finish_run`, `claim_mission`, civic rewards), then revoke the stats functions from the app. Fold in H2 and H3.
+5. **C6:** background tracking with a foreground service.
+6. **C3 + H10:** Ani behind an Edge Function, with chat memory.
+7. **Before a pilot:** H5, H6, C4, H9, N1, and the privacy wording decision.
+8. **Quality:** jest and app tests (M12), M2 performance, M3 dates, accessibility on older screens, remove dead code (L1).
 
 ---
 
@@ -269,10 +287,11 @@ Test on a mid-range Android phone (and an iPhone if you can). Expected failures 
 
 ```bash
 npm install --legacy-peer-deps
-npm run type-check                 # app: no errors (app-example/ errors can be ignored or the folder deleted)
+npm run type-check                 # app: 8 errors today (T1); app-example/ errors can be ignored or the folder deleted
 npm run lint                       # 0 errors, 32 warnings today
 npx expo-doctor                    # needs internet
 npx expo export --platform android --output-dir /tmp/karela-export   # bundles?
-cd supabase/tests && npm install && npm test                        # 105 SQL checks
+cd supabase/tests && npm install && npm test                        # 105 SQL checks; stops at the first failing file
+for f in t10 t11 t12 t13; do node $f.mjs; done                       # all four files, even if one fails
 git log --all --full-history -- .env                                # should print nothing
 ```

@@ -1,10 +1,11 @@
-# Karela 🏃‍♂️🇵🇭
+# Karela
 
 **A hybrid fitness and civic intelligence mobile app** built with React Native and Expo.
 
-Karela combines adaptive running algorithms with crowdsourced urban sensing — turning everyday movement into health progress and civic impact. Features an AI coach (Ani), RPG progression, Ghost pacing, and a Bayanihan disaster-response protocol.
+Karela combines adaptive running algorithms with crowdsourced urban sensing — turning everyday movement into health progress and civic impact. Features an AI coach (Ani), RPG progression, Ghost pacing, squads, guilds and territory, a Gem shop, and a Bayanihan disaster-response protocol.
 
 > For the full project vision, specification, algorithms, and research framework, see **[docs/aboutkarela.md](./docs/aboutkarela.md)**.
+> For what is built today and what is left, see **[docs/QA_REPORT.md](./docs/QA_REPORT.md)**.
 
 ---
 
@@ -45,9 +46,12 @@ EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 EXPO_PUBLIC_GEMINI_API_KEY=your-gemini-api-key
 EXPO_PUBLIC_WEATHER_API_KEY=your-openweathermap-api-key
+EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
 ```
 
-> ⚠️ **Security Note:** The `EXPO_PUBLIC_` prefix exposes these in the client bundle. The Supabase anon key is designed for this (protected by RLS). The Gemini key should ideally be proxied through a Supabase Edge Function in production.
+`.env.example` is the template and the list of every variable. For cloud (EAS) builds, set the same variables in EAS too, or the release app stops at launch.
+
+> **Security note:** The `EXPO_PUBLIC_` prefix exposes these in the client bundle. The Supabase anon key is designed for this (protected by RLS). The Gemini key should ideally be proxied through a Supabase Edge Function in production.
 
 ### Running the App
 
@@ -84,7 +88,9 @@ Scan the QR code with Expo Go (Android) or the Camera app (iOS) to open on your 
    supabase/12_guilds.sql
    supabase/13_territory.sql
    ```
-   Then add landmarks for territory (see the top of `13_territory.sql`).
+   Then add the territory landmarks: `supabase/landmarks_tuguegarao.sql`.
+
+   `supabase/demo/` is **not** part of this order. It holds mock data for screenshots, each with a file that removes it: civic reports (`tuguegarao_demo_reports.sql`, `remove_demo_reports.sql`) and guilds competing for the landmarks (`tuguegarao_demo_guilds.sql`, `remove_demo_guilds.sql`).
 3. Enable the **PostGIS** extension in your Supabase dashboard (Database → Extensions)
 4. Enable **Realtime** on the `profiles`, `missions`, and `civic_nodes` tables
 
@@ -99,27 +105,38 @@ karela/
 │   ├── index.tsx               # Entry / splash / onboarding screen
 │   ├── summary.tsx             # Post-run summary screen
 │   ├── performanceGraph.tsx    # Performance analytics
+│   ├── territory-map.tsx       # Map of landmarks coloured by the guild that holds them
+│   ├── scout-pass.tsx          # Scout Pass: benefits, season level, reward track
 │   ├── auth/                   # Login & signup screens
 │   │   ├── login.tsx
 │   │   └── signup.tsx
+│   ├── settings/               # Settings sub-screens
+│   │   ├── privacy-zones.tsx   # Up to 5 Privacy Zones (100 m)
+│   │   └── your-data.tsx       # What Karela stores and sends, download, delete
 │   ├── drawer/                 # Main app drawer screens
 │   │   ├── _layout.tsx         # Drawer navigation layout
 │   │   ├── dashboard.tsx       # Home dashboard
 │   │   ├── maps.tsx            # Map & run tracking
 │   │   ├── ai_coach.tsx        # Ani AI chat interface
 │   │   ├── quests.tsx          # Quest management
-│   │   ├── calendar.tsx        # Activity calendar
-│   │   ├── progress.tsx        # Progress & stats
+│   │   ├── calendar.tsx        # Activity calendar (real run history)
+│   │   ├── progress.tsx        # Progress & stats (pace and bar charts)
 │   │   ├── profile.tsx         # User profile (with edit modal)
-│   │   ├── guilds.tsx          # Guild & squad screen
-│   │   ├── shop.tsx            # Gem shop
-│   │   └── settings.tsx        # App settings
+│   │   ├── guilds.tsx          # Squad, Guild and Territory tabs
+│   │   ├── shop.tsx            # Gem shop (prices and purchases on the server)
+│   │   └── settings.tsx        # Settings, privacy, account
 │   ├── homepage/               # Sub-screens
 │   │   └── CustomizeAni.tsx    # Ani customization
 │   └── dashboard/
-│       └── character_creation.tsx
+│       └── character_creation.tsx  # Stub, not reachable yet (player character not built)
 ├── components/                 # Reusable UI components
-│   ├── ui/                     # Base UI primitives (Screen, etc.)
+│   ├── ui/                     # Base UI primitives (Screen, Button, Sheet, Avatar, SettingsRow)
+│   ├── icons/KarelaIcon.tsx    # Custom Karela SVG icon set (Gems, streak, squad, guild...)
+│   ├── guild/                  # Squad, Guild and Territory tabs
+│   ├── run/                    # Run screen stats panel (RunHUD) and heading marker (UserMarker)
+│   ├── charts/                 # Pace and bar charts (react-native-svg)
+│   ├── DynamicDock.tsx         # Bottom dock shared by the tab screens
+│   ├── TodayCard.tsx           # Dashboard "Today" card
 │   ├── AuthGate.tsx            # Auth route protection
 │   ├── CivicHUD.tsx            # Civic reporting overlay
 │   ├── RunHistory.tsx          # Run history list
@@ -134,7 +151,6 @@ karela/
 │   ├── useLocationEngine.ts    # GPS tracking & sensor fusion
 │   ├── useQuestEngine.ts       # Quest state management
 │   ├── useRouteBuilder.ts      # Route creation utilities
-│   ├── useSettings.ts          # Settings & dev tools
 │   └── useMotionShield.ts      # Motion detection guard
 ├── services/                   # Business logic & data layer
 │   ├── engines/                # Core algorithm engines
@@ -144,7 +160,8 @@ karela/
 │   │   ├── CivicEngine.ts      # Civic reporting & consensus
 │   │   └── GhostModelManager.ts   # Ghost model persistence
 │   ├── ai/
-│   │   └── aiService.ts        # Gemini AI integration (Ani)
+│   │   ├── aiService.ts        # Gemini AI integration (Ani)
+│   │   └── aniPersona.ts       # Ani's voice and wellness-only rules
 │   ├── database/
 │   │   ├── sqlite/             # Local offline storage
 │   │   │   ├── database.ts     # SQLite operations
@@ -154,23 +171,42 @@ karela/
 │   │       ├── auth.ts         # Authentication service
 │   │       ├── missions.ts     # Mission CRUD & realtime
 │   │       ├── profiles.ts     # User profile operations
-│   │       └── runService.ts   # Run history & AI summaries
+│   │       ├── runService.ts   # Run history & AI summaries
+│   │       └── userData.ts     # Download my data, delete account
 │   ├── tracker/                # GPS & movement utilities
 │   │   ├── routingService.ts   # Route planning (OSRM)
 │   │   ├── GpsKalmanFilter.ts  # GPS noise filtering
 │   │   ├── GhostEngine.ts      # Legacy ghost replay
 │   │   └── geoUtils.ts         # Geo math utilities
-│   ├── gemSystem.ts            # Gem economy logic
+│   ├── gemSystem.ts            # How Gems are earned (prices live on the server)
+│   ├── shop.ts                 # Shop catalogue and purchases (server functions)
+│   ├── store.ts                # Gem packs, Scout Pass, season and reward track (real-money items; screens only)
+│   ├── buffs.ts                # Active boosts and guild badge buffs
+│   ├── squads.ts               # Squads and Collective Shield
+│   ├── guilds.ts               # Guilds and badges
+│   ├── territory.ts            # Landmark zones; queues km-per-zone uploads with UUIDs
+│   ├── gameArt.ts              # Maps Shop items and badges to their art
 │   ├── streakMultiplier.ts     # Streak XP multiplier tiers
-│   ├── statsService.ts         # Stats aggregation
-│   ├── onboarding.ts           # 7-day onboarding arc
-│   ├── notificationService.ts  # Push notifications
+│   ├── streakService.ts        # Asks the server to settle the streak
+│   ├── runMath.ts              # Distance, time, pace, XP and calories in one place
+│   ├── runAnalytics.ts         # Progress and activity stats from run history
+│   ├── statsService.ts         # Stats helpers
+│   ├── calendarData.ts         # Calendar month grid from run history
+│   ├── privacyZones.ts         # Privacy Zones (stored only on the phone)
+│   ├── profileData.ts          # Profile edits through server functions
+│   ├── profilePhoto.ts         # Profile photo crop, strip location, upload
+│   ├── account.ts              # Change password, delete account
+│   ├── reminders.ts            # Daily reminder outside quiet hours
+│   ├── weatherSafety.ts        # Storm safety (Bayanihan Tier 0 and 1)
+│   ├── onboarding.ts           # 7-day onboarding arc (not wired up yet, QA H3)
+│   ├── notificationService.ts  # Notification helpers
 │   ├── PermissionsManager.ts   # OS permissions handler
-│   └── QuestGenerator.ts       # (Deprecated) Legacy quest gen
+│   └── QuestGenerator.ts       # (Unused) Legacy quest gen
 ├── styles/                     # Shared stylesheets
 ├── supabase/                   # Database migrations
 │   ├── schema.sql              # Core schema (run first)
-│   └── 02_ ... 13_*.sql        # Migrations, run in number order
+│   ├── 02_ ... 13_*.sql        # Migrations, run in number order
+│   └── tests/                  # SQL tests for 10 to 13 (PGlite, no live database needed)
 ├── assets/
 │   ├── fonts/                  # Excon font family
 │   ├── images/                 # App icons, onboarding slides, UI images
@@ -193,16 +229,17 @@ karela/
 | Layer | Technology | Version | Purpose |
 |---|---|---|---|
 | Framework | React Native + Expo | SDK 57 | Cross-platform mobile app |
-| Language | TypeScript | 5.9 | Type safety |
+| Language | TypeScript | ~6.0 | Type safety |
 | Navigation | Expo Router | file-based | Screen routing |
-| Local DB | expo-sqlite | ~16.0 | Offline-first data storage |
+| Local DB | expo-sqlite | ~57.0 | On-device storage |
 | Cloud Backend | Supabase (PostgreSQL + PostGIS) | ^2.108 | Auth, database, storage, realtime |
-| AI | Google Gemini 2.0 Flash | ^0.24 | Ani coaching & quest generation |
-| Maps | react-native-maps | 1.20 | GPS visualization |
-| Sensors | expo-location + expo-sensors | ~19.0 / ~15.0 | GPS + accelerometer |
+| AI | Google Gemini 2.5 Flash (`@google/generative-ai`) | ^0.24 | Ani coaching & quest generation |
+| Maps | react-native-maps | 1.27 | GPS visualization (Apple Maps on iOS, Google Maps on Android) |
+| Sensors | expo-location + expo-sensors | ~57.0 | GPS + accelerometer |
 | 3D | Three.js + @react-three/fiber | ^0.182 / ^9.6 | Character model rendering |
-| Animations | react-native-reanimated | ~4.1 | Smooth UI animations |
-| Charts | react-native-wagmi-charts | ^2.9 | Performance graphs |
+| Animations | react-native-reanimated | 4.5 | Smooth UI animations |
+| Charts | react-native-svg | 15.15 | Pace and bar charts (drawn in `components/charts/`) |
+| Notifications | expo-notifications | ~57.0 | Daily reminder |
 
 ---
 
@@ -215,7 +252,10 @@ npm run ios        # Run on iOS simulator
 npm run web        # Run in browser
 npm run lint       # Run ESLint
 npm run type-check # Run TypeScript type checking (tsc --noEmit)
-npm test           # Run tests (requires jest-expo setup)
+npm test           # App tests: not set up yet (jest isn't installed, QA M12)
+
+# SQL tests for migrations 10 to 13
+cd supabase/tests && npm install && npm test
 ```
 
 ---
@@ -227,7 +267,9 @@ npm test           # Run tests (requires jest-expo setup)
 - **Resonance System** — Fusion layer that uses your stamina state to dynamically adjust civic contribution load
 - **Civic Engine** — Crowdsourced urban issue reporting with DBSCAN-inspired spatial consensus verification
 - **Bayanihan Protocol** — Disaster preparedness and recovery quest system with safety tier hard-locks
-- **Streak Multiplier** — XP bonus (1.0×–3.0×) that rewards daily consistency over peak performance
+- **Streak Multiplier** — XP bonus (1.0×–3.0×) that rewards daily consistency over peak performance. The server counts streaks, and protected days (Streak Freeze, Streak Repair, a squad's Collective Shield) keep a streak alive
+- **Squads, Guilds and Territory** — squads of 3 to 12, guilds of up to 10 squads, and monthly contests for 250 m landmark zones. All rules run on the server
+- **Gems and the Shop** — Gems are earned by playing and can also be bought in Gem packs. They buy streak protection, boosts and visual-only cosmetics. The **Scout Pass** is a paid 90-day season pass with a 20-level reward track. Paying isn't switched on yet (screens only)
 
 ---
 
@@ -235,10 +277,14 @@ npm test           # Run tests (requires jest-expo setup)
 
 **Local-First, Cloud-Sync** — designed for the Philippine market where mobile data is expensive and inconsistent.
 
-- All sensor data and run tracking happens offline in SQLite
-- Sync to Supabase when connectivity is available
-- Conflict resolution: local timestamps honored for streaks, server recalculates XP from event log
-- All events carry UUIDs for idempotent sync
+The design:
+- Run tracking works with no signal and syncs to Supabase later
+- Every synced event carries a UUID, so syncing twice never double-counts
+- Game rules that involve Gems, streaks, squads, guilds and territory run on the server, never only on the phone
+
+Where it stands today (details in `docs/QA_REPORT.md`):
+- **Built:** territory uploads (km per zone) queue offline with a UUID. Shop purchases, streaks, squads, guilds and territory are server functions.
+- **Not built yet:** a run outbox. A run finished offline, or lost when the app is closed mid-run, is not saved yet (QA C7). XP and Gems for runs are still awarded by the phone (QA C1).
 
 ---
 
@@ -247,13 +293,13 @@ npm test           # Run tests (requires jest-expo setup)
 | Permission | Platform | Purpose |
 |---|---|---|
 | Fine/Coarse Location | Both | GPS tracking during runs |
-| Background Location | Both | Ghost tracking with screen off |
+| Background Location | Both | Tracking with the screen off (permission configured; the background task isn't built yet, QA C6) |
 | Activity Recognition | Android | Step counting & movement detection |
 | Motion Usage | iOS | Accelerometer & pedometer access |
 | Camera | Both | Civic report photo capture |
-| Notifications | Both | Run widget & streak alerts |
+| Notifications | Both | Daily reminder |
 
-All permissions are configured in `app.json` with user-facing descriptions.
+All permissions are configured in `app.config.js` with user-facing descriptions.
 
 ---
 
@@ -278,7 +324,7 @@ npx expo start
 
 ### Lint Status
 
-The project currently passes ESLint with **0 errors and 0 warnings**:
+ESLint: **0 errors, 32 warnings** (2026-10-09; the warnings are listed in `docs/QA_REPORT.md` 5.6). TypeScript: **8 errors** (QA T1).
 ```bash
 npm run lint
 ```
@@ -316,48 +362,63 @@ refactor: extract haversine into shared geoUtils
 
 ## Resolved Issues (July 2026 Audit)
 
-The following critical issues were identified and fixed:
+The following critical issues were identified and fixed (some of these files have since moved or been removed, for example `app.json` is now `app.config.js` and `useSettings.ts` is gone):
 
-- ✅ `AuthContext.tsx` — missing `applyStreakMultiplier` import (crashed XP earning)
-- ✅ `useSettings.ts` — missing `incrementStats`/`setStats` imports
-- ✅ `database.ts` — missing Supabase imports for run saving
-- ✅ `app.json` — added `expo-location` plugin (background location was broken)
-- ✅ `app.json` — added `ACTIVITY_RECOGNITION` + `NSMotionUsageDescription`
-- ✅ `app.json` — added `expo-sensors`, `expo-image-picker`, `expo-task-manager` plugins
-- ✅ `tsconfig.json` — removed stale Firebase path alias
-- ✅ `useMotionShield.ts` — fixed setTimeout memory leak
-- ✅ `statsService.ts` — fixed unsorted streak calculation
-- ✅ `QuestEngine.ts` — added completion validation before claiming
-- ✅ `PermissionsManager.ts` — fixed error handler returning wrong boolean
-- ✅ `profile.tsx` — implemented Edit Profile modal (was dead code)
-- ✅ All ESLint errors and warnings resolved (59 → 0)
+- `AuthContext.tsx` — missing `applyStreakMultiplier` import (crashed XP earning)
+- `useSettings.ts` — missing `incrementStats`/`setStats` imports
+- `database.ts` — missing Supabase imports for run saving
+- `app.json` — added `expo-location` plugin (background location was broken)
+- `app.json` — added `ACTIVITY_RECOGNITION` + `NSMotionUsageDescription`
+- `app.json` — added `expo-sensors`, `expo-image-picker`, `expo-task-manager` plugins
+- `tsconfig.json` — removed stale Firebase path alias
+- `useMotionShield.ts` — fixed setTimeout memory leak
+- `statsService.ts` — fixed unsorted streak calculation
+- `QuestEngine.ts` — added completion validation before claiming
+- `PermissionsManager.ts` — fixed error handler returning wrong boolean
+- `profile.tsx` — implemented Edit Profile modal (was dead code)
+- All ESLint errors and warnings resolved at the time (59 → 0)
 
 ---
 
-## Remaining Work
+## What's Built and What's Left
 
-See **[docs/QA_REPORT.md](./docs/QA_REPORT.md)** for the full QA report with priorities.
+**[docs/QA_REPORT.md](./docs/QA_REPORT.md)** is the one place that tracks this, with priorities and item codes (C1, H3, ...). This is a short summary as of 2026-10-09.
 
-### High Priority (Security)
-- [ ] Move Gemini API key to a Supabase Edge Function (currently exposed in client bundle)
-- [ ] Switch civic photo uploads from `getPublicUrl` to signed URLs
-- [ ] Replace OSRM demo server with production routing API
+### Built
+- [x] Login, signup with email verification, profile editing, profile photos
+- [x] Run tracking with GPS smoothing (Kalman filter, jump and vehicle-speed rejection), live stats panel, heading marker, Ghost pacing
+- [x] One shared set of run maths: XP at 1 per 10 m, calories from body weight (shown as an estimate), pace and time from the clock
+- [x] Progress and activity stats from every finished run, with pace and bar charts
+- [x] Calendar on real run history; dashboard Today card
+- [x] Streaks counted on the server, with Streak Freeze, Streak Repair and the squad Collective Shield
+- [x] Gem Shop: prices and purchases on the server; trails and photo frames show on the map and profile
+- [x] Squads, Guilds (with all five badges; Vanguard Guild shown as "coming later") and Territory (needs landmarks to be added)
+- [x] Civic reports locked to server functions; stale reports decay hourly
+- [x] Settings: Privacy Zones, daily reminder, permissions, change password, download my data, delete account, "Your data" page (RA 10173)
+- [x] Ani: wellness-only rules in every prompt; storm safety (Bayanihan Tier 0 and 1 from live weather)
+- [x] Custom Karela icon set and 3D-rendered Shop and badge art
+- [x] SQL tests for migrations 10 to 13
 
-### Medium Priority (Features)
-- [ ] Install Zustand for proper state management (replace god-context)
-- [ ] Fix XP formula to match spec (`1 XP / 10m` distance-based)
-- [ ] Implement stride-calibrated steps and weight-based calories
-- [ ] Add notification architecture (currently only race widget exists)
-- [x] Privacy Zones and in-app account deletion (RA 10173); deletion needs `supabase/08_account_deletion.sql`
-- [ ] Build out Guild/Squad systems (currently mock data)
-- [ ] Connect Calendar screen to real data (currently hardcoded)
-- [ ] Connect Shop screen to gem system (currently non-functional)
+Most of the server features need their SQL file run in Supabase first (see Database Setup and QA section 3).
 
-### Low Priority (Quality)
-- [ ] Set up `jest-expo` + `@testing-library/react-native` for unit tests
-- [ ] Add accessibility labels to all interactive elements
+### Left, most urgent first
+- [ ] Fix 8 TypeScript errors and one time-dependent SQL test (QA T1, T2)
+- [ ] Save runs on the phone with a UUID and an outbox so offline and crashed runs aren't lost; open the summary by id instead of from the URL (QA C5, C7)
+- [ ] Award XP and Gems on the server, not the phone (QA C1, H2)
+- [ ] Background tracking with the screen locked (QA C6)
+- [ ] Move the Gemini and weather keys behind a Supabase Edge Function; give Ani chat memory (QA C3, H10)
+- [ ] Civic photos private with signed URLs; limit who can read reports; stop civic reward farming (QA H5, H6, C4)
+- [ ] Signup validation, consent and minimum age (QA H9)
+- [ ] Wire up the 7-day onboarding (QA H3)
+- [ ] Replace the OSRM demo server with a production routing service (QA M10)
+- [ ] Push notifications for squads and guilds (QA N1)
+- [ ] Optional: Zustand for state management (replace the large AuthContext)
+
+### Quality
+- [ ] Set up `jest-expo` + `@testing-library/react-native` for unit tests (QA M12)
+- [ ] Accessibility labels on the older screens; no colour-only states (83 labels so far, QA M9)
 - [ ] Add i18n framework (react-i18next) for Tagalog/Ibanag
-- [ ] Batch polyline rendering on map for performance
+- [ ] Draw the run trail as one map line instead of one per GPS segment, for low-end Android (QA M2)
 - [ ] Add Sentry error monitoring for pilot
 
 ---
@@ -367,9 +428,10 @@ See **[docs/QA_REPORT.md](./docs/QA_REPORT.md)** for the full QA report with pri
 | Document | Contents |
 |---|---|
 | [docs/aboutkarela.md](./docs/aboutkarela.md) | Full project specification, algorithms, research framework, business model |
-| [docs/QA_REPORT.md](./docs/QA_REPORT.md) | QA report (October 2026): findings, priorities, and what happened to every older audit item |
+| [docs/QA_REPORT.md](./docs/QA_REPORT.md) | What is built and what is left (updated 2026-10-09): findings, priorities, device test list |
 | [docs/COMPUTATIONS.md](./docs/COMPUTATIONS.md) | Algorithm computations and formulas |
 | [docs/SDK_UPGRADE_LOG.md](./docs/SDK_UPGRADE_LOG.md) | Record of Expo SDK upgrades |
+| [supabase/tests/README.md](./supabase/tests/README.md) | How to run the SQL tests |
 | [website-v2/BACKLOG.md](./website-v2/BACKLOG.md) | Landing page to-do list |
 
 ---
@@ -393,4 +455,4 @@ All Rights Reserved © 2026 Randel Serafica
 
 ---
 
-*Pilot City: Tuguegarao City, Cagayan Valley, Philippines 🇵🇭*
+*Pilot City: Tuguegarao City, Cagayan Valley, Philippines*

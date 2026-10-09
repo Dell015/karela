@@ -55,6 +55,8 @@ export default function RootLayout() {
             <Stack.Screen name="dashboard/character_creation" options={anim("slide_from_right")} />
             <Stack.Screen name="settings/privacy-zones" options={anim("slide_from_right")} />
             <Stack.Screen name="settings/your-data" options={anim("slide_from_right")} />
+            <Stack.Screen name="territory-map" options={anim("slide_from_right")} />
+            <Stack.Screen name="scout-pass" options={anim("slide_from_right")} />
           </Stack>
         </AuthGate>
       </AuthProvider>

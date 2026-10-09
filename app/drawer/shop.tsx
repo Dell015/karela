@@ -15,9 +15,20 @@ import {
   SLOT_LABEL,
   timeLeft,
 } from "@/services/shop";
+import {
+  GEM_PACKS,
+  GemPack,
+  pesoText,
+  SCOUT_PASS,
+  SEASON,
+  STORE_CLOSED_MESSAGE,
+  STORE_CLOSED_TITLE,
+  STORE_OPEN,
+} from "@/services/store";
 import { KARELA } from "@/styles/designSystem";
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { useFocusEffect, useNavigation } from "expo-router";
+import { useFocusEffect, useNavigation, useRouter } from "expo-router";
 import { ReactNode, useCallback, useState } from "react";
 import {
   ActivityIndicator,
@@ -33,12 +44,17 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 /**
- * The Shop. Everything is bought with Gems earned by playing (runs and civic
- * reports), never with money. Items and prices come from the server
+ * The Shop. Items are bought with Gems. Gems are earned by playing (runs and
+ * civic reports) and, from launch, can also be bought (owner decision
+ * 2026-10-09). Items and Gem prices come from the server
  * (supabase/10_streak_protection_and_shop.sql); purchases are checked there.
+ *
+ * Gem packs and the Scout Pass (services/store.ts, app/scout-pass.tsx) are
+ * screens only until store billing is built: Buy says so, nothing is charged.
  */
 export default function ShopScreen() {
   const navigation = useNavigation("/drawer");
+  const router = useRouter();
   const { profile, reloadProfile } = useAuth();
   const buffs = useBuffs();
   const [state, setState] = useState<ShopState | null>(null);
@@ -74,7 +90,7 @@ export default function ShopScreen() {
     if (gems < item.price) {
       Alert.alert(
         "Not enough Gems",
-        `${item.name} costs ${item.price} Gems and you have ${gems}. Gems come from runs (5 for every 500 m) and civic reports.`,
+        `${item.name} costs ${item.price} Gems and you have ${gems}. Gems come from runs (5 for every 500 m) and civic reports, or from a Gem pack.`,
       );
       return;
     }
@@ -95,6 +111,12 @@ export default function ShopScreen() {
         },
       },
     ]);
+  };
+
+  const buyPack = (pack: GemPack) => {
+    if (!STORE_OPEN) {
+      Alert.alert(STORE_CLOSED_TITLE, `${pack.gems.toLocaleString()} Gems for ${pesoText(pack.pesos)}. ${STORE_CLOSED_MESSAGE}`);
+    }
   };
 
   const wear = async (slot: CosmeticSlot, itemId: string | null) => {
@@ -158,9 +180,40 @@ export default function ShopScreen() {
         >
           <Text style={styles.title}>Shop</Text>
           <Text style={styles.lead}>
-            Everything here costs <Text style={styles.leadStrong}>Gems you earn by moving</Text> and reporting
-            problems in your city. No real money.
+            Everything here costs <Text style={styles.leadStrong}>Gems</Text>. Earn them by moving and reporting
+            problems in your city, or top up below.
           </Text>
+
+          {/* Scout Pass: a whole-width band, not another card */}
+          <Pressable
+            onPress={() => router.push("/scout-pass")}
+            accessibilityRole="button"
+            accessibilityLabel={`Scout Pass, ${SEASON.name}, ${pesoText(SCOUT_PASS.pesos)} for ${SCOUT_PASS.days} days. Opens the pass.`}
+            style={({ pressed }) => [styles.pass, pressed && { opacity: 0.85 }]}
+          >
+            <KarelaIcon name="ticket" size={36} color={KARELA.vibrant.sky} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.passTitle}>Scout Pass, {SEASON.name}</Text>
+              <Text style={styles.passBody}>
+                {pesoText(SCOUT_PASS.pesos)} for {SCOUT_PASS.days} days: rare trails, Ani outfits, +20% Gems and a
+                20-level reward track.
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={KARELA.color.textSecondary} />
+          </Pressable>
+
+          {/* Gem packs */}
+          <View style={styles.section}>
+            <View style={styles.sectionHead}>
+              <KarelaIcon name="gem" size={20} color={KARELA.color.brand} />
+              <Text style={styles.sectionTitle} accessibilityRole="header">
+                Get Gems
+              </Text>
+            </View>
+            {GEM_PACKS.map((pack) => (
+              <PackRow key={pack.productId} pack={pack} onBuy={() => buyPack(pack)} />
+            ))}
+          </View>
 
           {!state && !loadError && <ActivityIndicator color={KARELA.color.brand} style={{ marginTop: 40 }} />}
           {loadError && (
@@ -283,6 +336,36 @@ const ItemRow = ({
   </View>
 );
 
+/** What a pack's Gems cover, using today's Shop prices. */
+const packHint = (g: number) =>
+  g >= 1200 ? "Two rare cosmetics, with Gems to spare"
+  : g >= 600 ? "Enough for a rare trail or frame"
+  : g >= 300 ? "Enough for a trail or a frame"
+  : "Enough for a Streak Freeze";
+
+const PackRow = ({ pack, onBuy }: { pack: GemPack; onBuy: () => void }) => (
+  <View style={styles.row}>
+    <View style={styles.packArt}>
+      <KarelaIcon name="gem" size={pack.gems >= 650 ? 40 : 32} color={KARELA.vibrant.sky} />
+    </View>
+    <View style={{ flex: 1 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: KARELA.space.sm }}>
+        <Text style={styles.rowName}>{pack.gems.toLocaleString()} Gems</Text>
+        {pack.note && <Text style={styles.packNote}>{pack.note}</Text>}
+      </View>
+      <Text style={styles.rowDesc}>{packHint(pack.gems)}</Text>
+    </View>
+    <Pressable
+      onPress={onBuy}
+      accessibilityRole="button"
+      accessibilityLabel={`Buy ${pack.gems} Gems for ${pack.pesos} pesos`}
+      style={({ pressed }) => [styles.price, pressed && { opacity: 0.8 }]}
+    >
+      <Text style={styles.priceText}>{pesoText(pack.pesos)}</Text>
+    </Pressable>
+  </View>
+);
+
 const CosmeticTile = ({
   name,
   note,
@@ -381,6 +464,21 @@ const styles = StyleSheet.create({
     borderBottomColor: KARELA.color.lineSoft,
   },
   rowArt: { width: 64, height: 64 },
+  packArt: { width: 64, height: 64, alignItems: "center", justifyContent: "center" },
+  packNote: { color: KARELA.color.gold, fontSize: KARELA.size.caption, fontFamily: KARELA.font.medium },
+
+  pass: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: KARELA.space.md,
+    marginTop: KARELA.space.xl,
+    paddingVertical: KARELA.space.lg,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: KARELA.vibrant.sky,
+  },
+  passTitle: { color: KARELA.color.textPrimary, fontSize: KARELA.size.body, fontFamily: KARELA.font.bold },
+  passBody: { color: KARELA.color.textSecondary, fontSize: KARELA.size.label, fontFamily: KARELA.font.regular, lineHeight: 18, marginTop: 2 },
   rowName: { color: KARELA.color.textPrimary, fontSize: KARELA.size.body, fontFamily: KARELA.font.bold },
   rowDesc: {
     color: KARELA.color.textMuted,

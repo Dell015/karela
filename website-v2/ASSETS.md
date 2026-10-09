@@ -1,79 +1,48 @@
-# Website Assets — Placeholder Manifest
+# Website assets
 
-Every asset the site needs but does not have yet is rendered as an on-brand
-placeholder (dashed lime border, diagonal hatch, "PLACEHOLDER" corner flag)
-showing the asset name and target dimensions.
+**Last updated:** 2026-10-09. The July version of this file listed seven
+screenshot slots. They are gone: the phone screens on the page are now built
+in HTML and CSS (`css/screens.css` and three `<template>`s in `index.html`),
+so the page needs no app screenshots.
 
-**Find every slot:** search `website-v2/` for `ph__flag` or `TODO(assets)`.
+All fonts and images are local (the CSP allows nothing else). Keep the page
+light for mid-range Android on prepaid data.
 
-## How to swap a placeholder for a real asset
+## What's in `assets/`
 
-Replace the `<div class="ph ...">` block with an `<img>`:
+| File | What it is | Size |
+|---|---|---|
+| `img/ani-run.webp`, `ani-walk.webp`, `ani-idle.webp` | Ani sprite sheets, 8 frames of 256 by 336 each, used with the `.sprite` classes | about 50 KB each |
+| `img/ani-face.webp` | Ani's face | 16 KB |
+| `img/karela_word-logo.png` | Wordmark in the nav and footer | 16 KB |
+| `img/icon.png` | Apple touch icon | 32 KB |
+| `img/favicon.png` | Favicon | 4 KB |
+| `img/randel.webp`, `yshia.webp` (Trishia), `steven.webp`, `sander.webp` | Team photos, 480 by 480, see-through background | about 20 KB each |
+| `img/og-placeholder.png` | **Placeholder** link-preview image (see below) | 20 KB |
+| `img/coach.png` | Not used by the page (BACKLOG P2-9) | 28 KB |
+| `fonts/Excon-*.woff2` | Excon, six weights | |
+| `fonts/GochiHand.woff2` | Ani's handwritten notes (`.note`) | |
 
-```html
-<!-- before -->
-<div class="ph ph--phone" role="img" aria-label="Placeholder for ...">
-  <span class="ph__flag">Placeholder</span>
-  ...
-</div>
+## Still needed
 
-<!-- after -->
-<img
-  src="assets/img/screens/active-run.webp"
-  alt="Karela active run screen showing ghost pacing against the runner's route"
-  width="1080"
-  height="2340"
-  loading="lazy"
-/>
-```
-
-Keep the `alt` text descriptive — it is what screen-reader users get instead of
-the image.
-
-## Needed assets
-
-### Priority 1 — blocks conversion
-
-| Slot | File to create | Dimensions | Where |
+| Asset | File | Size | Where |
 |---|---|---|---|
-| Active run / ghost pacing | `img/screens/active-run.webp` | 1080 × 2340 | Hero |
-| Screen recording of a run | `img/video/run-demo.mp4` + `.webm` | 1080 × 1920, 10–15s, < 3 MB | Hero |
-| Social preview card | `img/og-placeholder.png` → `img/og.png` | 1200 × 630 | `<meta og:image>` |
+| Link-preview image | `img/og.png` | 1200 by 630, under about 150 KB | `<meta property="og:image">` in `index.html` (search `TODO(assets)`), then delete `og-placeholder.png` |
 
-### Priority 2 — feature sections
+Team photos: new ones go in `img/` as 480 by 480 webp, like the four already there.
 
-| Slot | File to create | Dimensions | Where |
-|---|---|---|---|
-| Dashboard | `img/screens/dashboard.webp` | 1080 × 2340 | How It Works |
-| Ani chat | `img/screens/ani-chat.webp` | 1080 × 2340 | Meet Ani |
-| Civic report / HUD | `img/screens/civic-report.webp` | 1080 × 2340 | Civic Engine |
-| Quests | `img/screens/quests.webp` | 1080 × 2340 | Progression |
-| Progress graph | `img/screens/progress.webp` | 1080 × 2340 | Progression |
+## Ani sprites
 
-### Priority 3 — team section
+The sprites are rendered from `assets/3d/female_final.glb` (the app's Ani
+model) with three.js in headless Chromium. If the model changes, re-render
+them rather than editing them by hand, and frame the camera from the union of
+each clip's bounding boxes so her head is never cut off. The render script
+isn't saved in the repo yet (BACKLOG P2-11).
 
-Six portraits at 400 × 400, cropped square, named `img/team/<firstname>.webp`:
-Randel, Trishia, Steven, Qarisha, Cyduanne, Sander.
+## Before adding any image
 
-`assets/images/sir-sander.jpg` already exists in the app repo and can be reused
-for Sander.
-
-## Capturing screenshots
-
-```bash
-# From the repo root
-npm run web           # then use browser devtools device mode at 1080x2340
-# or
-npx expo run:android  # then use the emulator's screenshot button
-```
-
-## Before committing images
-
-Convert to WebP and compress. `assets/images/karelala.png` is **25 MB** and must
-never ship to the web as-is.
-
-```bash
-npx @squoosh/cli --webp '{"quality":82}' -d website-v2/assets/img/screens/ <input>
-```
-
-Target budget: each screenshot under 150 KB, hero video under 3 MB.
+- Convert to WebP and compress, for example:
+  `npx @squoosh/cli --webp '{"quality":82}' -d website-v2/assets/img/ <input>`
+- Give every `<img>` a `width`, `height` and descriptive `alt`.
+- Don't copy app images into the site as they are. Resize and compress them
+  first.

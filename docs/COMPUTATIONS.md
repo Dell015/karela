@@ -365,7 +365,7 @@ deviate = (role ≠ suppressed)
 
 ## 6. RPG Economy
 
-**Files:** `services/streakMultiplier.ts`, `services/gemSystem.ts`, `context/AuthContext.tsx`
+**Files:** `services/streakMultiplier.ts`, `services/gemSystem.ts`, `services/buffs.ts`, `context/AuthContext.tsx`; on the server `supabase/10_streak_protection_and_shop.sql` (streaks, Shop), `11_squads.sql` (Collective Shield), `12_guilds.sql` (badges), `13_territory.sql` (Territory Boost, buffs)
 
 ### 6.1 Leveling
 
@@ -396,41 +396,103 @@ XP_awarded = floor(XP_raw × multiplier)
 | 30+ | 3.0× (cap) |
 
 Breaking the streak resets to 1.0× immediately.
-**Gems are NOT multiplied** (flat rate).
+**Gems are NOT multiplied** by the streak (flat rate).
+
+**Guild and Shop buffs** (from `get_my_buffs`, cached in `services/buffs.ts`):
+```
+XP_awarded   = round(floor(XP_raw × streak_multiplier) × guild_xp_multiplier)
+Gems_awarded = round(Gems_raw × guild_gem_multiplier)
+civic_XP     = civic_XP_raw × 1.25 while a Bayanihan Boost is active (24 h)
+```
+
+| Buff | Value | Source |
+|------|-------|--------|
+| Pioneer badge | XP × 1.02 for 30 days | first landmark claim |
+| Century Walkers badge | Gems × 1.05, permanent | 1,000 km since the guild was founded |
+| Bayanihan Boost | civic XP × 1.25 for 24 h | Shop |
+| Territory Boost | guild km in landmark zones × 1.2 for 24 h | Shop |
 
 ### 6.3 Gem Earnings
 
-| Source | Gems |
-|--------|------|
-| Sector Bonus (per 500 m beating ghost) | 5 |
-| B2B QR scan | 20 |
-| Vanguard review | 10 |
+| Source | Gems | Status |
+|--------|------|--------|
+| Sector Bonus (per 500 m of a run) | 5 | Built (paid on the phone, QA C1) |
+| Civic report sent (pending) | 5, plus 50 XP | Built (paid on the phone, QA C4) |
+| Civic report that verifies a node (the 3rd nearby report) | 20, plus 200 XP | Built (paid on the phone, QA C4) |
+| Iron Streak guild badge (every member on a 7-day streak) | 500, split equally, once | Built (server) |
+| B2B QR scan | 20 | Not built |
+| Vanguard review | 10 | Not built |
 
 **Sector calculation:**
 ```
 total_sectors = floor(distance_meters / 500)
 gems_earned = total_sectors × 5
 ```
+The spec pays only sectors where you beat the ghost. Today every 500 m sector
+pays (QA H4).
 
-### 6.4 Gem Sinks
+### 6.4 Gem Sinks (the Shop)
 
-| Item | Cost |
-|------|------|
-| Streak Freeze | 80 |
-| Squad Shield | 200 |
-| Territory Defense Boost | 150 |
-| Cosmetic (basic) | 300 |
-| Cosmetic (rare) | 600 |
+Prices live in the database (`shop_items`), so they can change without an app
+update. Every purchase is checked and paid on the server in one transaction.
 
-**Seasonal cap:** gems above 500 convert to non-spendable Legacy Tokens.
+| Item | Cost | Effect |
+|------|------|--------|
+| Streak Freeze | 80 | Used by itself for a missed day. Hold up to 2 |
+| Streak Repair | 150 | Brings the streak back the day after a single missed day |
+| Bayanihan Boost | 120 | +25% civic XP for 24 h |
+| Territory Boost | 150 | Guild's zone km count 1.2× for 24 h |
+| Trail (aqua, sky, teal) | 300 | Run line colour on the map |
+| Trail (gold, Karela gradient) | 600 | Run line colour on the map |
+| Photo frame (aqua, ember) | 300 | Ring around the profile photo |
+| Photo frame (gold) | 600 | Ring around the profile photo |
+| Collective Shield (squad) | 200, split among members | Protects a squadmate's streak today (6 PM to midnight; refunded if not filled) |
 
-### 6.5 Streak Calculation (from SQLite run dates)
+Cosmetics are visual only.
+
+**Gem packs** (real money, owner decision 2026-10-09; screens only until store billing is built, `services/store.ts`):
+
+| Pack | Price | Gems per ₱1 |
+|------|-------|-------------|
+| 120 Gems | ₱49 | 2.45 |
+| 300 Gems | ₱99 | 3.03 |
+| 650 Gems | ₱199 | 3.27 |
+| 1,400 Gems | ₱399 | 3.51 |
+
+The stores keep about 15% of each sale.
+
+**Scout Pass season track:** level = floor(season XP / 750), capped at 20. Season XP is the XP from runs since the season started (`run_history.xp_earned`). Rewards per level are in `SEASON_TRACK` (`services/store.ts`), a draft for the owner to review.
+
+**Seasonal cap (not built yet, QA N4):** Gems above 500 at season end convert
+to non-spendable Legacy Tokens.
+
+### 6.5 Streak Calculation (on the server)
+
+The server counts the streak (`settle_streak`, `karela_current_streak`,
+`karela_streak_at` in `10_streak_protection_and_shop.sql`). The app calls
+`settle_streak` when it opens and after every run. Days are Philippine time.
 
 ```
-1. Get unique calendar days with runs (strip time component)
-2. If most recent run > 1 day before today → streak = 0 (broken)
-3. Count consecutive days backwards from latest run until a gap
+covered(day) = a run that day OR a protected day (freeze, repair or shield)
+
+streak_at(end):
+    walk back from `end` one day at a time
+    run day       → streak + 1
+    protected day → streak unchanged, keep walking
+    neither       → stop
+
+current streak = streak_at(today)      if today is covered
+               = streak_at(yesterday)  otherwise (today can still be saved)
+
+settle_streak:
+    gap = missed days between the last covered day and yesterday
+    if 0 < gap ≤ freezes held and the streak before the gap was > 0:
+        protect every missed day with a freeze
+    (freezes are only used when they cover the whole gap)
+    save streak and longest_streak on the profile
 ```
+
+A protected day keeps the streak alive but doesn't add to it.
 
 ### 6.6 Calorie Estimate
 
@@ -542,4 +604,4 @@ C = (XP_mission × S) + (V × CivicXP_base × B)
 ---
 
 *This document should be updated whenever a formula or constant changes.
-Last updated: June 29, 2026.*
+Last updated: October 9, 2026 (RPG economy: buffs, Shop, server streaks).*
