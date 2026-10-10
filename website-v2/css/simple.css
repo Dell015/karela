@@ -1,5 +1,5 @@
 /* ============================================================
-   KARELA WEB v2: SIMPLE ONE-MESSAGE PAGES (unsubscribe.html)
+   KARELA WEB v2: SIMPLE ONE-MESSAGE PAGES (unsubscribe.html, 404.html)
    One column, centred, on the shared background. Mobile first.
    ============================================================ */
 .simple {
@@ -49,4 +49,14 @@
 }
 .simple .btn[disabled] {
   cursor: wait;
+}
+.simple__ani {
+  --fh: 120px;
+  margin: -0.5rem 0 -0.25rem;
+}
+.simple__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
 }
