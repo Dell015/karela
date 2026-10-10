@@ -83,9 +83,3 @@ export const kmText = (meters: number) => {
   const km = Number.isFinite(meters) && meters > 0 ? meters / 1000 : 0;
   return km < 10 ? km.toFixed(2) : km.toFixed(1);
 };
-
-/** Reads a number from a route parameter; 0 if it's missing or not a number. */
-export const numParam = (v: string | string[] | undefined) => {
-  const n = Number(Array.isArray(v) ? v[0] : v);
-  return Number.isFinite(n) && n > 0 ? n : 0;
-};

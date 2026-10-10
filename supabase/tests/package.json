@@ -4,7 +4,7 @@
   "description": "Tests for supabase/10_...13_ on a throwaway Postgres (PGlite). Separate from the app: nothing here is bundled.",
   "type": "module",
   "scripts": {
-    "test": "node t10.mjs && node t11.mjs && node t12.mjs && node t13.mjs"
+    "test": "node t10.mjs && node t11.mjs && node t12.mjs && node t13.mjs && node t14.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8"

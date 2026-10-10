@@ -87,6 +87,7 @@ Scan the QR code with Expo Go (Android) or the Camera app (iOS) to open on your 
    supabase/11_squads.sql
    supabase/12_guilds.sql
    supabase/13_territory.sql
+   supabase/14_finish_run.sql
    ```
    Then add the territory landmarks: `supabase/landmarks_tuguegarao.sql`.
 
@@ -283,8 +284,8 @@ The design:
 - Game rules that involve Gems, streaks, squads, guilds and territory run on the server, never only on the phone
 
 Where it stands today (details in `docs/QA_REPORT.md`):
-- **Built:** territory uploads (km per zone) queue offline with a UUID. Shop purchases, streaks, squads, guilds and territory are server functions.
-- **Not built yet:** a run outbox. A run finished offline, or lost when the app is closed mid-run, is not saved yet (QA C7). XP and Gems for runs are still awarded by the phone (QA C1).
+- **Built:** a run outbox (`services/runOutbox.ts`): each run gets a UUID at Start, is saved on the phone while it happens, survives the app being killed, and syncs when online without counting twice (`14_finish_run.sql`). Territory uploads (km per zone) queue offline with a UUID. Shop purchases, streaks, squads, guilds and territory are server functions.
+- **Not built yet:** XP and Gems for runs are still worked out by the phone (QA C1). GPS stops when the screen locks (QA C6).
 
 ---
 
@@ -403,7 +404,7 @@ Most of the server features need their SQL file run in Supabase first (see Datab
 
 ### Left, most urgent first
 - [ ] Fix 8 TypeScript errors and one time-dependent SQL test (QA T1, T2)
-- [ ] Save runs on the phone with a UUID and an outbox so offline and crashed runs aren't lost; open the summary by id instead of from the URL (QA C5, C7)
+- [x] Save runs on the phone with a UUID and an outbox so offline and crashed runs aren't lost; open the summary by id instead of from the URL (QA C5, C7)
 - [ ] Award XP and Gems on the server, not the phone (QA C1, H2)
 - [ ] Background tracking with the screen locked (QA C6)
 - [ ] Move the Gemini and weather keys behind a Supabase Edge Function; give Ani chat memory (QA C3, H10)

@@ -71,8 +71,10 @@ the "not connected" message (empty endpoint) and the validation message.
 "Built for the Philippines" section ("Tracking runs offline in SQLite and
 syncs ... Every event carries a UUID").
 
-Today the app queues only territory uploads offline with a UUID. Runs aren't
-saved offline yet (app QA item C7 in `docs/QA_REPORT.md`, section 7).
+Update 2026-10-11: the app's run outbox is built (C7): runs are saved on the
+phone with a UUID and sync when online. It still needs a device test. Ani,
+map tiles and civic reports still need a connection, so "Fully" in the
+compare table is the owner's call (`docs/QA_REPORT.md`, section 7).
 
 **Done looks like:** either the app's run outbox is built (C7), or the two
 lines say it is planned. The owner decides which. The page hasn't been

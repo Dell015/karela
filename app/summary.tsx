@@ -9,14 +9,12 @@ import {
   caloriesFor,
   clockText,
   kmText,
-  numParam,
   paceFor,
   paceText,
   speedFor,
   xpFor,
 } from "@/services/runMath";
-import { recordRunTerritory } from "@/services/territory";
-import { GEM_EARNINGS, getTotalSectors } from "@/services/gemSystem";
+import { getRun, queueRun } from "@/services/runOutbox";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -30,172 +28,101 @@ import {
     View,
 } from "react-native";
 
-import { incrementStats, setStats } from "@/services/database/supabase/profiles";
-import {
-    generateAndSaveRunSummary,
-    logRunHistory,
-} from "@/services/database/supabase/runService";
-import { calculateStreak } from "@/services/statsService";
-import { fetchStreakFromHistory, settleStreak } from "@/services/streakService";
-import { QuestEngine } from "@/services/engines/QuestEngine";
-
 const { width } = Dimensions.get("window");
 
 export default function SummaryScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams();
-  const { path } = params;
-  const { user, profile, gainXP, earnGems } = useAuth();
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { user, profile, syncRuns } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
 
-  // Read every number safely (0 if missing), and work out XP and calories
-  // here from the distance with the shared formulas (services/runMath.ts),
-  // so a run with no time or no distance never shows NaN.
-  const meters = Math.floor(numParam(params.meters));
-  const seconds = Math.floor(numParam(params.seconds));
+  // The run is read from the phone by its id (services/runOutbox.ts), so a
+  // link can't hand this screen a distance. XP and calories are worked out
+  // here with the shared formulas (services/runMath.ts), never NaN.
+  const [run] = useState(() => (typeof id === "string" ? getRun(id) : null));
+  const meters = run?.meters ?? 0;
+  const seconds = run?.seconds ?? 0;
   const xp = xpFor(meters);
   const kcal = caloriesFor(meters, profile?.stats?.weight);
   const avgPace = paceFor(meters, seconds);
   const avgKmh = speedFor(meters, seconds);
 
-  const logRunToHistory = async () => {
-    if (!user) return;
-    try {
-      await logRunHistory(user.uid, {
-        distance_meters: meters,
-        duration_seconds: seconds,
-        calories: kcal,
-        xp_earned: xp,
-      });
-    } catch (error) {
-      console.error("Run history log error:", error);
-      throw error;
-    }
-  };
-
   const handleSaveGhost = async () => {
+    if (!run) return;
     try {
-      if (path) {
-        // Points inside the user's Privacy Zones are dropped before anything
-        // is written, even locally.
-        const safePath = await stripPrivacyZones(JSON.parse(path as string));
-        if (safePath.length < 2) {
-          Alert.alert(
-            "Ghost not saved",
-            "Most of this run was inside your Privacy Zones, so there's no route left to save. Your distance and XP still count.",
-          );
-          return;
-        }
-
-        // saveGhostRun is async and resolves to null on failure — without the
-        // await, the catch below could never see an error and the success alert
-        // fired even when the write failed.
-        const saved = await saveGhostRun(
-          meters,
-          seconds,
-          safePath,
-        );
-
-        if (!saved) {
-          Alert.alert("Ghost not saved", "This run couldn't be saved as a ghost. Try again.");
-          return;
-        }
-
-        onRunCompleted({
-          id: Date.now(),
-          date: Date.now(),
-          distance: meters,
-          duration: seconds,
-          avg_speed: seconds > 0 ? (meters / seconds) * 3.6 : 0,
-          path_data: JSON.stringify(safePath),
-        });
-
+      // Points inside Privacy Zones were dropped before the run was saved;
+      // this also drops any zone added since.
+      const safePath = await stripPrivacyZones(run.path);
+      if (safePath.length < 2) {
         Alert.alert(
-          "Ghost saved",
-          "Your ghost will learn from this run.",
+          "Ghost not saved",
+          "Most of this run was inside your Privacy Zones, so there's no route left to save. Your distance and XP still count.",
         );
+        return;
       }
+
+      // saveGhostRun is async and resolves to null on failure — without the
+      // await, the catch below could never see an error and the success alert
+      // fired even when the write failed.
+      const saved = await saveGhostRun(meters, seconds, safePath);
+
+      if (!saved) {
+        Alert.alert("Ghost not saved", "This run couldn't be saved as a ghost. Try again.");
+        return;
+      }
+
+      onRunCompleted({
+        id: Date.now(),
+        date: Date.now(),
+        distance: meters,
+        duration: seconds,
+        avg_speed: seconds > 0 ? (meters / seconds) * 3.6 : 0,
+        path_data: JSON.stringify(safePath),
+      });
+
+      Alert.alert("Ghost saved", "Your ghost will learn from this run.");
     } catch {
       Alert.alert("Ghost not saved", "This run couldn't be saved as a ghost. Try again.");
     }
   };
 
+  // The run joins the outbox, then syncs. Offline it waits on the phone and
+  // goes the next time Karela opens with a connection; every step is keyed
+  // to the run's id, so nothing is counted twice.
   const handleFinalizeMission = async () => {
+    if (!user || !run) return;
     setIsSaving(true);
-
-    if (!user || !profile) {
-      Alert.alert("One moment", "Your profile is still loading. Try again in a few seconds.");
-      setIsSaving(false);
-      return;
-    }
-
     try {
-      const distanceInKm = meters / 1000;
-      // Guard against a zero-duration run producing Infinity/NaN, which would
-      // be written to the profile and to mission progress.
-      const avgSpeedKmh =
-        seconds > 0 ? (meters / seconds) * 3.6 : 0;
-
-      await incrementStats(user.uid, {
-        total_distance_km: Number(distanceInKm.toFixed(2)),
-        total_calories_burned: kcal,
-      });
-
-      await logRunToHistory();
-
-      const runData = {
-        distance: meters,
-        duration: seconds,
-        avgSpeed: avgSpeedKmh,
-        sectors: [],
-        pace: avgSpeedKmh,
-      };
-      await generateAndSaveRunSummary(user.uid, runData);
-
-      // Guild territory: distance inside landmark zones, worked out on this
-      // phone from the full route (only the km leave the phone).
-      if (path) {
-        try {
-          await recordRunTerritory(JSON.parse(path as string));
-        } catch (e) {
-          console.warn("Territory not recorded:", e);
-        }
+      queueRun(run.id, kcal, xp);
+      await syncRuns();
+      if (getRun(run.id)) {
+        Alert.alert(
+          "Saved on this phone",
+          "Your run couldn't reach your account just now. It's kept on this phone and will be sent the next time you open Karela with a connection.",
+        );
       }
-
-      // Sync run distance to all active missions via QuestEngine
-      await QuestEngine.syncRunProgress(user.uid, distanceInKm, avgSpeedKmh);
-
-      // The server counts the streak (runs plus Freeze, Repair and Shield
-      // days) and saves it. If it can't (migration 10 not run, or offline),
-      // count from run_history here, then from the phone.
-      await setStats(user.uid, { last_active_date: new Date().toISOString() });
-      if (!(await settleStreak())) {
-        const currentStreak = (await fetchStreakFromHistory(user.uid)) ?? calculateStreak();
-        await setStats(user.uid, {
-          streak: currentStreak,
-          longest_streak: Math.max(currentStreak, Number(profile?.stats?.longest_streak || 0)),
-        });
-      }
-
-      if (xp > 0) await gainXP(xp);
-
-      const totalSectors = getTotalSectors(meters);
-      if (totalSectors > 0) {
-        const gemsEarned = totalSectors * GEM_EARNINGS.SECTOR_BONUS;
-        await earnGems(gemsEarned);
-      }
-
       router.replace("/drawer/dashboard");
     } catch (error) {
       console.error("Finalize Error:", error);
-      Alert.alert(
-        "Not synced yet",
-        "Your run couldn't be sent to your account. Check your connection and try again.",
-      );
+      Alert.alert("Run not saved", "This run couldn't be saved on your phone. Try again.");
     } finally {
       setIsSaving(false);
     }
   };
+
+  if (!run) {
+    return (
+      <Screen variant="energy">
+        <SafeAreaView style={[styles.container, styles.missing]}>
+          <Text style={styles.completeText}>Run not found</Text>
+          <Text style={styles.missingText}>
+            This run isn&apos;t on this phone any more. If you saved it, it&apos;s already in your history.
+          </Text>
+          <Button label="Back to home" block onPress={() => router.replace("/drawer/dashboard")} />
+        </SafeAreaView>
+      </Screen>
+    );
+  }
 
   return (
     <Screen variant="energy">
@@ -344,6 +271,13 @@ const styles = StyleSheet.create({
   paceNote: { color: KARELA.color.textMuted, fontSize: KARELA.size.caption, fontFamily: KARELA.font.regular, marginTop: KARELA.space.sm },
 
   footer: { padding: 30, width: "100%" },
+  missing: { justifyContent: "center", alignItems: "center", padding: KARELA.space.xl, gap: KARELA.space.lg },
+  missingText: {
+    color: KARELA.color.textMuted,
+    fontSize: KARELA.size.body,
+    fontFamily: KARELA.font.regular,
+    textAlign: "center",
+  },
   ghostButton: {
     marginBottom: KARELA.space.md,
   },

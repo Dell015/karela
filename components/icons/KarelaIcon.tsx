@@ -1,5 +1,6 @@
 import { KARELA } from "@/styles/designSystem";
 import React from "react";
+import type { ColorValue } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
 
 /**
@@ -118,9 +119,9 @@ interface KarelaIconProps {
   name: KarelaIconName;
   size?: number;
   /** line colour */
-  color?: string;
+  color?: ColorValue;
   /** soft fill colour; defaults to the line colour */
-  accent?: string;
+  accent?: ColorValue;
   /** strength of the soft fill, 0 to 1 */
   fillOpacity?: number;
   strokeWidth?: number;

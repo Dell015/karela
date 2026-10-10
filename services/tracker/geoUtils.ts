@@ -6,7 +6,10 @@ import { MapCoordinate } from "@/services/tracker/routingService";
  * Calculates the distance between two GPS coordinates using the Haversine formula.
  * @returns Distance in meters
  */
-export const calculateDistance = (point1: MapCoordinate, point2: MapCoordinate): number => {
+/** Any point with a position; ids and timestamps are not needed. */
+type LatLng = Pick<MapCoordinate, "latitude" | "longitude">;
+
+export const calculateDistance = (point1: LatLng, point2: LatLng): number => {
   const R = 6371e3; // Earth's radius in meters
   const lat1 = point1.latitude;
   const lon1 = point1.longitude;

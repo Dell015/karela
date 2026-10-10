@@ -83,7 +83,14 @@ if (process.argv[1].endsWith("t12.mjs")) {
   check(gems === 200, "paid 100 once", gems);
 
   // Century Walkers via km since founding
-  await run(db, B[2], 0, 1000000); // 1,000 km logged after founding
+  // Logged just after founding. run() would stamp it 8:00 AM today, which is
+  // before the guild when the test runs later in the day.
+  await admin(db);
+  await db.query(
+    `insert into public.run_history (user_id, distance_meters, duration_seconds, calories, xp_earned, completed_at)
+     values ($1, 1000000, 1200, 100, 300, now() + interval '1 minute')`,
+    [B[2]],
+  );
   await as(db, B[0]);
   g = await one(db, "select get_my_guild()");
   check(!!g.badges.century_walkers && g.buffs.gem_multiplier === 1.05, "Century Walkers + 5% gems", g.guild.km_since_founding);

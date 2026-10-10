@@ -1,8 +1,8 @@
 import { KarelaIcon } from "@/components/icons/KarelaIcon";
 import { KARELA } from "@/styles/designSystem";
 import { Ionicons } from "@expo/vector-icons";
-import { Stack, useRouter } from "expo-router";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Stack, useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -48,6 +48,14 @@ import { civicXpMultiplier, useBuffs } from "@/services/buffs";
 import { guildColor } from "@/services/guilds";
 import { getTerritories, HOLDER_REASON, LandmarkState } from "@/services/territory";
 import { styles } from "@/styles/mapStyles";
+import {
+  discardRun,
+  endInterruptedRun,
+  endRun,
+  getUnsavedRun,
+  saveRunProgress,
+  startRun,
+} from "@/services/runOutbox";
 
 /**
  * strokeColors only exists to stop Google Maps (Android) drawing lines in
@@ -75,6 +83,8 @@ export default function MapScreen() {
   const [isPaused, setIsPaused] = useState(false);
   // Path segments recorded while paused don't count: [from, to] segment indexes.
   const [pauseRanges, setPauseRanges] = useState<{ from: number; to: number | null }[]>([]);
+  // The run's id in the outbox (services/runOutbox.ts), from Start to End.
+  const runIdRef = useRef<string | null>(null);
   const lastInteractionTime = useRef<number>(0);
   const SNAP_BACK_DELAY = 15000; // 15 seconds in milliseconds
 
@@ -168,9 +178,11 @@ export default function MapScreen() {
   };
 
   const handleStartRace = async () => {
+    if (!user) return;
     const locationAllowed = await PermissionManager.requestLocation();
     if (locationAllowed) {
       resetRunClock();
+      runIdRef.current = startRun(user.uid);
       startedAtRef.current = Date.now();
       setPath([]);
       setIsRacing(true);
@@ -193,20 +205,23 @@ export default function MapScreen() {
     tickClock();
   };
 
-  const finishRun = () => {
+  const finishRun = async () => {
+    const id = runIdRef.current;
     const seconds = currentElapsed();
     const meters = Math.floor(physicalMeters);
     setIsRacing(false);
     resetRunClock();
-    router.push({
-      pathname: "/summary",
-      params: {
-        // XP and calories are worked out on the summary screen from these.
-        meters,
-        seconds,
-        path: JSON.stringify(path),
-      },
-    });
+    runIdRef.current = null;
+    if (!id) return;
+    try {
+      await endRun(id, meters, seconds, path);
+    } catch (e) {
+      console.error("Run not saved on the phone:", e);
+      Alert.alert("Run not saved", "This run couldn't be saved on your phone. Free up some space and try again next run.");
+      return;
+    }
+    // The summary reads the run from the phone by id, never numbers from the link.
+    router.push({ pathname: "/summary", params: { id } });
   };
 
   const handleStopRace = () => {
@@ -220,6 +235,8 @@ export default function MapScreen() {
             text: "Discard run",
             style: "destructive",
             onPress: () => {
+              if (runIdRef.current) discardRun(runIdRef.current);
+              runIdRef.current = null;
               setIsRacing(false);
               resetRunClock();
               setPath([]);
@@ -336,6 +353,64 @@ export default function MapScreen() {
   function tickClock() {
     setElapsedTime(currentElapsed());
   }
+
+  // --- SAVE PROGRESS (every 20 s), so a killed app doesn't lose the run ---
+  const liveRef = useRef({ path, meters: physicalMeters });
+  useEffect(() => {
+    liveRef.current = { path, meters: physicalMeters };
+  }, [path, physicalMeters]);
+  useEffect(() => {
+    if (!isRacing) return;
+    const save = () => {
+      const id = runIdRef.current;
+      if (!id) return;
+      saveRunProgress(id, liveRef.current.meters, currentElapsed(), liveRef.current.path).catch((e) =>
+        console.warn("Run progress not saved:", e),
+      );
+    };
+    const interval = setInterval(save, 20_000);
+    // Leaving the app is when it's most likely to be killed: save now.
+    const sub = AppState.addEventListener("change", (st) => {
+      if (st !== "active") save();
+    });
+    return () => {
+      clearInterval(interval);
+      sub.remove();
+    };
+  }, [isRacing]);
+
+  // --- A RUN THAT WAS CUT OFF (app killed) or never saved ---
+  // Checked when the screen opens, not when a run ends here.
+  const racingRef = useRef(isRacing);
+  useEffect(() => {
+    racingRef.current = isRacing;
+  }, [isRacing]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!user || racingRef.current) return;
+      const run = getUnsavedRun(user.uid);
+      if (!run) return;
+      const openSummary = () => {
+        if (run.state === "active") endInterruptedRun(run.id);
+        router.push({ pathname: "/summary", params: { id: run.id } });
+      };
+      if (run.meters < MIN_SAVE_M) {
+        discardRun(run.id); // too short to be worth asking about
+        return;
+      }
+      const when = new Date(run.startedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      Alert.alert(
+        "You have an unsaved run",
+        `${kmText(run.meters)} km in ${clockText(run.seconds)}, started at ${when}. Save it, or discard it?`,
+        [
+          { text: "Discard", style: "destructive", onPress: () => discardRun(run.id) },
+          { text: "Review and save", onPress: openSummary },
+        ],
+        { cancelable: false },
+      );
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.uid]),
+  );
 
   useEffect(() => {
     if (!isRacing) return;

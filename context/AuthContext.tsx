@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { AppState } from "react-native";
 import { supabase } from "../services/database/supabase/config";
 import {
     getProfile,
@@ -10,6 +11,7 @@ import { applyStreakMultiplier } from "../services/streakMultiplier";
 import { clearBuffs, getBuffs, refreshBuffs } from "../services/buffs";
 import { getEffectiveStreak, settleStreak } from "../services/streakService";
 import { flushTerritoryQueue, getTerritories } from "../services/territory";
+import { syncRunOutbox, type SyncResult } from "../services/runOutbox";
 
 // 1. STYLED INTERFACE (unchanged — keeps the rest of the app compatible)
 export interface UserProfile {
@@ -68,6 +70,8 @@ interface AuthContextType {
   gainXP: (amount: number) => Promise<void>;
   syncProgression: () => Promise<void>;
   earnGems: (amount: number) => Promise<void>;
+  /** Sends runs saved on this phone (services/runOutbox.ts). */
+  syncRuns: () => Promise<SyncResult>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -79,6 +83,7 @@ const AuthContext = createContext<AuthContextType>({
   gainXP: async () => {},
   syncProgression: async () => {},
   earnGems: async () => {},
+  syncRuns: async () => ({ synced: 0, pending: 0 }),
 });
 
 const DEFAULT_STATS = {
@@ -252,6 +257,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (user) await loadProfile(user.uid);
   };
 
+  const syncRuns = async (): Promise<SyncResult> => {
+    if (!user) return { synced: 0, pending: 0 };
+    const result = await syncRunOutbox(user.uid);
+    if (result.synced > 0) await loadProfile(user.uid);
+    return result;
+  };
+
   const logout = async () => {
     try {
       await supabase.auth.signOut();
@@ -295,6 +307,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (await settleStreak()) await loadProfile(su.id);
           const buffs = await refreshBuffs();
           if (buffs.guild_id) await getTerritories().catch(() => {});
+          // Runs finished offline, then the territory they queued.
+          if ((await syncRunOutbox(su.id)).synced > 0) await loadProfile(su.id);
           await flushTerritoryQueue();
         })();
 
@@ -338,9 +352,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
+  // Back in the app (maybe back online): send runs still waiting.
+  const uid = user?.uid;
+  useEffect(() => {
+    if (!uid) return;
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state !== "active") return;
+      void syncRunOutbox(uid).then(async (r) => {
+        if (r.synced > 0) await loadProfile(uid);
+        await flushTerritoryQueue();
+      });
+    });
+    return () => sub.remove();
+  }, [uid]);
+
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, reloadProfile, logout, gainXP, syncProgression, earnGems }}
+      value={{ user, profile, loading, reloadProfile, logout, gainXP, syncProgression, earnGems, syncRuns }}
     >
       {children}
     </AuthContext.Provider>

@@ -1973,7 +1973,7 @@ The phases above are the plan. This is what the code has today. Some Phase 2 fea
 | Ghost System with personal + Ani Pacer fallback | Built (personal Ghost); adaptive inputs partly empty (QA M5) |
 | Resonance System | Built: stamina score, Scout or Vanguard civic role, civic load. One input is always empty (QA M5) |
 | Ani coaching | Built: body profile, quest generation, post-run recap, wellness-only rules. No chat memory yet, no weekly plan |
-| SQLite offline logging + sync | Partly: territory uploads queue offline with UUIDs; runs don't yet (QA C7) |
+| SQLite offline logging + sync | Built: runs (run outbox, UUID per run) and territory uploads queue offline and sync once (QA C7; needs device test) |
 | Supabase Auth + RLS | Built: RLS on every table; game rules in server functions |
 | XP / Streak / Gem system | Built: server-counted streaks with Streak Freeze and Repair; XP and Gems for runs still awarded by the phone (QA C1) |
 | 7-day onboarding arc | Written but not wired up (QA H3) |

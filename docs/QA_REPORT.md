@@ -60,6 +60,7 @@ This is the one place that says what is done and what is left. Section 3 is **yo
    | `11_squads.sql` | Squads and Collective Shield | Squad tab can't load |
    | `12_guilds.sql` | Guilds and badges | Guild tab can't load |
    | `13_territory.sql` | Landmarks, territory scoring, Territory Boost, buffs | Territory tab and map zones can't load |
+   | `14_finish_run.sql` | Saves a run and its distance in one step, once per run id | Runs still save (once, by id), but a lost reply could add the distance total twice |
 2. **Add landmarks:** the first three (Ugac Sur, Ugac Norte, Buntun) are in `supabase/landmarks_tuguegarao.sql`; run it. Add more there.
 3. **Decide the privacy wording about Ani.** `docs/aboutkarela.md` says body data is "never shared with third parties", but Ani's prompts send display name, weight, age, notes for Ani and run summaries to Google Gemini. The in-app "Your data" page describes what really happens. Either change the spec wording or trim the prompts (or both).
 4. **Check the app id** `com.worshestershire.karela` (looks like a typo of "worcestershire"). It can't change after the first store upload. (M13)
@@ -113,29 +114,28 @@ Status words: **Open** (not started), **Partly** (some done, see note), **Fixed*
 The app now sends the fixed 25 m radius, but the server still accepts any radius from the caller; no photo is required; +50 XP and +5 Gems are paid before anyone confirms.
 *Fix:* ignore the client radius in `submit_civic_report`, require a photo, cap reports per day, pay most of the reward on confirmation (in a server function, see C1).
 
-**C5. Anyone can award themselves a run with a link. (Open)**
-`app/summary.tsx` still reads distance, time, calories, XP and the route from the URL.
-*Fix:* save the finished run on the phone with an id and open the summary by id; let the server compute XP (C1).
+**C5. Anyone can award themselves a run with a link. (Fixed 2026-10-11 for the link; XP still C1)**
+`app/summary.tsx` now opens a run by its id from the phone's outbox (`services/runOutbox.ts`); the link carries only the id. A modified app can still send any numbers until the server computes XP (C1).
 
 **C6. Runs stop when the screen locks. (Partly)** The run time is now read from the clock, so it stays right after a background trip, and the summary never shows NaN. GPS still stops while the screen is locked, so distance has a gap.
 No background location task; duration comes from a timer that pauses in the background. ("Keep screen on during runs" in Settings is a stopgap.)
 *Fix:* background location task with an Android foreground service; duration from GPS timestamps.
 
-**C7. A run is lost if the app is killed or offline. (Open)**
-No run outbox, no run UUIDs. Finishing offline fails. (Territory uploads already use a UUID queue: reuse that pattern.)
-*Fix:* write the run to SQLite while it happens, queue the upload with a UUID, and make `finish_run` idempotent on that UUID. Then the website's offline claim becomes true.
+**C7. A run is lost if the app is killed or offline. (Built 2026-10-11, needs device test)**
+`services/runOutbox.ts`: a run gets a UUID at Start and is saved to the SQLite table `run_outbox` every 20 s and when the app goes to the background (Privacy Zone points removed first). If the app is killed, the map offers "Review and save" or "Discard" next time. "Save and finish" queues the run; sync runs right away, at sign-in and whenever the app comes back to the front. Each sync step (history, totals, streak, XP, Gems, quests, territory, Ani's summary) is ticked off on the phone, so a retry never repeats a finished step; `finish_run` (`14_`) ignores a repeated id. The row and its route are deleted once everything is sent.
+*Still open:* if a reply is lost after the server applied XP, Gems or quest progress, the retry can add it again. Moving those into `finish_run` (C1) closes that. Territory km are now worked out from the route with Privacy Zone points removed (before, from the full route), so a landmark that overlaps a zone can count a little less.
 
 **C2. Anyone could edit civic nodes. (Fixed by `05_`)**
 **C8. Civic nodes never decayed. (Fixed by `06_`)**
 
 ### 5.1b Found on 2026-10-09 (fix first, both are small)
 
-**T1. 8 TypeScript errors. (Open)** They came in with the latest commits. None should crash the app, but `npm run type-check` no longer passes.
+**T1. 8 TypeScript errors. (Fixed 2026-10-11)** `KarelaIcon` now takes a `ColorValue`; `calculateDistance` takes any `{ latitude, longitude }` (the dummy ids in `app/territory-map.tsx` were removed). `npm run type-check` passes. They came in with the latest commits. None should crash the app, but `npm run type-check` no longer passes.
 - `app/drawer/_layout.tsx` lines 115, 122, 129: the drawer gives `KarelaIcon` a `ColorValue`, but its `color` prop only accepts a `string`.
 - `services/privacyZones.ts:21`, `services/runMath.ts:29`, `services/territory.ts:87-88`: `calculateDistance` (`services/tracker/geoUtils.ts`) asks for a `MapCoordinate`, which is stricter than the plain `{ latitude, longitude }` points these callers pass.
 *Fix:* widen `KarelaIcon`'s `color` to `ColorValue` (or `String(color)` in the drawer), and let `calculateDistance` take any `{ latitude: number; longitude: number }`.
 
-**T2. One SQL test depends on the time of day. (Open)** `supabase/tests/t12.mjs` (Century Walkers) logs its 1,000 km run at 8:00 AM Manila time today, but the guild is founded "now". After 8 AM the run is earlier than the guild, so it doesn't count and the check fails. It passed when it was written because that was before 8 AM. The guild code is right; the test is wrong. Because the files run with `&&`, the failure also stops `t13` (territory) from running under `npm test`. Run alone, `t13` passes 21 of 21.
+**T2. One SQL test depends on the time of day. (Fixed 2026-10-11)** The Century Walkers run is now logged a minute after founding; `npm test` runs all four files, 105 of 105 pass. `supabase/tests/t12.mjs` (Century Walkers) logs its 1,000 km run at 8:00 AM Manila time today, but the guild is founded "now". After 8 AM the run is earlier than the guild, so it doesn't count and the check fails. It passed when it was written because that was before 8 AM. The guild code is right; the test is wrong. Because the files run with `&&`, the failure also stops `t13` (territory) from running under `npm test`. Run alone, `t13` passes 21 of 21.
 *Fix:* log that run a minute after the guild is founded (for example `now() + interval '1 minute'`).
 
 **T3. Territory bars could draw in the wrong order and overflow. (Fixed 2026-10-09)** `get_territories` doesn't promise an order for `month_top`, but the Territory tab treated the first entry as the leader and sized every bar against it. Found while building the demo data. The tab now sorts by km itself (`components/guild/TerritoryTab.tsx`); no SQL change needed.
@@ -217,15 +217,15 @@ Indoor mode, stride calibration, anti-cheat beyond speed (H4), Bayanihan Tiers 2
 
 | Page says (`website-v2/index.html`) | Now |
 | --- | --- |
-| "Tracking runs offline in SQLite and syncs ... Every event carries a UUID" | **Not true yet** for runs (C7). True for territory uploads only |
-| "Does it work offline? Fully, and it syncs when you're back online" | **Not true yet** (C7) |
+| "Tracking runs offline in SQLite and syncs ... Every event carries a UUID" | **True once tested on a device** (C7 built 2026-10-11) |
+| "Does it work offline? Fully, and it syncs when you're back online" | **Mostly**: runs now finish and sync offline (C7). Ani, the map tiles and civic reports still need a connection, and GPS stops when the screen locks (C6). Owner decides if "Fully" stays |
 | "Up to five 100 m Privacy Zones are never stored, even locally" | **True** (Settings > Privacy Zones) |
 | "account deletion completes within 72 hours" | **True once `08_` is run** (it's immediate) |
 | Civic reports "expire when they go stale" | **True once `06_` is run** |
 | Storm rule ("in a storm the app stops asking users to run") | **True** for Tier 0 and 1 (needs the weather key, now set) |
 | "Raw GPS stays on your phone" | **True** (runs upload totals; territory uploads km per zone; civic reports upload the report location) |
 
-Either build C7 or soften the two offline lines to "planned". I haven't changed the page.
+C7 is built. Once it passes the device test, the first line is true; the "Fully" line is the owner's call. I haven't changed the page.
 
 ---
 
@@ -254,12 +254,17 @@ Test on a mid-range Android phone (and an iPhone if you can). Expected failures 
 - [ ] Add a landmark near you; run inside its circle; the guild's km shows in the Territory tab and the circle on the map turns the guild's colour.
 - [ ] Turn on airplane mode, run inside a zone, finish, then go online and reopen the app: the km arrive once.
 
-**Run tracking** *(old items, still expected to fail)*
+**Run outbox** *(C5, C7; best with 14 run)*
+- [ ] Run 1 km, force-close the app mid-run, reopen, open the map: "You have an unsaved run" shows about the distance you'd covered by the last save (up to 20 s missing). "Review and save" opens the summary; save it; it shows once in Calendar.
+- [ ] Same, but tap "Discard": nothing is saved and the prompt doesn't come back.
+- [ ] Airplane mode on: run, end, "Save and finish": "Saved on this phone" shows. Airplane mode off, bring Karela back to the front: distance, XP and the Calendar entry arrive once.
+- [ ] Turn off the connection right after tapping "Save and finish" (or force-close during the save), then reopen online: the run is counted once, not twice.
+- [ ] Open `karela://summary?meters=99999&seconds=60&kcal=1&xp=99999`: "Run not found", nothing awarded.
+- [ ] Settings > Reset progress with a run waiting offline: the waiting run is gone too.
+
+**Run tracking** *(still expected to fail)*
 - [ ] Lock the screen for 2 minutes mid-run: gap in the path, wrong time? *(C6)*
-- [ ] Force-close mid-run: anything recoverable? *(C7)*
-- [ ] Finish a run in airplane mode. *(C7)*
 - [ ] Ride a bike at 20 km/h: counted as running? *(H4)*
-- [ ] Open `karela://summary?meters=99999&seconds=60&kcal=1&xp=99999`: does it award? *(C5)*
 
 **Map**
 - [ ] On an iPhone, place a civic flag by dragging the map under the marker: the flag lands where the marker points.
@@ -273,8 +278,8 @@ Test on a mid-range Android phone (and an iPhone if you can). Expected failures 
 ## 9. Suggested order of work
 
 1. **You:** run `07_` today (security), then `08_` to `13_`, add landmarks, set EAS variables.
-2. **T1 + T2:** the 8 type errors and the time-dependent test (both under an hour).
-3. **C5 + C7 together:** runs saved on the phone with a UUID and an outbox, summary opened by id, offline finishing. This also makes the website's offline claim true.
+2. ~~**T1 + T2**~~ done 2026-10-11.
+3. ~~**C5 + C7**~~ built 2026-10-11 (run `14_`, then the device tests for runs below).
 4. **C1:** server-side rewards (`finish_run`, `claim_mission`, civic rewards), then revoke the stats functions from the app. Fold in H2 and H3.
 5. **C6:** background tracking with a foreground service.
 6. **C3 + H10:** Ani behind an Edge Function, with chat memory.
@@ -287,11 +292,11 @@ Test on a mid-range Android phone (and an iPhone if you can). Expected failures 
 
 ```bash
 npm install --legacy-peer-deps
-npm run type-check                 # app: 8 errors today (T1); app-example/ errors can be ignored or the folder deleted
+npm run type-check                 # app: 0 errors; app-example/ errors can be ignored or the folder deleted
 npm run lint                       # 0 errors, 32 warnings today
 npx expo-doctor                    # needs internet
 npx expo export --platform android --output-dir /tmp/karela-export   # bundles?
-cd supabase/tests && npm install && npm test                        # 105 SQL checks; stops at the first failing file
-for f in t10 t11 t12 t13; do node $f.mjs; done                       # all four files, even if one fails
+cd supabase/tests && npm install && npm test                        # 115 SQL checks, all pass; stops at the first failing file
+for f in t10 t11 t12 t13 t14; do node $f.mjs; done                   # all five files, even if one fails
 git log --all --full-history -- .env                                # should print nothing
 ```

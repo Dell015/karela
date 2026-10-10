@@ -16,6 +16,7 @@ export const MIN_PASSWORD_LENGTH = 6;
 const wipeLocalRuns = () => {
   db.execSync("DROP TABLE IF EXISTS ghost_runs");
   db.execSync("DROP TABLE IF EXISTS daily_missions");
+  db.execSync("DROP TABLE IF EXISTS run_outbox");
   initDatabase();
 };
 

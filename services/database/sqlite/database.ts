@@ -22,6 +22,21 @@ export const initDatabase = () => {
       status TEXT DEFAULT 'pending', 
       date INTEGER
     );
+    -- Runs waiting to reach the account (services/runOutbox.ts).
+    CREATE TABLE IF NOT EXISTS run_outbox (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      state TEXT NOT NULL,
+      started_at INTEGER NOT NULL,
+      finished_at INTEGER,
+      meters INTEGER NOT NULL DEFAULT 0,
+      seconds INTEGER NOT NULL DEFAULT 0,
+      calories INTEGER NOT NULL DEFAULT 0,
+      xp INTEGER NOT NULL DEFAULT 0,
+      path_json TEXT NOT NULL DEFAULT '[]',
+      done TEXT NOT NULL DEFAULT '[]',
+      updated_at INTEGER NOT NULL
+    );
   `);
 };
 

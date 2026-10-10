@@ -113,7 +113,7 @@ export default function TerritoryMapScreen() {
     if (e.nativeEvent.action === "marker-press") return;
     const p = e.nativeEvent.coordinate;
     const hit = (landmarks ?? [])
-      .map((l) => ({ l, d: calculateDistance({ id: "tap", ...p }, { id: l.id, latitude: l.latitude, longitude: l.longitude }) }))
+      .map((l) => ({ l, d: calculateDistance(p, l) }))
       .filter(({ l, d }) => d <= l.radius_m)
       .sort((a, b) => a.d - b.d)[0];
     setSelectedId(hit ? hit.l.id : null);
