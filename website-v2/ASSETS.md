@@ -15,8 +15,8 @@ light for mid-range Android on prepaid data.
 | `img/ani-run.webp`, `ani-walk.webp`, `ani-idle.webp` | Ani sprite sheets, 8 frames of 256 by 336 each, used with the `.sprite` classes | about 50 KB each |
 | `img/ani-face.webp` | Ani's face | 16 KB |
 | `img/karela_word-logo.png` | Wordmark in the nav and footer | 16 KB |
-| `img/icon.png` | Home-screen icon (Apple touch icon): the K mark, 180 by 180 on `#0b0f0c` | 15 KB |
-| `img/favicon.png` | Tab icon: the K mark, 32 by 32, see-through. Both made from `assets/images/karela_logo.png` (repo root) | 2 KB |
+| `img/icon-k-180.png` | Home-screen icon (Apple touch icon): the K mark, 180 by 180 on `#0b0f0c` | 15 KB |
+| `img/favicon-k-32.png` | Tab icon: the K mark, 32 by 32, see-through. Both made from `assets/images/karela_logo.png` (repo root) | 2 KB |
 | `img/randel.webp`, `yshia.webp` (Trishia), `steven.webp`, `sander.webp` | Team photos, 480 by 480, see-through background | about 20 KB each |
 | `img/og-placeholder.png` | **Placeholder** link-preview image (see below) | 20 KB |
 | `img/coach.png` | Not used by the page (BACKLOG P2-9) | 28 KB |
