@@ -14,7 +14,7 @@ import {
 
 
 // --- 1. CONFIGURATION & ASSETS ---
-const LOGO_IMAGE = require('@/assets/images/Onboarding/karela_logo.png');
+const LOGO_IMAGE = require('@/assets/images/karela_logo.png');
 
 const SLIDES = [
     { id: '1', title: 'Your run starts\nwith one step.', description: 'The hardest part is showing up. Ani helps with the rest.', image: LOGO_IMAGE },
