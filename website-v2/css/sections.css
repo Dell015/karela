@@ -147,11 +147,13 @@
   position: relative;
 }
 
+/* Inside .hero__ani, so it sits just above Ani's head at every size. */
 .hero__note {
   position: absolute;
   z-index: 3;
-  left: -4%;
-  bottom: calc(var(--fh, 150px) - 1rem);
+  left: 2%;
+  bottom: calc(100% + 0.25rem);
+  margin: 0;
   display: flex;
   align-items: flex-end;
   gap: 0.25rem;
@@ -165,9 +167,6 @@
   .hero__ani {
     left: -22%;
   }
-  .hero__note {
-    left: -26%;
-  }
 }
 
 @media (min-width: 900px) {
@@ -178,9 +177,6 @@
   .hero__ani {
     --fh: clamp(170px, 15vw, 230px);
     left: -58%;
-  }
-  .hero__note {
-    left: -66%;
   }
 }
 

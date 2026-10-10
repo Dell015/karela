@@ -216,6 +216,7 @@ window.KARELA_CONFIG = (function () {
         empty: "Enter your email to join the waitlist.",
         sending: "Adding you to the list…",
         success: "You're on the list. We'll email you when the beta opens.",
+        duplicate: "That email is already on the list. We'll email you when the beta opens.",
         error: "Something went wrong. Try again in a moment.",
         notConfigured:
           "The waitlist isn't live yet. We're still connecting the backend, so your email wasn't saved. Star the repo on GitHub and you'll see the announcement there first.",

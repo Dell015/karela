@@ -707,6 +707,12 @@
           headers: WL.headers || { "Content-Type": "application/json" },
           body: JSON.stringify(Object.assign({ email: email, timestamp: new Date().toISOString() }, WL.payloadExtras || {})),
         });
+        // 409: Supabase's one-row-per-email rule. They're already in.
+        if (res.status === 409) {
+          form.reset();
+          say(M.duplicate || M.success, "success", { href: "#survey", text: "Answer a quick survey" });
+          return;
+        }
         if (!res.ok) throw new Error("HTTP " + res.status);
         form.reset();
         say(M.success + " Got a minute?", "success", { href: "#survey", text: "Answer a quick survey" });
