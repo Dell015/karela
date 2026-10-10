@@ -8,10 +8,11 @@ settings for it are in `js/config.js`, section 0.
 |---|---|
 | `supabase-site.sql` | The `waitlist` and `survey_responses` tables. Visitors can only add rows. (Already run.) |
 | `02_confirmation_email.sql` | The "Email me a confirmation" box, the remove-me code per signup, the trigger that asks the Google script to send the email, and `remove_from_waitlist()` for `/unsubscribe`. |
+| `03_rate_limits.sql` | Rate limits: 20 signups and 20 survey answers per connection per 10 minutes, 500 of each per hour in total, and at most 90 confirmation emails a day (protects the Gmail). Numbers in `private.rate_limits()`. |
 | `confirmation-email.gs` | The Google Apps Script that sends the email from the owner's Gmail (about 100 a day on a free account). |
 
-Tests: `cd supabase/tests && node site_email.mjs` (14 checks; it uses a stand-in
-for pg_net, so no email is sent).
+Tests: `cd supabase/tests && node site_email.mjs && node site_limits.mjs`
+(14 + 10 checks; a stand-in replaces pg_net, so no email is sent).
 
 ## Setting up the confirmation email (once)
 
@@ -37,6 +38,12 @@ Four parts. Signups keep working the whole time.
    waitlist on the live site with your own email, box ticked: the email
    arrives within a minute. Its "Remove me from the list" link should remove
    you.
+
+## Rate limits (once)
+
+Supabase (website project) > SQL Editor > New query: paste all of
+`03_rate_limits.sql`, Run. "Success. No rows returned" is right. Someone over a
+limit sees "Too many tries from here. Wait a few minutes and try again."
 
 ## Later
 

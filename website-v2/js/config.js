@@ -82,6 +82,7 @@ window.KARELA_CONFIG = (function () {
         doneTitle: "Thank you.",
         doneBody: "Your answers help shape Karela. Karela Research Team, University of Saint Louis, Tuguegarao City.",
         error: "Something went wrong sending your answers. Try again in a moment.",
+        tooMany: "Too many answers from here in a short time. Wait a few minutes and try again.",
         notConfigured:
           "The survey isn't connected to a backend yet, so your answers weren't saved.",
       },
@@ -222,6 +223,7 @@ window.KARELA_CONFIG = (function () {
         success: "You're on the list. We'll email you when the beta opens.",
         successEmail: "You're on the list. A confirmation is on its way to your inbox.",
         duplicate: "That email is already on the list. We'll email you when the beta opens.",
+        tooMany: "Too many tries from here. Wait a few minutes and try again.",
         error: "Something went wrong. Try again in a moment.",
         notConfigured:
           "The waitlist isn't live yet. We're still connecting the backend, so your email wasn't saved. Star the repo on GitHub and you'll see the announcement there first.",

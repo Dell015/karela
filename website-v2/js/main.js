@@ -733,13 +733,20 @@
           });
         let res = await post(row);
         let emailed = row.wants_email;
-        // 400 before backend/02_confirmation_email.sql is run: the table has
-        // no wants_email column yet. Save the signup without it.
-        if (res.status === 400) {
+        let problem = res.status === 400 ? await res.clone().json().catch(() => ({})) : {};
+        // PGRST204 before backend/02_confirmation_email.sql is run: the table
+        // has no wants_email column yet. Save the signup without it.
+        if (problem.code === "PGRST204") {
           const rest = Object.assign({}, row);
           delete rest.wants_email;
           res = await post(rest);
           emailed = false; // no confirmation can go out yet
+          problem = res.status === 400 ? await res.clone().json().catch(() => ({})) : {};
+        }
+        // P0001: the database's rate limit (backend/03_rate_limits.sql).
+        if (problem.code === "P0001") {
+          say(M.tooMany || problem.message || M.error, "error");
+          return;
         }
         // 409: Supabase's one-row-per-email rule. They're already in.
         if (res.status === 409) {
@@ -932,6 +939,14 @@
           headers: S.headers || { "Content-Type": "application/json" },
           body: JSON.stringify(Object.assign({ answers: answers, timestamp: new Date().toISOString() }, S.payloadExtras || {})),
         });
+        // P0001: the database's rate limit (backend/03_rate_limits.sql).
+        if (res.status === 400) {
+          const problem = await res.json().catch(() => ({}));
+          if (problem.code === "P0001") {
+            say(M.tooMany || problem.message || M.error, "error");
+            return;
+          }
+        }
         if (!res.ok) throw new Error("HTTP " + res.status);
         done();
       } catch (err) {
