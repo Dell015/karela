@@ -37,33 +37,33 @@ real artwork for link previews, a privacy page, and store links at launch.
 
 ## P0
 
-### P0-1. Waitlist and survey don't save anything yet
+### P0-1. Waitlist and survey save to the site's Supabase (done 2026-10-11)
 
-**Where:** `website-v2/js/config.js`, `WAITLIST.endpoint` and `SURVEY.endpoint`
-(both `""`).
+**Where:** `website-v2/js/config.js`, section 0 (`SITE_DB`, `SITE_DB_HEADERS`).
 
-Both forms are finished: validation, keyboard use, screen-reader messages,
-sending and error states. While the endpoint is empty they say plainly that
-nothing was saved. They never fake a success.
+Both forms send to the website's own Supabase project
+(`https://jyvvuwlxjfqxrfgshqxh.supabase.co`, set up with
+`backend/supabase-site.sql`), never the app's. Visitors can only add rows;
+reading with the public key is refused. Read the data in the Supabase
+dashboard: Table Editor, `waitlist` and `survey_responses`. An email that's
+already on the list gets "That email is already on the list" (the table keeps
+one row per email, any capitalisation).
 
-The backend is ready to set up:
-- `website-v2/backend/supabase-site.sql` creates the `waitlist` and
-  `survey_responses` tables in a **new** Supabase project made only for the
-  site. Anyone can add a row; nobody can read, change or delete rows with the
-  public key. You read the data in the Supabase dashboard.
-- The CSP in `netlify.toml` and `vercel.json` already allows
-  `https://formspree.io` and `https://*.supabase.co` in `connect-src`. Once
-  you pick one, you can narrow it to that exact origin.
+`connect-src` in `netlify.toml` and `vercel.json` now allows only that one
+Supabase origin (Formspree and the `*.supabase.co` wildcard were removed).
 
-**Steps (Supabase):** create a new project, run `backend/supabase-site.sql`,
-then fill in `endpoint` and `headers` as the comments in `config.js` show.
-**Never use the mobile app's project or its `EXPO_PUBLIC_SUPABASE_ANON_KEY`.**
+Tested 2026-10-11 in Chrome with the production CSP: empty and invalid email
+messages, a new email (saved), the same email again (already on the list), a
+full survey (saved, thank-you screen).
 
-**Steps (Formspree):** create two forms, paste their URLs as the endpoints.
-
-**Done looks like:** a real email on the waitlist and a real survey
-submission each show up as a row, and the success message shows. Also test
-the "not connected" message (empty endpoint) and the validation message.
+**Confirmation email (built 2026-10-11, owner setup pending):** an "Email me
+a confirmation" box under the email field, ticked by default; the tick draws
+itself when the form comes into view. With it ticked, the database asks a
+Google Apps Script in the owner's Gmail to send the confirmation (owner's
+wording, Karela logo, "Remove me from the list" link to `/unsubscribe`). Steps
+and files: `backend/README.md`. There's no domain yet, so mail comes from
+Gmail; move to Resend or similar once a domain is bought. Ani in the email:
+later.
 
 ### P0-2. Two offline claims are ahead of the app
 

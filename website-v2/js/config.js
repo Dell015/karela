@@ -13,7 +13,30 @@
 window.KARELA_CONFIG = (function () {
   "use strict";
 
+  /* ----------------------------------------------------------
+     0. WHERE THE WAITLIST AND SURVEY ARE SAVED
+
+     The website's OWN Supabase project (not the app's), set up
+     with backend/supabase-site.sql. Visitors can only add rows;
+     nobody can read, change or delete them with this key. Read
+     the rows in the Supabase dashboard (Table Editor).
+
+     The publishable key below is meant to be public. Never put
+     the app's keys here, and never a service_role / secret key.
+     If you move the project, change SITE_DB here and the
+     connect-src origin in netlify.toml and vercel.json.
+     ---------------------------------------------------------- */
+  var SITE_DB = "https://jyvvuwlxjfqxrfgshqxh.supabase.co";
+  var SITE_DB_HEADERS = {
+    apikey: "sb_publishable_MXY1zUf7F8shTsn8ga32_g_uMKlxmuU",
+    Prefer: "return=minimal",
+    "Content-Type": "application/json",
+  };
+
   return {
+    /* The site's own database (section 0), for pages like /unsubscribe. */
+    SITE_DB: { url: SITE_DB, headers: SITE_DB_HEADERS },
+
     /* --------------------------------------------------------
        1. SURVEY
 
@@ -40,24 +63,15 @@ window.KARELA_CONFIG = (function () {
          hint      optional small line under the title
          required  true / false
 
-       Where answers go (same options as the waitlist)
-         Formspree:  endpoint: "https://formspree.io/f/YOUR_ID"
-         Supabase:   a SEPARATE project, never the app's. Run
-                     backend/supabase-site.sql in it, then use:
-                       endpoint: "https://YOUR.supabase.co/rest/v1/survey_responses",
-                       headers: { apikey: "ANON_KEY", Authorization: "Bearer ANON_KEY",
-                                  Prefer: "return=minimal",
-                                  "Content-Type": "application/json" }
-       Until an endpoint is set, the survey says plainly that
-       answers were not saved. It never pretends.
-
-       CSP: when you set an endpoint, add its origin to
-       connect-src in netlify.toml and vercel.json.
+       Where answers go: the survey_responses table in the
+       site's Supabase project (section 0). If endpoint is ever
+       set back to "", the survey says plainly that answers were
+       not saved. It never pretends.
        -------------------------------------------------------- */
     SURVEY: {
-      endpoint: "",
+      endpoint: SITE_DB + "/rest/v1/survey_responses",
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: SITE_DB_HEADERS,
       payloadExtras: { source: "karela-website-survey" },
       showSampleBadge: false,
 
@@ -191,31 +205,22 @@ window.KARELA_CONFIG = (function () {
     /* --------------------------------------------------------
        2. WAITLIST BACKEND
 
-       No backend is connected yet. While `endpoint` is empty the
-       form validates the email and says honestly that it isn't
-       live, instead of pretending to save it.
-
-       Option A, Formspree:
-         endpoint: "https://formspree.io/f/YOUR_FORM_ID"
-       Option B, a SEPARATE Supabase project (never the app's):
-         endpoint: "https://YOUR.supabase.co/rest/v1/waitlist",
-         headers: { apikey: "...", Authorization: "Bearer ...",
-                    Prefer: "return=minimal",
-                    "Content-Type": "application/json" }
-
-       SECURITY: never paste the mobile app's
-       EXPO_PUBLIC_SUPABASE_ANON_KEY here.
+       Emails go to the waitlist table in the site's Supabase
+       project (section 0), one row per email. If endpoint is
+       ever set back to "", the form says honestly that it isn't
+       live instead of pretending to save it.
        -------------------------------------------------------- */
     WAITLIST: {
-      endpoint: "",
+      endpoint: SITE_DB + "/rest/v1/waitlist",
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: SITE_DB_HEADERS,
       payloadExtras: { source: "karela-website" },
       messages: {
         invalid: "That email doesn't look right. Check it and try again.",
         empty: "Enter your email to join the waitlist.",
         sending: "Adding you to the list…",
         success: "You're on the list. We'll email you when the beta opens.",
+        successEmail: "You're on the list. A confirmation is on its way to your inbox.",
         duplicate: "That email is already on the list. We'll email you when the beta opens.",
         error: "Something went wrong. Try again in a moment.",
         notConfigured:

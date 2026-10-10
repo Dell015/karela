@@ -842,12 +842,21 @@
                   aria-describedby="waitlist-msg"
                 />
                 <button class="btn btn--ink" type="submit" data-waitlist-submit>Join the waitlist</button>
+                <label class="optin">
+                  <input class="optin__input" type="checkbox" name="wants_email" data-waitlist-confirm checked />
+                  <span class="optin__box" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="18" height="18" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+                  </span>
+                  <span class="optin__text">Email me a confirmation</span>
+                </label>
               </form>
               <p class="paper__msg" id="waitlist-msg" data-waitlist-msg role="status" aria-live="polite"></p>
 
               <p class="paper__fine">
-                One email when the beta opens. No newsletter, and we never
-                share your address. Privacy policy coming soon.
+                A confirmation now if you want one, and one email when the
+                beta opens. No newsletter, and we never share your address.
+                Every email has a link to remove yourself. Privacy policy
+                coming soon.
               </p>
 
               <p class="paper__stores">

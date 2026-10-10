@@ -650,6 +650,25 @@
     if (!form) return;
     const input = $("[data-waitlist-email]", form);
     const submit = $("[data-waitlist-submit]", form);
+    const confirmBox = $("[data-waitlist-confirm]", form);
+
+    // Draw the confirmation tick once, when the form comes into view.
+    const optin = confirmBox && confirmBox.closest(".optin");
+    if (optin) {
+      if ("IntersectionObserver" in window) {
+        const io = new IntersectionObserver((entries) => {
+          if (entries.some((en) => en.isIntersecting)) {
+            optin.classList.add("is-in");
+            io.disconnect();
+          }
+        }, { threshold: 0.6 });
+        io.observe(optin);
+      } else {
+        optin.classList.add("is-in");
+      }
+      // Clicking before it has drawn: show the real state at once.
+      confirmBox.addEventListener("change", () => optin.classList.add("is-in"));
+    }
     const msg = $("[data-waitlist-msg]");
     const WL = CONFIG.WAITLIST || {};
     const M = WL.messages || {};
@@ -702,11 +721,26 @@
       busy(true);
       say(M.sending, "");
       try {
-        const res = await fetch(WL.endpoint, {
-          method: WL.method || "POST",
-          headers: WL.headers || { "Content-Type": "application/json" },
-          body: JSON.stringify(Object.assign({ email: email, timestamp: new Date().toISOString() }, WL.payloadExtras || {})),
-        });
+        const row = Object.assign(
+          { email: email, timestamp: new Date().toISOString(), wants_email: !!(confirmBox && confirmBox.checked) },
+          WL.payloadExtras || {},
+        );
+        const post = (body) =>
+          fetch(WL.endpoint, {
+            method: WL.method || "POST",
+            headers: WL.headers || { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+        let res = await post(row);
+        let emailed = row.wants_email;
+        // 400 before backend/02_confirmation_email.sql is run: the table has
+        // no wants_email column yet. Save the signup without it.
+        if (res.status === 400) {
+          const rest = Object.assign({}, row);
+          delete rest.wants_email;
+          res = await post(rest);
+          emailed = false; // no confirmation can go out yet
+        }
         // 409: Supabase's one-row-per-email rule. They're already in.
         if (res.status === 409) {
           form.reset();
@@ -715,7 +749,7 @@
         }
         if (!res.ok) throw new Error("HTTP " + res.status);
         form.reset();
-        say(M.success + " Got a minute?", "success", { href: "#survey", text: "Answer a quick survey" });
+        say((emailed && M.successEmail ? M.successEmail : M.success) + " Got a minute?", "success", { href: "#survey", text: "Answer a quick survey" });
       } catch (err) {
         say(M.error, "error");
       } finally {

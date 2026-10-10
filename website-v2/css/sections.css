@@ -1164,6 +1164,101 @@
 .paper__form .btn {
   flex: 0 0 auto;
 }
+
+/* "Email me a confirmation": ticked by default. The tick draws itself
+   once when the form comes into view, so it reads as a choice. */
+.optin {
+  position: relative;
+  flex: 1 0 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 44px;
+  cursor: pointer;
+  color: var(--paper-ink);
+  font-weight: 500;
+}
+.optin__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.optin__box {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--paper-ink);
+  border-radius: var(--r-xs);
+  background: var(--paper-ink);
+  transition: background-color 0.2s, transform 0.2s var(--ease);
+}
+.optin__box svg {
+  fill: none;
+  stroke: var(--lime);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.optin__box path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.45s var(--ease) 0.1s;
+}
+.optin__input:not(:checked) + .optin__box {
+  background: transparent;
+}
+.optin__input:not(:checked) + .optin__box path {
+  stroke-dashoffset: 24;
+}
+.optin__input:focus-visible + .optin__box {
+  outline: 3px solid var(--paper-ink);
+  outline-offset: 3px;
+}
+/* With JS: start empty, draw the tick when the form is on screen. */
+.js .optin:not(.is-in) .optin__box {
+  background: transparent;
+}
+.js .optin:not(.is-in) .optin__box path {
+  stroke-dashoffset: 24;
+}
+.js .optin.is-in .optin__box {
+  transform: scale(1);
+  animation: optin-pop 0.5s var(--ease) 0.1s;
+}
+@keyframes optin-pop {
+  50% {
+    transform: scale(1.18);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .optin__box,
+  .optin__box path {
+    transition: none;
+  }
+  .js .optin:not(.is-in) .optin__box {
+    background: var(--paper-ink);
+  }
+  .js .optin:not(.is-in) .optin__box path {
+    stroke-dashoffset: 0;
+  }
+  .js .optin.is-in .optin__box {
+    animation: none;
+  }
+}
+@media (forced-colors: active) {
+  .optin__box {
+    border-color: CanvasText;
+  }
+  .optin__box svg {
+    stroke: CanvasText;
+  }
+}
 .paper__msg {
   min-height: 1.6em;
   margin-top: 0.8rem;

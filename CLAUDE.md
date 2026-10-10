@@ -93,7 +93,7 @@ Before calling any change done, check:
 - The browser console has no errors.
 - Reduced motion (`prefers-reduced-motion`) still gives a complete, readable page.
 - Keyboard: tab through the nav, menu, scrollbar tracker, Resonance slider, tier selector, forms and survey.
-- If you touched a form, test both the "no endpoint" message and the validation message.
+- If you touched a form, test the validation message and a real submission (it saves to the site's Supabase project, `js/config.js` section 0; delete test rows after).
 
 ### Structure
 
@@ -127,7 +127,7 @@ The goal: it must not look AI-generated. These rules come from the owner.
 - Motion is purposeful. One orchestrated moment (the hero ghost echo) plus motion that answers a user action. Do not add fade-up-on-scroll to every section or hover effects on everything.
 - Transitions between sections must be seamless. Sections are transparent over one fixed background that blends palettes by scroll position (`data-palette` on each section). Do not give a section its own opaque background.
 - Voice: plain, specific, honest, sentence case. Say "Join the waitlist", not "Submit". Errors say what happened and what to do. No hype, no invented numbers.
-- Placeholder content is labeled as such. The survey shows an orange "Sample questions" note until `showSampleBadge` is set to `false`. The waitlist and survey say plainly that nothing was saved until an endpoint is set. Never fake a success.
+- Placeholder content is labeled as such. The survey shows an orange "Sample questions" note until `showSampleBadge` is set to `false`. The waitlist and survey save to the site's own Supabase project (never the app's); if an endpoint is ever emptied they say plainly that nothing was saved. Never fake a success.
 - Accessibility floor: visible focus, `prefers-reduced-motion`, `forced-colors`, `prefers-contrast`, 4.5:1 text contrast, tap targets of at least 44px on phones.
 
 ### Ani on the page
@@ -138,7 +138,6 @@ The goal: it must not look AI-generated. These rules come from the owner.
 
 ### Still to do (see `website-v2/BACKLOG.md`)
 
-- Survey and waitlist endpoints. The survey questions are final, and `website-v2/backend/supabase-site.sql` is ready for a separate Supabase project; only the endpoints in `config.js` are missing.
 - Two offline claims on the page are ahead of the app (runs aren't saved offline yet). Build the app's run outbox or soften the lines; the owner decides.
 - Real og image (`assets/img/og-placeholder.png` is a placeholder).
 - Privacy policy page (the waitlist copy says "coming soon").

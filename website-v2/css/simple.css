@@ -1,0 +1,52 @@
+/* ============================================================
+   KARELA WEB v2: SIMPLE ONE-MESSAGE PAGES (unsubscribe.html)
+   One column, centred, on the shared background. Mobile first.
+   ============================================================ */
+.simple {
+  display: grid;
+  justify-items: start;
+  align-content: center;
+  gap: 1.1rem;
+  width: min(100% - 2 * var(--gutter), 34rem);
+  min-height: 100svh;
+  margin-inline: auto;
+  padding-block: 3rem;
+}
+.simple__logo img {
+  display: block;
+  width: 140px;
+  height: auto;
+  margin-bottom: 1.5rem;
+}
+.simple__title {
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--fs-h2);
+  font-weight: 900;
+  line-height: 1.1;
+}
+.simple__lead {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--fs-lead);
+  line-height: 1.55;
+}
+.simple__msg {
+  min-height: 1.5em;
+  margin: 0;
+  color: var(--ink-2);
+  font-weight: 500;
+  line-height: 1.5;
+}
+.simple__msg--success {
+  color: var(--lime);
+}
+.simple__msg--error {
+  color: var(--coral);
+}
+.simple__back {
+  margin-top: 1rem;
+}
+.simple .btn[disabled] {
+  cursor: wait;
+}
