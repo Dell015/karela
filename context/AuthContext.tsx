@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { AppState } from "react-native";
 import { supabase } from "../services/database/supabase/config";
 import {
+    EDITABLE_STATS,
     getProfile,
     incrementStats,
     setStats,
@@ -229,8 +230,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const mapped = mapRowToProfile(row);
 
       // Patch any missing stat fields (older rows / partial signup data)
+      // Only keys the app may set: earned stats (XP, Gems...) are the
+      // server's, and mapRowToProfile already fills them in for display.
       const missingKeys = Object.keys(DEFAULT_STATS).filter(
-        (k) => (row.stats || {})[k] === undefined,
+        (k) =>
+          (EDITABLE_STATS as readonly string[]).includes(k) && (row.stats || {})[k] === undefined,
       );
       if (missingKeys.length > 0) {
         const patch: Record<string, any> = {};

@@ -73,6 +73,8 @@ export interface SubmitReportResult {
   node_id?: string;
   consensus_reached?: boolean;
   node_status?: NodeStatus;
+  /** Paid by the server (supabase/15_server_rewards.sql). Missing before 15. */
+  reward?: { xp: number; gems: number };
   error?: string;
   message?: string;
 }
@@ -179,7 +181,8 @@ export const submitCivicReport = async (
   // submit_civic_report returns { error: 'duplicate_report' } with no `success`
   // field and inserts nothing, yet PostgREST reports no transport error — so an
   // unconditional sync would credit civic progress for a rejected report.
-  if (result?.success) {
+  // With 15 the server adds civic quest progress itself (result.reward).
+  if (result?.success && !result.reward) {
     try {
       await QuestEngine.syncCivicProgress(userId);
     } catch (e) {

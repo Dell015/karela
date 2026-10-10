@@ -88,6 +88,7 @@ Scan the QR code with Expo Go (Android) or the Camera app (iOS) to open on your 
    supabase/12_guilds.sql
    supabase/13_territory.sql
    supabase/14_finish_run.sql
+   supabase/15_server_rewards.sql
    ```
    Then add the territory landmarks: `supabase/landmarks_tuguegarao.sql`.
 
@@ -199,7 +200,7 @@ karela/
 │   ├── account.ts              # Change password, delete account
 │   ├── reminders.ts            # Daily reminder outside quiet hours
 │   ├── weatherSafety.ts        # Storm safety (Bayanihan Tier 0 and 1)
-│   ├── onboarding.ts           # 7-day onboarding arc (not wired up yet, QA H3)
+│   ├── onboarding.ts           # 7-day onboarding arc (paid and advanced by claim_mission)
 │   ├── notificationService.ts  # Notification helpers
 │   ├── PermissionsManager.ts   # OS permissions handler
 │   └── QuestGenerator.ts       # (Unused) Legacy quest gen
@@ -285,7 +286,9 @@ The design:
 
 Where it stands today (details in `docs/QA_REPORT.md`):
 - **Built:** a run outbox (`services/runOutbox.ts`): each run gets a UUID at Start, is saved on the phone while it happens, survives the app being killed, and syncs when online without counting twice (`14_finish_run.sql`). Territory uploads (km per zone) queue offline with a UUID. Shop purchases, streaks, squads, guilds and territory are server functions.
-- **Not built yet:** XP and Gems for runs are still worked out by the phone (QA C1). GPS stops when the screen locks (QA C6).
+- **Built:** rewards are paid by the server (`15_server_rewards.sql`): runs, quests, first-week days and civic reports. The app can't add XP or Gems itself (QA C1, H2, H3).
+- **Built:** a run keeps recording with the screen locked in a development or store build (`services/backgroundRun.ts`, Android shows a notification while it runs; QA C6). Not in Expo Go.
+- **Not built yet:** the run distance itself still comes from the phone (QA H4).
 
 ---
 
@@ -312,11 +315,16 @@ This project uses several native modules (background location, task manager, sen
 
 ```bash
 # Build and install a custom dev client (recommended)
+npx expo prebuild --clean   # after any change to app.config.js (android/ and ios/ are generated)
 npx expo run:android
+# or in the cloud:
+eas build --profile development --platform android
 
 # Or stick with Expo Go (some features limited)
 npx expo start
 ```
+
+**Recording a run with the screen locked needs a development or store build.** Expo Go has no background tasks, so there the run only records while the screen is on (Settings > "Keep screen on during runs" helps). The app checks this itself and doesn't crash in Expo Go; see `services/backgroundRun.ts`.
 
 ### Known Dependency Issues
 
@@ -405,12 +413,12 @@ Most of the server features need their SQL file run in Supabase first (see Datab
 ### Left, most urgent first
 - [ ] Fix 8 TypeScript errors and one time-dependent SQL test (QA T1, T2)
 - [x] Save runs on the phone with a UUID and an outbox so offline and crashed runs aren't lost; open the summary by id instead of from the URL (QA C5, C7)
-- [ ] Award XP and Gems on the server, not the phone (QA C1, H2)
+- [x] Award XP and Gems on the server, not the phone (QA C1, H2)
 - [ ] Background tracking with the screen locked (QA C6)
 - [ ] Move the Gemini and weather keys behind a Supabase Edge Function; give Ani chat memory (QA C3, H10)
 - [ ] Civic photos private with signed URLs; limit who can read reports; stop civic reward farming (QA H5, H6, C4)
 - [ ] Signup validation, consent and minimum age (QA H9)
-- [ ] Wire up the 7-day onboarding (QA H3)
+- [x] Wire up the 7-day onboarding (QA H3)
 - [ ] Replace the OSRM demo server with a production routing service (QA M10)
 - [ ] Push notifications for squads and guilds (QA N1)
 - [ ] Optional: Zustand for state management (replace the large AuthContext)

@@ -1,9 +1,17 @@
 import { PermissionManager } from "@/services/PermissionsManager";
+import { VEHICLE_KMH } from "@/services/runMath";
+import {
+  clearBackgroundPoints,
+  startBackgroundTracking,
+  stopBackgroundTracking,
+  takeBackgroundPoints,
+} from "@/services/backgroundRun";
 import { GhostEngine } from "@/services/tracker/GhostEngine";
 import { GpsKalmanFilter } from "@/services/tracker/GpsKalmanFilter";
 import * as Location from "expo-location";
 import { Magnetometer } from "expo-sensors";
 import { useEffect, useRef, useState } from "react";
+import { AppState } from "react-native";
 import { useMotionShield } from "./useMotionShield";
 
 const getDistance = (
@@ -50,7 +58,7 @@ export const useLocationEngine = (savedGhostData: any[]) => {
   const JITTER_THRESHOLD = 2.5;      // Min movement to register (meters)
   const TELEPORT_THRESHOLD = 100;    // Max plausible jump per fix (meters)
   const MAX_HUMAN_SPEED_MPS = 12.5;  // ~45 km/h — rejects GPS spikes
-  const VELOCITY_CAP = 35;           // km/h — flags vehicle travel
+  const VELOCITY_CAP = VEHICLE_KMH;  // km/h — flags vehicle travel
   const GPS_HEADING_MIN_SPEED = 2;   // m/s — use GPS course above this speed
 
   // Keep refs in sync with the latest props. This must run on every change,
@@ -62,6 +70,81 @@ export const useLocationEngine = (savedGhostData: any[]) => {
   useEffect(() => {
     isMovingRef.current = isPhysicallyMoving;
   }, [isPhysicallyMoving]);
+
+  type Fix = { latitude: number; longitude: number; timestamp: number };
+  type TrailPoint = Fix & { isVehicle: boolean };
+
+  /**
+   * The checks every trail point goes through, live or recorded in the
+   * background: jitter, impossible jumps and vehicle speed. Returns the
+   * point to add, or null. Updates the last accepted point and the total.
+   */
+  const acceptPoint = (point: Fix, speedMps: number): TrailPoint | null => {
+    const speedKmH = speedMps > 0 ? Math.round(speedMps * 3.6) : 0;
+    const isVehicle = speedKmH > VELOCITY_CAP;
+    const last = lastAcceptedRef.current;
+    if (!last) {
+      lastAcceptedRef.current = point;
+      return { ...point, isVehicle };
+    }
+
+    const distanceMoved = getDistance(last, point);
+    const dtSeconds = Math.max(0.001, (point.timestamp - last.timestamp) / 1000);
+    const impliedSpeed = distanceMoved / dtSeconds; // m/s
+
+    // OUTLIER REJECTION
+    //    - Too small: GPS jitter while standing still
+    //    - Too large: GPS spike / teleport
+    //    - Implausible speed: faster than a human can move on foot
+    if (distanceMoved < JITTER_THRESHOLD) return null;
+    if (distanceMoved > TELEPORT_THRESHOLD) return null;
+    if (impliedSpeed > MAX_HUMAN_SPEED_MPS && !isVehicle) return null;
+
+    lastAcceptedRef.current = point;
+
+    // DISTANCE ACCUMULATION — only count human-powered movement
+    if (!isVehicle && isMovingRef.current) {
+      setTotalDistance((prev) => prev + distanceMoved);
+    }
+    return { ...point, isVehicle };
+  };
+
+  // --- SCREEN LOCKED: points recorded in the background (services/backgroundRun.ts) ---
+  // Added to the trail when the app comes back to the front. In Expo Go
+  // background tracking doesn't start, and this finds nothing.
+  const wasInBackgroundRef = useRef(false);
+  const mergeBackgroundPoints = () => {
+    if (!wasInBackgroundRef.current) return;
+    wasInBackgroundRef.current = false;
+    const added: TrailPoint[] = [];
+    for (const p of takeBackgroundPoints()) {
+      const last = lastAcceptedRef.current;
+      if (last && p.timestamp <= last.timestamp) continue;
+      const accepted = acceptPoint({ latitude: p.latitude, longitude: p.longitude, timestamp: p.timestamp }, p.speed);
+      if (accepted) added.push(accepted);
+    }
+    if (added.length) setPath((current) => [...current, ...added]);
+  };
+
+  useEffect(() => {
+    if (!isRacing) return;
+    let stopped = false;
+    void startBackgroundTracking().then((on) => {
+      if (stopped && on) void stopBackgroundTracking();
+    });
+    const sub = AppState.addEventListener("change", (st) => {
+      if (st === "active") mergeBackgroundPoints();
+      else wasInBackgroundRef.current = true;
+    });
+    return () => {
+      stopped = true;
+      sub.remove();
+      wasInBackgroundRef.current = false;
+      void stopBackgroundTracking();
+      clearBackgroundPoints();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRacing]);
 
   // Reset run state ONLY when the race itself starts/stops.
   // Depending on isPhysicallyMoving here would wipe `path` and restart the
@@ -156,38 +239,15 @@ export const useLocationEngine = (savedGhostData: any[]) => {
           // 3. STRICT GATE — only record run path from high-accuracy fixes
           if (accuracy > ACCURACY_GATE_M) return;
 
-          const speedKmH = rawSpeedMps > 0 ? Math.round(rawSpeedMps * 3.6) : 0;
-          setCurrentSpeed(speedKmH);
-          const isVehicle = speedKmH > VELOCITY_CAP;
+          setCurrentSpeed(rawSpeedMps > 0 ? Math.round(rawSpeedMps * 3.6) : 0);
 
-          const last = lastAcceptedRef.current;
+          // Coming back from the background: add what was recorded there
+          // first, so the trail stays in time order.
+          mergeBackgroundPoints();
 
-          if (!last) {
-            lastAcceptedRef.current = filteredPoint;
-            setPath([{ ...filteredPoint, isVehicle }]);
-            return;
-          }
-
-          const distanceMoved = getDistance(last, filteredPoint);
-          const dtSeconds = Math.max(0.001, (gpsTimestamp - last.timestamp) / 1000);
-          const impliedSpeed = distanceMoved / dtSeconds; // m/s
-
-          // 3. OUTLIER REJECTION
-          //    - Too small: GPS jitter while standing still
-          //    - Too large: GPS spike / teleport
-          //    - Implausible speed: faster than a human can move on foot
-          if (distanceMoved < JITTER_THRESHOLD) return;
-          if (distanceMoved > TELEPORT_THRESHOLD) return;
-          if (impliedSpeed > MAX_HUMAN_SPEED_MPS && !isVehicle) return;
-
-          lastAcceptedRef.current = filteredPoint;
-
-          // 4. DISTANCE ACCUMULATION — only count human-powered movement
-          if (!isVehicle && isMovingRef.current) {
-            setTotalDistance((prev) => prev + distanceMoved);
-          }
-
-          setPath((current) => [...current, { ...filteredPoint, isVehicle }]);
+          // 4. OUTLIER REJECTION and distance (acceptPoint)
+          const accepted = acceptPoint(filteredPoint, rawSpeedMps);
+          if (accepted) setPath((current) => [...current, accepted]);
         },
       );
 
@@ -205,6 +265,9 @@ export const useLocationEngine = (savedGhostData: any[]) => {
       subscription?.remove();
       subscription = null;
     };
+    // One watcher for the screen's life. acceptPoint and mergeBackgroundPoints
+    // only use refs and state setters, so the first render's copies are fine.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // --- COMPASS (Magnetometer fallback for low-speed / stationary) ---

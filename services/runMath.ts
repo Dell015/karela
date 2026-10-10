@@ -9,6 +9,8 @@ import { calculateDistance } from "@/services/tracker/geoUtils";
 
 export type TrackPoint = { latitude: number; longitude: number; isVehicle?: boolean; timestamp?: number };
 
+/** Faster than this is a vehicle, not running (the server uses the same cap). */
+export const VEHICLE_KMH = 35;
 /** A GPS jump bigger than this between two fixes is a glitch, not running. */
 export const MAX_SEGMENT_M = 100;
 /** Runs shorter than this aren't worth saving. */

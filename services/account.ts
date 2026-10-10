@@ -17,6 +17,7 @@ const wipeLocalRuns = () => {
   db.execSync("DROP TABLE IF EXISTS ghost_runs");
   db.execSync("DROP TABLE IF EXISTS daily_missions");
   db.execSync("DROP TABLE IF EXISTS run_outbox");
+  db.execSync("DROP TABLE IF EXISTS run_points");
   initDatabase();
 };
 
@@ -108,6 +109,18 @@ export const exportMyData = async (uid: string): Promise<string> => {
  * civic reports are kept.
  */
 export const resetProgress = async (uid: string) => {
+  // The server resets it (supabase/15_server_rewards.sql); the app can't
+  // write those stats itself any more.
+  const { error: rpcError } = await supabase.rpc("reset_my_progress");
+  if (!rpcError) {
+    wipeLocalRuns();
+    return;
+  }
+  if (rpcError.code !== "PGRST202" && rpcError.code !== "42883") {
+    throw new Error("Reset didn't finish. Check your connection and try again.");
+  }
+
+  // 15 not run yet: the old way.
   const del = async (table: string) => {
     const { error } = await supabase.from(table).delete().eq("user_id", uid);
     if (error) throw new Error("Reset didn't finish. Check your connection and try again.");

@@ -30,9 +30,11 @@ export const addMission = async (
     frequency?: string;
     type?: string;
     created_at_key?: string;
+    /** First-week quest day, 1 to 7 (needs supabase/15_server_rewards.sql). */
+    onboarding_day?: number;
   }
 ) => {
-  const { error } = await supabase.from("missions").insert({
+  const row = {
     user_id: uid,
     title: mission.title,
     description: mission.description,
@@ -44,7 +46,14 @@ export const addMission = async (
     frequency: mission.frequency ?? "daily",
     type: mission.type ?? "distance",
     created_at_key: mission.created_at_key,
-  });
+    ...(mission.onboarding_day ? { onboarding_day: mission.onboarding_day } : {}),
+  };
+  let { error } = await supabase.from("missions").insert(row);
+  // PGRST204: no onboarding_day column yet (15 not run). Save without it.
+  if (error?.code === "PGRST204" && "onboarding_day" in row) {
+    const { onboarding_day: _skip, ...rest } = row;
+    ({ error } = await supabase.from("missions").insert(rest));
+  }
   if (error) throw error;
 };
 

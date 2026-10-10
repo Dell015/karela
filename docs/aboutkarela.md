@@ -867,7 +867,7 @@ The cold start problem is Karela's most critical UX challenge: a new user has no
 | 1 | *First Step* — 500m walk | Prove the app works. Seeds the first Ghost. |
 | 2 | *Neighborhood Scout* — 1km, map 3 landmarks | Introduce the map layer. Unlock Squad invites. |
 | 3 | *The Daily Route* — repeat Day 1 route | Introduce Ghost concept. First Sector Bonus eligible. |
-| 4 | *Community Eye* — photo a local issue (scattered trash, illegal dumping) | Introduce Bayanihan mechanic gently. +50 Gems. |
+| 4 | *Community Eye* — photo a local issue (scattered trash, illegal dumping) | Introduce Bayanihan mechanic gently. +30 Gems (owner decision 2026-10-11: Day 7's +50 stays the week's biggest). |
 | 5 | *Squad Up* — invite 1 person or join a Squad | Unlock social layer. 'Founding Member' badge if new Squad. |
 | 6 | *The Push* — beat Day 3 Ghost by any margin | Introduce competitive self-improvement. 1.2× preview. |
 | 7 | *Week Warrior* — complete any 1km+ mission | Earn first streak milestone. **1.5× multiplier unlocked.** |
@@ -1975,8 +1975,8 @@ The phases above are the plan. This is what the code has today. Some Phase 2 fea
 | Ani coaching | Built: body profile, quest generation, post-run recap, wellness-only rules. No chat memory yet, no weekly plan |
 | SQLite offline logging + sync | Built: runs (run outbox, UUID per run) and territory uploads queue offline and sync once (QA C7; needs device test) |
 | Supabase Auth + RLS | Built: RLS on every table; game rules in server functions |
-| XP / Streak / Gem system | Built: server-counted streaks with Streak Freeze and Repair; XP and Gems for runs still awarded by the phone (QA C1) |
-| 7-day onboarding arc | Written but not wired up (QA H3) |
+| XP / Streak / Gem system | Built: server-counted streaks with Streak Freeze and Repair; XP and Gems paid by the server for runs, quests and civic reports (QA C1) |
+| 7-day onboarding arc | Built: each day's quest pays its Gems and opens the next day (QA H3) |
 | Basic Squad formation | Built |
 | Civic quests + Vanguard review | Civic reports, consensus and decay built; Vanguard review not built |
 | B2B Quest Nodes | Not built |

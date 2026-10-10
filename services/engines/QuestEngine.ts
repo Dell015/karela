@@ -23,6 +23,7 @@ import {
   updateMission,
 } from "../database/supabase/missions";
 import { incrementStats, setStats } from "../database/supabase/profiles";
+import { callRpc, RpcError } from "../rpc";
 import {
   assignOnboardingQuest,
   getOnboardingDay,
@@ -563,6 +564,12 @@ export const QuestEngine = {
   /**
    * Claims a completed quest — awards XP, gems, and updates stats.
    * Returns the total XP awarded (after streak multiplier).
+   *
+   * With supabase/15_server_rewards.sql the server checks the goal and pays
+   * in one step (claim_mission), and first-week quests move onboarding to
+   * the next day. Its refusals ("Finish the quest goal first...") are
+   * thrown as RpcError with a message for the user. Without 15, the old
+   * phone-side claim below runs.
    */
   claimQuest: async (
     userId: string,
@@ -570,6 +577,13 @@ export const QuestEngine = {
     mission: { xpReward: number; type?: string; frequency?: string },
     streak: number
   ): Promise<{ xpAwarded: number; gemsAwarded: number }> => {
+    try {
+      const r = await callRpc<{ xp: number; gems: number }>("claim_mission", { p_mission: missionId });
+      return { xpAwarded: r.xp, gemsAwarded: r.gems };
+    } catch (e) {
+      if (!(e instanceof RpcError && e.notSetUp)) throw e;
+    }
+
     // Validate the mission is actually complete before claiming.
     // getMissions filters on status="active", so a mission that is missing here
     // was already claimed/expired — refuse rather than fail open and re-award.

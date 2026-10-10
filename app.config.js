@@ -82,12 +82,16 @@ export default {
       [
         "expo-location",
         {
+          // Background location keeps a run recording with the screen
+          // locked (services/backgroundRun.ts). Needs a development or
+          // store build; Expo Go can't run it.
           locationAlwaysAndWhenInUsePermission:
-            "Karela tracks your race against the ghost even when the screen is locked.",
+            "Karela keeps recording your run when the screen is locked. Your route stays on your phone.",
           locationAlwaysPermission:
-            "Karela requires background location to sync your progress with the ghost runner.",
+            "Karela keeps recording your run when the screen is locked. Your route stays on your phone.",
           locationWhenInUsePermission:
             "Karela uses your location to show your progress on the map.",
+          isIosBackgroundLocationEnabled: true,
           isAndroidBackgroundLocationEnabled: true,
           isAndroidForegroundServiceEnabled: true,
         },

@@ -48,10 +48,12 @@ import { civicXpMultiplier, useBuffs } from "@/services/buffs";
 import { guildColor } from "@/services/guilds";
 import { getTerritories, HOLDER_REASON, LandmarkState } from "@/services/territory";
 import { styles } from "@/styles/mapStyles";
+import { clearBackgroundPoints, stopBackgroundTracking } from "@/services/backgroundRun";
 import {
   discardRun,
   endInterruptedRun,
   endRun,
+  getRun,
   getUnsavedRun,
   saveRunProgress,
   startRun,
@@ -69,7 +71,7 @@ const androidStrokeColors = (points: number, color: string) =>
 
 export default function MapScreen() {
   const router = useRouter();
-  const { user, earnGems, gainXP } = useAuth();
+  const { user, earnGems, gainXP, reloadProfile } = useAuth();
   const mapRef = useRef<MapView>(null);
   const [hasZoomed, setHasZoomed] = useState(false);
   const [mapHeading, setMapHeading] = useState(0);
@@ -388,14 +390,21 @@ export default function MapScreen() {
   useFocusEffect(
     useCallback(() => {
       if (!user || racingRef.current) return;
-      const run = getUnsavedRun(user.uid);
+      let run = getUnsavedRun(user.uid);
       if (!run) return;
-      const openSummary = () => {
-        if (run.state === "active") endInterruptedRun(run.id);
-        router.push({ pathname: "/summary", params: { id: run.id } });
-      };
+      if (run.state === "active") {
+        // Cut off by a force-close: stop any GPS still running for it, and
+        // end it with what was recorded, screen-locked points included.
+        void stopBackgroundTracking();
+        endInterruptedRun(run.id);
+        run = getRun(run.id);
+        if (!run) return;
+      }
+      const runId = run.id;
+      const openSummary = () => router.push({ pathname: "/summary", params: { id: runId } });
       if (run.meters < MIN_SAVE_M) {
         discardRun(run.id); // too short to be worth asking about
+        clearBackgroundPoints();
         return;
       }
       const when = new Date(run.startedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
@@ -403,7 +412,14 @@ export default function MapScreen() {
         "You have an unsaved run",
         `${kmText(run.meters)} km in ${clockText(run.seconds)}, started at ${when}. Save it, or discard it?`,
         [
-          { text: "Discard", style: "destructive", onPress: () => discardRun(run.id) },
+          {
+            text: "Discard",
+            style: "destructive",
+            onPress: () => {
+              discardRun(run.id);
+              clearBackgroundPoints();
+            },
+          },
           { text: "Review and save", onPress: openSummary },
         ],
         { cancelable: false },
@@ -487,26 +503,35 @@ export default function MapScreen() {
     );
 
     if (result.success) {
+      // With supabase/15_server_rewards.sql the server has paid already
+      // (result.reward); before it, the phone pays the same amounts.
+      const boost = civicXpMultiplier(buffs);
+      const boostLine = boost > 1 ? "\nBayanihan Boost: +25% XP" : "";
+      const pay = async (xp: number, gems: number) => {
+        if (result.reward) {
+          await reloadProfile();
+          return result.reward;
+        }
+        await gainXP(Math.round(xp * boost));
+        await earnGems(gems);
+        return { xp, gems };
+      };
       if (result.consensus_reached) {
         // Node verified — full reward
-        const boost = civicXpMultiplier(buffs);
-        await gainXP(Math.round(200 * boost));
-        await earnGems(20);
+        const paid = await pay(200, 20);
         Alert.alert(
           "Report verified",
-          `Neighbours confirmed this issue.\n+200 XP, +20 Gems${boost > 1 ? "\nBayanihan Boost: +25% XP" : ""}`,
+          `Neighbours confirmed this issue.\n+${paid.xp} XP, +${paid.gems} Gems${boostLine}`,
         );
       } else {
         // Report submitted — small reward
-        const boost = civicXpMultiplier(buffs);
-        await gainXP(Math.round(50 * boost));
-        await earnGems(5);
+        const paid = await pay(50, 5);
         const count = result.node_id ? await getNodeReportCount(result.node_id) : null;
         const progress =
           count != null
             ? describeConsensus(count)
             : "It stays pending until 3 people nearby report it.";
-        Alert.alert("Report sent", `${progress}\n+50 XP, +5 Gems${boost > 1 ? "\nBayanihan Boost: +25% XP" : ""}`);
+        Alert.alert("Report sent", `${progress}\n+${paid.xp} XP, +${paid.gems} Gems${boostLine}`);
       }
     } else {
       Alert.alert("Report not sent", result.message || "Check your connection and try again.");

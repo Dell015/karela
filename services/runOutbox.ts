@@ -7,7 +7,8 @@ import { QuestEngine } from "@/services/engines/QuestEngine";
 import { GEM_EARNINGS, getTotalSectors } from "@/services/gemSystem";
 import { stripPrivacyZones } from "@/services/privacyZones";
 import { callRpc, RpcError } from "@/services/rpc";
-import type { TrackPoint } from "@/services/runMath";
+import { takeBackgroundPoints } from "@/services/backgroundRun";
+import { pathDistance, type TrackPoint, VEHICLE_KMH } from "@/services/runMath";
 import { calculateStreak } from "@/services/statsService";
 import { applyStreakMultiplier } from "@/services/streakMultiplier";
 import { fetchStreakFromHistory, getEffectiveStreak, settleStreak } from "@/services/streakService";
@@ -27,10 +28,13 @@ import { uuid } from "@/services/uuid";
  *
  * Syncing is a list of steps. Each one is ticked off on the phone as it
  * succeeds, so a retry (offline, app killed) carries on where it stopped
- * and never repeats a finished step. The first step, finish_run
- * (supabase/14_finish_run.sql), is keyed on the run's UUID on the server,
- * so even a repeat of it counts nothing twice. Once every step is done the
- * row, route included, is deleted.
+ * and never repeats a finished step. The first step, finish_run, is keyed
+ * on the run's UUID on the server, so even a repeat of it counts nothing
+ * twice. With supabase/15_server_rewards.sql it also pays the run (XP,
+ * Gems, calories, streak, quest progress) in the same transaction, and
+ * the phone only has territory and Ani's note left. Without 15 the phone
+ * does those steps itself, as before. Once every step is done the row,
+ * route included, is deleted.
  *
  * Privacy: points inside a Privacy Zone are dropped before the route is
  * written, so they never reach the phone's storage. Distance and time are
@@ -64,6 +68,7 @@ type Row = {
   xp: number;
   path_json: string;
   done: string;
+  updated_at: number;
 };
 
 const fromRow = (r: Row): OutboxRun => {
@@ -118,11 +123,44 @@ export const endRun = async (id: string, meters: number, seconds: number, path: 
   ]);
 };
 
-/** Ends a run that was cut off (app killed) at its last saved point. */
+/** Smaller moves than this between fixes are GPS jitter (as on the run screen). */
+const JITTER_M = 2.5;
+
+/**
+ * Ends a run that was cut off (app killed). It keeps what was saved, plus
+ * any points recorded with the screen locked after that
+ * (services/backgroundRun.ts), so a run that went on in the background
+ * isn't cut short.
+ */
 export const endInterruptedRun = (id: string) => {
+  const r = db.getFirstSync<Row>("SELECT * FROM run_outbox WHERE id = ? AND state = 'active'", [id]);
+  if (!r) return;
+  const run = fromRow(r);
+  let { meters, seconds, path } = run;
+  let finishedAt = r.updated_at;
+
+  const lastSaved = path[path.length - 1];
+  const extra: TrackPoint[] = [];
+  let prev: TrackPoint | undefined = lastSaved;
+  for (const p of takeBackgroundPoints()) {
+    if (p.timestamp <= (prev?.timestamp ?? run.startedAt)) continue;
+    const point = { latitude: p.latitude, longitude: p.longitude, timestamp: p.timestamp, isVehicle: p.speed * 3.6 > VEHICLE_KMH };
+    if (prev && pathDistance([prev, point]) < JITTER_M && !point.isVehicle) continue;
+    extra.push(point);
+    prev = point;
+  }
+  if (extra.length) {
+    meters += pathDistance(lastSaved ? [lastSaved, ...extra] : extra);
+    const lastTs = extra[extra.length - 1].timestamp ?? finishedAt;
+    // Time ran on from the last save to the last point (no pausing with the screen locked).
+    seconds += Math.max(0, Math.round((lastTs - r.updated_at) / 1000));
+    path = [...path, ...extra];
+    finishedAt = Math.max(finishedAt, lastTs);
+  }
+
   db.runSync(
-    "UPDATE run_outbox SET state = 'finished', finished_at = COALESCE(finished_at, updated_at), updated_at = ? WHERE id = ? AND state = 'active'",
-    [Date.now(), id],
+    "UPDATE run_outbox SET state = 'finished', meters = ?, seconds = ?, path_json = ?, finished_at = ?, updated_at = ? WHERE id = ?",
+    [Math.floor(meters), Math.floor(seconds), JSON.stringify(path), finishedAt, Date.now(), id],
   );
 };
 
@@ -168,13 +206,17 @@ const markDone = (id: string, done: Set<Step>) =>
     id,
   ]);
 
+/** Steps finish_run does itself: with 15 everything earned, with 14 the totals. */
+const SERVER_PAID: Step[] = ["totals", "streak", "xp", "gems", "quests"];
+
 /**
- * Saves the run under its UUID; a repeat is ignored by the server. withTotals
- * says whether distance and calories were added in the same call.
+ * Saves the run under its UUID; a repeat is ignored by the server. Returns
+ * the steps the server did in the same call.
  */
-const saveHistory = async (run: OutboxRun): Promise<{ withTotals: boolean }> => {
+const saveHistory = async (run: OutboxRun): Promise<Step[]> => {
   try {
-    await callRpc<boolean>("finish_run", {
+    // 15 returns { saved, xp, gems, ... }; 14 returns true / false.
+    const result = await callRpc<boolean | { saved: boolean }>("finish_run", {
       p_id: run.id,
       p_meters: run.meters,
       p_seconds: run.seconds,
@@ -182,7 +224,7 @@ const saveHistory = async (run: OutboxRun): Promise<{ withTotals: boolean }> => 
       p_xp: run.xp,
       p_finished_at: new Date(run.finishedAt ?? run.startedAt).toISOString(),
     });
-    return { withTotals: true }; // finish_run adds distance and calories itself
+    return typeof result === "object" && result !== null ? SERVER_PAID : ["totals"];
   } catch (e) {
     if (!(e instanceof RpcError && e.notSetUp)) throw e;
   }
@@ -197,7 +239,16 @@ const saveHistory = async (run: OutboxRun): Promise<{ withTotals: boolean }> => 
     completed_at: new Date(run.finishedAt ?? run.startedAt).toISOString(),
   });
   if (error && error.code !== "23505") throw error; // 23505: already saved
-  return { withTotals: false };
+  return [];
+};
+
+/**
+ * The server refused a phone-side reward step because 15 was run after this
+ * run was half synced. The server owns that step now, so it's skipped.
+ */
+const lockedByServer = (e: unknown) => {
+  const err = e as { code?: string; message?: string } | null;
+  return err?.code === "42501" || /^Only the server can change/.test(err?.message ?? "");
 };
 
 const syncOne = async (run: OutboxRun, done: Set<Step>) => {
@@ -206,14 +257,18 @@ const syncOne = async (run: OutboxRun, done: Set<Step>) => {
   const kmh = run.seconds > 0 ? (run.meters / run.seconds) * 3.6 : 0;
   const step = async (name: Step, fn: () => Promise<unknown>) => {
     if (done.has(name)) return;
-    await fn();
+    try {
+      await fn();
+    } catch (e) {
+      if (!lockedByServer(e)) throw e;
+      console.warn(`Run outbox: "${name}" is the server's now; skipped.`);
+    }
     done.add(name);
     markDone(run.id, done);
   };
 
   await step("history", async () => {
-    const { withTotals } = await saveHistory(run);
-    if (withTotals) done.add("totals");
+    for (const s of await saveHistory(run)) done.add(s);
   });
   await step("totals", () =>
     incrementStats(uid, {

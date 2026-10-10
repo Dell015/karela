@@ -15,8 +15,12 @@
  * Day 7: Week Warrior — any 1km+ mission (streak milestone)
  *
  * On Day 7 completion: unlock 1.5× multiplier, shareable summary card.
+ *
+ * Claiming a day's quest pays its Gems and moves to the next day on the
+ * server (claim_mission). The amounts there must match ONBOARDING_ARC.
  */
 
+import { dayKey } from "./calendarData";
 import { addMission } from "./database/supabase/missions";
 import { setStats } from "./database/supabase/profiles";
 
@@ -120,8 +124,8 @@ export const shouldAssignOnboardingQuest = (stats: any): boolean => {
   const day = getOnboardingDay(stats);
   if (day === null) return false;
 
-  // Already assigned today's onboarding quest
-  const todayKey = new Date().toISOString().split("T")[0];
+  // Already assigned today's onboarding quest (local date, not UTC)
+  const todayKey = dayKey(new Date());
   return stats?.onboarding_last_assigned !== todayKey;
 };
 
@@ -134,8 +138,10 @@ export const assignOnboardingQuest = async (userId: string, stats: any): Promise
   if (day === null) return false;
 
   const quest = ONBOARDING_ARC[day - 1];
-  const todayKey = new Date().toISOString().split("T")[0];
+  const todayKey = dayKey(new Date());
 
+  // onboarding_day lets the server pay the day's Gems and move to the next
+  // day when it's claimed (supabase/15_server_rewards.sql, claim_mission).
   await addMission(userId, {
     title: `Day ${day}: ${quest.title}`,
     description: quest.description,
@@ -145,27 +151,11 @@ export const assignOnboardingQuest = async (userId: string, stats: any): Promise
     frequency: "daily",
     type: quest.type === "civic" ? "civic" : "distance",
     created_at_key: todayKey,
+    onboarding_day: day,
   });
 
   await setStats(userId, { onboarding_last_assigned: todayKey });
   return true;
-};
-
-/**
- * Marks the current onboarding day as complete.
- * Call this when the user claims the onboarding mission reward.
- */
-export const completeOnboardingDay = async (userId: string, stats: any): Promise<OnboardingDay | null> => {
-  const day = getOnboardingDay(stats);
-  if (day === null) return null;
-
-  const quest = ONBOARDING_ARC[day - 1];
-
-  await setStats(userId, {
-    onboarding_day_completed: day,
-  });
-
-  return quest;
 };
 
 /**

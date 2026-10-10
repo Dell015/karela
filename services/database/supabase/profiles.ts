@@ -45,6 +45,16 @@ export const incrementStats = async (
 };
 
 /**
+ * The stats the app may set itself (supabase/15_server_rewards.sql,
+ * set_stats). Everything earned (XP, level, Gems, streaks, totals) is
+ * changed only by server functions.
+ */
+export const EDITABLE_STATS = [
+  "age", "weight", "height", "bmi", "target_weight", "ai_notes",
+  "last_daily_reset", "last_weekly_reset", "last_monthly_reset", "onboarding_last_assigned",
+] as const;
+
+/**
  * Overwrites stat fields (for non-numeric or absolute values).
  * Example: setStats(uid, { last_daily_reset: '2026-06-25' })
  */

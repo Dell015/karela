@@ -407,7 +407,7 @@ civic_XP     = civic_XP_raw × 1.25 while a Bayanihan Boost is active (24 h)
 
 | Buff | Value | Source |
 |------|-------|--------|
-| Pioneer badge | XP × 1.02 for 30 days | first landmark claim |
+| Pioneer badge | XP × 1.02 for 30 days (runs, quests, civic reports) | first landmark claim |
 | Century Walkers badge | Gems × 1.05, permanent | 1,000 km since the guild was founded |
 | Bayanihan Boost | civic XP × 1.25 for 24 h | Shop |
 | Territory Boost | guild km in landmark zones × 1.2 for 24 h | Shop |
@@ -416,9 +416,9 @@ civic_XP     = civic_XP_raw × 1.25 while a Bayanihan Boost is active (24 h)
 
 | Source | Gems | Status |
 |--------|------|--------|
-| Sector Bonus (per 500 m of a run) | 5 | Built (paid on the phone, QA C1) |
-| Civic report sent (pending) | 5, plus 50 XP | Built (paid on the phone, QA C4) |
-| Civic report that verifies a node (the 3rd nearby report) | 20, plus 200 XP | Built (paid on the phone, QA C4) |
+| Sector Bonus (per 500 m of a run) | 5 | Built (server, `finish_run`) |
+| Civic report sent (pending) | 5, plus 50 XP | Built (server, `submit_civic_report`; paid before confirmation, QA C4) |
+| Civic report that verifies a node (the 3rd nearby report) | 20, plus 200 XP | Built (server, `submit_civic_report`) |
 | Iron Streak guild badge (every member on a 7-day streak) | 500, split equally, once | Built (server) |
 | B2B QR scan | 20 | Not built |
 | Vanguard review | 10 | Not built |

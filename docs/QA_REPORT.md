@@ -36,12 +36,12 @@ This is the one place that says what is done and what is left. Section 3 is **yo
 | Streaks | **Done** (needs 10) | Server counts streaks; Freeze, Repair and Collective Shield all protect days |
 | Shop | **Done** (needs 10 and 13) | Real catalogue, server-checked purchases, cosmetics on map and profile |
 | Squads, guilds, territory | **Done** (needs 11 to 13, plus landmarks) | Full rules on the server, three-tab screen, map zones |
-| Run tracking | **Better screen, still at risk** | New run screen (live stats panel, heading marker, clock-based time, shared run maths). Still no background tracking, no crash recovery, results passed through the URL (C5 to C7) |
+| Run tracking | **Better, one gap left** | New run screen, run outbox with crash recovery and offline finishing, summary opened by id (C5, C7). Still no background tracking (C6) |
 | Progress and stats | **Done** | Progress and Your activity read every finished run, with real pace and bar charts (M15) |
-| Rewards (XP, Gems) | **Still forgeable** | The phone still awards XP and Gems itself (C1) |
+| Rewards (XP, Gems) | **Server-side once `15_` is run** | Runs, quests, first-week days and civic reports are paid by server functions; the app can't add XP or Gems (C1, H2, H3). Distance itself still comes from the phone (H4) |
 | Civic engine | **Mostly locked** | Writes locked (05), decay scheduled (06). Photos public, reports readable by all, rewards farmable (C4, H5, H6) |
 | Ani | **Safer, still client-side** | Wellness-only rules in every prompt. Key in the app, no chat memory (C3, H10) |
-| Offline-first | **Not built for runs** | Only territory uploads queue offline. Runs don't (C7) |
+| Offline-first | **Built for runs** | Runs and territory uploads queue offline with UUIDs (C7, needs device test) |
 | Accessibility | **Improving** | 83 labels/roles now (was 0 on 2026-10-07). Colour-only states remain in places |
 | Tests | **SQL only** | 105 SQL tests (104 pass, see T2). No app tests; jest isn't installed (M12) |
 | Icons and art | **Done** | Custom Karela icon set and 18 low-poly 3D renders |
@@ -61,6 +61,7 @@ This is the one place that says what is done and what is left. Section 3 is **yo
    | `12_guilds.sql` | Guilds and badges | Guild tab can't load |
    | `13_territory.sql` | Landmarks, territory scoring, Territory Boost, buffs | Territory tab and map zones can't load |
    | `14_finish_run.sql` | Saves a run and its distance in one step, once per run id | Runs still save (once, by id), but a lost reply could add the distance total twice |
+   | `15_server_rewards.sql` | The server pays runs, quests, first-week days and civic reports; the app can't add XP or Gems | **Anyone logged in can still give themselves XP and Gems**; first-week Gems are never paid |
 2. **Add landmarks:** the first three (Ugac Sur, Ugac Norte, Buntun) are in `supabase/landmarks_tuguegarao.sql`; run it. Add more there.
 3. **Decide the privacy wording about Ani.** `docs/aboutkarela.md` says body data is "never shared with third parties", but Ani's prompts send display name, weight, age, notes for Ani and run summaries to Google Gemini. The in-app "Your data" page describes what really happens. Either change the spec wording or trim the prompts (or both).
 4. **Check the app id** `com.worshestershire.karela` (looks like a typo of "worcestershire"). It can't change after the first store upload. (M13)
@@ -103,27 +104,26 @@ Status words: **Open** (not started), **Partly** (some done, see note), **Fixed*
 
 ### 5.1 Critical (fix before any real user)
 
-**C1. Rewards are still decided by the phone. (Partly)**
-`07_` stops logged-out abuse and locks profile columns, and the Shop, shields and territory are server-side now. But a logged-in user can still call `increment_stats` / `set_stats` on their own row and give themselves XP and Gems, and `missions` is still writable by its owner (`for all` policy).
-*Fix:* move run rewards (`finish_run`), quest claims (`claim_mission`) and civic rewards into server functions that compute the amount, then revoke `increment_stats` / `set_stats` from the app. Reset progress (Settings) will need a server function at the same time.
+**C1. Rewards are still decided by the phone. (Fixed by `15_`, 2026-10-11)**
+`15_server_rewards.sql`: `finish_run` works out a run's XP, Gems, calories, streak and quest progress from its distance and time; `claim_mission` checks and pays a quest at once; `submit_civic_report` pays the report itself; `reset_my_progress` replaces the phone's reset. The app can't call `increment_stats`, `set_stats` takes only body details, Ani notes and quest dates, and the app can only expire a quest (new quests get capped XP, a minimum target and a limit per day / week / month). All numbers are in `karela_reward_rules()`. The app falls back to the old way until `15_` is run. 30 SQL checks in `supabase/tests/t15.mjs`; the civic report function itself needs PostGIS and isn't covered there (test it on the device).
+*Still open:* the distance itself still comes from the phone (H4; the server caps it at 35 km/h). Civic rewards are still paid when a report is sent (C4).
 
 **C3. Gemini and weather keys ship inside the app. (Open)**
 *Fix:* a Supabase Edge Function holds the keys, checks the login and rate-limits. Check git history for `.env` (section 3).
 
 **C4. Civic rewards can be farmed. (Partly)**
 The app now sends the fixed 25 m radius, but the server still accepts any radius from the caller; no photo is required; +50 XP and +5 Gems are paid before anyone confirms.
-*Fix:* ignore the client radius in `submit_civic_report`, require a photo, cap reports per day, pay most of the reward on confirmation (in a server function, see C1).
+*Fix:* ignore the client radius in `submit_civic_report` (**done in `15_`**), require a photo. Owner decision 2026-10-11: **no daily cap**, and the reward stays paid when a report is sent. The same-area, same-day duplicate check still applies.
 
-**C5. Anyone can award themselves a run with a link. (Fixed 2026-10-11 for the link; XP still C1)**
-`app/summary.tsx` now opens a run by its id from the phone's outbox (`services/runOutbox.ts`); the link carries only the id. A modified app can still send any numbers until the server computes XP (C1).
+**C5. Anyone can award themselves a run with a link. (Fixed 2026-10-11)**
+`app/summary.tsx` now opens a run by its id from the phone's outbox (`services/runOutbox.ts`); the link carries only the id. With `15_` the server works out the rewards from the distance and time (C1).
 
-**C6. Runs stop when the screen locks. (Partly)** The run time is now read from the clock, so it stays right after a background trip, and the summary never shows NaN. GPS still stops while the screen is locked, so distance has a gap.
-No background location task; duration comes from a timer that pauses in the background. ("Keep screen on during runs" in Settings is a stopgap.)
-*Fix:* background location task with an Android foreground service; duration from GPS timestamps.
+**C6. Runs stop when the screen locks. (Built 2026-10-11, needs device test in a development build)** `services/backgroundRun.ts`: during a run a background location task records GPS fixes while the app is in the background (Android: foreground service with a "Karela is recording your run" notification, stopped if the app is force-closed). Privacy Zone points are dropped before they're saved. Back in the app they join the trail through the same checks as live GPS (`hooks/useLocationEngine.ts`). A run cut off by a force-close gets its screen-locked points too. Time was already read from the clock. `app.config.js` now turns on iOS background location and has plain permission text.
+*Limits:* needs "Allow all the time" location; without it, or in **Expo Go** (no background tasks), the run records only with the screen on, as before. Distance inside a Privacy Zone while the screen is locked isn't counted (those points are never stored). A change to `app.config.js` needs a new build (`npx expo prebuild --clean` locally; EAS does it itself).
 
 **C7. A run is lost if the app is killed or offline. (Built 2026-10-11, needs device test)**
 `services/runOutbox.ts`: a run gets a UUID at Start and is saved to the SQLite table `run_outbox` every 20 s and when the app goes to the background (Privacy Zone points removed first). If the app is killed, the map offers "Review and save" or "Discard" next time. "Save and finish" queues the run; sync runs right away, at sign-in and whenever the app comes back to the front. Each sync step (history, totals, streak, XP, Gems, quests, territory, Ani's summary) is ticked off on the phone, so a retry never repeats a finished step; `finish_run` (`14_`) ignores a repeated id. The row and its route are deleted once everything is sent.
-*Still open:* if a reply is lost after the server applied XP, Gems or quest progress, the retry can add it again. Moving those into `finish_run` (C1) closes that. Territory km are now worked out from the route with Privacy Zone points removed (before, from the full route), so a landmark that overlaps a zone can count a little less.
+*Closed by `15_`:* a lost reply after XP, Gems or quest progress could repeat them; with `15_` they're paid inside `finish_run`, once per run id. Territory km are now worked out from the route with Privacy Zone points removed (before, from the full route), so a landmark that overlaps a zone can count a little less.
 
 **C2. Anyone could edit civic nodes. (Fixed by `05_`)**
 **C8. Civic nodes never decayed. (Fixed by `06_`)**
@@ -142,9 +142,9 @@ No background location task; duration comes from a timer that pauses in the back
 
 ### 5.2 High
 
-**H2. Quest claim isn't atomic, and its XP comes from the phone. (Open)** `QuestEngine.claimQuest` reads, marks claimed, then awards in separate calls; AI-written rewards aren't clamped. *Fix:* one `claim_mission` server function (see C1); clamp AI rewards.
+**H2. Quest claim isn't atomic, and its XP comes from the phone. (Fixed by `15_`)** `claim_mission` locks the quest, checks the goal, marks it claimed and pays in one transaction. New quests' XP is capped at the app's own formula (`scaleXP` for the level, times 1.3), so Ani's quests can't carry more.
 
-**H3. The 7-day onboarding never advances. (Open)** `completeOnboardingDay()` is never called; its Gems are never paid; it uses UTC dates. *Fix:* call it when an onboarding quest is claimed; use the local-date helper.
+**H3. The 7-day onboarding never advances. (Fixed by `15_`)** First-week quests carry their day (`missions.onboarding_day`); claiming one pays that day's Gems and moves to the next day on the server. The day key is the local date now. Amounts are copied from `services/onboarding.ts` (Day 4 pays 30 Gems; the spec now says the same).
 
 **H4. Distance is easy to cheat. (Open)** Scoring ignores the step counter; anything under 35 km/h counts (bikes, tricycles, jeepneys in traffic); sector Gems are paid for every 500 m, not sectors beaten. *Fix:* cadence check, smarter vehicle detection, pay only sectors won.
 
@@ -241,6 +241,14 @@ Test on a mid-range Android phone (and an iPhone if you can). Expected failures 
 - [ ] Download my data opens the share sheet with your data.
 - [ ] Delete a throwaway account; you land on login and can't log back in. *(needs 08)*
 
+**Rewards** *(needs 15)*
+- [ ] Finish a 2 km run: about +200 XP (more on a streak) and +20 Gems; the profile shows them after the summary closes.
+- [ ] Claim a finished quest: the XP and Gems shown match the profile. Tap claim twice quickly: paid once.
+- [ ] A new account: the Day 1 quest appears; finish 500 m and claim it: +20 Gems, and the next day brings Day 2.
+- [ ] Send a civic report: "+50 XP, +5 Gems" (more on a streak); the third report nearby: "+200 XP, +20 Gems". A civic quest moves by one.
+- [ ] Settings > Reset progress: level 1, 0 km, Gems kept.
+- [ ] Edit weight and Ani notes in the profile: saved.
+
 **Shop and streaks** *(needs 10)*
 - [ ] Buy a Streak Freeze; skip a day; open the app: the streak is kept and you hold one fewer.
 - [ ] Miss one day with no freeze; the Shop offers Streak Repair; buy it; the streak comes back.
@@ -262,8 +270,14 @@ Test on a mid-range Android phone (and an iPhone if you can). Expected failures 
 - [ ] Open `karela://summary?meters=99999&seconds=60&kcal=1&xp=99999`: "Run not found", nothing awarded.
 - [ ] Settings > Reset progress with a run waiting offline: the waiting run is gone too.
 
+**Screen locked** *(C6; development build, location set to "Allow all the time")*
+- [ ] Start a run, lock the screen, walk 500 m, unlock: the trail has no gap and the distance includes those 500 m. Android shows "Karela is recording your run" while it's locked, and the notification goes when the run ends.
+- [ ] Same with Privacy Zone at home: the saved route has a gap inside the circle.
+- [ ] Lock the screen mid-run, then force-close Karela from the recent apps: the notification goes; reopen the map: "You have an unsaved run" with the distance up to the force-close.
+- [ ] In Expo Go: a run still starts and records with the screen on; nothing crashes.
+- [ ] Location set to "While using the app" only: the run still records with the screen on.
+
 **Run tracking** *(still expected to fail)*
-- [ ] Lock the screen for 2 minutes mid-run: gap in the path, wrong time? *(C6)*
 - [ ] Ride a bike at 20 km/h: counted as running? *(H4)*
 
 **Map**
@@ -280,8 +294,8 @@ Test on a mid-range Android phone (and an iPhone if you can). Expected failures 
 1. **You:** run `07_` today (security), then `08_` to `13_`, add landmarks, set EAS variables.
 2. ~~**T1 + T2**~~ done 2026-10-11.
 3. ~~**C5 + C7**~~ built 2026-10-11 (run `14_`, then the device tests for runs below).
-4. **C1:** server-side rewards (`finish_run`, `claim_mission`, civic rewards), then revoke the stats functions from the app. Fold in H2 and H3.
-5. **C6:** background tracking with a foreground service.
+4. ~~**C1 + H2 + H3**~~ built 2026-10-11 (run `15_`, then the reward device tests in section 8).
+5. ~~**C6**~~ built 2026-10-11 (test it in a development build).
 6. **C3 + H10:** Ani behind an Edge Function, with chat memory.
 7. **Before a pilot:** H5, H6, C4, H9, N1, and the privacy wording decision.
 8. **Quality:** jest and app tests (M12), M2 performance, M3 dates, accessibility on older screens, remove dead code (L1).
@@ -296,7 +310,7 @@ npm run type-check                 # app: 0 errors; app-example/ errors can be i
 npm run lint                       # 0 errors, 32 warnings today
 npx expo-doctor                    # needs internet
 npx expo export --platform android --output-dir /tmp/karela-export   # bundles?
-cd supabase/tests && npm install && npm test                        # 115 SQL checks, all pass; stops at the first failing file
-for f in t10 t11 t12 t13 t14; do node $f.mjs; done                   # all five files, even if one fails
+cd supabase/tests && npm install && npm test                        # 145 SQL checks, all pass; stops at the first failing file
+for f in t10 t11 t12 t13 t14 t15; do node $f.mjs; done               # all six files, even if one fails
 git log --all --full-history -- .env                                # should print nothing
 ```

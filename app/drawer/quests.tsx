@@ -3,6 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button, Chip, ScreenHeader } from "@/components/ui";
 import { Screen } from "@/components/ui/Screen";
 import { QuestEngine } from "@/services/engines/QuestEngine";
+import { RpcError } from "@/services/rpc";
 import {
     subscribeToMissions,
 } from "@/services/database/supabase/missions";
@@ -127,8 +128,14 @@ export default function QuestsScreen() {
       let message = `Quest complete. +${xpAwarded} XP.`;
       if (gemsAwarded > 0) message += ` +${gemsAwarded} Gems.`;
       Alert.alert("Reward claimed", message);
-    } catch {
-      Alert.alert("Couldn't claim", "Your reward wasn't saved. Check your connection and try again.");
+    } catch (e) {
+      // The server's refusals are written for people; anything else is a connection problem.
+      Alert.alert(
+        "Couldn't claim",
+        e instanceof RpcError && !e.notSetUp
+          ? e.message
+          : "Your reward wasn't saved. Check your connection and try again.",
+      );
     }
   };
 

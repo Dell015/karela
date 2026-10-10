@@ -37,6 +37,13 @@ export const initDatabase = () => {
       done TEXT NOT NULL DEFAULT '[]',
       updated_at INTEGER NOT NULL
     );
+    -- GPS fixes recorded with the screen locked (services/backgroundRun.ts).
+    CREATE TABLE IF NOT EXISTS run_points (
+      ts INTEGER NOT NULL,
+      latitude REAL NOT NULL,
+      longitude REAL NOT NULL,
+      speed REAL NOT NULL DEFAULT 0
+    );
   `);
 };
 

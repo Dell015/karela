@@ -1,6 +1,8 @@
 import { AuthGate } from "@/components/AuthGate";
 import { AuthProvider } from "@/context/AuthContext";
 import { initDatabase } from "@/services/database/sqlite/database";
+// Defines the background run task; it must load with the app (see the file).
+import "@/services/backgroundRun";
 import { initGhostModelTable } from "@/services/engines/GhostModelManager";
 import { Stack } from "expo-router";
 import React, { useEffect } from "react";
