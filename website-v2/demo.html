@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <title>Try the Karela app in your browser</title>
+    <meta
+      name="description"
+      content="A working demo of the Karela app in your browser: run against your ghost, report a blocked drain, claim quests, ask Ani and win a landmark with your guild. All demo data, nothing saved."
+    />
+    <meta name="theme-color" content="#0b0f0c" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="canonical" href="https://karela.app/demo.html" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Karela" />
+    <meta property="og:title" content="Try the Karela app in your browser" />
+    <meta property="og:description" content="Run, report and claim quests in a demo of the app. No download, nothing saved." />
+    <meta property="og:image" content="assets/img/og-placeholder.png" />
+
+    <link rel="icon" type="image/png" href="assets/img/favicon.png" />
+    <link rel="apple-touch-icon" href="assets/img/icon.png" />
+
+    <link rel="preload" href="assets/fonts/Excon-Black.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/Excon-Bold.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/Excon-Regular.woff2" as="font" type="font/woff2" crossorigin />
+
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/demo.css" />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#app">Skip to the demo</a>
+
+    <div class="bg" aria-hidden="true">
+      <div class="bg__blob bg__blob--1"></div>
+      <div class="bg__blob bg__blob--2"></div>
+      <div class="bg__blob bg__blob--3"></div>
+      <div class="bg__grain"></div>
+    </div>
+
+    <header class="dnav">
+      <div class="wrap dnav__inner">
+        <a href="index.html" aria-label="Karela, home">
+          <img class="dnav__logo" src="assets/img/karela_word-logo.png" alt="Karela" width="160" height="28" />
+        </a>
+        <a class="dnav__back" href="index.html#try">Back to the site</a>
+      </div>
+    </header>
+
+    <main id="main" class="demo">
+      <div class="wrap demo__grid">
+        <div class="demo__intro">
+          <h1 class="demo__title">Try Karela <span class="grad">in your browser.</span></h1>
+          <p class="demo__lead">
+            This is the app, rebuilt for the web. Tap around the way you would
+            on your phone: start a run, report a problem on the street, claim a
+            quest, talk to Ani.
+          </p>
+          <p class="demo__notice">
+            <span>
+              <strong>Everything here is demo data.</strong> Randel's account,
+              the squad, the guild, the runs and every number are made up.
+              Nothing you do is saved or sent anywhere, and reloading the page
+              starts over.
+            </span>
+          </p>
+        </div>
+
+        <div class="demo__stage" data-stage>
+          <button class="demo__exit" type="button" data-full-exit hidden>
+            <span>Karela demo</span>
+            <span>Exit full screen</span>
+          </button>
+          <div class="device">
+            <div class="device__screen">
+              <div class="app" id="app" data-app role="region" aria-label="Karela app demo">
+                <div class="app-nojs">
+                  The demo needs JavaScript to run. Everything else on this site
+                  works without it.
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn--outline demo__full" type="button" data-full aria-pressed="false">Full screen</button>
+        </div>
+
+        <div class="demo__extra">
+          <h2 class="demo__h">Things to try</h2>
+          <ul class="try">
+            <li><button type="button" data-try="run"><span>Race your ghost on a run</span><span>Run</span></button></li>
+            <li><button type="button" data-try="report"><span>Report a blocked drain</span><span>Bayanihan</span></button></li>
+            <li><button type="button" data-try="quest"><span>Claim a finished quest</span><span>Quests</span></button></li>
+            <li><button type="button" data-try="ani"><span>Ask Ani about your last run</span><span>Ani</span></button></li>
+            <li><button type="button" data-try="shield"><span>Shield a squadmate's streak</span><span>Squad</span></button></li>
+            <li><button type="button" data-try="territory"><span>See who holds Ugac Sur</span><span>Territory</span></button></li>
+            <li><button type="button" data-try="shop"><span>Buy a trail with demo Gems</span><span>Shop</span></button></li>
+          </ul>
+
+          <fieldset class="wx">
+            <legend>Weather in the demo</legend>
+            <div class="wx__opts">
+              <label><input type="radio" name="wx" value="clear" data-weather checked /><span>Clear</span></label>
+              <label><input type="radio" name="wx" value="storm" data-weather /><span>Storm</span></label>
+            </div>
+          </fieldset>
+
+          <button class="btn btn--outline" type="button" data-reset>Reset the demo</button>
+
+          <p class="demo__fine">
+            The map is a drawing, not real streets. Ugac Sur, Ugac Norte and
+            Buntun are real places in Tuguegarao; who holds them here is made
+            up. In the app, Ani is a 3D character and answers anything; here
+            she answers a few set questions.
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <script src="js/demo-data.js"></script>
+    <script src="js/demo.js"></script>
+  </body>
+</html>

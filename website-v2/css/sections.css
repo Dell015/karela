@@ -1530,3 +1530,45 @@ textarea.q__text {
   line-height: 1.6;
   color: var(--ink-2);
 }
+
+/* ------------------------------------------------------------
+   TRY IT (links to demo.html)
+   One whole-width statement with Ani running beside it, not a card.
+   ------------------------------------------------------------ */
+.trynow__inner {
+  display: grid;
+  gap: 1.5rem;
+  align-items: center;
+  padding-block: clamp(1.5rem, 4vw, 3rem);
+  border-block: 1px solid var(--line);
+}
+.trynow__ani {
+  display: flex;
+  justify-content: center;
+}
+.trynow__sprite {
+  --fh: 150px;
+}
+.trynow__copy .lead {
+  max-width: 38rem;
+  margin-top: 1rem;
+}
+.trynow__cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  margin-top: 1.75rem;
+}
+.trynow__cta .small {
+  margin: 0;
+}
+@media (min-width: 760px) {
+  .trynow__inner {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4rem);
+  }
+  .trynow__sprite {
+    --fh: 220px;
+  }
+}

@@ -20,6 +20,7 @@ light for mid-range Android on prepaid data.
 | `img/randel.webp`, `yshia.webp` (Trishia), `steven.webp`, `sander.webp` | Team photos, 480 by 480, see-through background | about 20 KB each |
 | `img/og-placeholder.png` | **Placeholder** link-preview image (see below) | 20 KB |
 | `img/coach.png` | Not used by the page (BACKLOG P2-9) | 28 KB |
+| `demo/*.webp` | The app's game art (badges, shop items, trails, frames) for the demo page. Copies of `assets/images/game/*.webp` in the repo root; re-copy them if the art is re-rendered | 2 to 5 KB each, 112 KB in all |
 | `fonts/Excon-*.woff2` | Excon, six weights | |
 | `fonts/GochiHand.woff2` | Ani's handwritten notes (`.note`) | |
 

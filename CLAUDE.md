@@ -104,6 +104,7 @@ Before calling any change done, check:
 - `css/sections.css`: every page section.
 - `js/config.js`: **everything you are likely to edit**: survey questions and endpoint, waitlist endpoint, store links, streak tiers, GitHub link.
 - `js/main.js`: one IIFE with numbered modules (scroll engine, nav, Resonance chart, ghost chart, tour, consensus, streak, tiers, waitlist, survey, run scrollbar, year).
+- `demo.html` + `css/demo.css` + `js/demo.js`: the app rebuilt for the browser, all demo data. `js/demo-data.js` holds every demo number and Ani's answers; keep it in step with the app (BACKLOG P2-12).
 
 ### Hard constraints
 

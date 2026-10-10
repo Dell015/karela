@@ -128,6 +128,20 @@ folder).
 
 ## P2
 
+### P2-12. Keep the demo in step with the app
+
+**Where:** `js/demo-data.js` and `js/demo.js`.
+
+The demo copies the app's screens, rules and prices by hand: the streak
+tiers, quest XP, squad and guild rules, shop prices, the Scout Pass track,
+Ani's quick-reply answers. When one changes in the app (`services/store.ts`,
+the `karela_*_rules()` SQL, `services/ai/demoReplies.ts`, a screen's
+layout), change the demo too. The game art in `assets/demo/` is copied from
+`assets/images/game/`.
+
+**Done looks like:** the demo matches the app at each release.
+
+
 ### P2-7. Team section (photos added 2026-10-09)
 
 **Where:** `#team` in `index.html`. Four people show with photos
@@ -178,6 +192,16 @@ re-rendered when the model changes, as `CLAUDE.md` asks.
 ---
 
 ## Done since the July backlog
+
+- **App demo (2026-10-11):** `demo.html` runs a copy of the app in the
+  browser with demo data (Randel's made-up account): Home, a fast-forwarded
+  run with the ghost, civic reports and pins, the run summary, Quests, Ani
+  (pre-written answers), Squad / Guild / Territory, Shop, Scout Pass,
+  Progress, Calendar, Profile and Customize Ani. Phone frame on laptops, a
+  Full screen button on phones. Nothing is saved. Linked from the hero
+  ("Try the app"), the new "Try it" section after the tour, and the menu.
+  Files: `demo.html`, `css/demo.css`, `js/demo-data.js` (all the demo
+  numbers and Ani's answers), `js/demo.js`, `assets/demo/`.
 
 - **Phone screens:** the 7 screenshot placeholders and `placeholders.css` are
   gone. The Ani, civic and streak phone screens are built in HTML and CSS
